@@ -17,10 +17,9 @@ const navItems = [
 export default function Navigation() {
     const [isActive, setIsActive] = useState(true)
     const ulRef = useRef()
+    const pathname = usePathname()
 
-    // console.log('Render navigation')
     useEffect(() => {
-        console.log('Render Effect')
         if (!isActive) {
             ulRef.current.className += ' top-[64px] opacity-100 '
         }
@@ -33,8 +32,8 @@ export default function Navigation() {
 
     useEffect(() => {
         setIsActive(true)
-    }, [usePathname()])
-    const pathname = usePathname()
+    }, [pathname])
+
 
     return (
         <>

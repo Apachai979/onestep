@@ -109,15 +109,15 @@ export default function Manufacture() {
                 <div className="flex justify-center items-center font-xl text-5xl">
                     <h1 className="text-center">
                         Мы придерживаемся принципов{' '}
-                        <p className="text-primary_green text-center">"Бережливого производства"</p>
+                        <p className="text-primary_green text-center">&quot;Бережливого производства&quot;</p>
                     </h1>
                 </div>
                 <div className="flex flex-col lg:flex-row justify-center items-center my-10">
                     <div className="flex flex-col lg:w-2/8 lg:space-y-6 text-lg lg:text-right">
                         {lean.map(elem => {
                             return (
-                                <div className="flex flex-row-reverse lg:flex-row justify-end items-center  space-x-2 space-x-reverse lg:space-x lg:space-x-4">
-                                    <p key={elem.title} className="">
+                                <div key={elem.title} className="flex flex-row-reverse lg:flex-row justify-end items-center  space-x-2 space-x-reverse lg:space-x lg:space-x-4">
+                                    <p className="">
                                         {elem.title}
                                     </p>
                                     <Image
@@ -143,9 +143,9 @@ export default function Manufacture() {
                     <div className="flex flex-col lg:w-2/8 lg:space-y-6 text-lg text-left">
                         {lean2.map(elem => {
                             return (
-                                <div className="flex justify-start items-center  space-x-2 space-x lg:space-x-4">
+                                <div key={elem.title} className="flex justify-start items-center  space-x-2 space-x lg:space-x-4">
                                     <Image src={elem.src} width={80} height={80} alt="box" />
-                                    <p key={elem.title}>{elem.title}</p>
+                                    <p>{elem.title}</p>
                                 </div>
                             )
                         })}

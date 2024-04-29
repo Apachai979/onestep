@@ -1,4 +1,3 @@
-import ButtonExtra from "@/components/buttons/ButtonExtra"
 import Image from "next/image"
 import ConnectUs from "@/components/ConnectUs"
 
@@ -143,9 +142,9 @@ export default function About() {
                         ruleOneStep.indexOf(elem) % 2 === 0 ? reverse = " lg:flex-row lg:space-x " : reverse = " lg:flex-row-reverse lg:space-x-reverse "
 
                         return (
-                            <div className={`flex justify-center items-center flex-col-reverse space-y-5 space-y-reverse lg:space-y-0 ${reverse} lg:space-x-10`}>
+                            <div key={elem.title} className={`flex justify-center items-center flex-col-reverse space-y-5 space-y-reverse lg:space-y-0 ${reverse} lg:space-x-10`}>
                                 <div className='lg:w-1/2'>
-                                    <h2 key={elem.title} className='text-2xl text-mainGreen mb-1 lg:mb-4 font-semibold'>{elem.title}</h2>
+                                    <h2 className='text-2xl text-mainGreen mb-1 lg:mb-4 font-semibold'>{elem.title}</h2>
                                     <p className='text-xl text-gray-950/95'>{elem.description}</p>
                                 </div>
                                 <div className='lg:w-1/2 '>

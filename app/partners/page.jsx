@@ -26,7 +26,7 @@ export default function Partners() {
 
                     {partnersInfo.map((elem) => {
                         return (
-                            <div className="group cursor-pointer flex-1 flex bg-white flex-col p-5 pl-10 lg:px-10 lg:py-6 space-y-5 rounded-3xl shadow-md" >
+                            <div key={elem.title} className="group cursor-pointer flex-1 flex bg-white flex-col p-5 pl-10 lg:px-10 lg:py-6 space-y-5 rounded-3xl shadow-md" >
                                 <div className='h-9 w-9 rotate-45 bg-primary_green rounded-lg group-hover:animate-spinner'></div>
                                 <h1 key={elem.title} className='text-2xl text-gray-950'>{elem.title}:</h1>
                                 <ul className="list-disc list-inside text-txtMiddle text-lg leading-normal">

@@ -115,9 +115,9 @@ export default function Doctors() {
                                     return (
                                         <tr key={el.title} className=" border border-b-gray-300 border-t-0 border-l-0 border-r-0 last:border-0 odd:bg-white even:bg-slate-50 text-base">
                                             <td className="pt-1 pb-2 pl-4 ">{el.title}</td>
-                                            {el.has.map((elem) => {
+                                            {el.has.map((elem, index) => {
                                                 return (
-                                                    <td className="">
+                                                    <td key={index} className="">
                                                         <div className="flex justify-center">
                                                             {elem === 1 && <BsCheckLg />}
                                                         </div></td>

@@ -5,6 +5,7 @@ import { ImSpinner2 } from "react-icons/im";
 
 export default function FormContact({ titleForForm }) {
 
+    const api = env("API_KEY_BITRIX")
     const code = '+7 ';
     const [spinner, setSpinner] = useState(false);
     const [success, setSuccess] = useState(false)
@@ -87,7 +88,7 @@ export default function FormContact({ titleForForm }) {
         query = query.slice(0, -1);
         console.log(query)
 
-        const url = `https://neoset.bitrix24.ru/rest/1/mzpsgl4hdwikjvig/crm.lead.add.json?${query}`;
+        const url = `https://neoset.bitrix24.ru/rest/1/${api}/crm.lead.add.json?${query}`;
 
         try {
             const response = await fetch(url, {

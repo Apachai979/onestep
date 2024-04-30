@@ -6,7 +6,6 @@
     "dev": "prisma generate && next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "export": "next export",
     "lint": "next lint",
     "migration:create": "prisma migrate dev --create-only",
     "migrate": "prisma migrate deploy"

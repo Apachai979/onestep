@@ -8,13 +8,14 @@ import { Napkin, PlasterPostOperative, ScalpelEleven, NeedleHolder, PlasterFixCa
 // const delay = (milliseconds) => {
 //     return new Promise(resolve => setTimeout(resolve, milliseconds));
 // };
+// export const dynamicParams = false
+// export async function generateStaticParams() {
+//     const neosets = await prisma.neoset.findMany()
 
-export async function generateStaticParams() {
-    const neosets = await prisma.neoset.findMany()
-    return neosets.map((neo) => ({
-        slug: neo.title,
-    }))
-}
+//     return neosets.map((neo) => ({
+//         slug: neo.title,
+//     }));
+// }
 
 export async function generateMetadata({ params: { title } }) {
 
@@ -95,6 +96,8 @@ async function getNeoset(titleName) {
 
 
 export default async function Neoset({ params: { title } }) {
+
+    // await new Promise(resolve => setTimeout(resolve, 5000))
 
     const [neoset, arrConsistOf] = await getNeoset(title)
 

@@ -1,7 +1,7 @@
 import { memo } from "react";
 
 export default memo(function ButtonMenu({ isActive }) {
-    console.log('Render ButtonMenu')
+    // console.log('Render ButtonMenu')
     return (
         <>
 

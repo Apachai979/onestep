@@ -4,8 +4,6 @@ import Navigation from "./Navigation"
 
 export default function TheHeader() {
 
-    console.log('Render')
-
     return (
         <header className="sticky top-0 sm920:bg-body_bg z-20 bg-white">
             <nav className="flex justify-center">

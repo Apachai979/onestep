@@ -9,13 +9,13 @@ import { Napkin, PlasterPostOperative, ScalpelEleven, NeedleHolder, PlasterFixCa
 //     return new Promise(resolve => setTimeout(resolve, milliseconds));
 // };
 // export const dynamicParams = false
-// export async function generateStaticParams() {
-//     const neosets = await prisma.neoset.findMany()
+export async function generateStaticParams() {
+    const neosets = await prisma.neoset.findMany()
 
-//     return neosets.map((neo) => ({
-//         slug: neo.title,
-//     }));
-// }
+    return neosets.map((neo) => ({
+        slug: neo.title,
+    }));
+}
 
 export async function generateMetadata({ params: { title } }) {
 

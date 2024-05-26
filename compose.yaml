@@ -1,0 +1,42 @@
+services:
+  app:
+    build: .
+    container_name: appNext
+    ports:
+      - 3000:3000
+    environment:
+      NODE_ENV: development
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /src/app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+
+  pgdb:
+    image: postgres:15-alpine
+    container_name: pgdb
+    restart: always
+    environment:
+      - POSTGRES_DB=dev-db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - pgdbdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5050:80"
+
+volumes:
+  pgdbdata:

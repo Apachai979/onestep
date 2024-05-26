@@ -221,7 +221,6 @@ export default async function Neoset({ params: { title } }) {
                         <tbody>
                             {title === 'dlya-gemodializa' ? <Dializ />
                                 : arrConsistOf.map((el) => {
-                                    console.log(el.component, el.class)
                                     return (
                                         <tr key={el.id} className="bg-gray-50 odd:bg-white even:bg-slate-100 border-b border-stone-200">
                                             <td className="py-2 px-4">{el.component}</td>

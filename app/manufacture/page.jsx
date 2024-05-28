@@ -2,6 +2,7 @@ import Video from '@/components/Video'
 import Image from 'next/image'
 import ConnectUs from '@/components/ConnectUs'
 
+
 export const metadata = {
     title: 'О производстве',
     description: 'Российский производитель медицинских одноразовых перевязочных материалов и процедурных стерильных наборов',
@@ -58,24 +59,8 @@ export default function Manufacture() {
     return (
         <>
             <div className="flex justify-center h-[500px] w-full relative bg-fixed ">
-                <div className="absolute  w-full h-full bg-txtGreen/50"></div>
-                <Video className="w-full"></Video>
-                {/* <Image
-                    src="/manufacture/manuf1.jpeg"
-                    alt="Neoset"
-                    width={4000}
-                    height={2000}
-                    className='object-cover z-10'>
-                </Image> */}
-
-                <h1 className="z-10 absolute bottom-[300px] text-center text-white font-semibold text-6xl">
-                    Производство OneStep
-                </h1>
-                <h2 className="z-10 absolute bottom-[200px] text-center text-white font-semibold text-3xl">
-                    Современные технологии и мировые стандарты качества
-                </h2>
+                <Video />
             </div>
-
             <div className="container mx-auto px-4 max-w-[1200px] my-10">
                 <div className="flex xl:space-x-20 flex-col xl:flex-row space-y-6 xl:space-y-0">
                     <div className="flex-1 justify-self-end pt-2">

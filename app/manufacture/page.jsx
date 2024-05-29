@@ -1,7 +1,6 @@
-import Video from '@/components/Video'
+import { SimpleVideo } from '@/components/SimpleVideo'
 import Image from 'next/image'
 import ConnectUs from '@/components/ConnectUs'
-
 
 export const metadata = {
     title: 'О производстве',
@@ -58,8 +57,8 @@ const cleanZoneImg = [
 export default function Manufacture() {
     return (
         <>
-            <div className="flex justify-center h-[500px] w-full relative bg-fixed ">
-                <Video />
+            <div className="flex justify-center h-auto w-full relative">
+                <SimpleVideo />
             </div>
             <div className="container mx-auto px-4 max-w-[1200px] my-10">
                 <div className="flex xl:space-x-20 flex-col xl:flex-row space-y-6 xl:space-y-0">

@@ -153,6 +153,7 @@ export default function Manufacture() {
                                     <Image
                                         key={el.src}
                                         src={el.src}
+                                        alt='Чистая зона'
                                         width={300}
                                         height={300}
                                         className="shadow-lg rounded-md"

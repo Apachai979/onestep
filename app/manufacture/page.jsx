@@ -10,29 +10,29 @@ export const metadata = {
 const lean = [
     {
         title: 'Производим ровно столько продукции, сколько нужно потребителям',
-        src: '/Manufacture/box.svg',
+        src: '/manufacture/box.svg',
     },
     {
         title: 'Гарантируем заказчику быструю и безопасную доставку продукции',
-        src: '/Manufacture/car.svg',
+        src: '/manufacture/car.svg',
     },
     {
         title: 'При помощи современных технологий мы научились использовать материальные, временные и трудовые ресурсы максимально эффективно',
-        src: '/Manufacture/technik.svg',
+        src: '/manufacture/technik.svg',
     },
 ]
 const lean2 = [
     {
         title: 'Стремимся к идеальному качеству продукции при нулевом проценте брака',
-        src: '/Manufacture/serct.svg',
+        src: '/manufacture/serct.svg',
     },
     {
         title: 'Мы сократили площадь складских помещений до необходимого минимума',
-        src: '/Manufacture/home.svg',
+        src: '/manufacture/home.svg',
     },
     {
         title: 'Каждый сотрудник предприятия имеет возможность раскрыть свой творческий потенциал, так как вовлечен в процесс создания продукта',
-        src: '/Manufacture/persons.svg',
+        src: '/manufacture/persons.svg',
     },
 ]
 const cleanZoneImg = [
@@ -57,7 +57,7 @@ const cleanZoneImg = [
 export default function Manufacture() {
     return (
         <>
-            <div className="flex justify-center h-auto w-full relative">
+            <div className="flex justify-center h-auto w-full">
                 <SimpleVideo />
             </div>
             <div className="container mx-auto px-4 max-w-[1200px] my-10">

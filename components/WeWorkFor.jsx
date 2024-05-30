@@ -64,14 +64,14 @@ export default function WeWorkFor() {
                     height={720}>
                 </Image>
             </div>
-            <div className='flex flex-col w-full py-6 px-5 justify-center items-center bg-mainGreen rounded-2xl lg:hidden'>
-                <h1 className='text-2xl text-white font-semibold text-center tracking-wide pb-3'>Для кого мы работаем</h1>
-                {/* <div className='flex flex-col md:flex-row w-full justify-between md:items-center md:space-x-1 space-y-2 md:space-y-0'>
-                    <Link href='/partners/specialist' className="flex-1 flex justify-between bg-backMiddle px-8 py-4 text-white tracking-wide text-xl md:text-center rounded-2xl hover:bg-white hover:text-txtGreen transition duration-300">Специалист</Link>
-                    <Link href='/partners/doctors' className="flex-1 flex justify-between bg-backMiddle px-8 py-4 text-white tracking-wide text-xl md:text-center rounded-2xl hover:bg-white hover:text-txtGreen whitespace-nowrap transition duration-300">Главный врач</Link>
-                    <Link href='/partners/patient' className="flex-1 flex justify-between bg-backMiddle px-8 py-4 text-white tracking-wide text-xl md:text-center rounded-2xl hover:bg-white hover:text-txtGreen transition duration-300">Пациент</Link>
-                    <Link href='/partners' className="flex-1 flex justify-between bg-backMiddle px-8 py-4 text-white tracking-wide text-xl md:text-center rounded-2xl hover:bg-white hover:text-txtGreen transition duration-300">Партнер</Link>
-                </div> */}
+            <div className='flex flex-col w-full pt-4 pb-5 px-5 justify-center items-center bg-mainGreen rounded-2xl lg:hidden'>
+                <h1 className='text-2xl text-white font-semibold text-center tracking-wide pb-4'>Для кого мы работаем</h1>
+                <div className='grid md:grid-cols-4 grid-cols gap-2 w-full'>
+                    <Link href='/partners/specialist' className="flex bg-backMiddle px-8 md:py-4 py-2.5 text-white tracking-wide text-xl md:text-center rounded-2xl hover:bg-white hover:text-txtGreen transition duration-300 ease-in-out justify-center active:scale-95 ">Специалист</Link>
+                    <Link href='/partners/doctors' className="flex bg-backMiddle px-8 md:py-4 py-2.5 text-white tracking-wide text-xl md:text-center rounded-2xl hover:bg-white hover:text-txtGreen whitespace-nowrap transition duration-300 ease-in-out justify-center active:scale-95">Главный врач</Link>
+                    <Link href='/partners/patient' className="flex bg-backMiddle px-8 md:py-4 py-2.5 text-white tracking-wide text-xl md:text-center rounded-2xl hover:bg-white hover:text-txtGreen transition duration-300 ease-in-out justify-center active:scale-95">Пациент</Link>
+                    <Link href='/partners' className="flex bg-backMiddle px-8 md:py-4 py-2.5 text-white tracking-wide text-xl md:text-center rounded-2xl hover:bg-white hover:text-txtGreen transition duration-300 ease-in-out justify-center active:scale-95">Партнер</Link>
+                </div>
             </div>
         </div>
     )

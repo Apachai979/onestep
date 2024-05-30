@@ -60,15 +60,15 @@ export default function Manufacture() {
             <div className="flex justify-center h-auto w-full">
                 <SimpleVideo />
             </div>
-            <div className="container mx-auto px-4 max-w-[1200px] my-10">
-                <div className="flex xl:space-x-20 flex-col xl:flex-row space-y-6 xl:space-y-0">
-                    <div className="flex-1 justify-self-end pt-2">
-                        <h1 className="text-6xl font-semibold text-mainGreen text-left xl:text-right">
+            <div className="container mx-auto px-4 max-w-[1200px] pt-8 pb-4">
+                <div className="flex xl:space-x-20 flex-col xl:flex-row space-y-3 xl:space-y-0">
+                    <div className="flex-1 justify-self-end">
+                        <h1 className="text-5xl font-semibold text-mainGreen text-left xl:text-right">
                             OneStep <span className="text-txtGreen">— это:</span>
                         </h1>
                     </div>
                     <div className="flex-1 justify-self-start">
-                        <ul className="list-disc list-inside text-2xl text-txtGreen leading-relaxed">
+                        <ul className="list-disc list-inside text-xl text-txtGreen leading-relaxed">
                             <li>
                                 высокотехнологичное оборудование, разработанное с учетом наших
                                 требований;
@@ -89,14 +89,14 @@ export default function Manufacture() {
 
             {/* nexblock */}
 
-            <div className="container mx-auto px-4 max-w-[1200px]">
-                <div className="flex justify-center items-center font-xl text-5xl">
+            <div className="container mx-auto px-4 max-w-[1200px] pt-4 pb-4">
+                <div className="flex justify-center items-center font-xl text-4xl mb-3">
                     <h1 className="text-center">
                         Мы придерживаемся принципов{' '}
                         <p className="text-primary_green text-center">&quot;Бережливого производства&quot;</p>
                     </h1>
                 </div>
-                <div className="flex flex-col lg:flex-row justify-center items-center my-10">
+                <div className="flex flex-col lg:flex-row justify-center items-center">
                     <div className="flex flex-col lg:w-2/8 lg:space-y-6 text-lg lg:text-right">
                         {lean.map(elem => {
                             return (
@@ -138,15 +138,15 @@ export default function Manufacture() {
             </div>
 
             {/* nexblock */}
-            <div className="container mx-auto px-4 max-w-[1200px]">
-                <h1 className="text-5xl font-semibold text-left mb-10 mt-2">
+            <div className="container mx-auto px-4 max-w-[1200px] pt-6 pb-4">
+                <h1 className="text-5xl font-semibold text-left ">
                     <span className="text-primary_green">Ключевые</span> моменты
                 </h1>
             </div>
             {/* nexblock */}
-            <div className="bg-gray-100 py-10">
+            <div className="bg-gray-100 pt-8 pb-4">
                 <div className="container mx-auto px-4 max-w-[1200px]">
-                    <div className="flex flex-col lg:flex-row justify-center space-x-10">
+                    <div className="flex flex-col lg:flex-row justify-center lg:space-x-10">
                         <div className="flex justify-center lg:w-1/2">
                             <div className="grid grid-cols-2 gap-5">
                                 {cleanZoneImg.map(el => (
@@ -161,14 +161,15 @@ export default function Manufacture() {
                                 ))}
                             </div>
                         </div>
-                        <div className="flex flex-col items-center lg:items-start lg:w-1/2 text-lg justify-center">
-                            <h2 className="text-4xl font-semibold mb-5 mt-4 lg:mt-0">
+                        <div className="flex flex-col text-xl items-left lg:w-1/2 justify-center">
+                            <h2 className="text-4xl pb-3 mt-4 lg:mt-0">
                                 Чистая зона
                             </h2>
-                            <p>Наличие чистой зоны на нашем производстве регламентировано:</p>
-                            <ul className="list-disc list-inside text-center lg:text-left">
+                            <hr className="h-1 w-24 bg-txtGreen" />
+                            <p className='pt-4 text-justify sm:text-left'>Наличие чистой зоны на нашем производстве регламентировано:</p>
+                            <ul className="list-disc list-inside text-justify sm:text-left lg:text-left">
                                 <li className="font-bold">ИСО 7-8 класс чистоты</li>
-                                <li>
+                                <li className=''>
                                     ГОСТ Р ИСО 14644-1-2002 «Чистые помещения и связанные с ними
                                     контролируемые среды, часть 1. Классификация чистоты воздуха»
                                 </li>
@@ -178,41 +179,40 @@ export default function Manufacture() {
                 </div>
             </div>
             <div id="storage" className='bg-gray-100 pt-5'>
-                <div className=' bg-body_bg pb-10'></div>
+                <div className=' bg-body_bg pb-8'></div>
             </div>
             {/* nexblock */}
 
             <div className="container mx-auto px-4 max-w-[1200px] pb-10">
                 <div className="flex justify-center flex-col lg:flex-row space-y-10 lg:space-y-0 lg:space-x-10">
                     <div className="flex-1 flex flex-col">
-                        <h1 className="text-5xl text-txtGreen">Сырье и материалы</h1>
+                        <h1 className="text-4xl text-txtGreen pb-4">Сырье и материалы</h1>
+                        <hr className="h-1 w-24 bg-txtGreen" />
                         <br />
-                        <hr className="h-1.5 w-24 bg-txtGreen" />
-                        <br />
-                        <p className="text-2xl text-txtGreen">
+                        <p className="text-xl text-txtGreen">
                             Качество готовой продукции, в первую очередь, зависит от качества сырья,
                             из которого ее производят.
                         </p>
                         <br />
-                        <p className="text-2xl text-txtGreen">
+                        <p className="text-xl text-txtGreen">
                             Именно поэтому, мы уделяем особое внимание выбору поставщиков и
                             производителей материалов и медицинских изделий для нашей продукции.
                         </p>
                         <br />
-                        <p className="text-2xl text-txtGreen">
+                        <p className="text-xl text-txtGreen">
                             Среди них - ведущие мировые компании, лидеры по производству
                             медицинского текстиля, одноразовых компонентов для хирургических наборов
                             и т.д.
                         </p>
                         <br />
-                        <p className="text-2xl text-txtGreen">
+                        <p className="text-xl text-txtGreen">
                             Наши перевязочные материалы выполнены из традиционной марли высокого
                             качества (100 % хлопок), обладающей прекрасными сорбционными свойствами,
                             воздухопроницаемы и безопасны для пациента, с плотностью 17 и 20 нитей
                             на квадратный сантиметр.
                         </p>
                         <br />
-                        <p className="text-2xl text-txtGreen">
+                        <p className="text-xl text-txtGreen">
                             Все материалы и компоненты, использующиеся в нашем производстве, имеют
                             сертификат качества EC Certificate (о соответствии системы менеджмента
                             качества и технической документации на продукцию европейским стандартам
@@ -232,9 +232,9 @@ export default function Manufacture() {
             </div>
 
             {/* nexblock */}
-            <div className="bg-gray-100">
-                <div className="container mx-auto px-4 max-w-[1200px] py-10">
-                    <div className="flex justify-center items-center flex-col lg:flex-row space-y-10 lg:space-y-0 lg:space-x-14">
+            <div className="bg-gray-100 pt-6 pb-6">
+                <div className="container mx-auto px-4 max-w-[1200px]">
+                    <div className="flex justify-center items-center flex-col-reverse lg:flex-row space-y-reverse space-y-10 lg:space-y-0 lg:space-x-14">
                         <div className="flex lg:w-6/12">
                             <Image
                                 src="/manufacture/sklad.jpg"
@@ -245,22 +245,21 @@ export default function Manufacture() {
                             ></Image>
                         </div>
                         <div className="flex lg:w-6/12 flex-col">
-                            <h1 className="text-5xl text-txtGreen">Склад и логистика</h1>
+                            <h1 className="text-4xl text-txtGreen pb-4">Склад и логистика</h1>
+                            <hr className="h-1 w-24 bg-txtGreen" />
                             <br />
-                            <hr className="h-1.5 w-24 bg-txtGreen" />
-                            <br />
-                            <p className="text-2xl text-txtGreen">
+                            <p className="text-xl text-txtGreen">
                                 Складские мощности позволяют обеспечить производство сырьем на
                                 несколько месяцев бесперебойной работы.
                             </p>
                             <br />
-                            <p className="text-2xl text-txtGreen">
+                            <p className="text-xl text-txtGreen">
                                 Также, возможности складского хранения позволяют иметь в наличии
                                 достаточное количество готовой продукции, необходимой для наших
                                 заказчиков.
                             </p>
                             <br />
-                            <p className="text-2xl text-txtGreen">
+                            <p className="text-xl text-txtGreen">
                                 Благодаря внедренной на производстве системе учета и контроля ERP,
                                 имеется возможность планировать складское хранение, а также
                                 регулировать сроки и стабильность поставки товара заказчику.
@@ -273,23 +272,22 @@ export default function Manufacture() {
             {/* nexblock */}
 
             <div id="sterility" className='bg-gray-100 pt-3'>
-                <div className=' bg-body_bg pb-12'></div>
+                <div className=' bg-body_bg pb-8'></div>
             </div>
 
             <div className="container mx-auto px-4 max-w-[1200px] pb-10">
                 <div className="flex justify-center  items-center flex-col lg:flex-row space-y-10 lg:space-y-0 lg:space-x-10">
-                    <div className="flex w-6/12 flex-col">
-                        <h1 className="text-5xl text-txtGreen">
+                    <div className="flex lg:w-6/12 flex-col">
+                        <h1 className="text-4xl text-txtGreen pb-4">
                             Упаковка: стерильность и безопасность.
                         </h1>
+                        <hr className="h-1 w-24 bg-txtGreen" />
                         <br />
-                        <hr className="h-1.5 w-24 bg-txtGreen" />
-                        <br />
-                        <p className="text-2xl text-txtGreen">
+                        <p className="text-xl text-txtGreen">
                             Упаковка наборов NeoSet выполнена из твердого материала, обеспечивающего
                             безопасность хранения и транспортировки.
                         </p>
-                        <div className="text-2xl text-txtGreen">
+                        <div className="text-xl text-txtGreen">
                             {' '}
                             Выполняет следующие функции:
                             <ul className="list-inside list-disc pl-4 leading-normal">
@@ -307,7 +305,7 @@ export default function Manufacture() {
                             </ul>
                         </div>
                         <br />
-                        <div className="text-2xl text-txtGreen">
+                        <div className="text-xl text-txtGreen">
                             Безопасность и простота в использовании. Cкругленные углы позволяют
                             избежать:
                             <ul className="list-inside list-disc pl-4 leading-normal">
@@ -319,7 +317,7 @@ export default function Manufacture() {
                             </ul>
                         </div>
                         <br />
-                        <p className="text-2xl text-txtGreen">
+                        <p className="text-xl text-txtGreen">
                             Сохранение стерильности упаковки гарантировано в течение всего срока
                             хранения.
                         </p>
@@ -339,11 +337,11 @@ export default function Manufacture() {
 
             {/* nexblock */}
 
-            <div className="bg-gray-100 py-10">
+            <div className="bg-gray-100 pt-8 pb-6">
                 <div className="container mx-auto px-4 max-w-[1200px]">
                     <div className="flex justify-center flex-col lg:flex-row">
                         <div className="flex-1 flex flex-col lg:items-center">
-                            <h1 className=" text-txtGreen text-5xl font-semibold whitespace-nowrap w-[420px] pt-1">
+                            <h1 className=" text-txtGreen text-5xl text-center md:text-left font-semibold whitespace-nowrap w-[420px] pt-1">
                                 О стерилизации
                             </h1>
                             <p className="text-gray-600 font-semibold lg:text-center text-sm lg:w-[420px] mt-5">
@@ -353,21 +351,21 @@ export default function Manufacture() {
                             <br />
                         </div>
                         <div className="flex-1">
-                            <p className="text-2xl text-txtGreen">
+                            <p className="text-xl text-txtGreen">
                                 Наша продукция проходит процедуру стерилизации методом
                                 электронно-лучевой обработки. Данную технологию иначе еще называют
                                 холодной пастеризацией (так как эффект достигается без повышения
                                 температуры).
                             </p>{' '}
                             <br />
-                            <p className="text-2xl text-txtGreen">
+                            <p className="text-xl text-txtGreen">
                                 На данный момент это самый безопасный и экологически чистый метод,
                                 обеспечивающий не только полную стерильность готовой продукции,
                                 инструмента, рабочего материала, сырья, но и существенно повышающий
                                 сроки годности.
                             </p>
                             <br />
-                            <ul className="list-disc list-inside text-2xl text-txtGreen">
+                            <ul className="list-disc list-inside text-xl text-txtGreen">
                                 <li className="list-none">Преимущества метода:</li>
                                 <li>Изделия при облучении не нагреваются и не намокают;</li>
                                 <li>Изделия можно использовать сразу после облучения;</li>

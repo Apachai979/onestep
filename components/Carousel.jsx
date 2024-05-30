@@ -1,7 +1,7 @@
 'use client'
 import Image from 'next/image'
 import sliderShape from '@/public/sliderImage/sliderShape.svg'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FaChevronCircleLeft } from 'react-icons/fa'
 import { FaChevronCircleRight } from 'react-icons/fa'
 import Link from 'next/link'
@@ -57,6 +57,13 @@ export default function Carousel() {
         if (slide == slides[slides.length - 1].id) setSlide(slides[0].id)
         else setSlide(slide + 1)
     }
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            nextSlide()
+        }, 6000)
+        return () => clearInterval(interval)
+    }, [slide])
 
     return (
         <div className="container mx-auto px-4">

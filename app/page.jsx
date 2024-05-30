@@ -124,8 +124,8 @@ export default function Home() {
             </Image>
           </div>
           <div className="flex-1 flex flex-col items-center justify-center space-y-5">
-            <h2 className='text-3xl font-semibold text-txtGreen'>Мы опирались на <span className='text-mainGreen'>лучший мировой опыт</span> производства медицинских изделий и <span className='text-mainGreen'>заложили основные принципы качества</span> и <span className='text-mainGreen'>удобства использования</span>. Так появился OneStep.</h2>
-            <Link href="/about" className="w-96 text-center border-[3px] border-mainGreen bg-white px-8 py-5 rounded-full text-mainGreen hover:text-white hover:bg-mainGreen text-2xl transition duration-300">Подробнее компании</Link>
+            <h2 className='text-2xl text-justify lg:text-left font-semibold text-txtGreen'>Мы опирались на <span className='text-mainGreen'>лучший мировой опыт</span> производства медицинских изделий и <span className='text-mainGreen'>заложили основные принципы качества</span> и <span className='text-mainGreen'>удобства использования</span>. Так появился OneStep.</h2>
+            <Link href="/about" className="w-96 text-center border-[3px] border-mainGreen bg-white px-8 py-3 rounded-full text-mainGreen hover:text-white hover:bg-mainGreen text-2xl transition duration-300">Подробнее компании</Link>
           </div>
         </div>
       </div>
@@ -134,7 +134,7 @@ export default function Home() {
       <div className='bg-white drop-shadow-sm'>
         <div className="container mx-auto px-4">
           <div className="my-10 py-10 flex flex-col justify-center items-center">
-            <h1 className='lg:indent-96 text-3xl text-center lg:text-5xl font-semibold text-txtMiddle/50 '>Мы оказываем поддержку <span className='text-mainGreen'>гемодиализным центрам</span> Западной Сибири и проектам в области медицинского образования
+            <h1 className='lg:indent-96 text-3xl text-center lg:text-4xl font-semibold text-txtMiddle/50 '>Мы оказываем поддержку <span className='text-mainGreen'>гемодиализным центрам</span> Западной Сибири и проектам в области медицинского образования
               <svg fill="none" viewBox="0 0 24 24" className="w-12 h-12 stroke-1 stroke-txtGreen/30 inline fill-mainGreen hover:scale-125 transition-transform duration-700 cursor-pointer">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
               </svg>
@@ -147,7 +147,7 @@ export default function Home() {
       {/* nextblock */}
 
       <div className='container mx-auto px-4 my-5'>
-        <h1 className='text-center text-5xl font-semibold text-mainGreen mb-5'>Наши <span className='text-txtGreen'>партнеры</span></h1>
+        <h1 className='text-center text-4xl font-semibold text-mainGreen mb-5'>Наши <span className='text-txtGreen'>партнеры</span></h1>
         <div className='flex justify-center items-center lg:divide-x'>
           <div className='flex items-center justify-center w-[300px] h-[112px]'>
             <Image

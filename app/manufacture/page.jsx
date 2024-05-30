@@ -232,7 +232,7 @@ export default function Manufacture() {
             </div>
 
             {/* nexblock */}
-            <div className="bg-gray-100 pt-6 pb-6">
+            <div className="bg-gray-100 pt-8 pb-6">
                 <div className="container mx-auto px-4 max-w-[1200px]">
                     <div className="flex justify-center items-center flex-col-reverse lg:flex-row space-y-reverse space-y-10 lg:space-y-0 lg:space-x-14">
                         <div className="flex lg:w-6/12">

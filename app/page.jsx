@@ -15,7 +15,9 @@ export default function Home() {
 
   return (
     <>
+
       <AuthComponent />
+
       <Carousel />
 
       {/* nextblock */}

@@ -17,17 +17,17 @@ export const metadata = {
 
 export default function RootLayout({ children, modal }) {
   return (
-    <html lang="en">
-      <body className={`${notoSans.className} antialiased bg-body_bg text-night_green`}>
-        <Providers>
+    <Providers>
+      <html lang="en">
+        <body className={`${notoSans.className} antialiased bg-body_bg text-night_green`}>
           <TheHeader />
           <main >
             {children}
             {modal}
           </main>
           <TheFooter />
-        </Providers>
-      </body>
-    </html>
+        </body>
+      </html>
+    </Providers>
   );
 }

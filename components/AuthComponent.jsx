@@ -1,14 +1,27 @@
 'use client'
-import { useSession } from 'next-auth/react'
+import { signIn, useSession } from "next-auth/react"
 
 export default function AuthComponent() {
-
-    const session = useSession()
+    const { data: session } = useSession();
 
     console.log(session)
     return (
-        <div className="container mx-auto px-4 max-w-[1200px] bg-blue-300 h-4">
+        <>
+            {session ? (
+                <h1>Welcome back</h1>)
+                : (
+                    <>
+                        <h1>Youre not logged in</h1>
+                        <button onClick={() => signIn('google')} className="w-10 h-10 border border-black rounded-lg">Google</button>
+                        <button onClick={() => signIn('github')} className="w-10 h-10 border border-black rounded-lg">Github</button>
+                    </>
+                )
+            }
 
-        </div>
+
+            <div>
+                Dashboard
+            </div>
+        </>
     )
 }

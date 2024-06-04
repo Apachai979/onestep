@@ -22,10 +22,10 @@ export default function SignIn() {
                     </h1>
                     <input
                         type="email"
-                        className="h-12 w-full rounded-lg border border-gray-300"
+                        className="h-12 w-full rounded-lg border border-gray-300 shadow-sm"
                         placeholder=" Адрес электронной почты"
                     />
-                    <button className="h-10 w-full rounded-lg border border-gray-300 px-1 transition-all ease-in-out hover:bg-mainGreen hover:font-semibold active:scale-95">
+                    <button className="h-10 w-full rounded-lg border border-gray-300 px-1 shadow-sm transition-all ease-in-out hover:bg-mainGreen hover:font-semibold active:scale-95">
                         Продолжить
                     </button>
                     <p className="text-center">
@@ -42,13 +42,13 @@ export default function SignIn() {
                     <div className="w-80 space-y-2 pb-2 pt-1">
                         <button
                             onClick={() => signIn('google')}
-                            className="h-10 w-full rounded-lg border border-gray-300 px-1 transition-all ease-in-out hover:bg-mainGreen hover:font-semibold active:scale-95"
+                            className="h-10 w-full rounded-lg border border-gray-300 px-1 shadow-sm transition-all ease-in-out hover:bg-mainGreen hover:font-semibold active:scale-95"
                         >
                             Google
                         </button>
                         <button
                             onClick={() => signIn('github')}
-                            className="h-10 w-full rounded-lg border border-gray-300 px-1 transition-all ease-in-out hover:bg-mainGreen hover:font-semibold active:scale-95"
+                            className="h-10 w-full rounded-lg border border-gray-300 px-1 shadow-sm transition-all ease-in-out hover:bg-mainGreen hover:font-semibold active:scale-95"
                         >
                             Github
                         </button>

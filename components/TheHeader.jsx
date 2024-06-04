@@ -19,16 +19,6 @@ export default function TheHeader() {
                         ></Image>
                     </Link>
 
-                    <div className="block sm920:hidden">
-                        {/* <button
-                            onClick={() => setIsActive(prev => !prev)}
-                            className="relative w-[50px] p-1 h-[40px] group cursor-pointer"
-                        >
-                            <AnimationMenuButton isActive={isActive} />
-                        </button> */}
-                    </div>
-                    {/* xl:px-8 px-4  */}
-
                     <Navigation />
                 </div>
             </nav>

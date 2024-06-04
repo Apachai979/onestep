@@ -5,7 +5,7 @@ import Link from "next/link"
 
 export default function SignIn() {
     return (
-        <div className="container mx-auto px-4 max-w-[1200px]">
+        <div className="container mx-auto px-4 max-w-[1200px] h-screen">
             <div className="flex justify-center items-center">
                 <Image
                     src="/logoOneStep.png"

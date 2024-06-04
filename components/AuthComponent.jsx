@@ -8,11 +8,8 @@ export default function AuthComponent() {
 
     console.log(session)
     return (
-<<<<<<< HEAD
-        <>+
-=======
         <div className='container mx-auto px-4'>
->>>>>>> e0a899e2d436dabf8e44f210e5a7fb78d747f4e5
+
             {session ? (
                 <div className="flex justify-end items-center space-x-1">
 
@@ -30,13 +27,8 @@ export default function AuthComponent() {
                 : (
                     <div className="space-x-4">
                         <h1>Youre not logged in</h1>
-<<<<<<< HEAD
-                        <button onClick={() => signIn('google')} className="w-autp h-10 border border-black rounded-lg">Google</button>
-                        <button onClick={() => signIn('github')} className="w-auto h-10 border border-black rounded-lg">Github</button>
-=======
                         <button onClick={() => signIn('google')} className="px-1 w-auto h-10 border border-black rounded-lg">Google</button>
                         <button onClick={() => signIn('github')} className="px-1 w-auto h-10 border border-black rounded-lg">Github</button>
->>>>>>> e0a899e2d436dabf8e44f210e5a7fb78d747f4e5
                     </div>
                 )
             }

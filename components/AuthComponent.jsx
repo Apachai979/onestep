@@ -6,15 +6,15 @@ export default function AuthComponent() {
 
     console.log(session)
     return (
-        <>
+        <>+
             {session ? (
                 <h1>Welcome back</h1>)
                 : (
-                    <>
+                    <div className="space-x-4">
                         <h1>Youre not logged in</h1>
-                        <button onClick={() => signIn('google')} className="w-10 h-10 border border-black rounded-lg">Google</button>
-                        <button onClick={() => signIn('github')} className="w-10 h-10 border border-black rounded-lg">Github</button>
-                    </>
+                        <button onClick={() => signIn('google')} className="w-autp h-10 border border-black rounded-lg">Google</button>
+                        <button onClick={() => signIn('github')} className="w-auto h-10 border border-black rounded-lg">Github</button>
+                    </div>
                 )
             }
 

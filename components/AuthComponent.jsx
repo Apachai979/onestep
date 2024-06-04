@@ -30,6 +30,9 @@ export default function AuthComponent() {
             ) : (
                 <div className="space-x-4">
                     <h1>Youre not logged in</h1>
+                    <Link href="/authorize" className="hover:text-mainGreen">
+                        Войти
+                    </Link>
                     <button
                         onClick={() => signIn('google')}
                         className="h-10 w-auto rounded-lg border border-black px-1"

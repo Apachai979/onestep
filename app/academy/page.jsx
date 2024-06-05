@@ -1,6 +1,7 @@
-'use client'
+"use client"
 import Link from "next/link"
 import { useState } from "react"
+import "./academy.css"
 // const neosets = [
 //     { name: 'Набор для снятия швов', description: 'Готовый к использованию стерильный набор инструментов и перевязочных материалов, предназначенный для снятия швов.', srcImg: '/catalog/aneste.jpg', pathname: 'dlya-snyatiya-shvov' },
 //     { name: 'Набор для обработки ран', description: 'Готовый к использованию стерильный набор инструментов и перевязочных материалов, предназначенный для дезинфекции и обработки ран.', srcImg: '/catalog/aneste.jpg', pathname: 'dlya-obrabotki-ran' },
@@ -13,22 +14,70 @@ import { useState } from "react"
 // ]
 
 export default function Academy() {
-    const [state, setState] = useState()
-    const bubbleFunc = () => {
+    const [order, setOrder] = useState([0, 1, 2, 3, 4])
+    const [lastClickedIndex, setLastClickedIndex] = useState(null)
+    const [classname, setClassname] = useState("")
 
+    const moveToTop = index => {
+        if (index === lastClickedIndex) {
+            setClassname("animate-shaker")
+            setTimeout(() => setClassname(""), 400)
+        } else {
+            setOrder([index, ...order.filter(i => i !== index)])
+            setClassname("animate-transformt z-10")
+            setTimeout(() => setClassname(""), 500)
+            setLastClickedIndex(index)
+        }
     }
 
     return (
-        <div className="container mx-auto px-4 h-screen">
-            <div className="flex justify-center items-center">
-                <Link href="#"><div className="bg-gray-300 px-10 py-2 m-2 text-center">красный</div></Link>
-                <Link href="#"><div className="bg-gray-300 p-10 py-2 m-2 text-center">красный</div></Link>
-                <Link href="#"><div className="bg-gray-300 p-10 py-2 m-2 text-center">красный</div></Link>
+        <div className='p-4'>
+            <div className='mb-4 flex justify-around'>
+                <button
+                    className='rounded bg-blue-500 px-4 py-2 text-white'
+                    onClick={() => moveToTop(0)}
+                >
+                    МЕНЕДЖМЕНТ КАЧЕСТВА
+                </button>
+                <button
+                    className='rounded bg-blue-500 px-4 py-2 text-white'
+                    onClick={() => moveToTop(1)}
+                >
+                    МЕДСЕСТРЕ
+                </button>
+                <button
+                    className='rounded bg-blue-500 px-4 py-2 text-white'
+                    onClick={() => moveToTop(2)}
+                >
+                    ПАЦИЕНТУ
+                </button>
+                <button
+                    className='rounded bg-blue-500 px-4 py-2 text-white'
+                    onClick={() => moveToTop(3)}
+                >
+                    МИРОВОЙ ОПЫТ
+                </button>
+                <button
+                    className='rounded bg-blue-500 px-4 py-2 text-white'
+                    onClick={() => moveToTop(4)}
+                >
+                    НОВОЕ В НАУКЕ И ТЕХНИКЕ
+                </button>
             </div>
-            <div className=" space-y-10">
-                <div className="w-full h-96 bg-red-400"></div>
-                <div className="w-full h-96 bg-blue-400"></div>
-                <div className="w-full h-96 bg-green-400"></div>
+            <div className='flex flex-col'>
+                {order.map(i => (
+                    <div
+                        key={i}
+                        className={`mb-4 border border-black p-4 ${order[0] === i && classname} `}
+                    >
+                        {" "}
+                        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quod itaque autem
+                        quae alias nam, molestiae suscipit odio doloribus aliquam, magnam labore
+                        aspernatur exercitationem corporis odit nobis! Nobis consectetur quasi
+                        doloremque?
+                        {`Блок ${i + 1} `}
+                    </div>
+                ))}
             </div>
         </div>
     )

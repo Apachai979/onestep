@@ -9,6 +9,15 @@ module.exports = {
   ],
   theme: {
     extend: {
+      dropShadow: {
+        neon: ["0 0px 4px theme('colors.light_green')",
+          "0 0 1px theme('colors.night_green')"]
+      },
+      boxShadow: {
+        footer: "0 -3px 10px -1px rgb(0 0 0 / 0.1), 0 -2px 10px 1px rgb(0 0 0 / 0.1)",
+        neon: "0 0 5px theme('colors.light_green'), 0 0 15px theme('colors.primary_green')",
+        neon_exp: "0 0 8px theme('colors.light_green'), 0 0 15px theme('colors.primary_green')",
+      },
       keyframes: {
         emersion: {
           '0%': { opacity: '0', scale: '0.9' },
@@ -59,6 +68,7 @@ module.exports = {
         txtLight: '#bebeb4',
         middle_green: '#14a091',
         txtMiddle: '#7e9895',
+        light_green: '#26f7df',
 
         bodyColor: '#fcfbf8',
         txtGreen: '#133531',

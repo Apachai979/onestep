@@ -3,14 +3,14 @@ import Image from 'next/image'
 
 export default function TheFooter() {
     return (
-        <footer className="bg-stone-200 rounded-t-3xl ">
+        <footer className="bg-stone-200 rounded-t-3xl shadow-footer">
             <div className="container mx-auto px-4 h-auto py-4" >
                 <div className="flex items-center justify-between flex-col space-y-1 md:flex-row w-auto">
                     <div className="flex-auto md:w-40 lg:w-48 mb-3 md:mb-0">
                         <Link href="/" className="flex-none">
                             <span className="sr-only">Onestep Logo</span>
                             <Image
-                                src="/logoOneStep.png"
+                                src="/logo_name.svg"
                                 alt="OneStep Logo"
                                 className=""
                                 width={110} //140 //128 //117 //110 //105

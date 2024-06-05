@@ -117,7 +117,7 @@ export default function About() {
                     <div className="space-y-2">
                         <div className="flex space-x-2">
                             <div className="flex w-14 flex-col items-center space-y-3 lg:order-2 lg:mr-[45%] lg:w-[10%]">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mainGreen text-base text-white">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mainGreen text-base text-white shadow-md">
                                     1
                                 </div>
                                 <div className="min-h-[160px] w-0 flex-1 border-r border-solid border-gray-400 md:min-h-[90px]"></div>
@@ -135,7 +135,7 @@ export default function About() {
                         </div>
                         <div className="flex space-x-2 lg:space-x-0">
                             <div className="flex w-14 flex-col items-center space-y-3 lg:order-1 lg:ml-[45%] lg:w-[10%]">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mainGreen text-base text-white">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mainGreen text-base text-white shadow-md">
                                     2
                                 </div>
                                 <div className="min-h-[160px] w-0 flex-1 border-r border-solid border-gray-400 md:min-h-[90px]"></div>
@@ -151,7 +151,7 @@ export default function About() {
                         </div>
                         <div className="flex space-x-2">
                             <div className="flex w-14 flex-col items-center space-y-3 lg:order-2 lg:mr-[45%] lg:w-[10%]">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mainGreen text-base text-white">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mainGreen text-base text-white shadow-md">
                                     3
                                 </div>
                                 <div className="min-h-[160px] w-0 flex-1 border-r border-solid border-gray-400 md:min-h-[90px]"></div>
@@ -169,7 +169,7 @@ export default function About() {
                         </div>
                         <div className="flex space-x-2">
                             <div className="flex w-14 flex-col items-center space-y-3 lg:order-1 lg:ml-[45%] lg:w-[10%]">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mainGreen text-base text-white">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mainGreen text-base text-white shadow-md">
                                     4
                                 </div>
                                 <div className="min-h-[160px] w-0 flex-1 border-r border-solid border-gray-400 md:min-h-[90px]"></div>
@@ -185,7 +185,7 @@ export default function About() {
                         </div>
                         <div className="flex space-x-2">
                             <div className="flex w-14 flex-col items-center space-y-3 lg:order-2 lg:mr-[45%] lg:w-[10%]">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mainGreen text-base text-white">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mainGreen text-base text-white shadow-md ">
                                     5
                                 </div>
                                 <div className="min-h-[160px] w-0 flex-1 border-r border-solid border-gray-400 md:min-h-[90px]"></div>
@@ -203,7 +203,7 @@ export default function About() {
                         </div>
                         <div className="flex space-x-2">
                             <div className="flex w-14 flex-col items-center space-y-3 lg:order-1 lg:ml-[45%] lg:w-[10%]">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mainGreen text-base text-white">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mainGreen text-base text-white shadow-md ">
                                     6
                                 </div>
                                 {/* <div className='flex-1 w-0 border-r border-solid border-gray-400'></div> */}

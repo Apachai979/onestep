@@ -44,7 +44,7 @@ module.exports = {
                     "100%": { opacity: "1" },
                 },
                 transformer: {
-                    "0%": { transform: "translateY(35px)" },
+                    "0%": { transform: "translateY(100px)" },
                     "50%": { transform: "translateY(-8px)" },
                     "100%": { transform: "translateY(0px)" },
                 },
@@ -58,7 +58,7 @@ module.exports = {
             },
             animation: {
                 shaker: "shake 0.4s ease-in-out ",
-                transformt: "transformer 0.5s ease-in-out ",
+                transformt: "transformer 0.7s ease-in-out ",
                 spinner: "spinner 2s cubic-bezier(0.1, 0.1, 0.8, 0.2) infinite",
                 emersion: "emersion 0.3s ease-in-out",
                 apparition: "apparition 0.3s ease-in-out",

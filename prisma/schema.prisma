@@ -66,3 +66,31 @@ model ConsistOf {
 
   @@map("consistOf")
 }
+
+model Category {
+  id      Int     @id @default(autoincrement())
+  name    String  @unique
+  content String?
+  posts   Post[]
+}
+
+model Section {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  posts Post[]
+}
+
+model Post {
+  id         String    @id @default(cuid())
+  title      String
+  content    String
+  photoUrl   String?
+  categoryId Int?
+  sectionId  Int?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  category   Category? @relation(fields: [categoryId], references: [id])
+  section    Section?  @relation(fields: [sectionId], references: [id])
+
+  @@map("posts")
+}

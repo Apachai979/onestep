@@ -1,8 +1,16 @@
-import prisma from "@/lib/client";
+import prisma from "@/lib/client"
 
-export function getAllCategories() {
-    return prisma.category.findMany();
+export function getPostById(id) {
+    return prisma.post.findUnique({
+        where: {
+            id,
+        },
+    })
 }
 export function getAllPosts() {
-    return prisma.post.findMany();
+    return prisma.post.findMany()
+}
+
+export function getAllCategories() {
+    return prisma.category.findMany()
 }

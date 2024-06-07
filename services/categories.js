@@ -7,9 +7,15 @@ export function getPostById(id) {
         },
     })
 }
-export function getAllPosts() {
-    return prisma.post.findMany()
-}
+
+export function getPosts() {
+    return prisma.post.findMany({
+        include: {
+            category: true,
+            section: true,
+        },
+    })
+};
 
 export function getAllCategories() {
     return prisma.category.findMany()

@@ -1,11 +1,11 @@
 import Link from "next/link"
-import { getAllCategories, getAllPosts } from "@/services/categories"
+import { getAllCategories, getPosts } from "@/services/categories"
 import BubbleBlock from "@/components/forAcademy/BubbleBlock"
 
 export default async function Academy() {
     const categories = await getAllCategories()
-    const posts = await getAllPosts()
-    // console.log(categories[0].name)
+    const posts = await getPosts()
+    // console.log('post ', posts[0].category.name)
     return (
         <div className='container mx-auto max-w-[1200px] px-4'>
             <div className='flex py-4'>

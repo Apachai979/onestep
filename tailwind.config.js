@@ -9,6 +9,9 @@ module.exports = {
     ],
     theme: {
         extend: {
+            gridTemplateColumns: {
+                'fill-150': 'repeat(auto-fill, minmax(150px, 1fr))',
+            },
             dropShadow: {
                 neon: [
                     "0 0px 4px theme('colors.light_green')",

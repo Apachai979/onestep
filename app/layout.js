@@ -19,7 +19,7 @@ export default function RootLayout({ children, modal }) {
   return (
     <Providers>
       <html lang="en">
-        <body className={`${notoSans.className} antialiased bg-body_bg text-night_green`}>
+        <body className={`${notoSans.className} antialiased bg-body_bg text-night_green min-w-[436px]`}>
           <TheHeader />
           <main >
             {children}

@@ -328,13 +328,13 @@ export default function Manufacture() {
                             хранения.
                         </p>
                     </div>
-                    <div className='flex w-6/12'>
+                    <div className='flex lg:w-6/12'>
                         <Image
                             src='/manufacture/steril.jpg'
                             alt='Neoset'
                             width={1920}
                             height={1080}
-                            className='h-[600px] rounded-md object-cover shadow-lg'
+                            className=' lg:h-[600px] rounded-md object-cover shadow-lg'
                         ></Image>
                     </div>
                 </div>

@@ -1,21 +1,32 @@
 "use client"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import Image from "next/image"
 export default function BubbleBlock({ categories, posts }) {
     // console.log(posts)
     const [idPost, setidPost] = useState(categories.map(i => i.id))
     const [lastClickedIndex, setLastClickedIndex] = useState(null)
     const [classname, setClassname] = useState("")
+    const animationRef = useRef(null);
 
     const moveToTop = index => {
-        console.log("number: " + index)
+
+        if (animationRef.current) {
+            clearTimeout(animationRef.current); // Отменяем текущую анимацию
+        }
+
         if (index === lastClickedIndex) {
             setClassname("animate-shaker")
-            setTimeout(() => setClassname(""), 400)
+            animationRef.current = setTimeout(() => {
+                setClassname("")
+                animationRef.current = null
+            }, 400)
         } else {
             setidPost([index, ...idPost.filter(i => i !== index)])
             setClassname("animate-transformt z-10")
-            setTimeout(() => setClassname(""), 700)
+            animationRef.current = setTimeout(() => {
+                setClassname("")
+                animationRef.current = null
+            }, 700)
             setLastClickedIndex(index)
         }
     }

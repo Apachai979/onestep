@@ -4,9 +4,9 @@ import Image from "next/image"
 export default function TellaSoft() {
 
     const tellasoft = [
-        { name: 'Марлевые салфетки TellaLux', srcImg: '/catalog/blood.jpg', href: 'marlevye-salfetki-tellalux' },
-        { name: 'Марлевые тампоны SoftLux', srcImg: '/catalog/blood.jpg', href: 'marlevye-tampony-softlux' },
-        { name: 'Марлевые тампоны SoftLux с рентгенконтрастной нитью', srcImg: '/catalog/blood.jpg', href: 'marlevye-tampony-softlux-s-xray' },
+        { name: 'Марлевые салфетки TellaLux', srcImg: '/catalog/tellasoft/napkins.jpg', href: '#' },
+        { name: 'Марлевые тампоны SoftLux', srcImg: '/catalog/tellasoft/tampons_set.jpg', href: '#' },
+        { name: 'Марлевые тампоны SoftLux с рентгенконтрастной нитью', srcImg: '/catalog/tellasoft/tampons_sets_x_ray thread.jpg', href: '#' },
     ]
 
     return (

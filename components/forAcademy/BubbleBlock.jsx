@@ -57,14 +57,28 @@ export default function BubbleBlock({ categories, posts }) {
                             className={`my-2 rounded-3xl border bg-zinc-200 p-4 ${idPost[0] === idCategory && classname}`}
                         >
                             <h2 className='py-2 text-xl font-semibold'>
-                                {categories[idCategory].name}
+                                {categories[idCategory - 1].name}
                             </h2>
+                            <div className="flex gap-3 mb-3">
+                                {selectPosts.filter((item, index, self) =>
+                                    index === self.findIndex((t) => (t.section.name === item.section.name
+                                    ))
+                                ).map((post) => {
+                                    return (
+
+                                        <div className="border border-gray-700 rounded-full px-3 py-1 my-1 ">
+                                            {post.section.name}
+                                        </div>
+
+                                    )
+                                })}
+                            </div>
                             {selectPosts.length > 0 &&
                                 selectPosts.map(post => {
                                     // console.log('post: ', post)
                                     return (
                                         <>
-                                            <div className='font-semibold py-1 '>{post.section.name}</div>
+                                            {/* <div className='font-semibold py-1 '>{post.section.name}</div> */}
                                             <div key={post.id} className={`mb-4 rounded-3xl bg-stone-300 p-4`}>
                                                 <div className='flex items-center space-x-4'>
                                                     <div className='h-14 w-14 rotate-45 overflow-hidden rounded-xl'>

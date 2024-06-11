@@ -5,7 +5,7 @@ import BubbleBlock from "@/components/forAcademy/BubbleBlock"
 export default async function Academy() {
     const categories = await getAllCategories()
     const posts = await getPosts()
-    // console.log('post ', posts[0].category.name)
+    // console.log('cat ', categories)
     return (
         <div className='container mx-auto max-w-[1200px] px-4'>
             <div className='flex py-4'>

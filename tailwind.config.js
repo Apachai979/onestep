@@ -47,8 +47,9 @@ module.exports = {
                     "100%": { opacity: "1" },
                 },
                 transformer: {
-                    "0%": { transform: "translateY(100px)" },
-                    "50%": { transform: "translateY(-8px)" },
+                    "0%": { transform: "translateY(150px)" },
+                    "45%": { transform: "translateY(-10px)" },
+                    "75%": { transform: "translateY(5px)" },
                     "100%": { transform: "translateY(0px)" },
                 },
                 shake: {

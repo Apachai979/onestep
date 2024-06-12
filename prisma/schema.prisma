@@ -85,6 +85,7 @@ model Post {
   title      String
   content    String
   photoUrl   String?
+  postUrl    String?
   categoryId Int?
   sectionId  Int?
   createdAt  DateTime  @default(now())

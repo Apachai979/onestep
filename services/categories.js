@@ -17,6 +17,9 @@ export function getPosts() {
     })
 };
 
-export function getAllCategories() {
+export function getCategories() {
     return prisma.category.findMany()
+}
+export function getSections() {
+    return prisma.section.findMany()
 }

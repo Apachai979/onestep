@@ -1,6 +1,7 @@
 "use client"
 import { useState, useRef } from "react"
 import Image from "next/image"
+import Link from "next/link"
 export default function BubbleBlock({ sections, categories, posts }) {
     // console.log(posts)
     const [idCategories, setIdCategories] = useState(categories.map(i => i.id))
@@ -103,7 +104,7 @@ export default function BubbleBlock({ sections, categories, posts }) {
                                                         key={post.id}
                                                         className={`mb-4 rounded-3xl bg-stone-300 p-4`}
                                                     >
-                                                        <div className='flex items-center space-x-4'>
+                                                        <Link href={post.postUrl} className='flex items-center space-x-4'>
                                                             <div className='h-14 w-14 rotate-45 overflow-hidden rounded-xl'>
                                                                 <Image
                                                                     src='/logo_only.svg'
@@ -116,7 +117,7 @@ export default function BubbleBlock({ sections, categories, posts }) {
                                                             <div className='text-xl font-semibold'>
                                                                 {post.title}
                                                             </div>
-                                                        </div>
+                                                        </Link>
                                                     </div>
                                                 </>
                                             )

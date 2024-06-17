@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-export default async function treatmentOfWounds() {
+export default function treatmentOfWounds() {
     return (
         <>
             <div className="container mx-auto max-w-[1200px] px-10 my-8">

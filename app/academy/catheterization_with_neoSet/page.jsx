@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-export default async function catheterization() {
+export default function catheterization() {
     return (
         <>
             <div className="container mx-auto max-w-[1200px] px-10 my-8">

@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import Block from '../Block'
 
 export default function Accordion({ children, title, design = ' bg-slate-100 ' }) {
     const [open, setOpen] = useState(false)

@@ -1,9 +1,11 @@
 "use client"
 import { useState, useRef } from "react"
+import React from "react"
 import Image from "next/image"
 import Link from "next/link"
-export default function BubbleBlock({ sections, categories, posts }) {
+export default React.memo(function BubbleBlock({ sections, categories, posts }) {
     // console.log(posts)
+
     const [idCategories, setIdCategories] = useState(categories.map(i => i.id))
     const [idSecton, setIdSection] = useState(sections.map(i => i.id))
     const [activeCategory, setActiveCategory] = useState(null)
@@ -131,3 +133,4 @@ export default function BubbleBlock({ sections, categories, posts }) {
         </div>
     )
 }
+);

@@ -11,7 +11,6 @@ export default async function Academy() {
         <div className='container mx-auto max-w-[1200px] px-4'>
             <div className='flex py-4'>
                 <h1 className='text-4xl font-semibold text-txtGreen'>Академия OneStep</h1>
-                <Link href="academy/treatment_of_wounds_with_neoset">href</Link>
             </div>
             <BubbleBlock categories={categories} posts={posts} sections={sections}></BubbleBlock>
         </div>

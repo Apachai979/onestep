@@ -15,7 +15,7 @@ const Tabs = ({ children }) => {
                 {children.map(child => (
                     <button
                         key={child.props.label}
-                        className={`${activeTab === child.props.label ? 'border border-b-white border-t-4 border-t-primary_green border-l-gray-1000 border-r-gray-300 bg-white text-dark_green' : 'border border-b-gray-300 border-t-0 border-r-0 border-l-0'
+                        className={`${activeTab === child.props.label ? 'border border-b-0 border-t-4 border-t-primary_green border-r-gray-300 border-l-gray-300 rounded-t-md bg-white text-dark_green' : 'border border-b-gray-300 border-t-0 border-l-0 border-r-0'
                             } flex-1 text-night_green text-md font-semibold py-2 px-3 `}
                         onClick={e => handleClick(e, child.props.label)}
                     >
@@ -26,7 +26,7 @@ const Tabs = ({ children }) => {
             <div className="">
                 {children.map((child) => {
                     if (child.props.label === activeTab) {
-                        return <div className='px-8 bg-white border-t-0 border border-gray-300 animate-scale' key={child.props.label}>{child.props.children}</div>;
+                        return <div className='px-8 bg-white border-t-0 border border-gray-300 animate-scale rounded-b-md ' key={child.props.label}>{child.props.children}</div>;
                     }
                     return null;
                 })}

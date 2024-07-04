@@ -8,6 +8,7 @@ const inter = Inter({ subsets: ["latin"] })
 const notoSans = Noto_Sans({
     subsets: ["cyrillic"],
     weight: ["300", "400", "500", "600", "700", "800"],
+    style: ["normal", "italic"],
 })
 
 export const metadata = {

@@ -3,8 +3,9 @@ import Image from "next/image";
 import { RiArrowLeftWideFill } from "react-icons/ri";
 import { RiArrowRightWideFill } from "react-icons/ri";
 import { useState } from "react";
+import Modal from "./Modal";
 
-const slides = [
+const baseSlides = [
     {
         id: 0,
         alt: '',
@@ -27,14 +28,34 @@ const slides = [
     }
 ]
 
+const splitW = (w) => {
+    let a = Math.floor(0.56 * w);  // Округление вниз до ближайшего целого
+    let b = Math.floor(0.22 * w);  // Округление вниз до ближайшего целого
+    let c = Math.floor(0.22 * w);  // Округление вниз до ближайшего целого
 
-export default function ImageCarousel() {
+    let total = a + b + c;
+
+    // Корректируем значения, чтобы их сумма была равна w
+    if (total < w) {
+        let difference = w - total;
+        a += difference;  // Добавляем разницу к одной из переменных (например, a)
+    } else if (total > w) {
+        let difference = total - w;
+        a -= difference;  // Вычитаем разницу из одной из переменных (например, a)
+    }
+
+    return [a, b];
+}
+
+export default function ImageCarousel({ slides = baseSlides, w = '400', h = '280' }) {
 
     const [count, setCount] = useState(0)
     const [animating, setAnimating] = useState(false);
+    const [isZoomed, setIsZoomed] = useState(false);
 
-
-    console.log(slides.length)
+    const handleClick = () => {
+        setIsZoomed(!isZoomed);
+    };
 
     const previousSlide = () => {
         if (!animating) {
@@ -68,15 +89,20 @@ export default function ImageCarousel() {
 
     return (
         <>
-            <div className="w-[370px] space-y-2 select-none">
-                <div className="relative h-[260px] w-[370px] rounded-xl overflow-hidden">
-
-                    <div className="absolute left-0 w-8 h-full group hover:bg-gray-400/50 cursor-pointer" onClick={previousSlide}>
-                        <RiArrowLeftWideFill size="45" className="fill-mainGreen -left-2 absolute top-1/2 -translate-y-1/2 group-hover:scale-90" />
+            <div className={`w-[${w}px] space-y-2 select-none float-right ml-6 mb-5`}>
+                <div className={`relative h-[${h}px] w-[${w}px] rounded-xl overflow-hidden`}>
+                    <div className={`absolute left-0 h-full cursor-pointer group `} style={{ width: `${splitW(w)[1]}px` }} onClick={previousSlide}>
+                        <div className="absolute left-0 w-8 h-full group-hover:bg-gray-400/50 cursor-pointer" >
+                            <RiArrowLeftWideFill size="37" className="opacity-0 fill-mainGreen -left-1 absolute top-1/2 -translate-y-1/2 group-hover:opacity-100" />
+                        </div>
                     </div>
 
-                    <div className="absolute right-0 w-8 h-full group hover:bg-gray-400/50 cursor-pointer" onClick={nextSlide}>
-                        <RiArrowRightWideFill size="45" className="fill-mainGreen absolute -right-2 top-1/2 -translate-y-1/2 group-hover:scale-90" />
+                    <div className={`absolute cursor-zoom-in bg-red-200 h-full ${isZoomed ? 'transform scale-150 z-50' : ''}`} style={{ width: `${splitW(w)[0]}px`, right: `${splitW(w)[1]}px` }} onClick={handleClick}></div>
+
+                    <div className={`absolute right-0 h-full cursor-pointer group`} style={{ width: `${splitW(w)[1]}px` }} onClick={nextSlide}>
+                        <div className="absolute right-0 w-8 h-full group-hover:bg-gray-400/50 cursor-pointer" >
+                            <RiArrowRightWideFill size="37" className="opacity-0 fill-mainGreen absolute -right-1 top-1/2 -translate-y-1/2 group-hover:opacity-100" />
+                        </div>
                     </div>
 
                     <div className="">
@@ -85,7 +111,7 @@ export default function ImageCarousel() {
                             alt={slides[count].alt}
                             width={1920}
                             height={1080}
-                            className={`slide h-[260px] w-[370px] object-cover shadow-lg  ${animating ? 'opacity-10 transition duration-500' : ''}`}
+                            className={`slide h-[${h}px] w-[${w}px] object-cover shadow-lg  ${animating ? 'opacity-10 transition duration-500' : ''} `}
                         ></Image>
                     </div>
 
@@ -108,7 +134,7 @@ export default function ImageCarousel() {
                         )
                     })}
                 </div>
-            </div>
+            </div >
         </>
     )
 }

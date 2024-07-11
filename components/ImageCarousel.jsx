@@ -100,15 +100,15 @@ export default function ImageCarousel({ slides = baseSlides, w = '400', h = '280
     return (
         <>
             <div className={`${isZoomed ? 'opacity-100' : ' z-20 opacity-0'} select-none`}>
-                <div className="fixed z-30 left-0 right-0 top-0 bottom-0 mx-auto my-auto backdrop-blur-md bg-gray-500/60">
-                    <div className="absolute right-12 top-10 text-2xl cursor-pointer py-56 px-24" onClick={handleClick}>
+                <div className="fixed z-30 left-0 right-0 top-0 bottom-0 mx-auto my-auto backdrop-blur-md bg-gray-500/60 ">
+                    <div className="absolute right-12 top-10 text-2xl cursor-pointer p-6 lg:py-36 lg:px-24 z-20" onClick={handleClick}>
                         <RiCloseLargeLine size={35} className="absolute top-5 right-5"></RiCloseLargeLine>
                     </div>
-                    <div className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 flex items-center">
-                        <div className=" cursor-pointer p-10 " onClick={previousImage}>
+                    <div className="h-screen flex items-center justify-center">
+                        <div className=" cursor-pointer p-2 lg:p-10 " onClick={previousImage}>
                             <TbSquareRoundedArrowLeft size={60}></TbSquareRoundedArrowLeft>
                         </div>
-                        <div className="animate-apparition">
+                        <div className="max-w-[1000px] max-h-[1000px]">
                             <Image
                                 src={slides[count].src}
                                 alt={slides[count].alt}
@@ -117,7 +117,7 @@ export default function ImageCarousel({ slides = baseSlides, w = '400', h = '280
                                 className='rounded-xl shadow-xl overflow-hidden object-cover object-center'
                             ></Image>
                         </div>
-                        <div className="cursor-pointer p-10 " onClick={nextImage}>
+                        <div className="cursor-pointer p-2 lg:p-10 " onClick={nextImage}>
                             <TbSquareRoundedArrowRight size={60}></TbSquareRoundedArrowRight>
                         </div>
                     </div>

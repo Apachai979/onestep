@@ -167,7 +167,7 @@ export default function ImageCarousel({ slides = baseSlides, w = "400", h = "280
                     </div>
                 </div>
                 <hr />
-                <div className={`flex max-w-[${w}px] justify-center space-x-2`}>
+                <div className={`flex max-w-[550px] max-w-[${w}px] justify-center space-x-2`}>
                     {slides.map((el, index) => {
                         return (
                             // el.id !== slides[count].id &&

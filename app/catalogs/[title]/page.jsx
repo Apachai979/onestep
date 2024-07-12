@@ -119,17 +119,6 @@ async function getNeoset(titleName) {
             })
             return { ...item, ...countObject }
         })
-        // for (let i = 1; i < data.code.length; i++) {
-        //     newArr.forEach(comp => {
-        //         let index = data.code[i].consistOf.findIndex(c => c.component === comp.component)
-        //         if (index !== -1) {
-        //             newArr[index] = {
-        //                 ...newArr[index],
-        //                 ["count" + (i + 1)]: comp.count,
-        //             }
-        //         }
-        //     })
-        // }
 
         return [data, resultArray]
     } catch (e) {

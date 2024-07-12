@@ -1,10 +1,32 @@
-import ButtonOpenForm from "@/components/buttons/ButtonOpenForm";
-import Image from "next/image";
-import Link from "next/link";
-import prisma from "@/lib/client";
-import { Napkin, PlasterPostOperative, ScalpelEleven, NeedleHolder, PlasterFixCatheter, PlasterTrip, Clamp, Plaster, PintsetThin, Bandage, Cover, CoverAperture, PintsetMedium, ScalpelRemoveFiber, CoverAdhesive, Ball, Container, AppPieces } from "@/components/pieces/MedicalPieces";
-import ImageCarousel from "@/components/ImageCarousel";
-import getImages from "@/lib/getImages";
+import ButtonOpenForm from "@/components/buttons/ButtonOpenForm"
+import Image from "next/image"
+import Link from "next/link"
+import prisma from "@/lib/client"
+import {
+    Napkin,
+    PlasterPostOperative,
+    ScalpelEleven,
+    NeedleHolder,
+    PlasterFixCatheter,
+    PlasterTrip,
+    Clamp,
+    Plaster,
+    PintsetThin,
+    Bandage,
+    Cover,
+    CoverAperture,
+    PintsetMedium,
+    ScalpelRemoveFiber,
+    CoverAdhesive,
+    Ball,
+    Container,
+    AppPieces,
+} from "@/components/pieces/MedicalPieces"
+import ImageCarousel from "@/components/ImageCarousel"
+import getImages from "@/lib/getImages"
+import mySort from "@/lib/mySort"
+import ButtonExtra from "@/components/buttons/ButtonExtra"
+import ButtonBorder from "@/components/buttons/ButtonBorder"
 
 // const delay = (milliseconds) => {
 //     return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -13,17 +35,16 @@ import getImages from "@/lib/getImages";
 export async function generateStaticParams() {
     const neosets = await prisma.neoset.findMany()
 
-    return neosets.map((neo) => ({
+    return neosets.map(neo => ({
         slug: neo.title,
-    }));
+    }))
 }
 
 export async function generateMetadata({ params: { title } }) {
-
     const data = await prisma.neoset.findFirst({
         where: {
-            pathname: title
-        }
+            pathname: title,
+        },
     })
 
     return {
@@ -50,7 +71,7 @@ const components = {
     cover: <Cover />,
     coverAperture: <CoverAperture />,
     coverAdhesive: <CoverAdhesive />,
-};
+}
 
 async function getNeoset(titleName) {
     // const response = await fetch('http://localhost:3000/api/neosets/' + titleName)
@@ -62,34 +83,32 @@ async function getNeoset(titleName) {
     try {
         const data = await prisma.neoset.findFirst({
             where: {
-                pathname: titleName
+                pathname: titleName,
             },
             include: {
                 code: {
                     include: {
-                        consistOf: true
-                    }
-                }
-            }
-
+                        consistOf: true,
+                    },
+                },
+            },
         })
 
-        const newArr = [...data.code[0].consistOf];
+        const newArr = [...data.code[0].consistOf]
 
         for (let i = 1; i < data.code.length; i++) {
             newArr.forEach(comp => {
-                let index = newArr.findIndex(c => c.component === comp.component);
+                let index = newArr.findIndex(c => c.component === comp.component)
                 if (index !== -1) {
                     newArr[index] = {
                         ...newArr[index],
-                        ['count' + (i + 1)]: comp.count
-                    };
+                        ["count" + (i + 1)]: comp.count,
+                    }
                 }
-            });
+            })
         }
 
         return [data, newArr]
-
     } catch (e) {
         console.log(e)
     }
@@ -97,120 +116,118 @@ async function getNeoset(titleName) {
 async function getImagesNeoset(id) {
     const data = await prisma.images.findMany({
         where: {
-            neosetId: id
-        }
+            neosetId: id,
+        },
     })
 
     return data
 }
 
 // async function createImages(title, id) {
-//     const path = process.cwd() + '\\public\\catalog\\' + title;
+//     const path = process.cwd() + "\\public\\catalog\\" + title
 //     const imagesNeoset = await getImages(path)
-//     const basePathToRemove = 'C:/Users/Comp_1/Documents/Projects/onestep/public';
+//     const basePathToRemove = "C:/Users/vitalii/Documents/NextProjects/newOnestep/onestep/public"
 
-//     const newImagesNeoset = imagesNeoset.map(file => file.replace(basePathToRemove, ''));
+//     const newImagesNeoset = imagesNeoset.map(file => file.replace(basePathToRemove, ""))
 
 //     const structuredArray = newImagesNeoset.map((src, index) => ({
-//         alt: 'Комплектующие набора Neoset',
+//         alt: "Комплектующие набора Neoset",
 //         description: `neoset`,
 //         src: src,
-//         neosetId: id
-//     }));
-
+//         neosetId: id,
+//     }))
 
 //     console.log(structuredArray)
 //     const myImage = await prisma.images.createMany({
 //         data: structuredArray,
-//     });
+//     })
 // }
+const prioritySrc = ["1main.jpeg", "1main.jpg", "2set.jpg"]
 
 export default async function Neoset({ params: { title } }) {
-
     // await new Promise(resolve => setTimeout(resolve, 5000))
-
-
 
     const [neoset, arrConsistOf] = await getNeoset(title)
     // console.log(neoset.id)
     const images = await getImagesNeoset(neoset.id)
-    console.log('start')
-    console.log(arrConsistOf)
+    const sortImages = await mySort(images, prioritySrc)
+    console.log(sortImages)
+    // console.log(images)
     // const tmp = await createImages(title, neoset.id)
     // console.log(tmp)
 
     function DializImage(neosetCode, sliceSize) {
-        return Object.values(neosetCode
-            .slice(0, sliceSize)
-            .flatMap(obj => obj.consistOf)
-            .reduce((mergedComponents, item) => {
-                if (!mergedComponents[item.component]) {
-                    mergedComponents[item.component] = item;
-                }
-                return mergedComponents;
-            }, []));
+        return Object.values(
+            neosetCode
+                .slice(0, sliceSize)
+                .flatMap(obj => obj.consistOf)
+                .reduce((mergedComponents, item) => {
+                    if (!mergedComponents[item.component]) {
+                        mergedComponents[item.component] = item
+                    }
+                    return mergedComponents
+                }, [])
+        )
     }
 
     const Dializ = () => {
-
         const consistOfValuesArrayStart = neoset.code
-            .filter(item => item.title === 'Начало')
-            .flatMap(item => item.consistOf);
+            .filter(item => item.title === "Начало")
+            .flatMap(item => item.consistOf)
 
         const consistOfValuesArrayEnd = neoset.code
-            .filter(item => item.title === 'Завершение')
-            .flatMap(item => item.consistOf);
+            .filter(item => item.title === "Завершение")
+            .flatMap(item => item.consistOf)
 
-        const processConsistOfValues = (arr) => {
+        const processConsistOfValues = arr => {
             return arr.reduce((acc, current) => {
-                const existingItem = acc.find(obj => obj.component === current.component);
+                const existingItem = acc.find(obj => obj.component === current.component)
                 if (existingItem) {
-                    existingItem[`count${existingItem.countt}`] = current.count;
-                    existingItem.countt++;
+                    existingItem[`count${existingItem.countt}`] = current.count
+                    existingItem.countt++
                 } else {
-                    acc.push({ ...current, countt: 2 });
+                    acc.push({ ...current, countt: 2 })
                 }
-                return acc;
-            }, []);
-        };
+                return acc
+            }, [])
+        }
 
-        const arrStart = processConsistOfValues(consistOfValuesArrayStart);
-        const arrEnd = processConsistOfValues(consistOfValuesArrayEnd);
+        const arrStart = processConsistOfValues(consistOfValuesArrayStart)
+        const arrEnd = processConsistOfValues(consistOfValuesArrayEnd)
 
         function renderRows(data) {
-            return data.map((el) => (
-                <tr key={el.id} className="bg-gray-50 odd:bg-white even:bg-slate-100 border-b border-stone-200">
-                    <td className="py-2 px-4">{el.component}</td>
-                    <td className="py-2 px-4 text-center">{el.count}</td>
-                    <td className="py-2 px-4 text-center">{el.count2}</td>
-                    <td className="py-2 px-4 text-center">{el.count3}</td>
+            return data.map(el => (
+                <tr
+                    key={el.id}
+                    className='border-b border-stone-200 bg-gray-50 odd:bg-white even:bg-slate-100'
+                >
+                    <td className='px-4 py-2'>{el.component}</td>
+                    <td className='px-4 py-2 text-center'>{el.count}</td>
+                    <td className='px-4 py-2 text-center'>{el.count2}</td>
+                    <td className='px-4 py-2 text-center'>{el.count3}</td>
                 </tr>
-            ));
+            ))
         }
 
         function renderEmptyCells(length) {
-            return Array.from({ length }, (_, index) => (
-                <td key={index} className="p-1"></td>
-            ));
+            return Array.from({ length }, (_, index) => <td key={index} className='p-1'></td>)
         }
 
         return (
             <>
-                <tr className="border-y border-gray-600 bg-white">
-                    <td className="py-2 px-4 font-semibold indent-5">Начало процедуры</td>
-                    <td className="className=p-3"></td>
-                    <td className="className=p-3"></td>
-                    <td className="className=p-3"></td>
+                <tr className='border-y border-gray-600 bg-white'>
+                    <td className='px-4 py-2 indent-5 font-semibold'>Начало процедуры</td>
+                    <td className='className=p-3'></td>
+                    <td className='className=p-3'></td>
+                    <td className='className=p-3'></td>
                 </tr>
                 {renderRows(arrStart)}
-                <tr className="bg-bodyColor">
-                    {renderEmptyCells(neoset.code.length - 2)}
-                </tr>
-                <tr className="border-b border-gray-600 bg-white">
-                    <td className="py-2 px-4 font-semibold indent-5">Завершение процедуры</td>
-                    <td className="className=p-3"></td>
-                    <td className="className=p-3"></td>
-                    <td className="className=p-3"></td>
+                <tr className='bg-bodyColor'>{renderEmptyCells(neoset.code.length - 2)}</tr>
+                <tr className='border-b border-gray-600 bg-white'>
+                    <td className='px-4 py-2 indent-5 font-semibold'>Завершение процедуры</td>
+                    <td className='className=p-3'></td>
+                    <td className='className=p-3'></td>
+                    <td className='className=p-3'></td>
                 </tr>
                 {renderRows(arrEnd)}
             </>
@@ -219,79 +236,121 @@ export default async function Neoset({ params: { title } }) {
 
     return (
         <>
-            <div className="container mx-auto px-4 max-w-[1200px] mt-10 mb-5">
-                <div className="flex flex-col space-y-5 items-center lg:flex-row-reverse lg:space-y-0 lg:items-start">
-                    <div className="flex mx-auto pt-2">
-                        <ImageCarousel slides={images} w='500' h='400' />
+            <div className='container mx-auto mb-5 mt-10 max-w-[1200px] px-4'>
+                <div className='flex flex-col items-center space-y-5 lg:flex-row-reverse lg:items-start lg:space-y-0'>
+                    <div className='mx-auto flex pt-2'>
+                        <ImageCarousel slides={sortImages} w='550' h='400' />
                     </div>
-                    <div className="flex flex-col flex-1">
-                        <Link href="/"><h1 className="text-5xl text-txtGreen font-semibold">{neoset.name}</h1></Link>
-                        <p className="text-txtGreen text-2xl mt-5">{neoset.description}</p>
-                        <p className="text-txtGreen font-semibold text-xl mt-5">Скачать:</p>
-                        <p><Link href="/" className="inline text-mainGreen text-lg font-semibold hover:text-night_green ">Регистрационное удостоверение</Link></p>
-                        <p><Link href="/" className="inline-flex text-mainGreen text-lg font-semibold hover:text-night_green">Инструкция по применению </Link></p>
-                        <p><Link href="/" className="text-mainGreen text-lg font-semibold hover:text-night_green">Видео-инструкция</Link></p>
-                        <div className="mt-10">
-                            <ButtonOpenForm url="/">Получить консультацию</ButtonOpenForm>
+                    <div className='flex flex-1 flex-col'>
+                        <Link href='/'>
+                            <h1 className='text-5xl font-semibold text-txtGreen'>{neoset.name}</h1>
+                        </Link>
+                        <p className='mt-5 text-2xl text-txtGreen'>{neoset.description}</p>
+                        <p className='mt-5 text-xl font-semibold text-txtGreen'>Скачать:</p>
+                        <p>
+                            <Link
+                                href='/'
+                                className='inline text-lg font-semibold text-mainGreen hover:text-night_green'
+                            >
+                                Регистрационное удостоверение
+                            </Link>
+                        </p>
+                        <p>
+                            <Link
+                                href='/'
+                                className='inline-flex text-lg font-semibold text-mainGreen hover:text-night_green'
+                            >
+                                Инструкция по применению{" "}
+                            </Link>
+                        </p>
+                        <p>
+                            <Link
+                                href='/'
+                                className='text-lg font-semibold text-mainGreen hover:text-night_green'
+                            >
+                                Видео-инструкция
+                            </Link>
+                        </p>
+                        <div className='mt-10'>
+                            <ButtonOpenForm url='/'>
+                                <ButtonExtra textButton={"Получить консультацию"}></ButtonExtra>
+                            </ButtonOpenForm>
                         </div>
                     </div>
-
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 max-w-[1200px]">
-                <div className=" rounded-xl overflow-auto bg-white">
-                    <table className="w-full table-auto">
+            <div className='container mx-auto max-w-[1200px] px-4'>
+                <div className='overflow-auto rounded-xl bg-white'>
+                    <table className='w-full table-auto'>
                         <thead>
-                            <tr className="border-b border-slate-600 ">
-                                <th className="text-left py-2 px-4 ">Состав:</th>
-                                {neoset.code.map((el) => {
-                                    if (el.title !== "Завершение") return <th key={el.id} className="py-2 px-4 ">{el.transcript}</th>
+                            <tr className='border-b border-slate-600'>
+                                <th className='px-4 py-2 text-left'>Состав:</th>
+                                {neoset.code.map(el => {
+                                    if (el.title !== "Завершение")
+                                        return (
+                                            <th key={el.id} className='px-4 py-2'>
+                                                {el.transcript}
+                                            </th>
+                                        )
                                 })}
                             </tr>
                         </thead>
                         <tbody>
-                            {title === 'dlya-gemodializa' ? <Dializ />
-                                : arrConsistOf.map((el) => {
+                            {title === "dlya-gemodializa" ? (
+                                <Dializ />
+                            ) : (
+                                arrConsistOf.map(el => {
                                     return (
-                                        <tr key={el.id} className="bg-gray-50 odd:bg-white even:bg-slate-100 border-b border-stone-200">
-                                            <td className="py-2 px-4">{el.component}</td>
-                                            <td className="py-2 px-4 text-center">{el.count}</td>
-                                            <td className="py-2 px-4 text-center">{el.count2}</td>
-                                            {(typeof el.count3 !== "undefined") && <td className="py-2 px-4 text-center">{el.count3}</td>}
-                                            {(typeof el.count4 !== "undefined") && <td className="py-2 px-4 text-center">{el.count4}</td>}
+                                        <tr
+                                            key={el.id}
+                                            className='border-b border-stone-200 bg-gray-50 odd:bg-white even:bg-slate-100'
+                                        >
+                                            <td className='px-4 py-2'>{el.component}</td>
+                                            <td className='px-4 py-2 text-center'>{el.count}</td>
+                                            <td className='px-4 py-2 text-center'>{el.count2}</td>
+                                            {typeof el.count3 !== "undefined" && (
+                                                <td className='px-4 py-2 text-center'>
+                                                    {el.count3}
+                                                </td>
+                                            )}
+                                            {typeof el.count4 !== "undefined" && (
+                                                <td className='px-4 py-2 text-center'>
+                                                    {el.count4}
+                                                </td>
+                                            )}
                                         </tr>
                                     )
                                 })
+                            )}
 
-                            }
-
-                            <tr className="bg-bodyColor" >
-                                {title === 'dlya-gemodializa'
-                                    ? Array.from({ length: (neoset.code.length - 2) }, (_, index) => (
-                                        <td key={index} className="p-3"></td>
-                                    ))
+                            <tr className='bg-bodyColor'>
+                                {title === "dlya-gemodializa"
+                                    ? Array.from({ length: neoset.code.length - 2 }, (_, index) => (
+                                          <td key={index} className='p-3'></td>
+                                      ))
                                     : Array.from({ length: neoset.code.length + 1 }, (_, index) => (
-                                        <td key={index} className="p-3"></td>
-                                    ))
-                                }
+                                          <td key={index} className='p-3'></td>
+                                      ))}
                             </tr>
 
-                            <tr className="border-t border-slate-400" >
-                                <td className="py-2 px-4">Количество наборов в транспортной упаковке:</td>
-                                <td className="py-2 px-4 text-center">60</td>
-                                <td className="py-2 px-4 text-center">50</td>
+                            <tr className='border-t border-slate-400'>
+                                <td className='px-4 py-2'>
+                                    Количество наборов в транспортной упаковке:
+                                </td>
+                                <td className='px-4 py-2 text-center'>60</td>
+                                <td className='px-4 py-2 text-center'>50</td>
                                 {/* <td className="py-2 px-4 text-center">50</td> */}
                             </tr>
                         </tbody>
                     </table>
                 </div>
-            </div >
+            </div>
 
             <AppPieces>
-                {title === 'dlya-gemodializa'
-                    ? DializImage(neoset.code, 2).map((el) => components[el.class])
-                    : arrConsistOf.map((el) => components[el.class])}
+                {title === "dlya-gemodializa"
+                    ? DializImage(neoset.code, 2).map(el => components[el.class])
+                    : arrConsistOf.map(el => components[el.class])}
             </AppPieces>
         </>
     )

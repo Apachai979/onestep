@@ -49,11 +49,12 @@ const splitW = (w) => {
     return [a, b];
 }
 
-export default function ImageCarousel({ slides = baseSlides.reverse(), w = '400', h = '280' }) {
+export default function ImageCarousel({ slides = baseSlides, w = '400', h = '280' }) {
 
     const [count, setCount] = useState(0)
     const [animating, setAnimating] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
+    slides.reverse()
 
     const handleClick = () => {
         setIsZoomed(!isZoomed);

@@ -160,7 +160,7 @@ export default async function Neoset({ params: { title } }) {
     // await new Promise(resolve => setTimeout(resolve, 5000))
 
     const [neoset, arrConsistOf] = await getNeoset(title)
-    console.log(arrConsistOf)
+    // console.log(arrConsistOf)
     const images = await getImagesNeoset(neoset.id)
     const sortImages = await mySort(images, prioritySrc)
     // console.log(sortImages)

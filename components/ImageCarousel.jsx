@@ -68,13 +68,6 @@ export default function ImageCarousel({ slides = baseSlides, w = '400', h = '280
             }, 150); // Duration of the animation
         }
     }
-    const previousImage = () => {
-        setCount((count - 1 + slides.length) % slides.length);
-    }
-    const nextImage = () => {
-        setCount((count - 1 + slides.length) % slides.length);
-    }
-
 
     const nextSlide = () => {
         if (!animating) {
@@ -122,8 +115,8 @@ export default function ImageCarousel({ slides = baseSlides, w = '400', h = '280
                     </div>
                 </div>
             </div>
-            <div className={`w-[${w}px] space-y-2 select-none float-right ml-6 mb-5`}>
-                <div className={`relative h-[${h}px] w-[${w}px] rounded-xl overflow-hidden`}>
+            <div className={`max-w-[${w}px] space-y-2 select-none float-right lg:ml-6 lg:mb-5 pb-2`}>
+                <div className={`relative max-h-[${h}px] max-w-[${w}px] rounded-xl overflow-hidden`}>
                     <div className={`absolute left-0 h-full cursor-pointer group ${isZoomed ? 'bg-gray-200/95 w-full h-full z-20' : ''}`} style={{ width: `${splitW(w)[1]}px` }} onClick={previousSlide}>
                         <div className="absolute left-0 w-8 h-full group-hover:bg-gray-400/50 cursor-pointer" >
                             <RiArrowLeftWideFill size="37" className="opacity-0 fill-mainGreen -left-1 absolute top-1/2 -translate-y-1/2 group-hover:opacity-100" />
@@ -153,7 +146,7 @@ export default function ImageCarousel({ slides = baseSlides, w = '400', h = '280
                         return (
                             // el.id !== slides[count].id &&
                             <div key={el.id}>
-                                <Image onClick={() => pickSlide(el.id)}
+                                <Image onClick={() => pickSlide(index)}
                                     src={el.src}
                                     alt={el.alt}
                                     width={1920}

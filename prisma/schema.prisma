@@ -11,14 +11,24 @@ datasource db {
 }
 
 model Neoset {
-  id          Int    @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
   description String
   pathname    String
   srcImg      String
   code        Code[]
+  images      Images[]
 
   @@map("neosets")
+}
+
+model Images {
+  id          Int     @id @default(autoincrement())
+  alt         String?
+  description String?
+  src         String
+  neoset      Neoset? @relation(fields: [neosetId], references: [id])
+  neosetId    Int?
 }
 
 model Code {

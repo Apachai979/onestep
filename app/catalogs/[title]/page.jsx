@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import prisma from "@/lib/client";
 import { Napkin, PlasterPostOperative, ScalpelEleven, NeedleHolder, PlasterFixCatheter, PlasterTrip, Clamp, Plaster, PintsetThin, Bandage, Cover, CoverAperture, PintsetMedium, ScalpelRemoveFiber, CoverAdhesive, Ball, Container, AppPieces } from "@/components/pieces/MedicalPieces";
-
+import ImageCarousel from "@/components/ImageCarousel";
+import getImages from "@/lib/getImages";
 
 // const delay = (milliseconds) => {
 //     return new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -93,13 +94,50 @@ async function getNeoset(titleName) {
         console.log(e)
     }
 }
+async function getImagesNeoset(id) {
+    const data = await prisma.images.findMany({
+        where: {
+            neosetId: id
+        }
+    })
 
+    return data
+}
+
+// async function createImages(title, id) {
+//     const path = process.cwd() + '\\public\\catalog\\' + title;
+//     const imagesNeoset = await getImages(path)
+//     const basePathToRemove = 'C:/Users/Comp_1/Documents/Projects/onestep/public';
+
+//     const newImagesNeoset = imagesNeoset.map(file => file.replace(basePathToRemove, ''));
+
+//     const structuredArray = newImagesNeoset.map((src, index) => ({
+//         alt: 'Комплектующие набора Neoset',
+//         description: `neoset`,
+//         src: src,
+//         neosetId: id
+//     }));
+
+
+//     console.log(structuredArray)
+//     const myImage = await prisma.images.createMany({
+//         data: structuredArray,
+//     });
+// }
 
 export default async function Neoset({ params: { title } }) {
 
     // await new Promise(resolve => setTimeout(resolve, 5000))
 
+
+
     const [neoset, arrConsistOf] = await getNeoset(title)
+    // console.log(neoset.id)
+    const images = await getImagesNeoset(neoset.id)
+    console.log('start')
+    console.log(arrConsistOf)
+    // const tmp = await createImages(title, neoset.id)
+    // console.log(tmp)
 
     function DializImage(neosetCode, sliceSize) {
         return Object.values(neosetCode
@@ -181,16 +219,10 @@ export default async function Neoset({ params: { title } }) {
 
     return (
         <>
-            <div className="container mx-auto px-4 max-w-[1200px] my-10">
+            <div className="container mx-auto px-4 max-w-[1200px] mt-10 mb-5">
                 <div className="flex flex-col space-y-5 items-center lg:flex-row-reverse lg:space-y-0 lg:items-start">
-                    <div className="flex">
-                        <Image
-                            src="/manufacture/nabor1.png"
-                            alt="Neoset"
-                            width={1000}
-                            height={2000}
-                            className='object-cover object-center shadow-md rounded-md w-[500px] h-[450px] mt-2'>
-                        </Image >
+                    <div className="flex mx-auto pt-2">
+                        <ImageCarousel slides={images} w='500' h='400' />
                     </div>
                     <div className="flex flex-col flex-1">
                         <Link href="/"><h1 className="text-5xl text-txtGreen font-semibold">{neoset.name}</h1></Link>

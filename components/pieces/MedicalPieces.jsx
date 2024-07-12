@@ -53,7 +53,7 @@ const Ball = () => {
 
 const Bandage = () => {
     return (
-        <div className='flex w-[260px] flex-col'>
+        <div key='bandage' className='flex w-[260px] flex-col'>
             <Image
                 src='/catalog/vector/bandage.svg'
                 className='h-[158px] w-[260px] rounded-lg border py-2'

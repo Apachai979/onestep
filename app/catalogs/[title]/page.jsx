@@ -94,21 +94,44 @@ async function getNeoset(titleName) {
             },
         })
 
-        const newArr = [...data.code[0].consistOf]
+        let combinedArray = []
 
-        for (let i = 1; i < data.code.length; i++) {
-            newArr.forEach(comp => {
-                let index = newArr.findIndex(c => c.component === comp.component)
-                if (index !== -1) {
-                    newArr[index] = {
-                        ...newArr[index],
-                        ["count" + (i + 1)]: comp.count,
-                    }
-                }
+        // Loop through each data.code[i].consistOf array and add its elements to the combined array
+        data.code.forEach(codeItem => {
+            combinedArray = combinedArray.concat(codeItem.consistOf)
+        })
+        let groupedByComponent = combinedArray.reduce((acc, item) => {
+            let key = item.component
+            if (!acc[key]) {
+                acc[key] = { ...item, counts: [] }
+                delete acc[key].count
+            }
+            acc[key].counts.push(item.count)
+            return acc
+        }, {})
+
+        // Convert back to desired format
+        let resultArray = Object.values(groupedByComponent).map(item => {
+            let counts = item.counts
+            let countObject = {}
+            counts.forEach((count, idx) => {
+                countObject[`count${idx + 1}`] = count
             })
-        }
+            return { ...item, ...countObject }
+        })
+        // for (let i = 1; i < data.code.length; i++) {
+        //     newArr.forEach(comp => {
+        //         let index = data.code[i].consistOf.findIndex(c => c.component === comp.component)
+        //         if (index !== -1) {
+        //             newArr[index] = {
+        //                 ...newArr[index],
+        //                 ["count" + (i + 1)]: comp.count,
+        //             }
+        //         }
+        //     })
+        // }
 
-        return [data, newArr]
+        return [data, resultArray]
     } catch (e) {
         console.log(e)
     }
@@ -148,10 +171,10 @@ export default async function Neoset({ params: { title } }) {
     // await new Promise(resolve => setTimeout(resolve, 5000))
 
     const [neoset, arrConsistOf] = await getNeoset(title)
-    // console.log(neoset.id)
+    console.log(arrConsistOf)
     const images = await getImagesNeoset(neoset.id)
     const sortImages = await mySort(images, prioritySrc)
-    console.log(sortImages)
+    // console.log(sortImages)
     // console.log(images)
     // const tmp = await createImages(title, neoset.id)
     // console.log(tmp)
@@ -307,7 +330,7 @@ export default async function Neoset({ params: { title } }) {
                                             className='border-b border-stone-200 bg-gray-50 odd:bg-white even:bg-slate-100'
                                         >
                                             <td className='px-4 py-2'>{el.component}</td>
-                                            <td className='px-4 py-2 text-center'>{el.count}</td>
+                                            <td className='px-4 py-2 text-center'>{el.count1}</td>
                                             <td className='px-4 py-2 text-center'>{el.count2}</td>
                                             {typeof el.count3 !== "undefined" && (
                                                 <td className='px-4 py-2 text-center'>

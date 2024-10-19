@@ -1,0 +1,1493 @@
+[
+	{
+		"title": "Набор NeoSet для снятия швов",
+		"name": "Nabor NeoSet dlya snyatiya shvov",
+		"runame": "Набор NeoSet для снятия швов",
+		"href": "dlya-snyatiya-shvov",
+		"description": "Готовый к использованию стерильный набор инструментов и перевязочных материалов, предназначенный для снятия швов.",
+		"photo_main": "/catalog/sets/removal_of_stitches.jpg",
+		"photo_lib": [
+			{
+				"id": "0",
+				"alt": "",
+				"src": "/catalog/dlya-snyatiya-shvov/1main.jpeg"
+			},
+			{
+				"id": "1",
+				"alt": "",
+				"src": "/catalog/dlya-snyatiya-shvov/08_resized-min.jpg"
+			},
+			{
+				"id": "2",
+				"alt": "",
+				"src": "/catalog/dlya-snyatiya-shvov/20-1_resized.jpg"
+			},
+			{
+				"id": "3",
+				"alt": "",
+				"src": "/catalog/dlya-snyatiya-shvov/22_resized.jpg"
+			},
+			{
+				"id": "4",
+				"alt": "",
+				"src": "/catalog/dlya-snyatiya-shvov/27_resized.jpg"
+			},
+			{
+				"id": "5",
+				"alt": "",
+				"src": "/catalog/dlya-snyatiya-shvov/2set.jpg"
+			},
+			{
+				"id": "6",
+				"alt": "",
+				"src": "/catalog/dlya-snyatiya-shvov/51_resized.jpg"
+			}
+		],
+		"consists_of": [
+			{
+				"image": "/catalog/vector/gauzepad.svg",
+				"name": "Марлевая салфетка",
+				"tagname": "Marlevaya salfetka",
+				"description": "Марлевая салфетка имеет подвернутые кромки и изготавливается из высококачественной марли (100% хлопок) плотностью 17 нитей на квадратный сантиметр, имеющей европейский сертификат качества EC Certificate."
+			},
+			{
+				"image": "/catalog/vector/scalpelRemoveFiber.svg",
+				"name": "Скальпель для снятия швов",
+				"tagname": "Skalpel dlya snyatiya shvov",
+				"description": "Скальпель для снятия швов с пластиковой ручкой и защитным колпачком. Лезвие выполнено из нержавеющей стали и обладает удобной серповидной формой для подцепления и разрезания шовного материала. Имеет европейский сертификат качества EC Certificate."
+			},
+			{
+				"image": "/catalog/vector/pintset.svg",
+				"name": "Пластиковый пинцет",
+				"tagname": "Plastikovyy pintset",
+				"description": "Пластиковый пинцет имеет тонкие кончики, специально приспособленные для точного и надежного захвата шовного материала. Выполнен из полипропилена и усилен стекловолокном."
+			},
+			{
+				"image": "/catalog/vector/gauzeball.svg",
+				"name": "Тампон марлевый",
+				"tagname": "Tampon marlevyy",
+				"description": "Тампон марлевый изготавливается из высококачественной марли (100% хлопок) плотностью 20 нитей на квадратный сантиметр, имеющей европейский сертификат ЕС Certificate."
+			}
+		],
+		"in_the_beginning": {
+			"compositions": [
+				{
+					"tagname": "Артикул NS-001-01",
+					"components": [
+						{
+							"components_name": "Skalpel dlya snyatiya shvov",
+							"components_name_ru": "Скальпель для снятия швов",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy s tonkimi kontsami",
+							"components_name_ru": "Пинцет пластиковый с тонкими концами",
+							"amount": "1"
+						},
+						{
+							"components_name": "Salfetka marlevaya 7,5kh7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "3"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "-"
+						}
+					]
+				},
+				{
+					"tagname": "Артикул NS-001-02",
+					"components": [
+						{
+							"components_name": "Skalpel dlya snyatiya shvov",
+							"components_name_ru": "Скальпель для снятия швов",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy s tonkimi kontsami",
+							"components_name_ru": "Пинцет пластиковый с тонкими концами",
+							"amount": "1"
+						},
+						{
+							"components_name": "Salfetka marlevaya 7,5kh7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "-"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "3"
+						}
+					]
+				}
+			]
+		}
+	},
+	{
+		"title": "Набор NeoSet для обработки ран",
+		"name": "Nabor NeoSet dlya obrabotki ran",
+		"runame": "Набор NeoSet для обработки ран",
+		"href": "dlya-obrabotki-ran",
+		"description": "Готовый к использованию стерильный набор инструментов и перевязочных материалов, предназначенный для дезинфекции и обработки ран.",
+		"photo_main": "/catalog/sets/handler_hurt.jpg",
+		"photo_lib": [
+			{
+				"id": "0",
+				"alt": "",
+				"src": "/catalog/dlya-obrabotki-ran/1main.jpeg"
+			},
+			{
+				"id": "1",
+				"alt": "",
+				"src": "/catalog/dlya-obrabotki-ran/08_resized.jpg"
+			},
+			{
+				"id": "2",
+				"alt": "",
+				"src": "/catalog/dlya-obrabotki-ran/06_resized.jpg"
+			},
+			{
+				"id": "3",
+				"alt": "",
+				"src": "/catalog/dlya-obrabotki-ran/29_resized.jpg"
+			},
+			{
+				"id": "4",
+				"alt": "",
+				"src": "/catalog/dlya-obrabotki-ran/2set.jpg"
+			}
+		],
+		"consists_of": [
+			{
+				"image": "/catalog/vector/gauzepad.svg",
+				"name": "Марлевая салфетка",
+				"tagname": "Marlevaya salfetka",
+				"description": "Марлевая салфетка имеет подвернутые кромки и изготавливается из высококачественной марли (100% хлопок) плотностью 17 нитей на квадратный сантиметр, имеющей европейский сертификат качества EC Certificate."
+			},
+			{
+				"image": "/catalog/vector/gauzeball.svg",
+				"name": "Тампон марлевый",
+				"tagname": "Tampon marlevyy",
+				"description": "Тампон марлевый изготавливается из высококачественной марли (100% хлопок) плотностью 20 нитей на квадратный сантиметр, имеющей европейский сертификат ЕС Certificate."
+			},
+			{
+				"image": "/catalog/vector/tweezers.svg",
+				"name": "Пинцет пластиковый перевязочный",
+				"tagname": "Plastikovyy pintset",
+				"description": "Пластиковый пинцет имеет рифленые кончики, специально приспособленные для удобного и надежного захвата перевязочных материалов."
+			}
+		],
+		"in_the_beginning": {
+			"compositions": [
+				{
+					"tagname": "Артикул NS-002-01",
+					"components": [
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "1"
+						},
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "5"
+						}
+					]
+				},
+				{
+					"tagname": "Артикул NS-002-02",
+					"components": [
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "1"
+						},
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "-"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "5"
+						}
+					]
+				}
+			]
+		}
+	},
+	{
+		"title": "Набор NeoSet для забора донорской крови",
+		"name": "Nabor NeoSet dlya zabora donorskoy krovi",
+		"runame": "Набор NeoSet для забора донорской крови",
+		"href": "dlya-zabora-donorskoj-krovi",
+		"description": "Готовый к использованию стерильный набор инструментов и перевязочных материалов, предназначенный для дезинфекции области руки и наложения повязки при процедуре забора донорской крови.",
+		"photo_main": "/catalog/sets/donor_blood_set.jpg",
+		"photo_lib": [
+			{
+				"id": "0",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-donorskoj-krovi/1main.jpg"
+			},
+			{
+				"id": "1",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-donorskoj-krovi/08_resized.jpg"
+			},
+			{
+				"id": "2",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-donorskoj-krovi/10_resized.jpg"
+			},
+			{
+				"id": "3",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-donorskoj-krovi/06_resized.jpg"
+			},
+			{
+				"id": "4",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-donorskoj-krovi/2set.jpg"
+			},
+			{
+				"id": "5",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-donorskoj-krovi/30_resized.jpg"
+			},
+			{
+				"id": "6",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-donorskoj-krovi/40_resized.jpg"
+			},
+			{
+				"id": "7",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-donorskoj-krovi/49_resized.jpg"
+			}
+		],
+		"consists_of": [
+			{
+				"image": "/catalog/vector/gauzepad.svg",
+				"name": "Марлевая салфетка",
+				"tagname": "Marlevaya salfetka",
+				"description": "Марлевая салфетка имеет подвернутые кромки и изготавливается из высококачественной марли (100% хлопок) плотностью 17 нитей на квадратный сантиметр, имеющей европейский сертификат качества EC Certificate."
+			},
+			{
+				"image": "/catalog/vector/gauzeball.svg",
+				"name": "Тампон марлевый",
+				"tagname": "Tampon marlevyy",
+				"description": "Тампон марлевый изготавливается из высококачественной марли (100% хлопок) плотностью 20 нитей на квадратный сантиметр, имеющей европейский сертификат ЕС Certificate."
+			},
+			{
+				"image": "/catalog/vector/coating.svg",
+				"name": "Непромокаемое защитное покрытие",
+				"tagname": "Nepromokayemoye zashchitnoye pokrytiye",
+				"description": "Непромокаемое защитное покрытие выполнено из двух слоев: целлюлоза и полиэтилен. Идеально подходит в качестве подлоктевого покрытия стола, защищающего от протекания различных жидкостей."
+			},
+			{
+				"image": "/catalog/vector/adhesivestrip.svg",
+				"name": "Пластырная полоска",
+				"tagname": "Plastyrnaya poloska",
+				"description": "Пластырная полоска выполнена из нетканного материала с применением гипоаллергенного клея."
+			},
+			{
+				"image": "/catalog/vector/tweezers.svg",
+				"name": "Пинцет пластиковый перевязочный",
+				"tagname": "Plastikovyy pintset",
+				"description": "Пластиковый пинцет имеет рифленые кончики, специально приспособленные для удобного и надежного захвата перевязочных материалов."
+			},
+			{
+				"image": "/catalog/vector/bandage.svg",
+				"name": "Высокоэластичный фиксирующий бинт",
+				"tagname": "Vysokoelastichnyy fiksiruyushchiy bint",
+				"description": "Высокоэластичный фиксирующий бинт. Изготовлен из гипоаллергенного полиэстера. Имеет европейский сертификат качества ЕС Certificate."
+			},
+			{
+				"image": "/catalog/vector/plaster.svg",
+				"name": "Пластырная повязка с абсорбционной подушкой",
+				"tagname": "Plastyrnaya povyazka s absorbtsionnoy podushkoy",
+				"description": "Пластырная повязка с абсорбционной подушкой из целлюлозы обладает кровеостанавливающими свойствами и применяется для закрытия пункционного отверстия после проведения процедуры."
+			}
+		],
+		"in_the_beginning": {
+			"compositions": [
+				{
+					"tagname": "Артикул NS-003-01",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "5"
+						},
+						{
+							"components_name": "Pokrytiye dvukhsloynoye zashchitnoye 30kh45 sm",
+							"components_name_ru": "Покрытие двухслойное защитное 30х45 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya poloska 150kh25 mm",
+							"components_name_ru": "Пластырная полоска 150х25 мм",
+							"amount": "4"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka absorbtsionnaya",
+							"components_name_ru": "Пластырная повязка абсорбционная",
+							"amount": "-"
+						},
+						{
+							"components_name": "Bint elastichnyy fiksiruyushchiy 1 m kh 7,5 sm",
+							"components_name_ru": "Бинт эластичный фиксирующий 1 м х 7,5 см",
+							"amount": "1"
+						}
+					]
+				},
+				{
+					"tagname": "Артикул NS-003-02",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "5"
+						},
+						{
+							"components_name": "Pokrytiye dvukhsloynoye zashchitnoye 30kh45 sm",
+							"components_name_ru": "Покрытие двухслойное защитное 30х45 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya poloska 150kh25 mm",
+							"components_name_ru": "Пластырная полоска 150х25 мм",
+							"amount": "4"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka absorbtsionnaya",
+							"components_name_ru": "Пластырная повязка абсорбционная",
+							"amount": "1"
+						},
+						{
+							"components_name": "Bint elastichnyy fiksiruyushchiy 1 m kh 7,5 sm",
+							"components_name_ru": "Бинт эластичный фиксирующий 1 м х 7,5 см",
+							"amount": "1"
+						}
+					]
+				}
+			]
+		}
+	},
+	{
+		"title": "Набор NeoSet для забора крови из вены",
+		"name": "Nabor NeoSet dlya zabora krovi iz veny",
+		"runame": "Набор NeoSet для забора крови из вены",
+		"href": "dlya-zabora-krovi-iz-veny",
+		"description": "Готовый к использованию стерильный набор перевязочных материалов, предназначенный для наложения повязки при процедуре забора крови из вены.",
+		"photo_main": "/catalog/sets/take_venous_blood.jpg",
+		"photo_lib": [
+			{
+				"id": "0",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-krovi-iz-veny/1main.jpg"
+			},
+			{
+				"id": "1",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-krovi-iz-veny/08_resized.jpg"
+			},
+			{
+				"id": "2",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-krovi-iz-veny/09_resized.jpg"
+			},
+			{
+				"id": "3",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-krovi-iz-veny/03_resized.jpg"
+			},
+			{
+				"id": "4",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-krovi-iz-veny/20-1_resized.jpg"
+			},
+			{
+				"id": "5",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-krovi-iz-veny/2set.jpg"
+			},
+			{
+				"id": "6",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-krovi-iz-veny/32_resized.jpg"
+			},
+			{
+				"id": "7",
+				"alt": "",
+				"src": "/catalog/dlya-zabora-krovi-iz-veny/40_resized.jpg"
+			}
+		],
+		"consists_of": [
+			{
+				"image": "/catalog/vector/gauzepad.svg",
+				"name": "Марлевая салфетка",
+				"tagname": "Marlevaya salfetka",
+				"description": "Марлевая салфетка имеет подвернутые кромки и изготавливается из высококачественной марли (100% хлопок) плотностью 17 нитей на квадратный сантиметр, имеющей европейский сертификат качества EC Certificate."
+			},
+			{
+				"image": "/catalog/vector/gauzeball.svg",
+				"name": "Тампон марлевый",
+				"tagname": "Tampon marlevyy",
+				"description": "Тампон марлевый изготавливается из высококачественной марли (100% хлопок) плотностью 20 нитей на квадратный сантиметр, имеющей европейский сертификат ЕС Certificate."
+			},
+			{
+				"image": "/catalog/vector/coating.svg",
+				"name": "Непромокаемое защитное покрытие",
+				"tagname": "Nepromokayemoye zashchitnoye pokrytiye",
+				"description": "Непромокаемое защитное покрытие выполнено из двух слоев: целлюлоза и полиэтилен. Идеально подходит в качестве подлоктевого покрытия стола, защищающего от протекания различных жидкостей."
+			},
+			{
+				"image": "/catalog/vector/bandage.svg",
+				"name": "Высокоэластичный фиксирующий бинт",
+				"tagname": "Vysokoelastichnyy fiksiruyushchiy bint",
+				"description": "Высокоэластичный фиксирующий бинт. Изготовлен из гипоаллергенного полиэстера. Имеет европейский сертификат качества ЕС Certificate."
+			},
+			{
+				"image": "/catalog/vector/plaster.svg",
+				"name": "Пластырная повязка с абсорбционной подушкой",
+				"tagname": "Plastyrnaya povyazka s absorbtsionnoy podushkoy",
+				"description": "Пластырная повязка с абсорбционной подушкой из целлюлозы обладает кровеостанавливающими свойствами и применяется для закрытия пункционного отверстия после проведения процедуры."
+			}
+		],
+		"in_the_beginning": {
+			"compositions": [
+				{
+					"tagname": "Артикул NS-004-01",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "3"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "-"
+						},
+						{
+							"components_name": "Pokrytiye dvukhsloynoye zashchitnoye 30kh45 sm",
+							"components_name_ru": "Покрытие двухслойное защитное 30х45 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka absorbtsionnaya",
+							"components_name_ru": "Пластырная повязка абсорбционная",
+							"amount": "-"
+						},
+						{
+							"components_name": "Bint elastichnyy fiksiruyushchiy 1 m kh 7,5 sm",
+							"components_name_ru": "Бинт эластичный фиксирующий 1 м х 7,5 см",
+							"amount": "1"
+						}
+					]
+				},
+				{
+					"tagname": "Артикул NS-004-02",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "-"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "3"
+						},
+						{
+							"components_name": "Pokrytiye dvukhsloynoye zashchitnoye 30kh45 sm",
+							"components_name_ru": "Покрытие двухслойное защитное 30х45 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka absorbtsionnaya",
+							"components_name_ru": "Пластырная повязка абсорбционная",
+							"amount": "-"
+						},
+						{
+							"components_name": "Bint elastichnyy fiksiruyushchiy 1 m kh 7,5 sm",
+							"components_name_ru": "Бинт эластичный фиксирующий 1 м х 7,5 см",
+							"amount": "1"
+						}
+					]
+				},
+				{
+					"tagname": "Артикул NS-004-03",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "3"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "3"
+						},
+						{
+							"components_name": "Pokrytiye dvukhsloynoye zashchitnoye 30kh45 sm",
+							"components_name_ru": "Покрытие двухслойное защитное 30х45 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka absorbtsionnaya",
+							"components_name_ru": "Пластырная повязка абсорбционная",
+							"amount": "1"
+						},
+						{
+							"components_name": "Bint elastichnyy fiksiruyushchiy 1 m kh 7,5 sm",
+							"components_name_ru": "Бинт эластичный фиксирующий 1 м х 7,5 см",
+							"amount": "1"
+						}
+					]
+				}
+			]
+		}
+	},
+	{
+		"title": "Набор NeoSet для катетеризации мочевого пузыря",
+		"name": "Nabor NeoSet dlya kateterizatsii mochevogo puzyrya",
+		"runame": "Набор NeoSet для катетеризации мочевого пузыря",
+		"href": "dlya-kateterizacii-mochevogo-puzyrya",
+		"description": "Готовый к использованию стерильный набор инструментов и перевязочных материалов, предназначенный для дезинфекции процедурной области и безопасной постановки катетера мочевого пузыря.",
+		"photo_main": "/catalog/sets/bladder_catheterization.jpg",
+		"photo_lib": [
+			{
+				"id": "0",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-mochevogo-puzyrya/1main.jpeg"
+			},
+			{
+				"id": "1",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-mochevogo-puzyrya/09_resized.jpg"
+			},
+			{
+				"id": "2",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-mochevogo-puzyrya/06_resized.jpg"
+			},
+			{
+				"id": "3",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-mochevogo-puzyrya/2set.jpg"
+			},
+			{
+				"id": "4",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-mochevogo-puzyrya/344resized.jpg"
+			},
+			{
+				"id": "5",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-mochevogo-puzyrya/34_resized.jpg"
+			},
+			{
+				"id": "6",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-mochevogo-puzyrya/52_resized.jpg"
+			},
+			{
+				"id": "7",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-mochevogo-puzyrya/53_resized.jpg"
+			}
+		],
+		"consists_of": [
+			{
+				"image": "/catalog/vector/gauzepad.svg",
+				"name": "Марлевая салфетка",
+				"tagname": "Marlevaya salfetka",
+				"description": "Марлевая салфетка имеет подвернутые кромки и изготавливается из высококачественной марли (100% хлопок) плотностью 17 нитей на квадратный сантиметр, имеющей европейский сертификат качества EC Certificate."
+			},
+			{
+				"image": "/catalog/vector/gauzeball.svg",
+				"name": "Тампон марлевый",
+				"tagname": "Tampon marlevyy",
+				"description": "Тампон марлевый изготавливается из высококачественной марли (100% хлопок) плотностью 20 нитей на квадратный сантиметр, имеющей европейский сертификат ЕС Certificate."
+			},
+			{
+				"image": "/catalog/vector/withaperturemain.svg",
+				"name": "Непромокаемое покрытие с апертурой",
+				"tagname": "Nepromokayemoye pokrytiye s aperturoy",
+				"description": "Непромокаемое покрытие с апертурой выполнено из двух слоев: целлюлоза и полиэтилен. Имеет круглый вырез в центральной части. Идеально подходит для защиты пациента от протекания различных жидкостей."
+			},
+			{
+				"image": "/catalog/vector/tweezers.svg",
+				"name": "Пинцет пластиковый перевязочный",
+				"tagname": "Pintset plastikovyy perevyazochnyy",
+				"description": "Пластиковый пинцет имеет рифленые кончики, специально приспособленные для удобного и надежного захвата перевязочных материалов."
+			},
+			{
+				"image": "/catalog/vector/clip.svg",
+				"name": "Пластиковый зажим",
+				"tagname": "Plastikovyy zazhim",
+				"description": "Пластиковый зажим имеет рифленые бранши и зубчатый замок для надежной фиксации и зажима различных предметов. Выполнен из полипропилена и усилен стекловолокном."
+			}
+		],
+		"in_the_beginning": {
+			"compositions": [
+				{
+					"tagname": "Артикул NS-005-01",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "3"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "3"
+						},
+						{
+							"components_name": "Pokrytiye dvukhsloynoye s aperturoy 60kh60 sm",
+							"components_name_ru": "Покрытие двухслойное с апертурой 60х60 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "2"
+						},
+						{
+							"components_name": "Zazhim plastikovyy",
+							"components_name_ru": "Зажим пластиковый",
+							"amount": "-"
+						}
+					]
+				},
+				{
+					"tagname": "Артикул NS-005-02",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "3"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "3"
+						},
+						{
+							"components_name": "Pokrytiye dvukhsloynoye s aperturoy 60kh60 sm",
+							"components_name_ru": "Покрытие двухслойное с апертурой 60х60 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "1"
+						},
+						{
+							"components_name": "Zazhim plastikovyy",
+							"components_name_ru": "Зажим пластиковый",
+							"amount": "1"
+						}
+					]
+				}
+			]
+		}
+	},
+	{
+		"title": "Набор NeoSet для катетеризации центральных вен",
+		"name": "Nabor NeoSet dlya kateterizatsii tsentral'nykh ven",
+		"runame": "Набор NeoSet для катетеризации центральных вен",
+		"href": "dlya-kateterizacii-centralnyh-ven",
+		"description": "Готовый к использованию стерильный набор инструментов и перевязочных материалов, предназначенный для дезинфекции процедурной области и безопасной постановки центрального венозного катетера.",
+		"photo_main": "/catalog/sets/central_venous_catheterization.jpg",
+		"photo_lib": [
+			{
+				"id": "0",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-centralnyh-ven/1main.jpeg"
+			},
+			{
+				"id": "1",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-centralnyh-ven/17_resized.jpg"
+			},
+			{
+				"id": "2",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-centralnyh-ven/08_resized.jpg"
+			},
+			{
+				"id": "3",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-centralnyh-ven/21_resized.jpg"
+			},
+			{
+				"id": "4",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-centralnyh-ven/23_resized.jpg"
+			},
+			{
+				"id": "5",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-centralnyh-ven/2set.jpg"
+			},
+			{
+				"id": "6",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-centralnyh-ven/36_resized.jpg"
+			},
+			{
+				"id": "7",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-centralnyh-ven/38_resized.jpg"
+			},
+			{
+				"id": "8",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-centralnyh-ven/40_resized.jpg"
+			},
+			{
+				"id": "9",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-centralnyh-ven/50_resized.jpg"
+			},
+			{
+				"id": "10",
+				"alt": "",
+				"src": "/catalog/dlya-kateterizacii-centralnyh-ven/52_resized.jpg"
+			}
+		],
+		"consists_of": [
+			{
+				"image": "/catalog/vector/gauzepad.svg",
+				"name": "Марлевая салфетка",
+				"tagname": "Marlevaya salfetka",
+				"description": "Марлевая салфетка имеет подвернутые кромки и изготавливается из высококачественной марли (100% хлопок) плотностью 17 нитей на квадратный сантиметр, имеющей европейский сертификат качества EC Certificate."
+			},
+			{
+				"image": "/catalog/vector/gauzeball.svg",
+				"name": "Тампон марлевый",
+				"tagname": "Tampon marlevyy",
+				"description": "Тампон марлевый изготавливается из высококачественной марли (100% хлопок) плотностью 20 нитей на квадратный сантиметр, имеющей европейский сертификат ЕС Certificate."
+			},
+			{
+				"image": "/catalog/vector/withaperturemain.svg",
+				"name": "Непромокаемое покрытие с апертурой",
+				"tagname": "Nepromokayemoye pokrytiye s aperturoy",
+				"description": "Непромокаемое покрытие с апертурой выполнено из двух слоев: целлюлоза и полиэтилен. Имеет круглый вырез в центральной части. Идеально подходит для защиты пациента от протекания различных жидкостей."
+			},
+			{
+				"image": "/catalog/vector/coating.svg",
+				"name": "Непромокаемое покрытие",
+				"tagname": "Nepromokayemoye pokrytiye",
+				"description": "Непромокаемое покрытие стола выполнено из двух слоев: целлюлозы и полиэтилена. Идеально подходит для защиты инструментального стола, препятствует протеканию различных жидкостей."
+			},
+			{
+				"image": "/catalog/vector/tweezers.svg",
+				"name": "Пинцет пластиковый перевязочный",
+				"tagname": "Pintset plastikovyy perevyazochnyy",
+				"description": "Пластиковый пинцет имеет рифленые кончики, специально приспособленные для удобного и надежного захвата перевязочных материалов."
+			},
+			{
+				"image": "/catalog/vector/needleholder.svg",
+				"name": "Иглодержатель",
+				"tagname": "Igloderzhatel",
+				"description": "Иглодержатель выполнен из нержавеющей стали, имеет рифлёные бранши и зубчатый замок для прочного удержания иглы во время наложения швов и фиксации нити при проведении хирургических вмешательств."
+			},
+			{
+				"image": "/catalog/vector/scalpelEleven.svg",
+				"name": "Скальпель с пластиковой ручкой и защитным кожухом",
+				"tagname": "Skalpel s plastikovoy ruchkoy i zashchitnym kozhukhom",
+				"description": "Скальпель с пластиковой ручкой и защитным кожухом. Лезвие классической формы №11 для различных хирургических манипуляций выполнено из нержавеющей стали. Имеет европейский сертификат качества ЕС Certificate."
+			},
+			{
+				"image": "/catalog/vector/container.svg",
+				"name": "Пластиковая емкость",
+				"tagname": "Plastikovaya yemkost",
+				"description": "Пластиковая емкость имеет шкалу для определения объема наливаемой жидкости. Отлично подходит для дезинфицирующего раствора и смачивания марлевых тампонов."
+			},
+			{
+				"image": "/catalog/vector/plasterfixed.svg",
+				"name": "Пластырная повязка для фиксации катетеров и канюль",
+				"tagname": "Plastyrnaya povyazka dlya fiksatsii kateterov i kanyul",
+				"description": "Пластырная повязка для фиксации катетеров и канюль имеет прозрачную смотровую вставку из плёнки в центре повязки и дополнительные полоски для фиксации."
+			},
+			{
+				"image": "/catalog/vector/clip.svg",
+				"name": "Пластиковый зажим",
+				"tagname": "Plastikovyy zazhim",
+				"description": "Пластиковый зажим имеет рифленые бранши и зубчатый замок для надежной фиксации и зажима различных предметов. Выполнен из полипропилена и усилен стекловолокном."
+			}
+		],
+		"in_the_beginning": {
+			"compositions": [
+				{
+					"tagname": "Артикул NS-006-01",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "5"
+						},
+						{
+							"components_name": "Pokrytiye s aperturoy i adgezivnym sloyem 75kh75 sm",
+							"components_name_ru": "Покрытие с апертурой и адгезивным слоем 75х75 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pokrytiye stola dvukhsloynoye 75kh90 sm",
+							"components_name_ru": "Покрытие стола двухслойное 75х90 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "1"
+						},
+						{
+							"components_name": "Zazhim plastikovyy",
+							"components_name_ru": "Зажим пластиковый",
+							"amount": "1"
+						},
+						{
+							"components_name": "Igloderzhatel stalnoy",
+							"components_name_ru": "Иглодержатель стальной",
+							"amount": "-"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka dlya fiksatsii katetera",
+							"components_name_ru": "Пластырная повязка для фиксации катетера",
+							"amount": "-"
+						},
+						{
+							"components_name": "Skalpel s plastikovoy ruchkoy",
+							"components_name_ru": "Скальпель с пластиковой ручкой",
+							"amount": "-"
+						},
+						{
+							"components_name": "Yemkost plastikovaya graduirovannaya 60 ml",
+							"components_name_ru": "Емкость пластиковая градуированная 60 мл",
+							"amount": "1"
+						}
+					]
+				},
+				{
+					"tagname": "Артикул NS-006-02",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "5"
+						},
+						{
+							"components_name": "Pokrytiye s aperturoy i adgezivnym sloyem 75kh75 sm",
+							"components_name_ru": "Покрытие с апертурой и адгезивным слоем 75х75 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pokrytiye stola dvukhsloynoye 75kh90 sm",
+							"components_name_ru": "Покрытие стола двухслойное 75х90 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "1"
+						},
+						{
+							"components_name": "Zazhim plastikovyy",
+							"components_name_ru": "Зажим пластиковый",
+							"amount": "1"
+						},
+						{
+							"components_name": "Igloderzhatel stalnoy",
+							"components_name_ru": "Иглодержатель стальной",
+							"amount": "-"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka dlya fiksatsii katetera",
+							"components_name_ru": "Пластырная повязка для фиксации катетера",
+							"amount": "1"
+						},
+						{
+							"components_name": "Skalpel s plastikovoy ruchkoy",
+							"components_name_ru": "Скальпель с пластиковой ручкой",
+							"amount": "1"
+						},
+						{
+							"components_name": "Yemkost plastikovaya graduirovannaya 60 ml",
+							"components_name_ru": "Емкость пластиковая градуированная 60 мл",
+							"amount": "1"
+						}
+					]
+				},
+				{
+					"tagname": "Артикул NS-006-03",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "5"
+						},
+						{
+							"components_name": "Pokrytiye s aperturoy i adgezivnym sloyem 75kh75 sm",
+							"components_name_ru": "Покрытие с апертурой и адгезивным слоем 75х75 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pokrytiye stola dvukhsloynoye 75kh90 sm",
+							"components_name_ru": "Покрытие стола двухслойное 75х90 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "1"
+						},
+						{
+							"components_name": "Zazhim plastikovyy",
+							"components_name_ru": "Зажим пластиковый",
+							"amount": "1"
+						},
+						{
+							"components_name": "Igloderzhatel stalnoy",
+							"components_name_ru": "Иглодержатель стальной",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka dlya fiksatsii katetera",
+							"components_name_ru": "Пластырная повязка для фиксации катетера",
+							"amount": "1"
+						},
+						{
+							"components_name": "Skalpel s plastikovoy ruchkoy",
+							"components_name_ru": "Скальпель с пластиковой ручкой",
+							"amount": "1"
+						},
+						{
+							"components_name": "Yemkost plastikovaya graduirovannaya 60 ml",
+							"components_name_ru": "Емкость пластиковая градуированная 60 мл",
+							"amount": "1"
+						}
+					]
+				}
+			]
+		}
+	},
+	{
+		"title": "Набор NeoSet для локальной анестезии",
+		"name": "Nabor NeoSet dlya lokalnoy anestezii",
+		"runame": "Набор NeoSet для локальной анестезии",
+		"href": "dlya-lokalnoj-anestezii",
+		"description": "Готовый к использованию стерильный набор инструментов и перевязочных материалов, предназначенный для дезинфекции процедурной области и безопасного выполнения локальной анестезии.",
+		"photo_main": "/catalog/sets/local_anesthesia.jpg",
+		"photo_lib": [
+			{
+				"id": "0",
+				"alt": "",
+				"src": "/catalog/dlya-lokalnoj-anestezii/1main.jpg"
+			},
+			{
+				"id": "1",
+				"alt": "",
+				"src": "/catalog/dlya-lokalnoj-anestezii/08_resized.jpg"
+			},
+			{
+				"id": "2",
+				"alt": "",
+				"src": "/catalog/dlya-lokalnoj-anestezii/13_resized.jpg"
+			},
+			{
+				"id": "3",
+				"alt": "",
+				"src": "/catalog/dlya-lokalnoj-anestezii/06_resized.jpg"
+			},
+			{
+				"id": "4",
+				"alt": "",
+				"src": "/catalog/dlya-lokalnoj-anestezii/2set.jpg"
+			},
+			{
+				"id": "5",
+				"alt": "",
+				"src": "/catalog/dlya-lokalnoj-anestezii/39_resized.jpg"
+			},
+			{
+				"id": "6",
+				"alt": "",
+				"src": "/catalog/dlya-lokalnoj-anestezii/40_resized.jpg"
+			},
+			{
+				"id": "7",
+				"alt": "",
+				"src": "/catalog/dlya-lokalnoj-anestezii/50_resized.jpg"
+			}
+		],
+		"consists_of": [
+			{
+				"image": "/catalog/vector/gauzepad.svg",
+				"name": "Марлевая салфетка",
+				"tagname": "Marlevaya salfetka",
+				"description": "Марлевая салфетка имеет подвернутые кромки и изготавливается из высококачественной марли (100% хлопок) плотностью 17 нитей на квадратный сантиметр, имеющей европейский сертификат качества EC Certificate."
+			},
+			{
+				"image": "/catalog/vector/gauzeball.svg",
+				"name": "Тампон марлевый",
+				"tagname": "Tampon marlevyy",
+				"description": "Тампон марлевый изготавливается из высококачественной марли (100% хлопок) плотностью 20 нитей на квадратный сантиметр, имеющей европейский сертификат ЕС Certificate."
+			},
+			{
+				"image": "/catalog/vector/withaperture.svg",
+				"name": "Непромокаемое покрытие с апертурой и адгезивным слоем",
+				"tagname": "Nepromokayemoye pokrytiye s aperturoy i adgezivnym sloyem",
+				"description": "Непромокаемое покрытие с апертурой и адгезивным слоем выполнено из двух слоев: целлюлоза и полиэтилен. Имеет круглый вырез диаметром 80 мм в центральной части и адгезивный слой вокруг него для надежной фиксации на теле пациента."
+			},
+			{
+				"image": "/catalog/vector/coating.svg",
+				"name": "Непромокаемое покрытие",
+				"tagname": "Nepromokayemoye pokrytiye",
+				"description": "Непромокаемое защитное покрытие выполнено из двух слоев: целлюлоза и полиэтилен. Идеально подходит в качестве подлоктевого покрытия стола, защищающего от протекания различных жидкостей."
+			},
+			{
+				"image": "/catalog/vector/tweezers.svg",
+				"name": "Пинцет пластиковый перевязочный",
+				"tagname": "Pintset plastikovyy perevyazochnyy",
+				"description": "Пластиковый пинцет имеет рифленые кончики, специально приспособленные для удобного и надежного захвата перевязочных материалов."
+			},
+			{
+				"image": "/catalog/vector/container.svg",
+				"name": "Пластиковая емкость",
+				"tagname": "Plastikovaya yemkost",
+				"description": "Пластиковая емкость имеет шкалу для определения объема наливаемой жидкости. Отлично подходит для дезинфицирующего раствора и смачивания марлевых тампонов."
+			},
+			{
+				"image": "/catalog/vector/plasterwith.svg",
+				"name": "Пластырная повязка послеоперационная с мягкой подушечкой в центре",
+				"tagname": "Plastyrnaya povyazka posleoperatsionnaya s myagkoy podushechkoy v tsentre",
+				"description": "Пластырная повязка послеоперационная с мягкой подушечкой в центре используется для комфортного и безопасного закрытия послеоперационных ран."
+			}
+		],
+		"in_the_beginning": {
+			"compositions": [
+				{
+					"tagname": "Артикул NS-007-01",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "5"
+						},
+						{
+							"components_name": "Pokrytiye s aperturoy i adgezivnym sloyem 75kh75 sm",
+							"components_name_ru": "Покрытие с апертурой и адгезивным слоем 75х75 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pokrytiye stola dvukhsloynoye 75kh90 sm",
+							"components_name_ru": "Покрытие стола двухслойное 75х90 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka posleoperatsionnaya",
+							"components_name_ru": "Пластырная повязка послеоперационная",
+							"amount": "-"
+						},
+						{
+							"components_name": "Yemkost plastikovaya graduirovannaya 60 ml",
+							"components_name_ru": "Емкость пластиковая градуированная 60 мл",
+							"amount": "1"
+						}
+					]
+				},
+				{
+					"tagname": "Артикул NS-007-02",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "5"
+						},
+						{
+							"components_name": "Pokrytiye s aperturoy i adgezivnym sloyem 75kh75 sm",
+							"components_name_ru": "Покрытие с апертурой и адгезивным слоем 75х75 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pokrytiye stola dvukhsloynoye 75kh90 sm",
+							"components_name_ru": "Покрытие стола двухслойное 75х90 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka posleoperatsionnaya",
+							"components_name_ru": "Пластырная повязка послеоперационная",
+							"amount": "1"
+						},
+						{
+							"components_name": "Yemkost plastikovaya graduirovannaya 60 ml",
+							"components_name_ru": "Емкость пластиковая градуированная 60 мл",
+							"amount": "1"
+						}
+					]
+				}
+			]
+		}
+	},
+	{
+		"title": "Набор NeoSet для гемодиализа",
+		"name": "Nabor NeoSet dlya gemodializa (nachalo/zaversheniye)",
+		"runame": "Набор NeoSet для гемодиализа (начало/завершение)",
+		"href": "dlya-gemodializa",
+		"description": "Готовый к использованию стерильный набор инструментов и перевязочных материалов, предназначенный для дезинфекции процедурной области и безопасного выполнения гемодиализа.",
+		"photo_main": "/catalog/sets/hemodialysis.jpg",
+		"photo_lib": [
+			{
+				"id": "0",
+				"alt": "",
+				"src": "/catalog/dlya-gemodializa/1main.jpeg"
+			},
+			{
+				"id": "1",
+				"alt": "",
+				"src": "/catalog/dlya-gemodializa/10_resized.jpg"
+			},
+			{
+				"id": "2",
+				"alt": "",
+				"src": "/catalog/dlya-gemodializa/25-1_resized.jpg"
+			},
+			{
+				"id": "3",
+				"alt": "",
+				"src": "/catalog/dlya-gemodializa/2set.jpg"
+			},
+			{
+				"id": "4",
+				"alt": "",
+				"src": "/catalog/dlya-gemodializa/3set.jpg"
+			},
+			{
+				"id": "5",
+				"alt": "",
+				"src": "/catalog/dlya-gemodializa/47_resized.jpg"
+			},
+			{
+				"id": "6",
+				"alt": "",
+				"src": "/catalog/dlya-gemodializa/49_resized.jpg"
+			},
+			{
+				"id": "7",
+				"alt": "",
+				"src": "/catalog/dlya-gemodializa/4set.jpg"
+			},
+			{
+				"id": "8",
+				"alt": "",
+				"src": "/catalog/dlya-gemodializa/5set.jpg"
+			},
+			{
+				"id": "9",
+				"alt": "",
+				"src": "/catalog/dlya-gemodializa/7resized.jpg"
+			}
+		],
+		"consists_of": [
+			{
+				"image": "/catalog/vector/gauzepad.svg",
+				"name": "Марлевая салфетка",
+				"tagname": "Marlevaya salfetka",
+				"description": "Марлевая салфетка имеет подвернутые кромки и изготавливается из высококачественной марли (100% хлопок) плотностью 17 нитей на квадратный сантиметр, имеющей европейский сертификат качества EC Certificate."
+			},
+			{
+				"image": "/catalog/vector/coating.svg",
+				"name": "Непромокаемое защитное покрытие",
+				"tagname": "Nepromokayemoye zashchitnoye pokrytiye",
+				"description": "Непромокаемое защитное покрытие выполнено из двух слоев: целлюлоза и полиэтилен. Идеально подходит в качестве подлоктевого покрытия стола, защищающего от протекания различных жидкостей."
+			},
+			{
+				"image": "/catalog/vector/pintset.svg",
+				"name": "/catalog/vector/pintset.svg",
+				"tagname": "Plastikovyy pintset",
+				"description": "Пластиковый пинцет имеет тонкие кончики, специально приспособленные для точного и надежного захвата шовного материала. Выполнен из полипропилена и усилен стекловолокном."
+			},
+			{
+				"image": "/catalog/vector/gauzeball.svg",
+				"name": "Тампон марлевый",
+				"tagname": "Tampon marlevyy",
+				"description": "Тампон марлевый изготавливается из высококачественной марли (100% хлопок) плотностью 20 нитей на квадратный сантиметр, имеющей европейский сертификат ЕС Certificate."
+			},
+			{
+				"image": "/catalog/vector/adhesivestrip.svg",
+				"name": "Пластырная полоска",
+				"tagname": "Plastyrnaya poloska",
+				"description": "Пластырная полоска выполнена из нетканого материала с применением гипоаллергенного клея."
+			},
+			{
+				"image": "/catalog/vector/bandage.svg",
+				"name": "Высокоэластичный фиксирующий бинт",
+				"tagname": "Vysokoelastichnyy fiksiruyushchiy bint",
+				"description": "Высокоэластичный фиксирующий бинт. Изготовлен из гипоаллергенного полиэстера. Имеет европейский сертификат качества ЕС Certificate."
+			},
+			{
+				"image": "/catalog/vector/plaster.svg",
+				"name": "Пластырная повязка с абсорбционной подушкой",
+				"tagname": "Plastyrnaya povyazka s absorbtsionnoy podushkoy",
+				"description": "Пластырная повязка с абсорбционной подушкой из целлюлозы обладает кровеостанавливающими свойствами и применяется для закрытия пункционного отверстия после проведения процедуры."
+			}
+		],
+		"in_the_beginning": {
+			"compositions": [
+				{
+					"tagname": "Артикул NS-008-01",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "3"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "3"
+						},
+						{
+							"components_name": "Pokrytiye dvukhsloynoye zashchitnoye 60x60 sm",
+							"components_name_ru": "Покрытие двухслойное защитное 60х60 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya poloska 150x25 mm",
+							"components_name_ru": "Пластырная полоска 150х25 мм",
+							"amount": "4"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "-"
+						}	
+					]
+				},
+				{
+					"tagname": "Артикул NS-008-02",
+					"components": [				
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "5"
+						},
+						{
+							"components_name": "Pokrytiye dvukhsloynoye zashchitnoye 60x60 sm",
+							"components_name_ru": "Покрытие двухслойное защитное 60х60 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya poloska 150x25 mm",
+							"components_name_ru": "Пластырная полоска 150х25 мм",
+							"amount": "6"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "-"
+						}
+						
+					]
+				},
+				{
+					"tagname": "Артикул NS-008-03",
+					"components": [
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya poloska 150x25 mm",
+							"components_name_ru": "Пластырная полоска 150х25 мм",
+							"amount": "6"
+						},
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "5"
+						},
+						{
+							"components_name": "Pokrytiye dvukhsloynoye zashchitnoye 60x60 sm",
+							"components_name_ru": "Покрытие двухслойное защитное 60х60 см",
+							"amount": "1"
+						}
+					]
+				}
+			]
+		},
+		"in_the_end": {
+			"compositions": [
+				{
+					"tagname": "Артикул NS-008-01",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "3"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "3"
+						},
+						{
+							"components_name": "Bint elastichnyy fiksiruyushchiy 2m x 10 sm",
+							"components_name_ru": "Бинт эластичный фиксирующий 2м х 10 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "-"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka absorbtsionnaya",
+							"components_name_ru": "Пластырная повязка абсорбционная",
+							"amount": "-"
+						}
+					]
+				},
+				{
+					"tagname": "Артикул NS-008-02",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "4"
+						},
+						{
+							"components_name": "Bint elastichnyy fiksiruyushchiy 2m x 10 sm",
+							"components_name_ru": "Бинт эластичный фиксирующий 2м х 10 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "-"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka absorbtsionnaya",
+							"components_name_ru": "Пластырная повязка абсорбционная",
+							"amount": "-"
+						}
+					]
+				},
+				{
+					"tagname": "Артикул NS-008-03",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "4"
+						},
+						{
+							"components_name": "Bint elastichnyy fiksiruyushchiy 2m x 10 sm",
+							"components_name_ru": "Бинт эластичный фиксирующий 2м х 10 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka absorbtsionnaya",
+							"components_name_ru": "Пластырная повязка абсорбционная",
+							"amount": "2"
+						}
+					]
+				}
+			]
+		}
+	}
+]

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import prisma from "@/lib/client"
+import jsonData from "@/components/Data/data.json"
 
 
 // const delay = (milliseconds) => {
@@ -19,24 +20,26 @@ async function getNeosets() {
 }
 
 export default async function Neosets() {
-
+    const jsonString = JSON.stringify(jsonData); // Превращаем объект в строку JSON
+    const parsedData = JSON.parse(jsonString); // Превращаем строку обратно в объект
+    // console.log(parsedData)
     const products = await getNeosets()
 
     return (
         <>
             {
-                products.map((product) => (
-                    <Link key={product.id} href={`/catalogs/${product.pathname}`}>
+                parsedData.map((product) => (
+                    <Link key={product.name} href={`/catalogs/${product.href}`}>
                         <div className="flex flex-col w-[265px] group">
                             <Image
-                                src={product.srcImg}
+                                src={product.photo_main}
                                 alt="Neoset"
                                 className="object-cover object-center rounded-2xl h-[170px] shadow-md  transition duration-300 group-hover:shadow-stone-300 group-hover:-translate-y-3 group-hover:scale-105"
                                 width={1280}
                                 height={720}
                                 priority>
                             </Image>
-                            <h3 className='text-mainGreen text-xl font-semibold text-center transition duration-300 group-hover:text-txtGreen group-hover:-translate-y-1'>{product.name}</h3>
+                            <h3 className='text-mainGreen text-xl font-semibold text-center transition duration-300 group-hover:text-txtGreen group-hover:-translate-y-1'>{product.runame}</h3>
                         </div>
                     </Link>
                 ))

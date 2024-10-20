@@ -334,7 +334,7 @@ export default function Manufacture() {
                             alt='Neoset'
                             width={1920}
                             height={1080}
-                            className=' lg:h-[600px] rounded-md object-cover shadow-lg'
+                            className='rounded-md object-cover shadow-lg lg:h-[600px]'
                         ></Image>
                     </div>
                 </div>
@@ -386,6 +386,28 @@ export default function Manufacture() {
                             </ul>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div className='container mx-auto max-w-[1200px] px-4 py-10'>
+                <h1 className='text-center text-5xl font-semibold text-txtGreen'>
+                    Сертификаты OneStep
+                </h1>
+                <div className='flex items-center justify-center space-x-10 pt-8'>
+                    <Image
+                        src='/sertification/Iso_9001.jpg'
+                        alt='Сертификат соответствия ISO 9001:2015'
+                        width={1920}
+                        height={1080}
+                        className='w-[204px] rounded-md object-cover shadow-lg md:w-[320px] lg:w-[500px]'
+                    ></Image>
+                    <Image
+                        src='/sertification/Iso_13485.jpeg'
+                        alt='Сертификат соответствия ISO 13485-2017'
+                        width={1920}
+                        height={1080}
+                        className='w-[200px] rounded-md object-cover pt-1 shadow-lg md:w-[312px] lg:w-[485px]'
+                    ></Image>
                 </div>
             </div>
             <ConnectUs

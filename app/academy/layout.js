@@ -1,6 +1,6 @@
 import AcademyHeader from "@/components/AcademyHeader"
 
-const myFunc = () => {}
+const myFunc = () => { }
 export default function AcademyLayout({ children }) {
     return (
         <section>
@@ -9,7 +9,7 @@ export default function AcademyLayout({ children }) {
                     <h1 className='text-4xl font-semibold text-txtGreen'>Академия OneStep</h1>
                 </div>
 
-                <AcademyHeader />
+                {/* <AcademyHeader /> */}
             </div>
             {children}
         </section>

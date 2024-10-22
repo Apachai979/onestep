@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-export default function Cvc() {
+export default function cvc() {
     return (
         <>
             <div className='container mx-auto my-8 max-w-[1200px] px-10'>

@@ -25,10 +25,10 @@ export default function RootLayout({ children, modal }) {
         <Providers>
             <html lang='en'>
                 <body
-                    className={`${notoSans.className} min-w-[436px] bg-body_bg text-night_green antialiased`}
+                    className={`${notoSans.className} flex min-h-screen min-w-[436px] flex-col bg-body_bg text-night_green antialiased`}
                 >
                     <TheHeader />
-                    <main>
+                    <main className='flex-grow'>
                         {children}
                         {modal}
                     </main>

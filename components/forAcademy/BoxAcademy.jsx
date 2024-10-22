@@ -39,12 +39,11 @@ const BoxAcademy = ({ title, categories }) => {
                         </div>
 
                         {visibleTopics.map(topic => (
-                            <div className='mb-4 flex items-center rounded-3xl bg-stone-300 p-4'>
-                                <Link
-                                    key={topic.title}
-                                    href={topic.href}
-                                    className='flex items-center space-x-4'
-                                >
+                            <div
+                                key={topic.title}
+                                className='mb-4 flex items-center rounded-3xl bg-stone-300 p-4'
+                            >
+                                <Link href={topic.href} className='flex items-center space-x-4'>
                                     <div className='min-h-14 min-w-14 rotate-45 overflow-hidden rounded-xl'>
                                         {topic.image ? (
                                             <Image

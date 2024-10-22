@@ -1,6 +1,3 @@
-import AcademyHeader from "@/components/AcademyHeader"
-
-const myFunc = () => { }
 export default function AcademyLayout({ children }) {
     return (
         <section>
@@ -10,7 +7,6 @@ export default function AcademyLayout({ children }) {
                 </div>
                 {children}
             </div>
-
         </section>
     )
 }

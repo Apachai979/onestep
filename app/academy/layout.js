@@ -8,10 +8,9 @@ export default function AcademyLayout({ children }) {
                 <div className='flex py-4'>
                     <h1 className='text-4xl font-semibold text-txtGreen'>Академия OneStep</h1>
                 </div>
-
-                {/* <AcademyHeader /> */}
+                {children}
             </div>
-            {children}
+
         </section>
     )
 }

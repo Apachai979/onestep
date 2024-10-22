@@ -16,7 +16,7 @@ export default function Catheterization() {
                     <li>Определение алгоритма катетеризации мочевого пузыря (с использованием Набора «NeoSet»).</li>
                 </ol>
 
-                <h3 className="font-semibold mt-6 mb-4">4. Показания:</h3>
+                <h3 className="font-semibold mt-6 mb-4">Показания:</h3>
                 <ul>
                     <li>&#8212; Выведение мочи перед оперативным вмешательством.</li>
                     <li>&#8212; Выведение мочи при острой задержке мочи.</li>

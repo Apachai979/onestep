@@ -9,19 +9,19 @@
                 "topics": [
                     {
                         "title": "СОП \"Катетеризации мочевого пузыря с набором NeoSet\"",
-                        "image": "",
+                        "image": "/academy/image_topics/cateter_moch.webp",
                         "alt": "Onestep",
-                        "href": "/academy/catheterization_with_neoset"
+                        "href": "/academy/catheterization_with_neoSet"
                     },
                     {
                         "title": "СОП \"Проведение обработки ран с набором NeoSet\"",
-                        "image": "",
+                        "image": "/academy/image_topics/obrabotka_ran.webp",
                         "alt": "Onestep",
                         "href": "/academy/treatment_of_wounds_with_neoset"
                     },
                     {
                         "title": "СОП \"Взятие венозной крови с набором NeoSet\"",
-                        "image": "",
+                        "image": "/academy/image_topics/take_ven_blood.webp",
                         "alt": "Onestep",
                         "href": "/academy/venous_blood_collection_with_neoset"
                     },
@@ -51,7 +51,7 @@
                 "topics": [
                     {
                         "title": "Разработка СОПов: правила, рекомендации, нормативная база.",
-                        "image": "/academy/image_topics/standart_operating.webp",
+                        "image": "/academy/image_topics/standart_operating.jpg",
                         "alt": "Onestep",
                         "href": "/academy/dev_sops"
                     }

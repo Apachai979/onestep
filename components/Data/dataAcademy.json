@@ -77,7 +77,7 @@
                         "title": "Видео-обзор оснащения процедурного кабинета в московской клинике: разбор и рекомендации.",
                         "image": "/academy/image_topics/video_view.jpg",
                         "alt": "onestep",
-                        "href": "/academy/"
+                        "href": "/academy/video-obzor_protsedurnogo_kabineta"
                     }
                 ]
             },
@@ -89,7 +89,7 @@
                         "title": "Центры повышения квалификации для медицинских работников",
                         "image": "/academy/image_topics/centre_advanced_training.jpg",
                         "alt": "Onestep",
-                        "href": "/academy/"
+                        "href": "/academy/tsentri_povisheniya_kvalifikatsii"
                     },
                     {
                         "title": "Сколько часов нужно отучиться для допуска к аккредитации?",
@@ -171,9 +171,21 @@
                 "topics": [
                     {
                         "title": "Робот - в помощь",
-                        "image": "",
+                        "image": "/academy/image_topics/robot.jpg",
                         "alt": "Onestep",
-                        "href": "/academy/"
+                        "href": "/academy/robot_v_pomosch"
+                    },
+                    {
+                        "title": "Забор крови на анализ с помощью новых технологий",
+                        "image": "/academy/image_topics/zabor_krovi_tehn.jpg",
+                        "alt": "Onestep",
+                        "href": "/academy/zabor_krovi_novykh_tekhnologiy"
+                    },
+                    {
+                        "title": "Виртуальная реальность для повышения уровня образования",
+                        "image": "/academy/image_topics/virtual_real.jpg",
+                        "alt": "Onestep",
+                        "href": "/academy/virtualnaya_realnost"
                     }
                 ]
             },
@@ -183,9 +195,9 @@
                 "topics": [
                     {
                         "title": "Возможности телемедицины",
-                        "image": "",
+                        "image": "/academy/image_topics/telemedical.jpg",
                         "alt": "Onestep",
-                        "href": "/academy/"
+                        "href": "/academy/vozmozhnosti_telemeditsini"
                     }
                 ]
             }

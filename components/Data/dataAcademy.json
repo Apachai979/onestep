@@ -11,7 +11,7 @@
                         "title": "СОП \"Катетеризации мочевого пузыря с набором NeoSet\"",
                         "image": "/academy/image_topics/cateter_moch.webp",
                         "alt": "Onestep",
-                        "href": "/academy/catheterization_with_neoSet"
+                        "href": "/academy/catheterization_neoset"
                     },
                     {
                         "title": "СОП \"Проведение обработки ран с набором NeoSet\"",
@@ -27,19 +27,19 @@
                     },
                     {
                         "title": "СОП \"Снятие швов с набором NeoSet\"",
-                        "image": "",
+                        "image": "/academy/image_topics/snyatiye_shvov.webp",
                         "alt": "Onestep",
                         "href": "/academy/removing_sutures_with_neoset"
                     },
                     {
                         "title": "СОП \"Проведение локальной эпидуральной анестезии с набором NeoSet\"",
-                        "image": "",
+                        "image": "/academy/image_topics/provedeniye_lokal.webp",
                         "alt": "Onestep",
                         "href": "/academy/epidural_anesthesia_with_neoset"
                     },
                     {
                         "title": "СОП \"Постановка центрального венозного катетера (ЦВК)\"",
-                        "image": "",
+                        "image": "/academy/image_topics/tsvk.webp",
                         "alt": "Onestep",
                         "href": "/academy/cvc_with_neoset"
                     }

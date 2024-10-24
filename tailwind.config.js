@@ -9,8 +9,13 @@ module.exports = {
     ],
     theme: {
         extend: {
+            scale: {
+                60: "0.6",
+                65: "0.65",
+                70: "0.7",
+            },
             gridTemplateColumns: {
-                'fill-150': 'repeat(auto-fill, minmax(150px, 1fr))',
+                "fill-150": "repeat(auto-fill, minmax(150px, 1fr))",
             },
             dropShadow: {
                 neon: [

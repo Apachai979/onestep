@@ -2,37 +2,48 @@
 import parsedData from "@/components/Data/dataAcademy.json"
 import { useState } from "react"
 import BoxAcademy from "@/components/forAcademy/BoxAcademy"
+import { usePathname, useSearchParams, useRouter } from "next/navigation"
 
 export default function Academy() {
-    const [activeTab, setActiveTab] = useState("Менеджмент качества")
-    const [isAnimating, setIsAnimating] = useState(false);
-    const handleTabClick = title => {
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const section = searchParams.get("section")
+    console.log(section)
+    const [activeTab, setActiveTab] = useState(section)
+    const [isAnimating, setIsAnimating] = useState(false)
 
-        setIsAnimating(true);
+    const handleTabClick = href => {
+        router.replace(`/academy?section=${href}`)
+
+        setIsAnimating(true)
 
         setTimeout(() => {
-            setActiveTab(title)
-            setIsAnimating(false);
-        }, 200); // Длительность анимации 300ms
+            setActiveTab(href)
+            setIsAnimating(false)
+        }, 200) // Длительность анимации 300ms
     }
 
     // Перемещаем активную вкладку в начало списка
     const sortedData = [
-        ...parsedData.filter(item => item.title === activeTab),
-        ...parsedData.filter(item => item.title !== activeTab),
+        ...parsedData.filter(item => item.href === activeTab),
+        ...parsedData.filter(item => item.href !== activeTab),
     ]
 
     return (
-        <div className="px-4">
+        <div className='px-4'>
             {/* Навигационные элементы */}
-            <div className='mb-5 flex flex-wrap gap-4'>
+
+            <div className='sticky top-[136px] z-10 flex flex-wrap gap-4 bg-body_bg py-2'>
                 {parsedData.map(item => (
                     <button
                         key={item.title}
                         href='#'
-                        onClick={() => handleTabClick(item.title)}
-                        className={`text-nowrap rounded-full border border-primary_green bg-stone-50 px-3 py-2 text-lg font-semibold ${activeTab === item.title ? "text-primary_green" : "text-gray-500"
-                            }`}
+                        onClick={() => handleTabClick(item.href)}
+                        className={`text-nowrap rounded-full border border-primary_green bg-stone-50 text-lg font-semibold ${
+                            activeTab === item.href
+                                ? "border-2 px-3 py-2 text-primary_green"
+                                : "px-3.5 py-2.5 text-gray-500"
+                        }`}
                     >
                         {item.title}
                     </button>
@@ -40,7 +51,9 @@ export default function Academy() {
             </div>
 
             {/* Отображение всех блоков с контентом, активный блок первым */}
-            <div className={`mb-3 flex w-full flex-col gap-3 transition-all duration-200 transform ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+            <div
+                className={`mb-3 flex w-full transform flex-col gap-3 transition-all duration-200 ${isAnimating ? "scale-95 opacity-0" : "scale-100 opacity-100"}`}
+            >
                 {sortedData.map(item => (
                     <BoxAcademy key={item.title} title={item.title} categories={item.categories} />
                 ))}

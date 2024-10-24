@@ -7,7 +7,7 @@ import { useState, useEffect } from "react"
 export default function BackAcademy() {
     const router = useRouter()
     const pathname = usePathname()
-    const [isAcademyPage, setIsAcademyPage] = useState(false)
+    const [isAcademyPage, setIsAcademyPage] = useState(true)
 
     useEffect(() => {
         setIsAcademyPage(pathname === "/academy")

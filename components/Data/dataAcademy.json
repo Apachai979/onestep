@@ -111,27 +111,27 @@
                 "topics": [
                     {
                         "title": "Видео \"Переливание крови\"",
-                        "image": "",
+                        "image": "/academy/image_topics/pereliv_krovi.jpg",
                         "alt": "Onestep",
-                        "href": "/academy/"
+                        "href": "/academy/video_perelivanie_krovi"
                     },
                     {
                         "title": "Как проходит процедура переливания крови?",
                         "image": "",
                         "alt": "Onestep",
-                        "href": "/academy/"
+                        "href": "/academy/protsedura_perelivaniya_krovi"
                     },
                     {
                         "title": "Как проверяют кровь доноров?",
                         "image": "",
                         "alt": "Onestep",
-                        "href": "/academy/"
+                        "href": "/academy/proveryayut_krov_donorov"
                     },
                     {
                         "title": "Что нужно знать донору крови?",
                         "image": "",
                         "alt": "Onestep",
-                        "href": "/academy/"
+                        "href": "/academy/chto_nuzhno_znat_donoru_krovi"
                     }
                 ]
             },
@@ -143,19 +143,19 @@
                         "title": "Кратко - о процедуре ГЕМОДИАЛИЗА",
                         "image": "",
                         "alt": "Onestep",
-                        "href": "/academy/"
+                        "href": "/academy/about_gemodializ"
                     },
                     {
                         "title": "Готовимся к гемодиализу правильно",
                         "image": "",
                         "alt": "Onestep",
-                        "href": "/academy/"
+                        "href": "/academy/gotovimsya_k_gemodializu"
                     },
                     {
                         "title": "Основные опасения и вопросы по процедуре гемодиализа",
                         "image": "",
                         "alt": "Onestep",
-                        "href": "/academy/"
+                        "href": "/academy/osnovnyye_opaseniya_gemodializa"
                     }
                 ]
             }
@@ -186,6 +186,12 @@
                         "image": "/academy/image_topics/virtual_real.jpg",
                         "alt": "Onestep",
                         "href": "/academy/virtualnaya_realnost"
+                    },
+                    {
+                        "title": "Портативная диагностика для упрощения доступа к медицинским услугам",
+                        "image": "/academy/image_topics/portable_medical.jpg",
+                        "alt": "Onestep",
+                        "href": "/academy/portativnaya_diagnostika"
                     }
                 ]
             },
@@ -198,6 +204,30 @@
                         "image": "/academy/image_topics/telemedical.jpg",
                         "alt": "Onestep",
                         "href": "/academy/vozmozhnosti_telemeditsini"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "title": "Экономическая эффективность вашей организации",
+        "href": "ekonomicheskaya effektivnost vashey organizatsii",
+        "categories": [
+            {
+                "name": "Сэкономить время и снизить затраты на расходные материалы с OneStep",
+                "href": "Sekonomit vremya i snizit zatraty na raskhodnyye materialy s OneStep",
+                "topics": [
+                    {
+                        "title": "ПРОЦЕДУРНЫЕ И ОПЕРАЦИОННЫЕ КОМПЛЕКТЫ – cобирать самостоятельно или использовать готовые?",
+                        "image": "",
+                        "alt": "Onestep",
+                        "href": "/academy/protsedurnie_operatsionnie_komplekti"
+                    },
+                    {
+                        "title": "Бережливые технологии - как инструмент повышения эффективности медицинской организации.",
+                        "image": "",
+                        "alt": "Onestep",
+                        "href": "/academy/berezhlivyye_tekhnologii"
                     }
                 ]
             }

@@ -117,13 +117,13 @@
                     },
                     {
                         "title": "Как проходит процедура переливания крови?",
-                        "image": "",
+                        "image": "/academy/image_topics/perelivanie_krovi.webp",
                         "alt": "Onestep",
                         "href": "/academy/protsedura_perelivaniya_krovi"
                     },
                     {
                         "title": "Как проверяют кровь доноров?",
-                        "image": "",
+                        "image": "/academy/image_topics/check_blood.webp",
                         "alt": "Onestep",
                         "href": "/academy/proveryayut_krov_donorov"
                     },

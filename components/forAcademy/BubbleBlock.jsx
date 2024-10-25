@@ -2,14 +2,17 @@
 import parsedData from "@/components/Data/dataAcademy.json"
 import { useState } from "react"
 import BoxAcademy from "@/components/forAcademy/BoxAcademy"
-import { usePathname, useSearchParams, useRouter } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
+
+function Search() {
+    const searchParams = useSearchParams()
+    const section = searchParams.get("section")
+    return section
+}
 
 export default function Academy() {
-    const searchParams = useSearchParams()
     const router = useRouter()
-    const section = searchParams.get("section")
-    console.log(section)
-    const [activeTab, setActiveTab] = useState(section)
+    const [activeTab, setActiveTab] = useState(Search())
     const [isAnimating, setIsAnimating] = useState(false)
 
     const handleTabClick = href => {

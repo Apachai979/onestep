@@ -43,35 +43,34 @@ const BoxAcademy = ({ title, categories }) => {
                         </div>
 
                         {visibleTopics.map(topic => (
-                            <div
+                            <Link
                                 key={topic.title}
-                                className='mb-4 flex items-center rounded-3xl bg-stone-300 p-4'
+                                href={topic.href}
+                                className='mb-4 flex items-center space-x-4 rounded-3xl bg-stone-300 px-4 py-2.5 shadow-md transition duration-300 hover:bg-stone-400 hover:shadow-lg'
                             >
-                                <Link href={topic.href} className='flex items-center space-x-4'>
-                                    <div className='min-h-14 min-w-14 rotate-45 overflow-hidden rounded-xl'>
-                                        {topic.image ? (
-                                            <Image
-                                                src={topic.image}
-                                                alt=''
-                                                width={720}
-                                                height={480}
-                                                className='h-14 w-14 -rotate-45 object-cover object-center'
-                                            ></Image>
-                                        ) : (
-                                            <Image
-                                                src='/logo_only.svg'
-                                                alt=''
-                                                width={720}
-                                                height={480}
-                                                className='h-14 w-14 -rotate-45 object-cover object-center'
-                                            ></Image>
-                                        )}
-                                    </div>
-                                    <div className='text-md font-semibold md:text-xl'>
-                                        {topic.title}
-                                    </div>
-                                </Link>
-                            </div>
+                                <div className='min-h-14 min-w-14 rotate-45 overflow-hidden rounded-xl'>
+                                    {topic.image ? (
+                                        <Image
+                                            src={topic.image}
+                                            alt=''
+                                            width={720}
+                                            height={480}
+                                            className='h-14 w-14 -rotate-45 object-cover object-center'
+                                        />
+                                    ) : (
+                                        <Image
+                                            src='/logo_only.svg'
+                                            alt=''
+                                            width={720}
+                                            height={480}
+                                            className='h-14 w-14 -rotate-45 object-cover object-center'
+                                        />
+                                    )}
+                                </div>
+                                <div className='text-md font-semibold text-gray-800 md:text-xl'>
+                                    {topic.title}
+                                </div>
+                            </Link>
                         ))}
                     </div>
                 </div>

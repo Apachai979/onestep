@@ -40,15 +40,17 @@ export default function Academy() {
                 {parsedData.map(item => (
                     <button
                         key={item.title}
-                        href='#'
                         onClick={() => handleTabClick(item.href)}
-                        className={`text-nowrap rounded-full border border-primary_green bg-stone-50 text-lg font-semibold ${
+                        className={`relative rounded-full border-2 transition-all duration-300 ease-in-out ${
                             activeTab === item.href
-                                ? "border-2 px-3 py-2 text-primary_green"
-                                : "px-3.5 py-2.5 text-gray-500"
-                        }`}
+                                ? "shadow-glow border-primary_green bg-transparent text-primary_green"
+                                : "border-gray-300 bg-stone-50 text-gray-600 hover:bg-gray-100"
+                        } px-4 py-2 text-lg font-semibold`}
                     >
                         {item.title}
+                        {activeTab === item.href && (
+                            <span className='absolute inset-0 rounded-full opacity-20 transition-all duration-300 ease-in-out'></span>
+                        )}
                     </button>
                 ))}
             </div>

@@ -30,7 +30,11 @@ const BoxAcademy = ({ title, categories }) => {
                                 <Link
                                     key={category.name}
                                     href='#'
-                                    className={`my-1 rounded-3xl border border-gray-700 px-3 py-1 ${activeCategory === category.name && "bg-primary_green"}`}
+                                    className={`relative my-1 inline-block rounded-full border-b-2 transition-all duration-300 ease-in-out ${
+                                        activeCategory === category.name
+                                            ? "border-primary_green text-primary_green"
+                                            : "border-transparent text-gray-600 hover:border-gray-400 hover:text-gray-800"
+                                    } px-3 py-1 text-base font-semibold`}
                                     onClick={() => handleCategoryClick(category.name)}
                                 >
                                     {category.name}

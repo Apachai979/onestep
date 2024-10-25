@@ -1,23 +1,23 @@
 "use client"
 import parsedData from "@/components/Data/dataAcademy.json"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import BoxAcademy from "@/components/forAcademy/BoxAcademy"
-import { useSearchParams, useRouter } from "next/navigation"
-
-function Search() {
-    const searchParams = useSearchParams()
-    const section = searchParams.get("section")
-    return section
-}
 
 export default function Academy() {
-    const router = useRouter()
-    const [activeTab, setActiveTab] = useState(Search())
+    const [activeTab, setActiveTab] = useState()
     const [isAnimating, setIsAnimating] = useState(false)
 
-    const handleTabClick = href => {
-        router.replace(`/academy?section=${href}`)
+    useEffect(() => {
+        // Получаем значение из localStorage при загрузке страницы
+        const savedSection = localStorage.getItem("section")
+        if (savedSection) {
+            setActiveTab(savedSection)
+        }
+    }, [])
 
+    const handleTabClick = href => {
+        window.scrollTo({ top: 0, behavior: "smooth" })
+        localStorage.setItem("section", href)
         setIsAnimating(true)
 
         setTimeout(() => {

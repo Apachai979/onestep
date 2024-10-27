@@ -27,7 +27,7 @@ const BoxAcademy = ({ title, categories }) => {
                         <h2 className='py-2 text-xl font-semibold'>{title}</h2>
                         <div className='mb-3 flex flex-wrap gap-3'>
                             {categories.map(category => (
-                                <Link
+                                <button
                                     key={category.name}
                                     href='#'
                                     className={`relative my-1 inline-block rounded-full border-b-2 transition-all duration-300 ease-in-out ${
@@ -38,7 +38,7 @@ const BoxAcademy = ({ title, categories }) => {
                                     onClick={() => handleCategoryClick(category.name)}
                                 >
                                     {category.name}
-                                </Link>
+                                </button>
                             ))}
                         </div>
 

@@ -1,21 +1,21 @@
-'use client'
-import { usePathname } from 'next/navigation'
-import Block from './Block'
-import Link from 'next/link'
+"use client"
+import { usePathname } from "next/navigation"
+import Block from "./Block"
+import Link from "next/link"
 
 const arrPartners = [
-    { href: '/partners/specialist', title: 'Специалисту' },
-    { href: '/partners/doctors', title: 'Главному врачу' },
-    { href: '/partners', title: 'Партнеру' },
-    { href: '/partners/patient', title: 'Пациенту' },
+    { href: "/partners/specialist", title: "Специалисту" },
+    { href: "/partners/doctors", title: "Главному врачу" },
+    { href: "/partners", title: "Партнеру" },
+    { href: "/partners/patient", title: "Пациенту" },
 ]
 
 export default function NavPartners() {
     const pathname = usePathname()
     return (
         <Block>
-            <div className="flex justify-center my-3">
-                <ul className="grid md:grid-cols-2 gap-1 lg:grid-cols-4 w-full">
+            <div className='mb-5 flex justify-center'>
+                <ul className='grid w-full gap-1 md:grid-cols-2 lg:grid-cols-4'>
                     {arrPartners.map(elem => {
                         const isActive = pathname === elem.href
                         return (
@@ -24,11 +24,11 @@ export default function NavPartners() {
                                 href={elem.href}
                                 className={
                                     isActive
-                                        ? 'min-w-[220px] border-2 border-primary_green bg-primary_green text-white rounded-full py-2 text-center   '
-                                        : 'min-w-[220px] border-2 border-gray-200 rounded-full py-2 text-center hover:text-white hover:bg-primary_green hover:border-primary_green transition ease-in duration-200'
+                                        ? "min-w-[220px] rounded-full border-2 border-primary_green bg-primary_green py-2 text-center text-white"
+                                        : "min-w-[220px] rounded-full border-2 border-gray-200 py-2 text-center transition duration-200 ease-in hover:border-primary_green hover:bg-primary_green hover:text-white"
                                 }
                             >
-                                <li className="">{elem.title}</li>
+                                <li className=''>{elem.title}</li>
                             </Link>
                         )
                     })}

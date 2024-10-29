@@ -141,19 +141,19 @@
                 "topics": [
                     {
                         "title": "Кратко - о процедуре ГЕМОДИАЛИЗА",
-                        "image": "",
+                        "image": "/academy/image_topics/gemo_true.webp",
                         "alt": "Onestep",
                         "href": "/academy/about_gemodializ"
                     },
                     {
                         "title": "Готовимся к гемодиализу правильно",
-                        "image": "",
+                        "image": "/academy/image_topics/gemodializ_short.webp",
                         "alt": "Onestep",
                         "href": "/academy/gotovimsya_k_gemodializu"
                     },
                     {
                         "title": "Основные опасения и вопросы по процедуре гемодиализа",
-                        "image": "",
+                        "image": "/academy/image_topics/true_trainig.webp",
                         "alt": "Onestep",
                         "href": "/academy/osnovnyye_opaseniya_gemodializa"
                     }

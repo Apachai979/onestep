@@ -25,7 +25,7 @@ export default function Layout({ children, modal }) {
         <Providers>
             <html lang='en'>
                 <body
-                    className={`${notoSans.className} flex min-h-screen min-w-full flex-col bg-body_bg text-night_green antialiased overflow-visible`}
+                    className={`${notoSans.className} container min-h-screen min-w-full bg-body_bg text-night_green antialiased overflow-visible`}
                 >
                     <TheHeader />
                     <main className='grid grid-cols-1 '>

@@ -23,9 +23,9 @@ export const metadata = {
 export default function Layout({ children, modal }) {
     return (
         <Providers>
-            <html lang='en'>
+            <html lang='en' className="">
                 <body
-                    className={`${notoSans.className} container min-h-screen min-w-full bg-body_bg text-night_green antialiased overflow-visible`}
+                    className={`${notoSans.className} max-w-sm min-h-screen bg-body_bg text-night_green min-w-full antialiased overflow-visible`}
                 >
                     <TheHeader />
                     <main className='grid grid-cols-1 '>

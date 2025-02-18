@@ -71,15 +71,13 @@ export default function Carousel() {
                                 : 'absolute lg:left-8 bottom-0 lg:top-0 lg:bottom-0 flex lg:flex-col flex-row w-full px-5 lg:mx-0 lg:w-[450px] h-40 lg:h-120 z-30 transition opacity-0 duration-700'
                         }
                     >
-                        <div className="flex lg:h-1/2 grow lg:justify-normal justify-center">
-                            <h1 className="text-white select-none font-semibold text-3xl lg:text-4xl self-center lg:self-end pb-2 lg:pb-0">
+                        <div className="flex space-x-4 lg:justify-normal m-auto md:flex-col items-center">
+                            <h1 className="text-white select-none font-semibold text-xl sm:text-2xl lg:text-4xl self-center lg:self-end pb-2 lg:pb-0">
                                 {el.description}
                             </h1>
-                        </div>
-                        <div className="flex lg:h-1/2 grow justify-center lg:justify-normal">
                             <Link
                                 href={el.href}
-                                className="self-center select-none lg:self-start lg:mt-5 text-center py-3 px-6 lg:w-64 bg-white rounded-full text-stone-700 text-xl transition duration-300 border-2 border-primary_green hover:text-white hover:bg-primary_green hover:border-2 hover:border-white active:border-dark_green"
+                                className="self-center select-none lg:self-start lg:mt-5 text-center py-2.5 px-5 lg:w-64 bg-white rounded-full text-stone-700 text-md sm:text-xl transition duration-300 border-2 border-primary_green hover:text-white hover:bg-primary_green hover:border-2 hover:border-white active:border-dark_green"
                             >
                                 {el.buttonName}
                             </Link>

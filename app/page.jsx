@@ -11,6 +11,48 @@ export const metadata = {
         "Российский производитель медицинских одноразовых перевязочных материалов и процедурных стерильных наборов",
 }
 
+const features = [
+    {
+        title: "Мировые стандарты качества",
+        img: "/home/img1.jpg",
+        points: [
+            "контроль качества на всех этапах производства",
+            "имеется сертификат соответствия требованиям ГОСТ Р ИСО 9001-2015 (ISO-9001:2015)",
+            "лучшие поставщики комплектующих",
+        ],
+    },
+    {
+        title: "Удобство и функциональность",
+        img: "/home/img4.jpg",
+        points: [
+            "Наши наборы:",
+            "готовы к применению",
+            "оптимальны по составу",
+            "эргономика укладки соответствует стандарту операционных процедур",
+            "упаковка совмещена с контейнером для дезсредства",
+        ],
+    },
+    {
+        title: "Безопасность и надежность",
+        img: "/home/img3.jpg",
+        points: [
+            "100%-я стерильность",
+            "гарантия защиты от внутрибольничных инфекций",
+            "прочная несминаемая упаковка",
+        ],
+    },
+    {
+        title: "Экономия времени и средств",
+        img: "/home/img2.jpg",
+        points: [
+            "Использование наших наборов позволит:",
+            "сократить время подготовки к процедуре на 30%",
+            "уменьшить количество и трудозатраты персонала",
+            "повысить эффективность оказания помощи пациенту",
+        ],
+    },
+];
+
 export default function Home() {
     return (
         <>
@@ -20,121 +62,61 @@ export default function Home() {
 
             {/* nextblock */}
 
-            <h1 className='mx my-14 text-center text-3xl font-semibold text-night_green'>
+            {/* <h1 className='container mx-auto p-x-4 my-14 text-center text-3xl font-semibold text-night_green'>
                 OneStep —{" "}
                 <span className='text-primary_green'>
                     российский производитель медицинских <br /> одноразовых перевязочных материалов
                     и процедурных <br />
                     стерильных наборов
                 </span>
-            </h1>
+            </h1> */}
 
             {/* nextblock */}
-            <div className='container mx-auto px-4'>
-                {/* <div className='grid lg:grid-cols-2 place-items-center gap-y-8 xl:mx-28 2xl:mx-60 '> */}
-                <div className='flex justify-center'>
-                    <div className='grid gap-10 lg:grid-cols-2 lg:gap-12'>
-                        <div className='relative h-[350px] w-[460px] cursor-pointer overflow-hidden rounded-2xl bg-white drop-shadow-md'>
-                            <div className='absolute z-20 bg-white transition-opacity hover:opacity-0'>
-                                <Image
-                                    src='/home/img1.jpg'
-                                    alt='Neoset'
-                                    className='h-[250px] w-[460px] object-cover object-bottom'
-                                    width={1280}
-                                    height={720}
-                                    priority
-                                ></Image>
-                                <h2 className='my-8 text-center text-2xl font-semibold text-night_green'>
-                                    Мировые стандарты качества
-                                </h2>
+            <div className="container mx-auto px-4">
+                <div className="flex justify-center">
+                    <div className="grid gap-6 sm:gap-10 lg:grid-cols-2 lg:gap-12">
+                        {features.map((feature, index) => (
+                            <div
+                                key={feature.id} // Используйте уникальный идентификатор, если он доступен
+                                className="relative h-72 w-96 cursor-pointer overflow-hidden rounded-2xl bg-white drop-shadow-md"
+                            >
+                                <div className="absolute w-full z-20 bg-white transition-opacity duration-500 hover:opacity-0 ">
+                                    <div className="flex h-52">
+                                        <Image
+                                            src={feature.img}
+                                            alt={feature.title}
+                                            className="object-cover "
+                                            width={1280}
+                                            height={720}
+                                            priority={index < 2} // Приоритет только для первых двух изображений
+                                        />
+                                    </div>
+                                    <div className="flex h-20 justify-center items-center">
+                                        <h2 className="text-center text-2xl font-semibold text-night_green">
+                                            {feature.title}
+                                        </h2>
+                                    </div>
+                                </div>
+                                <ul className="absolute inset-0 z-10 mx-10 py-5 list-inside list-disc text-lg font-semibold leading-relaxed text-txtMiddle">
+                                    {feature.points.map((point, i) => (
+                                        <li key={point.id} className={i === 0 ? "-mt-5 list-none pb-3" : ""}>
+                                            {point}
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
-                            <ul className='absolute inset-0 z-10 m-10 list-inside list-disc text-xl font-semibold leading-relaxed text-txtMiddle'>
-                                <li>контроль качества на всех этапах производства</li>
-                                <li>
-                                    имеется сертификат соответствия требованиям ГОСТ Р ИСО 9001-2015
-                                    (ISO-9001:2015)
-                                </li>
-                                <li>лучшие поставщики комплектующих</li>
-                            </ul>
-                        </div>
-                        <div className='relative h-[350px] w-[460px] cursor-pointer overflow-hidden rounded-2xl bg-white drop-shadow-md'>
-                            <div className='absolute z-20 bg-white transition-opacity duration-500 hover:opacity-0'>
-                                <Image
-                                    src='/home/img4.jpg'
-                                    alt='Neoset'
-                                    className='h-[250px] w-[460px] object-cover object-bottom'
-                                    width={1280}
-                                    height={720}
-                                    priority
-                                ></Image>
-                                <h2 className='my-8 text-center text-2xl font-semibold text-night_green'>
-                                    Удобство и функциональность
-                                </h2>
-                            </div>
-                            <ul className='absolute inset-0 z-10 m-10 list-inside list-disc text-xl font-semibold leading-relaxed text-txtMiddle'>
-                                <li className='-mt-5 list-none pb-3'>Наши наборы:</li>
-                                <li>готовы к применению</li>
-                                <li>оптимальны по составу</li>
-                                <li>
-                                    эргономика укладки соответствует стандарту операционных процедур
-                                </li>
-                                <li>упаковка совмещена с контейнером для дезсредства</li>
-                            </ul>
-                        </div>
-                        <div className='relative h-[350px] w-[460px] cursor-pointer overflow-hidden rounded-2xl bg-white drop-shadow-md'>
-                            <div className='absolute z-20 bg-white transition-opacity duration-500 hover:opacity-0'>
-                                <Image
-                                    src='/home/img3.jpg'
-                                    alt='Neoset'
-                                    className='h-[250px] w-[460px] object-cover object-bottom'
-                                    width={1280}
-                                    height={720}
-                                    priority
-                                ></Image>
-                                <h2 className='my-8 text-center text-2xl font-semibold text-night_green'>
-                                    Безопасность и надежность
-                                </h2>
-                            </div>
-                            <ul className='absolute inset-0 z-10 m-10 list-inside list-disc text-xl font-semibold leading-relaxed text-txtMiddle'>
-                                <li>100% -я стерильность</li>
-                                <li>гарантия защиты от внутрибольничных инфекций</li>
-                                <li>прочная несминаемая упаковка</li>
-                            </ul>
-                        </div>
-                        <div className='relative h-[350px] w-[460px] cursor-pointer overflow-hidden rounded-2xl bg-white drop-shadow-md'>
-                            <div className='absolute z-20 bg-white transition-opacity duration-500 hover:opacity-0'>
-                                <Image
-                                    src='/home/img2.jpg'
-                                    alt='Neoset'
-                                    className='h-[250px] w-[460px] object-cover object-bottom'
-                                    width={1280}
-                                    height={720}
-                                    priority
-                                ></Image>
-                                <h2 className='my-8 text-center text-2xl font-semibold text-night_green'>
-                                    Экономия времени и средств
-                                </h2>
-                            </div>
-                            <ul className='absolute inset-0 z-10 m-10 list-inside list-disc text-xl font-semibold leading-relaxed text-txtMiddle'>
-                                <li className='-mt-5 list-none pb-3'>
-                                    Использование наших наборов позволит:
-                                </li>
-                                <li>сократить время подготовки к процедуре на 30%</li>
-                                <li>уменьшить количество и трудозатраты персонала</li>
-                                <li>повысить эффективность оказания помощи пациенту</li>
-                            </ul>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </div>
 
             {/* nextblock */}
 
-            <WeWorkFor />
+            {/* <WeWorkFor /> */}
 
             {/* nextblock */}
 
-            <div className='container mx-auto flex justify-center px-4'>
+            {/* <div className='container mx-auto flex justify-center px-4'>
                 <div className='flex w-[1000px] flex-col items-center justify-center space-y-5 rounded-3xl bg-white p-14 drop-shadow-lg lg:shrink lg:flex-row lg:space-y-0 xl:w-[1200px]'>
                     <div className='flex flex-1 justify-center'>
                         <Image
@@ -164,10 +146,10 @@ export default function Home() {
                         </Link>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* nextblock */}
-            <div className='bg-white drop-shadow-sm'>
+            {/* <div className='bg-white min-w-full drop-shadow-sm'>
                 <div className='container mx-auto px-4'>
                     <div className='my-10 flex flex-col items-center justify-center py-10'>
                         <h1 className='text-center text-3xl font-semibold text-txtMiddle/50 lg:indent-96 lg:text-4xl'>
@@ -188,13 +170,13 @@ export default function Home() {
                         </h1>
                         <Link
                             href='/about'
-                            className='mt-4 rounded-full border-[3px] border-mainGreen bg-white px-10 py-3 text-center text-2xl text-mainGreen transition duration-300 hover:bg-mainGreen hover:text-white lg:self-end'
+                            className='tracking-wide mt-4 rounded-full border-[3px] border-mainGreen bg-white px-10 py-3 text-center text-2xl text-mainGreen transition duration-300 hover:bg-mainGreen hover:text-white lg:self-end'
                         >
                             Подробнее
                         </Link>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* nextblock */}
 

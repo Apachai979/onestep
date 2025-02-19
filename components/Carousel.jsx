@@ -1,4 +1,5 @@
-'use client';
+'use client'
+
 import Image from 'next/image';
 import sliderShape from '@/public/sliderImage/sliderShape.svg';
 import { useState, useEffect } from 'react';

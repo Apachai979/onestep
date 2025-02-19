@@ -25,16 +25,15 @@ const BoxAcademy = ({ title, categories }) => {
                 <div className='flex w-full flex-col'>
                     <div className='my-2 rounded-3xl border bg-zinc-200 p-4'>
                         <h2 className='py-2 text-xl font-semibold'>{title}</h2>
-                        <div className='mb-3 flex flex-wrap gap-3'>
+                        <div className='mb-3 flex flex-wrap sm:gap-3'>
                             {categories.map(category => (
                                 <button
                                     key={category.name}
                                     href='#'
-                                    className={`relative my-1 inline-block rounded-full border-b-2 transition-all duration-300 ease-in-out ${
-                                        activeCategory === category.name
-                                            ? "border-primary_green text-primary_green"
-                                            : "border-transparent text-gray-600 hover:border-gray-400 hover:text-gray-800"
-                                    } px-3 py-1 text-base font-semibold`}
+                                    className={`relative my-1 inline-block rounded-full border-b-2 transition-all duration-300 ease-in-out ${activeCategory === category.name
+                                        ? "border-primary_green text-primary_green"
+                                        : "border-transparent text-gray-600 hover:border-gray-400 hover:text-gray-800"
+                                        } px-3 py-1 text-base font-semibold`}
                                     onClick={() => handleCategoryClick(category.name)}
                                 >
                                     {category.name}

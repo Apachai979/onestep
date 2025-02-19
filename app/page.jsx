@@ -62,14 +62,14 @@ export default function Home() {
 
             {/* nextblock */}
 
-            {/* <h1 className='container mx-auto p-x-4 my-14 text-center text-3xl font-semibold text-night_green'>
+            <h1 className='container mx-auto p-x-4 my-14 text-center text-3xl font-semibold text-night_green'>
                 OneStep —{" "}
                 <span className='text-primary_green'>
                     российский производитель медицинских <br /> одноразовых перевязочных материалов
                     и процедурных <br />
                     стерильных наборов
                 </span>
-            </h1> */}
+            </h1>
 
             {/* nextblock */}
             <div className="container mx-auto px-4">
@@ -92,14 +92,14 @@ export default function Home() {
                                         />
                                     </div>
                                     <div className="flex h-20 justify-center items-center">
-                                        <h2 className="text-center text-2xl font-semibold text-night_green">
+                                        <h2 className="text-center text-xl font-semibold text-night_green">
                                             {feature.title}
                                         </h2>
                                     </div>
                                 </div>
                                 <ul className="absolute inset-0 z-10 mx-10 py-5 list-inside list-disc text-lg font-semibold leading-relaxed text-txtMiddle">
                                     {feature.points.map((point, i) => (
-                                        <li key={point.id} className={i === 0 ? "-mt-5 list-none pb-3" : ""}>
+                                        <li key={point.id} className={i === 0 && index === 1 || i === 0 && index === 3 ? "list-none pb-3" : ""}>
                                             {point}
                                         </li>
                                     ))}
@@ -112,12 +112,12 @@ export default function Home() {
 
             {/* nextblock */}
 
-            {/* <WeWorkFor /> */}
+            <WeWorkFor />
 
             {/* nextblock */}
 
-            {/* <div className='container mx-auto flex justify-center px-4'>
-                <div className='flex w-[1000px] flex-col items-center justify-center space-y-5 rounded-3xl bg-white p-14 drop-shadow-lg lg:shrink lg:flex-row lg:space-y-0 xl:w-[1200px]'>
+            <div className='container mx-auto px-4'>
+                <div className='flex max-w-[1000px] flex-col items-center justify-center space-y-5 rounded-3xl bg-white p-14 drop-shadow-lg lg:shrink lg:flex-row lg:space-y-0 xl:w-[1200px]'>
                     <div className='flex flex-1 justify-center'>
                         <Image
                             src='/home/worldexp.png'
@@ -128,7 +128,7 @@ export default function Home() {
                         ></Image>
                     </div>
                     <div className='flex flex-1 flex-col items-center justify-center space-y-5'>
-                        <h2 className='text-justify text-2xl font-semibold text-txtGreen lg:text-left'>
+                        <h2 className='text-justify text-xl sm:text-2xl font-semibold text-txtGreen lg:text-left'>
                             Мы опирались на{" "}
                             <span className='text-mainGreen'>лучший мировой опыт</span> производства
                             медицинских изделий и{" "}
@@ -140,16 +140,16 @@ export default function Home() {
                         </h2>
                         <Link
                             href='/about'
-                            className='w-96 rounded-full border-[3px] border-mainGreen bg-white px-8 py-3 text-center text-2xl text-mainGreen transition duration-300 hover:bg-mainGreen hover:text-white'
+                            className='min-w-80 rounded-full border-[3px] border-mainGreen bg-white py-3 text-center text-xl sm:text-2xl text-mainGreen transition duration-300 hover:bg-mainGreen hover:text-white'
                         >
                             Подробнее компании
                         </Link>
                     </div>
                 </div>
-            </div> */}
+            </div>
 
             {/* nextblock */}
-            {/* <div className='bg-white min-w-full drop-shadow-sm'>
+            <div className='bg-white min-w-full drop-shadow-sm'>
                 <div className='container mx-auto px-4'>
                     <div className='my-10 flex flex-col items-center justify-center py-10'>
                         <h1 className='text-center text-3xl font-semibold text-txtMiddle/50 lg:indent-96 lg:text-4xl'>
@@ -176,7 +176,7 @@ export default function Home() {
                         </Link>
                     </div>
                 </div>
-            </div> */}
+            </div>
 
             {/* nextblock */}
 

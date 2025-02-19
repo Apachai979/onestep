@@ -118,7 +118,7 @@ export default function FormContact({ titleForForm }) {
             <section>
 
                 <h1 className="text-2xl mb-4 text-center">{titleForForm}</h1>
-                <form onSubmit={handleSubmit} className=" space-y-4 w-96">
+                <form onSubmit={handleSubmit} className=" space-y-4 max-w-96">
 
                     <div className="relative">
                         <input id="first_name" type="text" required className={hasErrorName ? "input border-gray-300  focus:border-primary_green peer " : "input border-red-500"} placeholder=" " name='NAME' onChange={handleCheckInput} />

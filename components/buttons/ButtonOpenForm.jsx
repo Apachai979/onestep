@@ -44,7 +44,7 @@ export default function ButtonOpenForm({ children, titleForForm = "Задать 
             >
                 <div
                     ref={wrapper}
-                    className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-white p-10 pt-7 rounded-xl overflow-hidden animate-emersion"
+                    className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-white p-10 pt-7 rounded-xl overflow-hidden animate-emersion min-w-96"
                 >
                     <section className="flex flex-col justify-center items-center ">
                         <FormContact titleForForm={titleForForm} />

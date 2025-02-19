@@ -11,6 +11,13 @@ export const metadata = {
         "Российский производитель медицинских одноразовых перевязочных материалов и процедурных стерильных наборов",
 }
 
+const partners = [
+    { src: '/home/partners/partner1.jpeg', alt: 'НИИ Кардиологии' },
+    { src: '/home/partners/partner2.png', alt: 'НИИ Онкологии' },
+    { src: '/home/partners/partner3.jpeg', alt: 'ТОКБ' },
+    { src: '/home/partners/partner4.png', alt: 'Сибирский государственный медицинский университет' },
+];
+
 const features = [
     {
         title: "Мировые стандарты качества",
@@ -149,10 +156,10 @@ export default function Home() {
             </div>
 
             {/* nextblock */}
-            <div className='bg-white min-w-full drop-shadow-sm'>
+            <div className='bg-white min-w-full drop-shadow-sm my-4'>
                 <div className='container mx-auto px-4'>
-                    <div className='my-10 flex flex-col items-center justify-center py-10'>
-                        <h1 className='text-center text-3xl font-semibold text-txtMiddle/50 lg:indent-96 lg:text-4xl'>
+                    <div className='my-2 sm:my-8 flex flex-col items-center justify-center py-6 sm:py-10'>
+                        <h1 className='text-center text-2xl sm:text-3xl font-semibold text-txtMiddle/50 lg:indent-96 lg:text-4xl'>
                             Мы оказываем поддержку{" "}
                             <span className='text-mainGreen'>гемодиализным центрам</span> Западной
                             Сибири и проектам в области медицинского образования
@@ -170,7 +177,7 @@ export default function Home() {
                         </h1>
                         <Link
                             href='/about'
-                            className='tracking-wide mt-4 rounded-full border-[3px] border-mainGreen bg-white px-10 py-3 text-center text-2xl text-mainGreen transition duration-300 hover:bg-mainGreen hover:text-white lg:self-end'
+                            className='tracking-wide mt-4 rounded-full border-[3px] border-mainGreen bg-white px-10 py-3 text-center text-xl sm:text-2xl text-mainGreen transition duration-300 hover:bg-mainGreen hover:text-white lg:self-end'
                         >
                             Подробнее
                         </Link>
@@ -180,47 +187,23 @@ export default function Home() {
 
             {/* nextblock */}
 
-            <div className='container mx-auto my-5 px-4'>
+            <div className='container mx-auto my-3 sm:my-5 px-4'>
                 <h1 className='mb-5 text-center text-4xl font-semibold text-mainGreen'>
                     Наши <span className='text-txtGreen'>партнеры</span>
                 </h1>
-                <div className='flex items-center justify-center lg:divide-x'>
-                    <div className='flex h-[112px] w-[300px] items-center justify-center'>
-                        <Image
-                            src='/home/partners/partner1.jpeg'
-                            alt='НИИ Кардиологии'
-                            className='h-auto w-auto object-cover object-center'
-                            width={160}
-                            height={70}
-                        ></Image>
-                    </div>
-                    <div className='flex h-[112px] w-[300px] items-center justify-center'>
-                        <Image
-                            src='/home/partners/partner2.png'
-                            alt='НИИ Кардиологии'
-                            className='h-auto w-auto object-cover object-center'
-                            width={160}
-                            height={70}
-                        ></Image>
-                    </div>
-                    <div className='flex h-[112px] w-[300px] items-center justify-center'>
-                        <Image
-                            src='/home/partners/partner3.jpeg'
-                            alt='НИИ Кардиологии'
-                            className='h-auto w-auto object-cover object-center'
-                            width={160}
-                            height={70}
-                        ></Image>
-                    </div>
-                    <div className='flex h-[112px] w-[300px] items-center justify-center'>
-                        <Image
-                            src='/home/partners/partner4.png'
-                            alt='НИИ Кардиологии'
-                            className='h-auto w-auto object-cover object-center'
-                            width={160}
-                            height={70}
-                        ></Image>
-                    </div>
+                <div className='flex flex-wrap justify-center lg:gap-0 '>
+                    {partners.map((partner, index) => (
+                        <div key={index} className='flex sm:h-28 w-72 items-center justify-center p-3'>
+                            <Image
+                                src={partner.src}
+                                alt={partner.alt}
+                                className='h-auto w-auto object-cover object-center'
+                                width={160}
+                                height={70}
+                                priority
+                            />
+                        </div>
+                    ))}
                 </div>
             </div>
 

@@ -3,9 +3,9 @@ import Modal from "@/components/Modal";
 export default function Sterilizationcosts() {
     return (
         <Modal>
-            <div className="flex flex-col w-[650px] text-lg">
-                <h1 className="text-2xl font-semibold pb-3">Применение готовых стерильных материалов и инструментов существенно снижает данный вид расходов.</h1>
-                <table class="table-auto ">
+            <div className="flex flex-col text-md">
+                <h1 className="text-xl md:text-2xl font-semibold pb-3">Применение готовых стерильных материалов и инструментов существенно снижает данный вид расходов.</h1>
+                <table class="table-auto text-sm">
                     <thead>
                         <tr className="border border-b-gray-600 border-t-0 border-l-0 border-r-0">
                             <th className="border border-r-gray-600 border-t-0 border-b-0 border-l-0 "> </th>

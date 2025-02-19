@@ -44,7 +44,7 @@ export default function Academy() {
                         className={`relative rounded-full border-2 transition-all duration-300 ease-in-out ${activeTab === item.href
                             ? "shadow-glow border-primary_green bg-transparent text-primary_green"
                             : "border-gray-300 bg-stone-50 text-gray-600 hover:bg-gray-100"
-                            } sm:px-4 sm:py-2 px-1 py-2 text-lg font-semibold leading-tight sm:leading-none`}
+                            } sm:px-4 sm:py-2 px-1.5 py-1.5 text-lg font-semibold leading-tight sm:leading-none`}
                     >
                         {item.title}
                         {activeTab === item.href && (

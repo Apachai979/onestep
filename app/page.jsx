@@ -124,33 +124,37 @@ export default function Home() {
             {/* nextblock */}
 
             <div className='container mx-auto px-4'>
-                <div className='flex max-w-[1000px] flex-col items-center justify-center space-y-5 rounded-3xl bg-white p-14 drop-shadow-lg lg:shrink lg:flex-row lg:space-y-0 xl:w-[1200px]'>
-                    <div className='flex flex-1 justify-center'>
-                        <Image
-                            src='/home/worldexp.png'
-                            alt='Neoset'
-                            className='h-[330px] w-[330px] rounded-3xl object-cover object-center'
-                            width={1280}
-                            height={720}
-                        ></Image>
-                    </div>
-                    <div className='flex flex-1 flex-col items-center justify-center space-y-5'>
-                        <h2 className='text-justify text-xl sm:text-2xl font-semibold text-txtGreen lg:text-left'>
-                            Мы опирались на{" "}
-                            <span className='text-mainGreen'>лучший мировой опыт</span> производства
-                            медицинских изделий и{" "}
-                            <span className='text-mainGreen'>
-                                заложили основные принципы качества
-                            </span>{" "}
-                            и <span className='text-mainGreen'>удобства использования</span>. Так
-                            появился OneStep.
-                        </h2>
-                        <Link
-                            href='/about'
-                            className='min-w-80 rounded-full border-[3px] border-mainGreen bg-white py-3 text-center text-xl sm:text-2xl text-mainGreen transition duration-300 hover:bg-mainGreen hover:text-white'
-                        >
-                            Подробнее компании
-                        </Link>
+                <div className="flex justify-center">
+                    <div className='flex max-w-[1000px] flex-col items-center justify-center space-y-5 rounded-3xl bg-white p-14 drop-shadow-lg lg:shrink lg:flex-row lg:space-y-0 xl:w-[1200px]'>
+                        <div className='flex flex-1 justify-center'>
+                            <Image
+                                src='/home/worldexp.png'
+                                alt='Neoset'
+                                className='h-[330px] w-[330px] rounded-3xl object-cover object-center'
+                                width={1280}
+                                height={720}
+                            ></Image>
+                        </div>
+
+                        <div className='flex flex-1 flex-col items-center justify-center space-y-5 mx-auto'>
+                            <h2 className='text-justify text-xl sm:text-2xl font-semibold text-txtGreen lg:text-left'>
+                                Мы опирались на{" "}
+                                <span className='text-mainGreen'>лучший мировой опыт</span> производства
+                                медицинских изделий и{" "}
+                                <span className='text-mainGreen'>
+                                    заложили основные принципы качества
+                                </span>{" "}
+                                и <span className='text-mainGreen'>удобства использования</span>. Так
+                                появился OneStep.
+                            </h2>
+                            <Link
+                                href='/about'
+                                className='min-w-80 rounded-full border-[3px] border-mainGreen bg-white py-3 text-center text-xl sm:text-2xl text-mainGreen transition duration-300 hover:bg-mainGreen hover:text-white'
+                            >
+                                Подробнее компании
+                            </Link>
+
+                        </div>
                     </div>
                 </div>
             </div>

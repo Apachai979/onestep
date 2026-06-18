@@ -1,39 +1,61 @@
 "use client"
 import { signIn } from "next-auth/react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 
-export default function SignIn() {
+export default function Register() {
     const router = useRouter()
-    const searchParams = useSearchParams()
-    const callbackUrl = searchParams.get("callbackUrl") || "/"
 
+    const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [passwordConfirm, setPasswordConfirm] = useState("")
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
 
     async function handleSubmit(e) {
         e.preventDefault()
         setError("")
+
+        if (password.length < 8) {
+            setError("Пароль должен содержать минимум 8 символов")
+            return
+        }
+        if (password !== passwordConfirm) {
+            setError("Пароли не совпадают")
+            return
+        }
+
         setLoading(true)
 
-        const res = await signIn("credentials", {
+        const res = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password }),
+        })
+
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}))
+            setError(data.error || "Не удалось создать аккаунт")
+            setLoading(false)
+            return
+        }
+
+        const signInRes = await signIn("credentials", {
             email,
             password,
             redirect: false,
-            callbackUrl,
         })
 
         setLoading(false)
 
-        if (res?.error) {
-            setError(res.error)
+        if (signInRes?.error) {
+            setError("Аккаунт создан, но не удалось войти. Попробуйте ещё раз.")
             return
         }
-        router.push(callbackUrl)
+        router.push("/")
         router.refresh()
     }
 
@@ -54,8 +76,16 @@ export default function SignIn() {
                     className='flex w-80 flex-col items-center justify-center space-y-3'
                 >
                     <h1 className='text-center text-2xl font-semibold text-night_green'>
-                        Личный кабинет
+                        Создание аккаунта
                     </h1>
+                    <input
+                        type='text'
+                        autoComplete='name'
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                        className='h-12 w-full rounded-lg border border-gray-300 px-3 shadow-sm'
+                        placeholder='Имя (необязательно)'
+                    />
                     <input
                         type='email'
                         required
@@ -68,11 +98,20 @@ export default function SignIn() {
                     <input
                         type='password'
                         required
-                        autoComplete='current-password'
+                        autoComplete='new-password'
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                         className='h-12 w-full rounded-lg border border-gray-300 px-3 shadow-sm'
-                        placeholder='Пароль'
+                        placeholder='Пароль (минимум 8 символов)'
+                    />
+                    <input
+                        type='password'
+                        required
+                        autoComplete='new-password'
+                        value={passwordConfirm}
+                        onChange={e => setPasswordConfirm(e.target.value)}
+                        className='h-12 w-full rounded-lg border border-gray-300 px-3 shadow-sm'
+                        placeholder='Повторите пароль'
                     />
                     {error && (
                         <p className='w-full text-center text-sm text-red-600'>{error}</p>
@@ -82,38 +121,17 @@ export default function SignIn() {
                         disabled={loading}
                         className='h-10 w-full rounded-lg border border-gray-300 px-1 shadow-sm transition-all ease-in-out hover:bg-mainGreen hover:font-semibold active:scale-95 disabled:cursor-not-allowed disabled:opacity-60'
                     >
-                        {loading ? "Входим..." : "Войти"}
+                        {loading ? "Создаём аккаунт..." : "Зарегистрироваться"}
                     </button>
                     <p className='text-center'>
-                        У вас нет учетной записи?{" "}
+                        Уже есть аккаунт?{" "}
                         <Link
-                            href='/register'
+                            href='/authorize'
                             className='text-dark_green hover:text-mainGreen'
                         >
-                            Зарегистрироваться
+                            Войти
                         </Link>
                     </p>
-                    <div className='flex w-80 items-center justify-center'>
-                        <hr className='h-0.5 w-full bg-gray-300' />
-                        <p className='px-2'>или</p>
-                        <hr className='h-0.5 w-full bg-gray-300' />
-                    </div>
-                    <div className='w-80 space-y-2 pb-2 pt-1'>
-                        <button
-                            type='button'
-                            onClick={() => signIn("google", { callbackUrl })}
-                            className='h-10 w-full rounded-lg border border-gray-300 px-1 shadow-sm transition-all ease-in-out hover:bg-mainGreen hover:font-semibold active:scale-95'
-                        >
-                            Google
-                        </button>
-                        <button
-                            type='button'
-                            onClick={() => signIn("mailru", { callbackUrl })}
-                            className='h-10 w-full rounded-lg border border-gray-300 px-1 shadow-sm transition-all ease-in-out hover:bg-mainGreen hover:font-semibold active:scale-95'
-                        >
-                            MailRu
-                        </button>
-                    </div>
                 </form>
             </div>
         </div>

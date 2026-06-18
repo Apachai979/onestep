@@ -2,6 +2,8 @@
 import { signIn, signOut, useSession } from "next-auth/react"
 import Image from "next/image"
 import Link from "next/link"
+import { GiExitDoor } from "react-icons/gi"
+import { LuLogIn } from "react-icons/lu"
 
 export default function AuthComponent() {
     const { data: session } = useSession()
@@ -12,7 +14,7 @@ export default function AuthComponent() {
             {session ? (
                 <div className='flex items-center justify-end space-x-1'>
                     <h1>
-                        Добро пожаловать,{" "}
+                        {/* Добро пожаловать,{" "} */}
                         <Link href='#' onClick={() => signOut({ callbackUrl: "/" })}>
                             {session?.user?.name}
                         </Link>
@@ -29,11 +31,15 @@ export default function AuthComponent() {
                 </div>
             ) : (
                 <div className='space-x-4'>
-                    <h1>Youre not logged in</h1>
-                    <Link href='/authorize' className='hover:text-mainGreen'>
-                        Войти
+                    {/* <h1>Youre not logged in</h1> */}
+                    <Link
+                        href='/authorize'
+                        className='flex items-center justify-center hover:text-mainGreen'
+                    >
+                        <LuLogIn />
+                        <span className='mx-1.5'>Войти</span>
                     </Link>
-                    <button
+                    {/* <button
                         onClick={() => signIn("google")}
                         className='h-10 w-auto rounded-lg border border-black px-1'
                     >
@@ -44,13 +50,13 @@ export default function AuthComponent() {
                         className='h-10 w-auto rounded-lg border border-black px-1'
                     >
                         Mailru
-                    </button>
-                    <button
+                    </button> */}
+                    {/* <button
                         onClick={() => signIn("github")}
                         className='h-10 w-auto rounded-lg border border-black px-1'
                     >
                         Github
-                    </button>
+                    </button> */}
                 </div>
             )}
         </div>

@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "migration:create": "prisma migrate dev --create-only",
-    "migrate": "prisma migrate deploy"
+    "migrate": "prisma migrate deploy",
+    "db:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@next/third-parties": "^14.2.16",

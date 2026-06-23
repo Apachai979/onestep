@@ -1,11 +1,18 @@
 "use client"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import Image from "next/image"
-import Link from "next/link"
 
-export default function SignIn() {
+export default function SignInPage() {
+    return (
+        <Suspense fallback={null}>
+            <SignIn />
+        </Suspense>
+    )
+}
+
+function SignIn() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const callbackUrl = searchParams.get("callbackUrl") || "/"
@@ -84,14 +91,8 @@ export default function SignIn() {
                     >
                         {loading ? "Входим..." : "Войти"}
                     </button>
-                    <p className='text-center'>
-                        У вас нет учетной записи?{" "}
-                        <Link
-                            href='/register'
-                            className='text-dark_green hover:text-mainGreen'
-                        >
-                            Зарегистрироваться
-                        </Link>
+                    <p className='text-center text-sm text-gray-500'>
+                        Доступ предоставляется по приглашению администратора.
                     </p>
                     <div className='flex w-80 items-center justify-center'>
                         <hr className='h-0.5 w-full bg-gray-300' />

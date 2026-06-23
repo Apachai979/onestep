@@ -6,6 +6,11 @@ import MailRuProvider from "next-auth/providers/mailru"
 import bcrypt from "bcryptjs"
 import prisma from "@/lib/client"
 
+function displayName(user: { firstName?: string | null; lastName?: string | null; email: string }) {
+    const composed = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim()
+    return composed || user.email
+}
+
 export const authOptions: NextAuthOptions = {
     session: {
         strategy: "jwt",
@@ -38,11 +43,16 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Неверный email или пароль")
                 }
 
+                if (user.status !== "ACTIVE") {
+                    throw new Error("Учётная запись заблокирована")
+                }
+
                 return {
                     id: user.id,
                     email: user.email,
-                    name: user.name ?? user.email,
-                }
+                    name: displayName(user),
+                    role: user.role,
+                } as never
             },
         }),
         GithubProvider({
@@ -61,13 +71,15 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
-                token.id = user.id
+                token.id = (user as { id?: string }).id
+                token.role = (user as { role?: string }).role ?? "MANAGER"
             }
             return token
         },
         async session({ session, token }) {
-            if (session.user && token.id) {
-                ;(session.user as { id?: string }).id = token.id as string
+            if (session.user) {
+                ;(session.user as { id?: string; role?: string }).id = token.id as string
+                ;(session.user as { id?: string; role?: string }).role = token.role as string
             }
             return session
         },

@@ -13,8 +13,13 @@ datasource db {
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
-  name         String?
   passwordHash String
+  firstName    String?
+  lastName     String?
+  phone        String?
+  position     String?
+  role         String   @default("MANAGER")
+  status       String   @default("ACTIVE")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

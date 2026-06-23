@@ -29,24 +29,52 @@ model User {
 }
 
 model Counterparty {
-  id            String   @id @default(cuid())
-  type          String
-  name          String
-  region        String
-  inn           String?
-  contactPerson String?
-  phone         String?
-  email         String?
-  address       String?
-  note          String?
-  createdById   String?
-  createdBy     User?    @relation("CounterpartyCreatedBy", fields: [createdById], references: [id])
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @default(cuid())
+  type            String
+  name            String
+  region          String
+  inn             String?
+  kpp             String?
+  ogrn            String?
+  okpo            String?
+  okved           String?
+  bankName        String?
+  bankAccount     String?
+  bankCorrAccount String?
+  bik             String?
+  totalRevenue    Decimal  @default(0)
+  discount        Decimal?
+  phone           String?
+  email           String?
+  address         String?
+  note            String?
+  contacts        Contact[]
+  createdById     String?
+  createdBy       User?    @relation("CounterpartyCreatedBy", fields: [createdById], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([type])
   @@index([region])
   @@map("counterparties")
+}
+
+model Contact {
+  id             String       @id @default(cuid())
+  counterpartyId String
+  counterparty   Counterparty @relation(fields: [counterpartyId], references: [id], onDelete: Cascade)
+  firstName      String?
+  lastName       String?
+  phone          String?
+  email          String?
+  birthDate      DateTime?
+  position       String?
+  isPrimary      Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([counterpartyId])
+  @@map("contacts")
 }
 
 model Neoset {

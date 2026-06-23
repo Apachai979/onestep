@@ -10,6 +10,7 @@ export async function GET(_request, { params }) {
         where: { id: params.id },
         include: {
             createdBy: { select: { id: true, firstName: true, lastName: true, email: true } },
+            contacts: { orderBy: [{ isPrimary: "desc" }, { lastName: "asc" }, { firstName: "asc" }] },
         },
     })
     if (!item) return Response.json({ error: "Не найдено" }, { status: 404 })

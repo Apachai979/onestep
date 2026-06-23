@@ -1,6 +1,7 @@
 "use client"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { formatMoney, formatPercent } from "@/lib/crm/format"
 
 export default function CounterpartyList({ type, newHref }) {
     const [items, setItems] = useState(null)
@@ -69,46 +70,63 @@ export default function CounterpartyList({ type, newHref }) {
                             <th className='px-4 py-3'>ИНН</th>
                             <th className='px-4 py-3'>Контактное лицо</th>
                             <th className='px-4 py-3'>Телефон</th>
-                            <th className='px-4 py-3'>Email</th>
+                            <th className='px-4 py-3 text-right'>Бюджет</th>
+                            <th className='px-4 py-3 text-right'>Скидка</th>
                         </tr>
                     </thead>
                     <tbody>
                         {items === null && (
                             <tr>
-                                <td colSpan={6} className='px-4 py-6 text-center text-gray-400'>
+                                <td colSpan={7} className='px-4 py-6 text-center text-gray-400'>
                                     Загрузка...
                                 </td>
                             </tr>
                         )}
                         {items?.length === 0 && (
                             <tr>
-                                <td colSpan={6} className='px-4 py-6 text-center text-gray-400'>
+                                <td colSpan={7} className='px-4 py-6 text-center text-gray-400'>
                                     Записей не найдено
                                 </td>
                             </tr>
                         )}
-                        {items?.map(item => (
-                            <tr
-                                key={item.id}
-                                className='border-t border-gray-100 hover:bg-gray-50'
-                            >
-                                <td className='px-4 py-3'>
-                                    <Link
-                                        href={`/crm/counterparties/${item.id}`}
-                                        className='font-medium text-night_green hover:text-primary_green'
-                                    >
-                                        {item.name}
-                                    </Link>
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>{item.region}</td>
-                                <td className='px-4 py-3 text-gray-700'>{item.inn || "—"}</td>
-                                <td className='px-4 py-3 text-gray-700'>
-                                    {item.contactPerson || "—"}
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>{item.phone || "—"}</td>
-                                <td className='px-4 py-3 text-gray-700'>{item.email || "—"}</td>
-                            </tr>
-                        ))}
+                        {items?.map(item => {
+                            const primary = item.contacts?.[0]
+                            const primaryName = primary
+                                ? `${primary.firstName ?? ""} ${primary.lastName ?? ""}`.trim() ||
+                                  primary.email ||
+                                  primary.phone ||
+                                  "—"
+                                : "—"
+                            return (
+                                <tr
+                                    key={item.id}
+                                    className='border-t border-gray-100 hover:bg-gray-50'
+                                >
+                                    <td className='px-4 py-3'>
+                                        <Link
+                                            href={`/crm/counterparties/${item.id}`}
+                                            className='font-medium text-night_green hover:text-primary_green'
+                                        >
+                                            {item.name}
+                                        </Link>
+                                    </td>
+                                    <td className='px-4 py-3 text-gray-700'>{item.region}</td>
+                                    <td className='px-4 py-3 text-gray-700'>
+                                        {item.inn || "—"}
+                                    </td>
+                                    <td className='px-4 py-3 text-gray-700'>{primaryName}</td>
+                                    <td className='px-4 py-3 text-gray-700'>
+                                        {item.phone || primary?.phone || "—"}
+                                    </td>
+                                    <td className='px-4 py-3 text-right text-gray-700'>
+                                        {formatMoney(item.totalRevenue)}
+                                    </td>
+                                    <td className='px-4 py-3 text-right text-gray-700'>
+                                        {formatPercent(item.discount)}
+                                    </td>
+                                </tr>
+                            )
+                        })}
                     </tbody>
                 </table>
             </div>

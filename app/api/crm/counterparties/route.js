@@ -30,6 +30,20 @@ export async function GET(request) {
     const items = await prisma.counterparty.findMany({
         where,
         orderBy: { name: "asc" },
+        include: {
+            contacts: {
+                where: { isPrimary: true },
+                take: 1,
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    phone: true,
+                    email: true,
+                    position: true,
+                },
+            },
+        },
     })
     return Response.json({ items })
 }

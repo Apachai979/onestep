@@ -23,7 +23,30 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  counterparties Counterparty[] @relation("CounterpartyCreatedBy")
+
   @@map("users")
+}
+
+model Counterparty {
+  id            String   @id @default(cuid())
+  type          String
+  name          String
+  region        String
+  inn           String?
+  contactPerson String?
+  phone         String?
+  email         String?
+  address       String?
+  note          String?
+  createdById   String?
+  createdBy     User?    @relation("CounterpartyCreatedBy", fields: [createdById], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([type])
+  @@index([region])
+  @@map("counterparties")
 }
 
 model Neoset {

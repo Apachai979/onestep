@@ -34,6 +34,11 @@ export default async function CrmHome() {
                     description='Справочник лечебных учреждений.'
                     href='/crm/customers'
                 />
+                <CrmCard
+                    title='Товары'
+                    description='Справочник наборов NeoSet: артикулы, цены, состав.'
+                    href='/crm/products'
+                />
                 {role === "ADMIN" && (
                     <CrmCard
                         title='Пользователи'

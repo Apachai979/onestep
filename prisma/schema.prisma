@@ -24,6 +24,7 @@ model User {
   updatedAt    DateTime @updatedAt
 
   counterparties Counterparty[] @relation("CounterpartyCreatedBy")
+  projects       Project[]      @relation("ProjectManager")
 
   @@map("users")
 }
@@ -54,9 +55,79 @@ model Counterparty {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  projectsAsDistributor Project[] @relation("ProjectDistributor")
+  projectsAsEndCustomer Project[] @relation("ProjectEndCustomer")
+
   @@index([type])
   @@index([region])
   @@map("counterparties")
+}
+
+model Project {
+  id                String        @id @default(cuid())
+  externalAuctionId String
+  internalName      String
+  status            String        @default("IN_PROGRESS")
+  totalAmount       Decimal       @default(0)
+  auctionDate       DateTime?
+  duplicateComment  String?
+
+  distributorId     String
+  distributor       Counterparty  @relation("ProjectDistributor", fields: [distributorId], references: [id])
+  endCustomerId     String
+  endCustomer       Counterparty  @relation("ProjectEndCustomer", fields: [endCustomerId], references: [id])
+  managerId         String
+  manager           User          @relation("ProjectManager", fields: [managerId], references: [id])
+
+  items             ProjectItem[]
+  contacts          Contact[]
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([status])
+  @@index([externalAuctionId, endCustomerId])
+  @@index([distributorId])
+  @@index([endCustomerId])
+  @@index([managerId])
+  @@map("projects")
+}
+
+model ProjectItem {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  sku       String?
+  name      String
+  quantity  Decimal  @default(1)
+  amount    Decimal  @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([productId])
+  @@map("project_items")
+}
+
+model Product {
+  id                  String        @id @default(cuid())
+  sku                 String        @unique
+  name                String
+  category            String
+  basePrice           Decimal       @default(0)
+  packagePrice        Decimal       @default(0)
+  recommendedLpuPrice Decimal?
+  transportPackQty    Int           @default(0)
+  contents            String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  projectItems        ProjectItem[]
+
+  @@index([category])
+  @@map("products")
 }
 
 model Contact {
@@ -72,6 +143,8 @@ model Contact {
   isPrimary      Boolean      @default(false)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+
+  projects       Project[]
 
   @@index([counterpartyId])
   @@map("contacts")

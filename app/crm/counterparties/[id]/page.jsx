@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import prisma from "@/lib/client"
 import { COUNTERPARTY_TYPE_LABELS } from "@/lib/crm/counterparty"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
+import { PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import ContactsSection from "@/components/crm/ContactsSection"
 
 export const metadata = { title: "Контрагент | CRM" }
@@ -16,6 +17,20 @@ export default async function CounterpartyPage({ params }) {
         },
     })
     if (!item) notFound()
+
+    const projectsRelation =
+        item.type === "DISTRIBUTOR"
+            ? { distributorId: item.id }
+            : { endCustomerId: item.id }
+    const projects = await prisma.project.findMany({
+        where: projectsRelation,
+        orderBy: { createdAt: "desc" },
+        include: {
+            distributor: { select: { id: true, name: true } },
+            endCustomer: { select: { id: true, name: true } },
+            manager: { select: { firstName: true, lastName: true, email: true } },
+        },
+    })
 
     const contactsForClient = item.contacts.map(c => ({
         ...c,
@@ -87,6 +102,84 @@ export default async function CounterpartyPage({ params }) {
                 <Row label='Бюджет (сумма сделок)' value={formatMoney(item.totalRevenue)} />
                 <Row label='Скидка клиента' value={formatPercent(item.discount)} />
             </Section>
+
+            <section className='rounded-xl border border-gray-200 bg-white p-5'>
+                <h2 className='mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500'>
+                    История связок ({projects.length})
+                </h2>
+                {projects.length === 0 ? (
+                    <p className='text-sm text-gray-400'>Проектов пока нет.</p>
+                ) : (
+                    <div className='overflow-x-auto rounded-lg border border-gray-100'>
+                        <table className='w-full text-sm'>
+                            <thead className='bg-gray-50 text-left text-xs uppercase text-gray-500'>
+                                <tr>
+                                    <th className='px-3 py-2'>Аукцион</th>
+                                    <th className='px-3 py-2'>Проект</th>
+                                    <th className='px-3 py-2'>
+                                        {item.type === "DISTRIBUTOR"
+                                            ? "Конечный потребитель"
+                                            : "Дистрибьютор"}
+                                    </th>
+                                    <th className='px-3 py-2'>Менеджер</th>
+                                    <th className='px-3 py-2'>Статус</th>
+                                    <th className='px-3 py-2 text-right'>Сумма</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {projects.map(p => {
+                                    const counter =
+                                        item.type === "DISTRIBUTOR"
+                                            ? p.endCustomer
+                                            : p.distributor
+                                    return (
+                                        <tr
+                                            key={p.id}
+                                            className='border-t border-gray-100 hover:bg-gray-50'
+                                        >
+                                            <td className='px-3 py-2 text-gray-700'>
+                                                {p.externalAuctionId}
+                                            </td>
+                                            <td className='px-3 py-2'>
+                                                <Link
+                                                    href={`/crm/projects/${p.id}`}
+                                                    className='font-medium text-night_green hover:text-primary_green'
+                                                >
+                                                    {p.internalName}
+                                                </Link>
+                                            </td>
+                                            <td className='px-3 py-2 text-gray-700'>
+                                                {counter ? (
+                                                    <Link
+                                                        href={`/crm/counterparties/${counter.id}`}
+                                                        className='hover:text-primary_green'
+                                                    >
+                                                        {counter.name}
+                                                    </Link>
+                                                ) : (
+                                                    "—"
+                                                )}
+                                            </td>
+                                            <td className='px-3 py-2 text-gray-700'>
+                                                {p.manager
+                                                    ? `${p.manager.firstName ?? ""} ${p.manager.lastName ?? ""}`.trim() ||
+                                                      p.manager.email
+                                                    : "—"}
+                                            </td>
+                                            <td className='px-3 py-2 text-gray-700'>
+                                                {PROJECT_STATUS_LABELS[p.status]}
+                                            </td>
+                                            <td className='px-3 py-2 text-right text-gray-700'>
+                                                {formatMoney(p.totalAmount)}
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
 
             <Section title='Служебное'>
                 <Row label='Создал' value={createdByName} />

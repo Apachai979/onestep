@@ -46,6 +46,12 @@ export default async function CrmLayout({ children }) {
                         >
                             Конечные потребители
                         </Link>
+                        <Link
+                            href='/crm/products'
+                            className='text-gray-600 hover:text-primary_green'
+                        >
+                            Товары
+                        </Link>
                         {role === "ADMIN" && (
                             <Link
                                 href='/crm/users'

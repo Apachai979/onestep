@@ -1,6 +1,9 @@
 "use client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import DadataSearch from "./DadataSearch"
+
+const DADATA_FIELDS = ["name", "inn", "kpp", "ogrn", "okpo", "okved", "region", "address"]
 
 const EMPTY = {
     name: "",
@@ -43,6 +46,18 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
         return e => setForm(prev => ({ ...prev, [field]: e.target.value }))
     }
 
+    function applyDadata(party) {
+        setForm(prev => {
+            const next = { ...prev }
+            for (const f of DADATA_FIELDS) {
+                if (party[f] !== undefined && party[f] !== null && party[f] !== "") {
+                    next[f] = party[f]
+                }
+            }
+            return next
+        })
+    }
+
     async function handleSubmit(e) {
         e.preventDefault()
         setError("")
@@ -75,6 +90,8 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
 
     return (
         <form onSubmit={handleSubmit} className='space-y-6'>
+            <DadataSearch onPick={applyDadata} />
+
             <Section title='Основное'>
                 <Field label='Название *' value={form.name} onChange={update("name")} required />
                 <Field label='Регион *' value={form.region} onChange={update("region")} required />

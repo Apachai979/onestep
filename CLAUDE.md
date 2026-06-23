@@ -43,6 +43,10 @@ The `/api/neosets` route ([app/api/neosets/route.js](app/api/neosets/route.js)) 
 
 NextAuth with GitHub, Google, and Mail.ru providers, configured in [configs/auth.ts](configs/auth.ts) and mounted at [app/api/auth/[...nextauth]/route.js](app/api/auth/%5B...nextauth%5D/route.js). Required env vars: `GITHUB_ID`, `GITHUB_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_SECRET`, `MAILRU_CLIENT_ID`, `MAILRU_CLIENT_SECRET`, plus `NEXTAUTH_URL` / `NEXTAUTH_SECRET`. Remote images from `avatars.githubusercontent.com` and `lh3.googleusercontent.com` are allowlisted in [next.config.mjs](next.config.mjs) — add any new auth provider avatar host there.
 
+### CRM external integrations
+
+- **DaData (party search)** — counterparty form ([components/crm/CounterpartyForm.jsx](components/crm/CounterpartyForm.jsx)) uses [components/crm/DadataSearch.jsx](components/crm/DadataSearch.jsx) which calls the server proxy [app/api/crm/dadata/find-party/route.js](app/api/crm/dadata/find-party/route.js). The proxy keeps the token server-side. Required env var: `DADATA_API_KEY`. The lib at [lib/crm/dadata.js](lib/crm/dadata.js) auto-routes between `findById/party` (when query is 10/12/13/15 digits — INN/OGRN/OKPO) and `suggest/party` (free text). If a new endpoint or field mapping is needed, change it there — the rest of the stack just passes objects through.
+
 ### Styling
 
 Tailwind with an extensive custom theme in [tailwind.config.js](tailwind.config.js): brand color tokens (`night_green`, `primary_green`, `dark_green`, `light_green`, `body_bg`, etc. — note several have duplicate alias names like `mainGreen`/`primary_green`, both are in use), custom screens (`sm920`, `lg1100`, `lg1245`, `md1372`...), and named keyframes/animations (`emersion`, `apparition`, `transformer`, `shaker`, `spinner`). Prefer existing tokens over raw hex.

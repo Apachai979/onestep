@@ -1,9 +1,10 @@
 "use client"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import DadataSearch from "./DadataSearch"
 
-const DADATA_FIELDS = ["name", "inn", "kpp", "ogrn", "okpo", "okved", "region", "address"]
+const DADATA_PARTY_FIELDS = ["name", "inn", "kpp", "ogrn", "okpo", "okved", "region", "address"]
+const BIK_RE = /^\d{9}$/
 
 const EMPTY = {
     name: "",
@@ -46,10 +47,10 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
         return e => setForm(prev => ({ ...prev, [field]: e.target.value }))
     }
 
-    function applyDadata(party) {
+    function applyDadataParty(party) {
         setForm(prev => {
             const next = { ...prev }
-            for (const f of DADATA_FIELDS) {
+            for (const f of DADATA_PARTY_FIELDS) {
                 if (party[f] !== undefined && party[f] !== null && party[f] !== "") {
                     next[f] = party[f]
                 }
@@ -57,6 +58,57 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
             return next
         })
     }
+
+    const [bankLookup, setBankLookup] = useState({ status: "idle", message: "" })
+    const lastBikRef = useRef("")
+
+    useEffect(() => {
+        const bik = form.bik.trim()
+        if (!BIK_RE.test(bik)) {
+            lastBikRef.current = bik
+            setBankLookup({ status: "idle", message: "" })
+            return
+        }
+        if (bik === lastBikRef.current) return
+        lastBikRef.current = bik
+
+        const controller = new AbortController()
+        setBankLookup({ status: "loading", message: "Ищем банк..." })
+
+        fetch("/api/crm/dadata/find-bank", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: bik }),
+            signal: controller.signal,
+        })
+            .then(async r => {
+                const data = await r.json().catch(() => ({}))
+                if (!r.ok) throw new Error(data.error || "Ошибка поиска банка")
+                return data.items || []
+            })
+            .then(items => {
+                const bank = items[0]
+                if (!bank) {
+                    setBankLookup({ status: "not-found", message: "Банк не найден" })
+                    return
+                }
+                setForm(prev => ({
+                    ...prev,
+                    bankName: bank.name || prev.bankName,
+                    bankCorrAccount: bank.bankCorrAccount || prev.bankCorrAccount,
+                }))
+                setBankLookup({
+                    status: "found",
+                    message: `Подставлено: ${bank.name}`,
+                })
+            })
+            .catch(err => {
+                if (err.name === "AbortError") return
+                setBankLookup({ status: "error", message: err.message || "Ошибка" })
+            })
+
+        return () => controller.abort()
+    }, [form.bik])
 
     async function handleSubmit(e) {
         e.preventDefault()
@@ -90,7 +142,7 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
 
     return (
         <form onSubmit={handleSubmit} className='space-y-6'>
-            <DadataSearch onPick={applyDadata} />
+            <DadataSearch target='party' onPick={applyDadataParty} />
 
             <Section title='Основное'>
                 <Field label='Название *' value={form.name} onChange={update("name")} required />
@@ -130,7 +182,29 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                     onChange={update("bankName")}
                     className='sm:col-span-2'
                 />
-                <Field label='БИК' value={form.bik} onChange={update("bik")} />
+                <div>
+                    <label className='mb-1 block text-sm text-gray-700'>БИК</label>
+                    <input
+                        value={form.bik}
+                        onChange={update("bik")}
+                        inputMode='numeric'
+                        placeholder='9 цифр — поиск автоматически'
+                        className='w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-primary_green focus:outline-none'
+                    />
+                    {bankLookup.status !== "idle" && (
+                        <p
+                            className={`mt-1 text-xs ${
+                                bankLookup.status === "found"
+                                    ? "text-primary_green"
+                                    : bankLookup.status === "loading"
+                                      ? "text-gray-500"
+                                      : "text-red-600"
+                            }`}
+                        >
+                            {bankLookup.message}
+                        </p>
+                    )}
+                </div>
                 <Field
                     label='Расчётный счёт'
                     value={form.bankAccount}

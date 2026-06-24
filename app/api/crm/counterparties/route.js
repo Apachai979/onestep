@@ -18,14 +18,6 @@ export async function GET(request) {
         }
         where.type = type
     }
-    if (region) where.region = { contains: region }
-    if (q) {
-        where.OR = [
-            { name: { contains: q } },
-            { inn: { contains: q } },
-            { contactPerson: { contains: q } },
-        ]
-    }
 
     const items = await prisma.counterparty.findMany({
         where,
@@ -45,7 +37,30 @@ export async function GET(request) {
             },
         },
     })
-    return Response.json({ items })
+
+    const filtered = items.filter(it => {
+        if (region) {
+            const r = region.toLowerCase()
+            if (!(it.region || "").toLowerCase().includes(r)) return false
+        }
+        if (q) {
+            const ql = q.toLowerCase()
+            const inName = (it.name || "").toLowerCase().includes(ql)
+            const inInn = (it.inn || "").toLowerCase().includes(ql)
+            const inContact = it.contacts?.some(c => {
+                const fn = `${c.firstName ?? ""} ${c.lastName ?? ""}`.toLowerCase()
+                return (
+                    fn.includes(ql) ||
+                    (c.email || "").toLowerCase().includes(ql) ||
+                    (c.phone || "").toLowerCase().includes(ql)
+                )
+            })
+            if (!inName && !inInn && !inContact) return false
+        }
+        return true
+    })
+
+    return Response.json({ items: filtered })
 }
 
 export async function POST(request) {

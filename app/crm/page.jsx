@@ -20,6 +20,16 @@ export default async function CrmHome() {
 
             <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
                 <CrmCard
+                    title='Задачи'
+                    description='Список и календарь задач: типы, дедлайны, ответственные.'
+                    href='/crm/tasks'
+                />
+                <CrmCard
+                    title='Сделки (канбан)'
+                    description='Прямые продажи клиентам: канбан-доска со статусами от «Новая» до «Выиграна».'
+                    href='/crm/deals'
+                />
+                <CrmCard
                     title='Проекты (аукционы)'
                     description='Список действующих и завершённых проектов, связки дистрибьютор — конечный потребитель.'
                     href='/crm/projects'

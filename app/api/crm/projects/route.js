@@ -33,19 +33,6 @@ export async function GET(request) {
     if (customerId) where.endCustomerId = customerId
     if (distributorId) where.distributorId = distributorId
     if (managerId) where.managerId = managerId
-    if (q) {
-        where.OR = [
-            { externalAuctionId: { contains: q } },
-            { internalName: { contains: q } },
-        ]
-    }
-    if (region) {
-        where.OR = [
-            ...(where.OR || []),
-            { distributor: { region: { contains: region } } },
-            { endCustomer: { region: { contains: region } } },
-        ]
-    }
     if (dateFrom || dateTo) {
         where.auctionDate = {}
         if (dateFrom) where.auctionDate.gte = new Date(`${dateFrom}T00:00:00.000Z`)
@@ -61,7 +48,26 @@ export async function GET(request) {
             manager: { select: MANAGER_SELECT },
         },
     })
-    return Response.json({ items })
+
+    const filtered = items.filter(p => {
+        if (q) {
+            const ql = q.toLowerCase()
+            const matchQ =
+                (p.externalAuctionId || "").toLowerCase().includes(ql) ||
+                (p.internalName || "").toLowerCase().includes(ql)
+            if (!matchQ) return false
+        }
+        if (region) {
+            const rl = region.toLowerCase()
+            const matchR =
+                (p.distributor?.region || "").toLowerCase().includes(rl) ||
+                (p.endCustomer?.region || "").toLowerCase().includes(rl)
+            if (!matchR) return false
+        }
+        return true
+    })
+
+    return Response.json({ items: filtered })
 }
 
 export async function POST(request) {

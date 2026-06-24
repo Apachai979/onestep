@@ -1,10 +1,13 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { formatMoney } from "@/lib/crm/format"
 import { looksLikeUrl } from "@/lib/crm/project"
 import ProjectItemsSection from "@/components/crm/ProjectItemsSection"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
+import RelatedTasksSection from "@/components/crm/RelatedTasksSection"
 
 export const metadata = { title: "Проект | CRM" }
 
@@ -19,6 +22,7 @@ function fmtDate(d) {
 }
 
 export default async function ProjectPage({ params }) {
+    const session = await getServerSession(authOptions)
     const item = await prisma.project.findUnique({
         where: { id: params.id },
         include: {
@@ -147,6 +151,13 @@ export default async function ProjectPage({ params }) {
             </section>
 
             <ProjectItemsSection projectId={item.id} initialItems={itemsForClient} />
+
+            <RelatedTasksSection
+                relationKind='project'
+                relationId={item.id}
+                currentUserId={session?.user?.id}
+                currentUserRole={session?.user?.role}
+            />
         </div>
     )
 }

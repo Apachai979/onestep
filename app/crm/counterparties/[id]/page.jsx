@@ -1,14 +1,18 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { COUNTERPARTY_TYPE_LABELS } from "@/lib/crm/counterparty"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import { PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import ContactsSection from "@/components/crm/ContactsSection"
+import RelatedTasksSection from "@/components/crm/RelatedTasksSection"
 
 export const metadata = { title: "Контрагент | CRM" }
 
 export default async function CounterpartyPage({ params }) {
+    const session = await getServerSession(authOptions)
     const item = await prisma.counterparty.findUnique({
         where: { id: params.id },
         include: {
@@ -78,6 +82,13 @@ export default async function CounterpartyPage({ params }) {
             </Section>
 
             <ContactsSection counterpartyId={item.id} initialContacts={contactsForClient} />
+
+            <RelatedTasksSection
+                relationKind={item.type === "DISTRIBUTOR" ? "distributor" : "endCustomer"}
+                relationId={item.id}
+                currentUserId={session?.user?.id}
+                currentUserRole={session?.user?.role}
+            />
 
             <Section title='Реквизиты'>
                 <Row label='ИНН' value={item.inn} />

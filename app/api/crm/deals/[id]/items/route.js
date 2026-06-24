@@ -1,0 +1,43 @@
+import prisma from "@/lib/client"
+import { requireCrmSession } from "@/lib/crm/session"
+import { parseDealItemPayload } from "@/lib/crm/deal"
+
+async function recalcTotal(tx, dealId) {
+    const items = await tx.dealItem.findMany({ where: { dealId }, select: { amount: true } })
+    const total = items.reduce((s, it) => s + Number(it.amount), 0)
+    await tx.deal.update({ where: { id: dealId }, data: { totalAmount: total.toString() } })
+}
+
+export async function POST(request, { params }) {
+    const { session, response } = await requireCrmSession()
+    if (!session) return response
+
+    const deal = await prisma.deal.findUnique({ where: { id: params.id } })
+    if (!deal) return Response.json({ error: "Сделка не найдена" }, { status: 404 })
+
+    let body
+    try {
+        body = await request.json()
+    } catch {
+        return Response.json({ error: "Некорректный JSON" }, { status: 400 })
+    }
+
+    const { data, error } = parseDealItemPayload(body)
+    if (error) return Response.json({ error }, { status: 400 })
+
+    if (data.productId) {
+        const exists = await prisma.product.findUnique({
+            where: { id: data.productId },
+            select: { id: true },
+        })
+        if (!exists) return Response.json({ error: "Товар не найден" }, { status: 400 })
+    }
+
+    const created = await prisma.$transaction(async tx => {
+        const item = await tx.dealItem.create({ data: { ...data, dealId: params.id } })
+        await recalcTotal(tx, params.id)
+        return item
+    })
+
+    return Response.json({ item: created }, { status: 201 })
+}

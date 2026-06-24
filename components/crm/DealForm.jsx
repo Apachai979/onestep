@@ -1,0 +1,254 @@
+"use client"
+import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
+import { DEAL_STATUSES, DEAL_STATUS_LABELS } from "@/lib/crm/deal"
+import SearchableSelect from "./SearchableSelect"
+
+const EMPTY = {
+    title: "",
+    counterpartyId: "",
+    contactId: "",
+    managerId: "",
+    status: "NEW",
+    note: "",
+}
+
+function safeJson(text) {
+    try {
+        return JSON.parse(text)
+    } catch {
+        return null
+    }
+}
+
+function managerName(u) {
+    return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
+}
+
+function contactName(c) {
+    const fn = `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim()
+    return fn || c.email || c.phone || "Контакт без имени"
+}
+
+export default function DealForm({ initial, mode = "create", currentUserId, defaultStatus }) {
+    const router = useRouter()
+
+    const [form, setForm] = useState(() => {
+        if (!initial) {
+            return {
+                ...EMPTY,
+                managerId: currentUserId || "",
+                status: defaultStatus || "NEW",
+            }
+        }
+        return {
+            title: initial.title ?? "",
+            counterpartyId: initial.counterpartyId ?? "",
+            contactId: initial.contactId ?? "",
+            managerId: initial.managerId ?? "",
+            status: initial.status ?? "NEW",
+            note: initial.note ?? "",
+        }
+    })
+    const [counterparties, setCounterparties] = useState([])
+    const [managers, setManagers] = useState([])
+    const [contacts, setContacts] = useState([])
+    const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        Promise.all([
+            fetch("/api/crm/counterparties").then(r => r.json()),
+            fetch("/api/crm/users").then(r => r.json()),
+        ])
+            .then(([c, u]) => {
+                setCounterparties(c.items || [])
+                setManagers(u.items || [])
+            })
+            .catch(() => {})
+    }, [])
+
+    useEffect(() => {
+        if (!form.counterpartyId) {
+            setContacts([])
+            return
+        }
+        fetch(`/api/crm/counterparties/${form.counterpartyId}`)
+            .then(r => r.json())
+            .then(d => setContacts(d.item?.contacts || []))
+            .catch(() => setContacts([]))
+    }, [form.counterpartyId])
+
+    function update(field) {
+        return e => setForm(prev => ({ ...prev, [field]: e.target.value }))
+    }
+
+    const counterpartyOptions = useMemo(
+        () =>
+            counterparties.map(c => ({
+                id: c.id,
+                label: c.name,
+                sublabel: `${c.type === "DISTRIBUTOR" ? "Дистрибьютор" : "Конечный потребитель"}${
+                    c.inn ? ` · ИНН ${c.inn}` : ""
+                }${c.region ? ` · ${c.region}` : ""}`,
+                search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
+            })),
+        [counterparties],
+    )
+
+    async function handleSubmit(e) {
+        e.preventDefault()
+        setError("")
+        setLoading(true)
+
+        const payload = { ...form, contactId: form.contactId || null }
+        const url = mode === "create" ? "/api/crm/deals" : `/api/crm/deals/${initial.id}`
+        const method = mode === "create" ? "POST" : "PATCH"
+
+        const res = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        })
+
+        if (!res.ok) {
+            const text = await res.text()
+            const data = text ? safeJson(text) : {}
+            setError(data?.error || "Не удалось сохранить")
+            setLoading(false)
+            return
+        }
+        const data = await res.json()
+        router.push(`/crm/deals/${data.item?.id || initial?.id}`)
+        router.refresh()
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className='space-y-5'>
+            <Section title='Основное'>
+                <Field
+                    label='Название сделки (опц.)'
+                    value={form.title}
+                    onChange={update("title")}
+                    placeholder='Если пусто — будет «Сделка с {клиент}»'
+                    className='sm:col-span-2'
+                />
+                <div className='sm:col-span-2'>
+                    <label className='mb-1 block text-sm text-gray-700'>Клиент *</label>
+                    <SearchableSelect
+                        value={form.counterpartyId}
+                        onChange={id =>
+                            setForm(prev => ({ ...prev, counterpartyId: id, contactId: "" }))
+                        }
+                        required
+                        placeholder='Введите название или ИНН'
+                        options={counterpartyOptions}
+                    />
+                </div>
+                <div>
+                    <label className='mb-1 block text-sm text-gray-700'>Контактное лицо</label>
+                    <SearchableSelect
+                        value={form.contactId}
+                        onChange={id => setForm(prev => ({ ...prev, contactId: id }))}
+                        disabled={!form.counterpartyId}
+                        placeholder={
+                            !form.counterpartyId
+                                ? "Сначала выберите клиента"
+                                : contacts.length === 0
+                                  ? "У клиента нет контактов"
+                                  : "— Не выбран —"
+                        }
+                        options={contacts.map(c => ({
+                            id: c.id,
+                            label: contactName(c),
+                            search: `${c.firstName ?? ""} ${c.lastName ?? ""} ${c.email ?? ""} ${c.phone ?? ""}`,
+                        }))}
+                    />
+                </div>
+                <div>
+                    <label className='mb-1 block text-sm text-gray-700'>
+                        Ответственный менеджер *
+                    </label>
+                    <SearchableSelect
+                        value={form.managerId}
+                        onChange={id => setForm(prev => ({ ...prev, managerId: id }))}
+                        required
+                        options={managers.map(m => ({
+                            id: m.id,
+                            label: managerName(m),
+                            search: `${m.firstName ?? ""} ${m.lastName ?? ""} ${m.email ?? ""}`,
+                        }))}
+                    />
+                </div>
+            </Section>
+
+            <Section title='Статус и примечание'>
+                <div className='sm:col-span-2'>
+                    <label className='mb-1 block text-sm text-gray-700'>Статус</label>
+                    <select
+                        value={form.status}
+                        onChange={update("status")}
+                        className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-primary_green focus:outline-none'
+                    >
+                        {DEAL_STATUSES.map(s => (
+                            <option key={s} value={s}>
+                                {DEAL_STATUS_LABELS[s]}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className='sm:col-span-2'>
+                    <label className='mb-1 block text-sm text-gray-700'>Примечание</label>
+                    <textarea
+                        rows={3}
+                        value={form.note}
+                        onChange={update("note")}
+                        className='w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-primary_green focus:outline-none'
+                    />
+                </div>
+            </Section>
+
+            {error && <p className='text-sm text-red-600'>{error}</p>}
+
+            <div className='flex justify-end gap-3'>
+                <button
+                    type='button'
+                    onClick={() => router.back()}
+                    className='rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100'
+                >
+                    Отмена
+                </button>
+                <button
+                    type='submit'
+                    disabled={loading}
+                    className='rounded-lg bg-primary_green px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-contrast_green disabled:cursor-not-allowed disabled:opacity-60'
+                >
+                    {loading ? "Сохраняем..." : mode === "create" ? "Создать" : "Сохранить"}
+                </button>
+            </div>
+        </form>
+    )
+}
+
+function Section({ title, children }) {
+    return (
+        <section className='rounded-xl border border-gray-200 bg-white p-5'>
+            <h2 className='mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500'>
+                {title}
+            </h2>
+            <div className='grid gap-4 sm:grid-cols-2'>{children}</div>
+        </section>
+    )
+}
+
+function Field({ label, className = "", ...props }) {
+    return (
+        <div className={className}>
+            <label className='mb-1 block text-sm text-gray-700'>{label}</label>
+            <input
+                {...props}
+                className='w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-primary_green focus:outline-none'
+            />
+        </div>
+    )
+}

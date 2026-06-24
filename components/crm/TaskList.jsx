@@ -1,0 +1,249 @@
+"use client"
+import Link from "next/link"
+import { useEffect, useState } from "react"
+import {
+    TASK_STATUSES,
+    TASK_STATUS_COLORS,
+    TASK_STATUS_LABELS,
+    TASK_TYPES,
+    allDayDateLabel,
+} from "@/lib/crm/task"
+import { TaskTypeBadge } from "./TaskTypeIcon"
+import TaskCloseModal from "./TaskCloseModal"
+
+function safeJson(text) {
+    try {
+        return JSON.parse(text)
+    } catch {
+        return null
+    }
+}
+
+function fullName(u) {
+    if (!u) return "—"
+    return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
+}
+
+function fmtRange(t) {
+    if (t.allDay) {
+        const s = allDayDateLabel(t.startAt)
+        const e = allDayDateLabel(t.endAt)
+        return s === e ? s : `${s} — ${e}`
+    }
+    const start = new Date(t.startAt)
+    const end = new Date(t.endAt)
+    return `${start.toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" })} — ${end.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}`
+}
+
+function relationLink(t) {
+    if (t.deal)
+        return {
+            href: `/crm/deals/${t.deal.id}`,
+            label: t.deal.title || `Сделка с ${t.deal.counterparty?.name || "клиентом"}`,
+        }
+    if (t.project)
+        return { href: `/crm/projects/${t.project.id}`, label: t.project.internalName }
+    if (t.distributor)
+        return { href: `/crm/counterparties/${t.distributor.id}`, label: t.distributor.name }
+    if (t.endCustomer)
+        return { href: `/crm/counterparties/${t.endCustomer.id}`, label: t.endCustomer.name }
+    return null
+}
+
+export default function TaskList({ currentUserId, currentUserRole }) {
+    const [items, setItems] = useState(null)
+    const [error, setError] = useState("")
+    const [closing, setClosing] = useState(null)
+    const [filters, setFilters] = useState({
+        status: "OPEN",
+        type: "",
+        mine: false,
+    })
+
+    async function load() {
+        const params = new URLSearchParams()
+        if (filters.status) params.set("status", filters.status)
+        if (filters.type) params.set("type", filters.type)
+        if (filters.mine) params.set("mine", "1")
+        setError("")
+        const r = await fetch(`/api/crm/tasks?${params.toString()}`)
+        const text = await r.text()
+        const data = text ? safeJson(text) : {}
+        if (!r.ok) {
+            setError(data?.error || `Ошибка ${r.status}`)
+            setItems([])
+            return
+        }
+        setItems(data.items || [])
+    }
+
+    useEffect(() => {
+        load()
+    }, [filters])
+
+    function canClose(t) {
+        if (currentUserRole === "ADMIN") return true
+        return t.assigneeId === currentUserId || t.createdById === currentUserId
+    }
+
+    function isOverdue(t) {
+        if (t.status !== "OPEN") return false
+        return new Date(t.endAt) < new Date()
+    }
+
+    return (
+        <div className='space-y-4'>
+            <div className='flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white p-4'>
+                <div className='flex-1 min-w-[180px]'>
+                    <label className='mb-1 block text-xs text-gray-600'>Статус</label>
+                    <select
+                        value={filters.status}
+                        onChange={e =>
+                            setFilters(prev => ({ ...prev, status: e.target.value }))
+                        }
+                        className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                    >
+                        <option value=''>Все</option>
+                        {TASK_STATUSES.map(s => (
+                            <option key={s} value={s}>
+                                {TASK_STATUS_LABELS[s]}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className='flex-1 min-w-[180px]'>
+                    <label className='mb-1 block text-xs text-gray-600'>Тип</label>
+                    <select
+                        value={filters.type}
+                        onChange={e =>
+                            setFilters(prev => ({ ...prev, type: e.target.value }))
+                        }
+                        className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                    >
+                        <option value=''>Все</option>
+                        {TASK_TYPES.map(t => (
+                            <option key={t.key} value={t.key}>
+                                {t.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <label className='flex items-center gap-2 text-sm text-gray-700'>
+                    <input
+                        type='checkbox'
+                        checked={filters.mine}
+                        onChange={e =>
+                            setFilters(prev => ({ ...prev, mine: e.target.checked }))
+                        }
+                    />
+                    Только мои
+                </label>
+            </div>
+
+            {error && <p className='text-sm text-red-600'>{error}</p>}
+
+            <div className='overflow-x-auto rounded-xl border border-gray-200 bg-white'>
+                <table className='w-full text-sm'>
+                    <thead className='bg-gray-50 text-left text-xs uppercase text-gray-500'>
+                        <tr>
+                            <th className='px-4 py-3'>Заголовок</th>
+                            <th className='px-4 py-3'>Тип</th>
+                            <th className='px-4 py-3'>Срок</th>
+                            <th className='px-4 py-3'>Ответственный</th>
+                            <th className='px-4 py-3'>Связь</th>
+                            <th className='px-4 py-3'>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {items === null && (
+                            <tr>
+                                <td colSpan={6} className='px-4 py-6 text-center text-gray-400'>
+                                    Загрузка...
+                                </td>
+                            </tr>
+                        )}
+                        {items?.length === 0 && (
+                            <tr>
+                                <td colSpan={6} className='px-4 py-6 text-center text-gray-400'>
+                                    Задач не найдено
+                                </td>
+                            </tr>
+                        )}
+                        {items?.map(t => {
+                            const rel = relationLink(t)
+                            const overdue = isOverdue(t)
+                            const clickable = t.status === "OPEN" && canClose(t)
+                            return (
+                                <tr
+                                    key={t.id}
+                                    onClick={() => {
+                                        if (clickable) setClosing(t)
+                                    }}
+                                    className={`border-t border-gray-100 ${
+                                        clickable
+                                            ? "cursor-pointer hover:bg-gray-50"
+                                            : "cursor-default"
+                                    }`}
+                                    title={clickable ? "Открыть и закрыть задачу" : ""}
+                                >
+                                    <td className='px-4 py-3'>
+                                        <div className='font-medium text-night_green'>
+                                            {t.title}
+                                        </div>
+                                        {t.description && (
+                                            <div className='mt-0.5 line-clamp-1 text-xs text-gray-500'>
+                                                {t.description}
+                                            </div>
+                                        )}
+                                    </td>
+                                    <td className='px-4 py-3'>
+                                        <TaskTypeBadge type={t.type} />
+                                    </td>
+                                    <td className='px-4 py-3 text-gray-700'>
+                                        <span className={overdue ? "text-red-600" : ""}>
+                                            {fmtRange(t)}
+                                        </span>
+                                    </td>
+                                    <td className='px-4 py-3 text-gray-700'>
+                                        {fullName(t.assignee)}
+                                    </td>
+                                    <td className='px-4 py-3 text-gray-700'>
+                                        {rel ? (
+                                            <Link
+                                                href={rel.href}
+                                                onClick={e => e.stopPropagation()}
+                                                className='text-night_green underline hover:text-primary_green'
+                                            >
+                                                {rel.label}
+                                            </Link>
+                                        ) : (
+                                            "—"
+                                        )}
+                                    </td>
+                                    <td className='px-4 py-3'>
+                                        <span
+                                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${TASK_STATUS_COLORS[t.status]}`}
+                                        >
+                                            {TASK_STATUS_LABELS[t.status]}
+                                        </span>
+                                    </td>
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
+            </div>
+
+            {closing && (
+                <TaskCloseModal
+                    task={closing}
+                    onClose={() => setClosing(null)}
+                    onClosed={() => {
+                        setClosing(null)
+                        load()
+                    }}
+                />
+            )}
+        </div>
+    )
+}

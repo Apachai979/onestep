@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, buildInternalName } from "@/lib/crm/project"
 import ProjectContactsPicker from "./ProjectContactsPicker"
+import SearchableSelect from "./SearchableSelect"
 
 const EMPTY = {
     externalAuctionId: "",
@@ -76,6 +77,42 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
         const c = refs.customers.find(x => x.id === form.endCustomerId)
         return buildInternalName(d?.name, c?.name)
     }, [refs, form.distributorId, form.endCustomerId])
+
+    const distributorOptions = useMemo(
+        () =>
+            refs.distributors.map(c => ({
+                id: c.id,
+                label: c.name,
+                sublabel: `${c.inn ? `ИНН ${c.inn}` : ""}${
+                    c.inn && c.region ? " · " : ""
+                }${c.region ?? ""}`,
+                search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
+            })),
+        [refs.distributors],
+    )
+
+    const customerOptions = useMemo(
+        () =>
+            refs.customers.map(c => ({
+                id: c.id,
+                label: c.name,
+                sublabel: `${c.inn ? `ИНН ${c.inn}` : ""}${
+                    c.inn && c.region ? " · " : ""
+                }${c.region ?? ""}`,
+                search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
+            })),
+        [refs.customers],
+    )
+
+    const managerOptions = useMemo(
+        () =>
+            refs.managers.map(m => ({
+                id: m.id,
+                label: `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || m.email,
+                search: `${m.firstName ?? ""} ${m.lastName ?? ""} ${m.email ?? ""}`,
+            })),
+        [refs.managers],
+    )
 
     function update(field) {
         return e => setForm(prev => ({ ...prev, [field]: e.target.value }))
@@ -185,31 +222,39 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
             </Section>
 
             <Section title='Участники'>
-                <Select
-                    label='Конечный потребитель *'
-                    value={form.endCustomerId}
-                    onChange={update("endCustomerId")}
-                    options={refs.customers}
-                    required
-                />
-                <Select
-                    label='Дистрибьютор *'
-                    value={form.distributorId}
-                    onChange={update("distributorId")}
-                    options={refs.distributors}
-                    required
-                />
-                <Select
-                    label='Ответственный менеджер *'
-                    value={form.managerId}
-                    onChange={update("managerId")}
-                    options={refs.managers.map(m => ({
-                        id: m.id,
-                        name:
-                            `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || m.email,
-                    }))}
-                    required
-                />
+                <div>
+                    <label className='mb-1 block text-sm text-gray-700'>
+                        Конечный потребитель *
+                    </label>
+                    <SearchableSelect
+                        value={form.endCustomerId}
+                        onChange={id => setForm(prev => ({ ...prev, endCustomerId: id }))}
+                        required
+                        placeholder='Введите название или ИНН'
+                        options={customerOptions}
+                    />
+                </div>
+                <div>
+                    <label className='mb-1 block text-sm text-gray-700'>Дистрибьютор *</label>
+                    <SearchableSelect
+                        value={form.distributorId}
+                        onChange={id => setForm(prev => ({ ...prev, distributorId: id }))}
+                        required
+                        placeholder='Введите название или ИНН'
+                        options={distributorOptions}
+                    />
+                </div>
+                <div>
+                    <label className='mb-1 block text-sm text-gray-700'>
+                        Ответственный менеджер *
+                    </label>
+                    <SearchableSelect
+                        value={form.managerId}
+                        onChange={id => setForm(prev => ({ ...prev, managerId: id }))}
+                        required
+                        options={managerOptions}
+                    />
+                </div>
             </Section>
 
             <section className='rounded-xl border border-gray-200 bg-white p-5'>
@@ -353,23 +398,3 @@ function Field({ label, className = "", ...props }) {
     )
 }
 
-function Select({ label, value, onChange, options, required, className = "" }) {
-    return (
-        <div className={className}>
-            <label className='mb-1 block text-sm text-gray-700'>{label}</label>
-            <select
-                value={value}
-                onChange={onChange}
-                required={required}
-                className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-primary_green focus:outline-none'
-            >
-                <option value=''>— Выберите —</option>
-                {options.map(o => (
-                    <option key={o.id} value={o.id}>
-                        {o.name}
-                    </option>
-                ))}
-            </select>
-        </div>
-    )
-}

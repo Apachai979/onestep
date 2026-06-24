@@ -1,8 +1,9 @@
 "use client"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { PROJECT_STATUS_LABELS, PROJECT_STATUSES, looksLikeUrl } from "@/lib/crm/project"
 import { formatMoney } from "@/lib/crm/format"
+import SearchableSelect from "./SearchableSelect"
 
 const STATUS_CLASS = {
     IN_PROGRESS: "bg-blue-100 text-blue-800",
@@ -76,6 +77,46 @@ export default function ProjectsList() {
         return e => setFilters(prev => ({ ...prev, [field]: e.target.value }))
     }
 
+    function setId(field) {
+        return id => setFilters(prev => ({ ...prev, [field]: id }))
+    }
+
+    const distributorOptions = useMemo(
+        () =>
+            refs.distributors.map(c => ({
+                id: c.id,
+                label: c.name,
+                sublabel: `${c.inn ? `ИНН ${c.inn}` : ""}${
+                    c.inn && c.region ? " · " : ""
+                }${c.region ?? ""}`,
+                search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
+            })),
+        [refs.distributors],
+    )
+
+    const customerOptions = useMemo(
+        () =>
+            refs.customers.map(c => ({
+                id: c.id,
+                label: c.name,
+                sublabel: `${c.inn ? `ИНН ${c.inn}` : ""}${
+                    c.inn && c.region ? " · " : ""
+                }${c.region ?? ""}`,
+                search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
+            })),
+        [refs.customers],
+    )
+
+    const managerOptions = useMemo(
+        () =>
+            refs.managers.map(m => ({
+                id: m.id,
+                label: fullName(m),
+                search: `${m.firstName ?? ""} ${m.lastName ?? ""} ${m.email ?? ""}`,
+            })),
+        [refs.managers],
+    )
+
     return (
         <div className='space-y-4'>
             <div className='grid gap-3 rounded-xl border border-gray-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4'>
@@ -109,46 +150,28 @@ export default function ProjectsList() {
                     />
                 </FilterField>
                 <FilterField label='Менеджер'>
-                    <select
+                    <SearchableSelect
                         value={filters.managerId}
-                        onChange={set("managerId")}
-                        className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
-                    >
-                        <option value=''>Все</option>
-                        {refs.managers.map(m => (
-                            <option key={m.id} value={m.id}>
-                                {fullName(m)}
-                            </option>
-                        ))}
-                    </select>
+                        onChange={setId("managerId")}
+                        options={managerOptions}
+                        placeholder='Все'
+                    />
                 </FilterField>
                 <FilterField label='Дистрибьютор'>
-                    <select
+                    <SearchableSelect
                         value={filters.distributorId}
-                        onChange={set("distributorId")}
-                        className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
-                    >
-                        <option value=''>Все</option>
-                        {refs.distributors.map(d => (
-                            <option key={d.id} value={d.id}>
-                                {d.name}
-                            </option>
-                        ))}
-                    </select>
+                        onChange={setId("distributorId")}
+                        options={distributorOptions}
+                        placeholder='Все'
+                    />
                 </FilterField>
                 <FilterField label='Конечный потребитель'>
-                    <select
+                    <SearchableSelect
                         value={filters.customerId}
-                        onChange={set("customerId")}
-                        className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
-                    >
-                        <option value=''>Все</option>
-                        {refs.customers.map(c => (
-                            <option key={c.id} value={c.id}>
-                                {c.name}
-                            </option>
-                        ))}
-                    </select>
+                        onChange={setId("customerId")}
+                        options={customerOptions}
+                        placeholder='Все'
+                    />
                 </FilterField>
                 <FilterField label='Дата с'>
                     <input

@@ -23,10 +23,31 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  counterparties Counterparty[] @relation("CounterpartyCreatedBy")
-  projects       Project[]      @relation("ProjectManager")
+  counterparties   Counterparty[] @relation("CounterpartyCreatedBy")
+  projects         Project[]      @relation("ProjectManager")
+  dealsAsManager   Deal[]         @relation("DealManager")
+  dealsAsAuthor    Deal[]         @relation("DealCreatedBy")
+  invites          Invite[]       @relation("InviteCreatedBy")
+  tasksAsAssignee  Task[]         @relation("TaskAssignee")
+  tasksAsAuthor    Task[]         @relation("TaskCreatedBy")
 
   @@map("users")
+}
+
+model Invite {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  email       String?
+  role        String   @default("MANAGER")
+  expiresAt   DateTime
+  usedAt      DateTime?
+  usedByEmail String?
+  createdById String
+  createdBy   User     @relation("InviteCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([token])
+  @@map("invites")
 }
 
 model Counterparty {
@@ -57,6 +78,9 @@ model Counterparty {
 
   projectsAsDistributor Project[] @relation("ProjectDistributor")
   projectsAsEndCustomer Project[] @relation("ProjectEndCustomer")
+  deals                 Deal[]    @relation("DealCounterparty")
+  tasksAsDistributor    Task[]    @relation("TaskDistributor")
+  tasksAsEndCustomer    Task[]    @relation("TaskEndCustomer")
 
   @@index([type])
   @@index([region])
@@ -81,6 +105,7 @@ model Project {
 
   items             ProjectItem[]
   contacts          Contact[]
+  tasks             Task[]
 
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -125,6 +150,7 @@ model Product {
   updatedAt           DateTime      @updatedAt
 
   projectItems        ProjectItem[]
+  dealItems           DealItem[]    @relation("DealItemProduct")
 
   @@index([category])
   @@map("products")
@@ -145,9 +171,96 @@ model Contact {
   updatedAt      DateTime     @updatedAt
 
   projects       Project[]
+  deals          Deal[]    @relation("DealContact")
 
   @@index([counterpartyId])
   @@map("contacts")
+}
+
+model Deal {
+  id             String   @id @default(cuid())
+  title          String?
+  status         String   @default("NEW")
+  totalAmount    Decimal  @default(0)
+  note           String?
+
+  counterpartyId String
+  counterparty   Counterparty @relation("DealCounterparty", fields: [counterpartyId], references: [id])
+  contactId      String?
+  contact        Contact?     @relation("DealContact", fields: [contactId], references: [id], onDelete: SetNull)
+  managerId      String
+  manager        User         @relation("DealManager", fields: [managerId], references: [id])
+  createdById    String
+  createdBy      User         @relation("DealCreatedBy", fields: [createdById], references: [id])
+
+  items          DealItem[]
+  tasks          Task[]
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status])
+  @@index([counterpartyId])
+  @@index([managerId])
+  @@map("deals")
+}
+
+model DealItem {
+  id        String   @id @default(cuid())
+  dealId    String
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation("DealItemProduct", fields: [productId], references: [id], onDelete: SetNull)
+  sku       String?
+  name      String
+  quantity  Decimal  @default(1)
+  amount    Decimal  @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dealId])
+  @@index([productId])
+  @@map("deal_items")
+}
+
+model Task {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  type          String
+  status        String    @default("OPEN")
+  result        String?
+  startAt       DateTime
+  endAt         DateTime
+  allDay        Boolean   @default(true)
+
+  assigneeId    String
+  assignee      User      @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdById   String
+  createdBy     User      @relation("TaskCreatedBy", fields: [createdById], references: [id])
+
+  dealId         String?
+  deal           Deal?         @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  projectId      String?
+  project        Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  distributorId  String?
+  distributor    Counterparty? @relation("TaskDistributor", fields: [distributorId], references: [id], onDelete: SetNull)
+  endCustomerId  String?
+  endCustomer    Counterparty? @relation("TaskEndCustomer", fields: [endCustomerId], references: [id], onDelete: SetNull)
+
+  closedAt      DateTime?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+  @@index([assigneeId])
+  @@index([startAt])
+  @@index([dealId])
+  @@index([projectId])
+  @@index([distributorId])
+  @@index([endCustomerId])
+  @@map("tasks")
 }
 
 model Neoset {

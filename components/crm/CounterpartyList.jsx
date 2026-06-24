@@ -3,6 +3,14 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 
+function safeJson(text) {
+    try {
+        return JSON.parse(text)
+    } catch {
+        return null
+    }
+}
+
 export default function CounterpartyList({ type, newHref }) {
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
@@ -18,10 +26,12 @@ export default function CounterpartyList({ type, newHref }) {
         setError("")
         fetch(`/api/crm/counterparties?${params.toString()}`, { signal: controller.signal })
             .then(async r => {
-                if (!r.ok) throw new Error((await r.json()).error || "Ошибка загрузки")
-                return r.json()
+                const text = await r.text()
+                const data = text ? safeJson(text) : {}
+                if (!r.ok) throw new Error(data?.error || `Ошибка ${r.status}`)
+                return data
             })
-            .then(data => setItems(data.items))
+            .then(data => setItems(data.items || []))
             .catch(err => {
                 if (err.name === "AbortError") return
                 setError(err.message)

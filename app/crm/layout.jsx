@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import Link from "next/link"
 import { authOptions } from "@/configs/auth"
 import SignOutButton from "@/components/crm/SignOutButton"
+import TasksNavLink from "@/components/crm/TasksNavLink"
 
 export const metadata = {
     title: "CRM",
@@ -28,6 +29,13 @@ export default async function CrmLayout({ children }) {
                             CRM
                         </Link>
                         <span className='text-gray-300'>|</span>
+                        <TasksNavLink />
+                        <Link
+                            href='/crm/deals'
+                            className='text-gray-600 hover:text-primary_green'
+                        >
+                            Сделки
+                        </Link>
                         <Link
                             href='/crm/projects'
                             className='text-gray-600 hover:text-primary_green'

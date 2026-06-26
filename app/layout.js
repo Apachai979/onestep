@@ -20,15 +20,15 @@ export const metadata = {
     },
 }
 
-export default function RootLayout({ children, modal }) {
+export default function Layout({ children, modal }) {
     return (
         <Providers>
-            <html lang='en'>
+            <html lang='en' className="">
                 <body
-                    className={`${notoSans.className} flex min-h-screen min-w-[436px] flex-col bg-body_bg text-night_green antialiased`}
+                    className={`${notoSans.className} max-w-sm min-h-screen bg-body_bg text-night_green min-w-full antialiased overflow-visible`}
                 >
                     <TheHeader />
-                    <main className='flex-grow'>
+                    <main className='grid grid-cols-1 '>
                         {children}
                         {modal}
                     </main>

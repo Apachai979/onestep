@@ -3,9 +3,9 @@ import Modal from "@/components/Modal";
 export default function Safebox() {
     return (
         <Modal>
-            <div className="flex flex-col w-[650px] text-lg">
-                <h1 className="text-2xl font-semibold pb-3">Оптимизация хранения и упрощенная утилизация</h1>
-                <ul className="list-disc list-inside space-y-2">
+            <div className="flex flex-col text-md">
+                <h1 className="md:text-2xl text-xl font-semibold pb-3">Оптимизация хранения и упрощенная утилизация</h1>
+                <ul className="list-disc list-inside space-y-2 sm:text-lg">
                     <li>Комплектация в стерильную упаковку создает условия безопасного хранения нужных материалов</li>
                     <li>Гарантированная возможность безопасного хранения стерильных наборов до 5 лет</li>
                     <li>Отсутствие затрат на утилизацию неиспользованных перевязочных материалов. Оптимальный, четко выверенный состав элементов набора, позволяет не создавать лишних отходов в виде элементов, взятых &quot;на всякий случай&quot;</li>

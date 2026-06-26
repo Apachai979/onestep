@@ -1,9 +1,10 @@
-"use client"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
-import AnimationMenuButton from "./buttons/AnimationMenuButton"
-import AuthComponent from "./AuthComponent"
+'use client'
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import clsx from 'clsx';
+import AnimationMenuButton from './buttons/AnimationMenuButton';
+import AuthComponent from './AuthComponent';
 
 const navItems = [
     // { label: "Каталог", href: "/catalogs" },
@@ -15,85 +16,62 @@ const navItems = [
     { label: "Контакты", href: "/contacts" },
 ]
 
+const PhoneInfo = ({ className }) => (
+    <div className={clsx("-space-y-1.5 flex-none", className)}>
+        <p className="text-xs font-semibold text-stone-400">Тел./WhatsApp</p>
+        <p className="lg:text-lg text-base font-semibold">+7 (495) 231-01-11</p>
+    </div>
+);
+
 export default function Navigation() {
-    const [isActive, setIsActive] = useState(true)
-    const ulRef = useRef()
-    const pathname = usePathname()
+    const [isActive, setIsActive] = useState(true);
+    const pathname = usePathname();
 
     useEffect(() => {
-        if (!isActive) {
-            ulRef.current.className += " top-[64px] opacity-100 "
-        }
+        setIsActive(true);
+    }, [pathname]);
 
-        if (isActive) {
-            ulRef.current.className =
-                " rounded-b-3xl sm920:rounded-none sm920:flex sm920:flex-1 sm920:items-center sm920:justify-evenly z-[-1] sm920:z-auto sm920:static absolute bg-gray-200 sm920:bg-body_bg sm920:max-w-[880px] w-full left-0 sm920:w-auto xl:px-8 sm920:px-4 sm920:py-0 py-4 pl-7 text-base sm920:text-sm lg:text-base sm920:opacity-100 opacity-0 top-[-400px] transition-all ease-in duration-300 "
-        }
-    }, [isActive])
-
-    useEffect(() => {
-        setIsActive(true)
-    }, [pathname])
+    const navClasses = clsx(
+        'rounded-b-3xl sm920:rounded-none sm920:flex sm920:flex-1 sm920:items-center sm920:justify-evenly text-nowrap select-none',
+        'absolute sm920:static bg-gray-200 sm920:bg-body_bg sm920:max-w-[880px] w-full left-0 sm920:w-auto xl:px-8 sm920:px-4 sm920:py-0 py-4 pl-7',
+        'text-base sm920:text-sm lg:text-base transition-all ease-in duration-300',
+        { 'top-[64px] opacity-100 z-20': !isActive, 'top-[-400px] opacity-0 z-[-1] sm920:opacity-100 sm920:z-auto sm920:static': isActive }
+    );
 
     return (
         <>
-            <ul
-                ref={ulRef}
-                className='absolute left-0 top-[-400px] z-[-1] w-full rounded-b-3xl bg-gray-200 py-4 pl-7 text-base opacity-0 transition-all duration-300 ease-in sm920:static sm920:z-auto sm920:flex sm920:w-auto sm920:max-w-[880px] sm920:flex-1 sm920:items-center sm920:justify-evenly sm920:rounded-none sm920:bg-body_bg sm920:px-4 sm920:py-0 sm920:text-sm sm920:opacity-100 lg:text-base xl:px-8'
-            >
-                <li className='mx-4 mb-8 mt-2 text-center sm920:mx-0 sm920:my-0'>
-                    <Link
-                        href='/catalogs'
-                        className={
-                            pathname === "/catalogs"
-                                ? "rounded-full bg-contrast_green px-14 py-2 text-white shadow-inner shadow-gray-600/50 sm920:px-6 sm920:py-2"
-                                : "rounded-full bg-primary_green px-14 py-2 text-center text-white shadow-md shadow-night_green/50 transition-all hover:bg-contrast_green hover:text-white hover:shadow-inner hover:shadow-gray-600/50 sm920:px-6 sm920:py-2"
-                        }
-                    >
+            <ul className={navClasses}>
+                <li className="mx-4 mb-8 mt-2 sm920:my-0 sm920:mx-0 text-center">
+                    <Link href="/catalogs" aria-current={pathname === '/catalogs' ? 'page' : undefined}
+                        className={clsx(
+                            'rounded-full px-14 py-2 sm920:px-6 sm920:py-2 text-center transition-all',
+                            pathname === '/catalogs' ? 'bg-contrast_green text-white shadow-inner shadow-gray-600/50' : 'bg-primary_green text-white shadow-md hover:shadow-inner hover:bg-contrast_green'
+                        )}>
                         Каталог
                     </Link>
                 </li>
-
-                {navItems.map(link => {
-                    const isActive = pathname === link.href
-                    return (
-                        <li
-                            key={link.label}
-                            className='mx-4 my-6 text-center sm920:mx-0 sm920:my-0'
-                        >
-                            <Link
-                                href={link.href}
-                                className={
-                                    isActive
-                                        ? "px-1 text-primary_green duration-300"
-                                        : "px-1 duration-300 hover:text-primary_green"
-                                }
-                            >
-                                {link.label}
-                            </Link>
-                        </li>
-                    )
-                })}
-                <div className='block flex-none -space-y-1.5 text-center sm920:hidden'>
-                    <p className='text-xs font-semibold text-stone-400'>Тел./WhatsApp</p>
-                    <p className='text-base font-semibold lg:text-lg'>+7 (495) 231-01-11</p>
-                </div>
+                {navItems.map((link) => (
+                    <li key={link.label} className="mx-4 my-6 sm920:my-0 sm920:mx-0 text-center">
+                        <Link href={link.href} aria-current={pathname === link.href ? 'page' : undefined}
+                            className={clsx('px-1 duration-300', pathname === link.href ? 'text-primary_green' : 'hover:text-primary_green')}>
+                            {link.label}
+                        </Link>
+                    </li>
+                ))}
+                <PhoneInfo className="block sm920:hidden text-center" />
             </ul>
-            {/* //autorize */}
+            <PhoneInfo className="hidden sm920:block" />
             <div>
                 <AuthComponent />
             </div>
-            {/* // */}
-            {/* <div className="-space-y-1.5 flex-none hidden sm920:block ">
-                <p className="text-xs font-semibold text-stone-400">Тел./WhatsApp</p>
-                <p className="lg:text-lg text-base font-semibold">+7 (495) 231-01-11</p>
-            </div> */}
             <button
                 onClick={() => setIsActive(prev => !prev)}
-                className='group relative block h-[40px] w-[44px] cursor-pointer sm920:hidden'
+                className="relative w-[44px] h-[40px] group cursor-pointer block sm920:hidden"
+                aria-label="Toggle menu"
+                aria-expanded={!isActive}
             >
                 <AnimationMenuButton isActive={isActive} />
             </button>
         </>
-    )
+    );
 }

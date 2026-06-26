@@ -3,8 +3,8 @@ import Modal from "@/components/Modal";
 export default function Fallcost() {
     return (
         <Modal>
-            <div className="flex flex-col w-[650px] text-lg">
-                <h1 className="text-2xl font-semibold pb-3">Затраты времени на примере <br /> процедуры обработки ран: </h1>
+            <div className="flex flex-col lg:text-lg text-sm">
+                <h1 className="md:text-2xl text-xl font-semibold pb-3">Затраты времени на примере <br /> процедуры обработки ран: </h1>
                 <p className="py-1">Готовые процедурные наборы исключают лишние действия и функции, позволяя медицинскому персоналу сосредоточиться на другой, более важной работе.</p>
                 <p className="py-1">Кроме того, немаловажно, что для большинства процедур, выполняемых с применением наборов, не требуется помощник (ассистент).</p>
                 <p className="py-1">Сравним примерное затрачиваемое время на подготовку к такой распространенной процедуре, как обработка ран.</p>

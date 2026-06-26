@@ -110,8 +110,8 @@ export default function Neoset({ params }) {
             </div>
 
             <div className='container mx-auto max-w-[1200px] px-4'>
-                <div className='overflow-auto rounded-xl bg-white'>
-                    <table className='w-full table-auto'>
+                <div className='overflow-x-auto rounded-xl bg-white'>
+                    <table className='w-full min-w-max table-auto'>
                         <thead>
                             <tr className='border-b border-slate-600'>
                                 <th className='px-4 py-2 text-left'>Состав:</th>
@@ -127,24 +127,24 @@ export default function Neoset({ params }) {
                         <tbody>
                             {neoset.name ===
                                 "Nabor NeoSet dlya gemodializa (nachalo/zaversheniye)" && (
-                                <tr className='border-y-2 border-slate-700 border-b-slate-400'>
-                                    <td className='px-4 py-2 font-semibold'>Начало процедуры</td>
-                                </tr>
-                            )}
+                                    <tr className='border-y-2 border-slate-700 border-b-slate-400'>
+                                        <td className='px-4 py-2 font-semibold'>Начало процедуры</td>
+                                    </tr>
+                                )}
 
                             {renderComponentRows(componentsList)}
 
                             {neoset.name ===
                                 "Nabor NeoSet dlya gemodializa (nachalo/zaversheniye)" && (
-                                <>
-                                    <tr className='border-y-2 border-slate-700 border-b-slate-400'>
-                                        <td className='px-4 py-2 font-semibold'>
-                                            Завершение процедуры
-                                        </td>
-                                    </tr>
-                                    {renderComponentRows(componentsDializList)}
-                                </>
-                            )}
+                                    <>
+                                        <tr className='border-y-2 border-slate-700 border-b-slate-400'>
+                                            <td className='px-4 py-2 font-semibold'>
+                                                Завершение процедуры
+                                            </td>
+                                        </tr>
+                                        {renderComponentRows(componentsDializList)}
+                                    </>
+                                )}
                             <tr className='border-t-2 border-slate-700'>
                                 <td className='px-4 py-2 font-semibold'>
                                     Состав набора может быть скорректирован по вашему запросу
@@ -154,6 +154,7 @@ export default function Neoset({ params }) {
                     </table>
                 </div>
             </div>
+
             <Block>
                 <div className='my-10 grid justify-items-center gap-5 sm:grid-cols-2 sm920:grid-cols-3 lg1100:grid-cols-4'>
                     {neoset.consists_of.map(component => (

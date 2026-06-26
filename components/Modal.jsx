@@ -35,12 +35,12 @@ export default function Modal({ children }) {
     return (
         <div
             ref={overlay}
-            className="fixed z-30 left-0 right-0 top-0 bottom-0 mx-auto my-auto backdrop-blur-sm bg-black/60 animate-apparition"
+            className="fixed z-30 left-0 right-0 top-0 bottom-0 mx-auto my-auto backdrop-blur-sm bg-black/60 animate-apparition overflow-y-auto"
             onClick={onClick}
         >
             <div
                 ref={wrapper}
-                className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-white p-10 rounded-xl overflow-hidden animate-emersion"
+                className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-white p-8 rounded-xl overflow-hidden animate-emersion min-w-96 "
             >
                 {children}
             </div>

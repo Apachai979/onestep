@@ -9,11 +9,11 @@ export const metadata = {
 export default function Contacts() {
     return (
         <div className='container mx-auto px-4'>
-            <div className='flex flex-col items-center'>
-                <h1 className='flex py-6 text-3xl font-semibold'>Контакты</h1>
-                <div className='flex-col-2 flex space-x-10'>
-                    <div className='flex flex-col space-y-6 rounded-3xl border border-stone-300 bg-body_bg p-8 text-xl'>
-                        <div className='space-y-2'>
+            <h1 className='py-6 text-3xl font-semibold text-center'>Контакты</h1>
+            <div className="flex justify-center">
+                <div className='flex flex-col sm:grid sm:grid-cols-2 sm:max-w-[1200px] sm:gap-10 justify-center items-center '>
+                    <div className='flex flex-col space-y-6 rounded-3xl border border-stone-300 bg-body_bg p-8 text-xl sm:place-self-start sm:justify-self-stretch sm:text-right sm:mt-4'>
+                        <div className='space-y-2 '>
                             <p className='text-stone-400'>Адрес производства:</p>
                             <p className=''>
                                 634015, Томская область, г. Томск, <br />
@@ -32,6 +32,7 @@ export default function Contacts() {
                     </div>
 
                     <FormContact />
+                    <div className="m-3"></div>
                     {/* <Test /> */}
                 </div>
             </div>

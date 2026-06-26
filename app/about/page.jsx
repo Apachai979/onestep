@@ -223,7 +223,7 @@ export default function About() {
 
             {/* NextBlock  ПРИНЦИПЫ ONESTEP*/}
             <div className='container mx-auto max-w-[1200px] px-4'>
-                <div className='mb-12 mt-5 space-y-14 px-16'>
+                <div className='mb-12 mt-5 space-y-14 sm:px-16 px-4'>
                     <div className='mb-10'>
                         <h1 className='pt-10 text-center text-4xl font-semibold text-txtGreen'>
                             Принципы <span className='text-mainGreen'>OneStep</span>
@@ -267,12 +267,12 @@ export default function About() {
             <div className='bg-white pb-5'>
                 <div className='container mx-auto mb-6 max-w-[1200px] px-4'>
                     <div className='mb-8'>
-                        <h1 className='px-20 pt-10 text-center text-4xl font-semibold text-txtGreen'>
+                        <h1 className='sm:px-20 px-4 pt-10 text-center text-4xl font-semibold text-txtGreen'>
                             Социальная ответственность компании{" "}
                             <span className='text-mainGreen'>OneStep</span>
                         </h1>
                     </div>
-                    <div className='grid gap-x-8 gap-y-8 px-14 md:grid-cols-2 md:gap-y-8'>
+                    <div className='grid gap-x-8 gap-y-8 sm:px-14 px-4 md:grid-cols-2 md:gap-y-8'>
                         <div className='flex-1 space-y-2 md:space-y-3'>
                             <h2 className='text-2xl font-semibold text-mainGreen'>
                                 Медицинское сообщество

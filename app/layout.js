@@ -3,6 +3,7 @@ import "./globals.css"
 import TheHeader from "@/components/TheHeader"
 import TheFooter from "@/components/TheFooter"
 import Providers from "@/components/Providers"
+import HideOnCrm from "@/components/HideOnCrm"
 
 const inter = Inter({ subsets: ["latin"] })
 const notoSans = Noto_Sans({
@@ -27,12 +28,16 @@ export default function Layout({ children, modal }) {
                 <body
                     className={`${notoSans.className} max-w-sm min-h-screen bg-body_bg text-night_green min-w-full antialiased overflow-visible`}
                 >
-                    <TheHeader />
+                    <HideOnCrm>
+                        <TheHeader />
+                    </HideOnCrm>
                     <main className='grid grid-cols-1 '>
                         {children}
                         {modal}
                     </main>
-                    <TheFooter />
+                    <HideOnCrm>
+                        <TheFooter />
+                    </HideOnCrm>
                 </body>
             </html>
         </Providers>

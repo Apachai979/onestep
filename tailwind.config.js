@@ -103,6 +103,12 @@ module.exports = {
                 txtLight: "#bebeb4",
                 txtMiddle: "#7e9895",
                 backMiddle: "#14a091",
+
+                // BrandBook 2022 palette
+                brand_main: "#089E8D",
+                brand_soft: "#BBD8D1",
+                brand_blue: "#8BC4DF",
+                brand_mint: "#74C0B6",
             },
             screens: {
                 lg1245: "1245px",

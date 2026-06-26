@@ -88,7 +88,7 @@ export default function ProjectContactsPicker({
 
     if (!counterpartyId) {
         return (
-            <div className='rounded-lg border border-dashed border-gray-300 p-3 text-sm text-gray-400'>
+            <div className='rounded-lg border border-dashed border-brand_soft/60 p-3 text-sm text-gray-400'>
                 Сначала выберите компанию
             </div>
         )
@@ -120,7 +120,7 @@ export default function ProjectContactsPicker({
                     {contacts.map(c => (
                         <li
                             key={c.id}
-                            className='flex items-start gap-2 rounded-md border border-gray-100 px-3 py-2'
+                            className='flex items-start gap-2 rounded-md border border-brand_soft/30 px-3 py-2'
                         >
                             <input
                                 type='checkbox'
@@ -178,14 +178,14 @@ export default function ProjectContactsPicker({
                                 setShowAdd(false)
                                 setError("")
                             }}
-                            className='rounded-md border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-100'
+                            className='rounded-md border border-brand_soft/60 px-3 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
                         >
                             Отмена
                         </button>
                         <button
                             type='submit'
                             disabled={saving}
-                            className='rounded-md bg-primary_green px-3 py-1 text-xs font-semibold text-white hover:bg-contrast_green disabled:opacity-60'
+                            className='rounded-md bg-brand_main px-3 py-1 text-xs font-semibold text-white hover:bg-brand_main/90 disabled:opacity-60'
                         >
                             {saving ? "Сохраняем..." : "Добавить"}
                         </button>
@@ -202,7 +202,7 @@ function Field({ label, className = "", ...props }) {
             <label className='mb-0.5 block text-[11px] text-gray-600'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                className='w-full rounded-md border border-brand_soft/60 px-2 py-1.5 text-sm shadow-sm focus:border-brand_main focus:outline-none'
             />
         </div>
     )

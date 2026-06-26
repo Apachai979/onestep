@@ -10,6 +10,7 @@ import {
 } from "@/lib/crm/deal"
 import { calculateDealShipmentProgress, isShipmentOverdue } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
+import { useToast } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -25,6 +26,7 @@ function managerName(u) {
 }
 
 export default function DealsKanban() {
+    const toast = useToast()
     const [deals, setDeals] = useState(null)
     const [error, setError] = useState("")
     const [q, setQ] = useState("")
@@ -86,7 +88,7 @@ export default function DealsKanban() {
             }
         } catch (err) {
             setDeals(prev)
-            alert(err.message)
+            toast.error(err.message)
         }
     }
 
@@ -133,12 +135,12 @@ export default function DealsKanban() {
                         value={q}
                         onChange={e => setQ(e.target.value)}
                         placeholder='Название сделки или клиента'
-                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     />
                 </div>
                 <Link
                     href='/crm/deals/new'
-                    className='rounded-lg bg-primary_green px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-contrast_green'
+                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                 >
                     Новая сделка
                 </Link>
@@ -173,7 +175,7 @@ export default function DealsKanban() {
                                 </div>
                                 <Link
                                     href={`/crm/deals/new?status=${status}`}
-                                    className='rounded-md border border-gray-300 px-2 py-0.5 text-xs text-gray-600 hover:bg-white hover:text-primary_green'
+                                    className='rounded-md border border-brand_soft/60 px-2 py-0.5 text-xs text-gray-600 hover:bg-white hover:text-brand_main'
                                     title='Добавить сделку с этим статусом'
                                 >
                                     +
@@ -257,7 +259,7 @@ function DealCard({ deal, dragging, onDragStart, onDragEnd }) {
                     <div className='mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200'>
                         <div
                             className={`h-full transition-all ${
-                                progress.isFullyShipped ? "bg-green-500" : "bg-primary_green"
+                                progress.isFullyShipped ? "bg-green-500" : "bg-brand_main"
                             }`}
                             style={{ width: `${progress.percent}%` }}
                         />

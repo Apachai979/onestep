@@ -1,5 +1,6 @@
 "use client"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import {
     PROJECT_STATUS_COLORS,
@@ -7,8 +8,10 @@ import {
     PROJECT_STATUSES,
     looksLikeUrl,
 } from "@/lib/crm/project"
+import { LuTarget, LuPlus } from "react-icons/lu"
 import { formatMoney } from "@/lib/crm/format"
 import SearchableSelect from "./SearchableSelect"
+import { EmptyState, TableSkeleton } from "@/components/crm/ui"
 
 const STATUS_CLASS = PROJECT_STATUS_COLORS
 
@@ -23,6 +26,7 @@ function formatDate(d) {
 }
 
 export default function ProjectsList() {
+    const router = useRouter()
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
     const [filters, setFilters] = useState({
@@ -120,20 +124,20 @@ export default function ProjectsList() {
 
     return (
         <div className='space-y-4'>
-            <div className='grid gap-3 rounded-xl border border-gray-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4'>
+            <div className='grid gap-3 rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:grid-cols-2 lg:grid-cols-4'>
                 <FilterField label='Поиск'>
                     <input
                         value={filters.q}
                         onChange={set("q")}
                         placeholder='Аукцион, название'
-                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     />
                 </FilterField>
                 <FilterField label='Статус'>
                     <select
                         value={filters.status}
                         onChange={set("status")}
-                        className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     >
                         <option value=''>Все</option>
                         {PROJECT_STATUSES.map(s => (
@@ -147,7 +151,7 @@ export default function ProjectsList() {
                     <input
                         value={filters.region}
                         onChange={set("region")}
-                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     />
                 </FilterField>
                 <FilterField label='Менеджер'>
@@ -179,7 +183,7 @@ export default function ProjectsList() {
                         type='date'
                         value={filters.dateFrom}
                         onChange={set("dateFrom")}
-                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     />
                 </FilterField>
                 <FilterField label='Дата по'>
@@ -187,7 +191,7 @@ export default function ProjectsList() {
                         type='date'
                         value={filters.dateTo}
                         onChange={set("dateTo")}
-                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     />
                 </FilterField>
             </div>
@@ -195,17 +199,22 @@ export default function ProjectsList() {
             <div className='flex justify-end'>
                 <Link
                     href='/crm/projects/new'
-                    className='rounded-lg bg-primary_green px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-contrast_green'
+                    className='inline-flex items-center gap-2 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                 >
+                    <LuPlus className='h-4 w-4' />
                     Новый проект
                 </Link>
             </div>
 
-            {error && <p className='text-sm text-red-600'>{error}</p>}
+            {error && (
+                <p className='rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                    {error}
+                </p>
+            )}
 
-            <div className='overflow-x-auto rounded-xl border border-gray-200 bg-white'>
+            <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
                 <table className='w-full text-sm'>
-                    <thead className='bg-gray-50 text-left text-xs uppercase text-gray-500'>
+                    <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
                         <tr>
                             <th className='px-4 py-3'>Конечный потребитель</th>
                             <th className='px-4 py-3'>Аукцион</th>
@@ -220,22 +229,21 @@ export default function ProjectsList() {
                         </tr>
                     </thead>
                     <tbody>
-                        {items === null && (
-                            <tr>
-                                <td colSpan={10} className='px-4 py-6 text-center text-gray-400'>
-                                    Загрузка...
-                                </td>
-                            </tr>
-                        )}
+                        {items === null && <TableSkeleton rows={5} cols={10} />}
                         {items?.length === 0 && (
-                            <tr>
-                                <td colSpan={10} className='px-4 py-6 text-center text-gray-400'>
-                                    Проектов не найдено
-                                </td>
-                            </tr>
+                            <EmptyState
+                                colSpan={10}
+                                icon={LuTarget}
+                                title='Проектов не найдено'
+                                hint='Попробуйте сбросить фильтры или создайте новый проект.'
+                            />
                         )}
                         {items?.map(p => (
-                            <tr key={p.id} className='border-t border-gray-100 hover:bg-gray-50'>
+                            <tr
+                                key={p.id}
+                                onClick={() => router.push(`/crm/projects/${p.id}`)}
+                                className='cursor-pointer border-t border-brand_soft/30 transition hover:bg-brand_soft/15'
+                            >
                                 <td className='px-4 py-3 text-gray-700'>
                                     {p.endCustomer?.name || "—"}
                                 </td>
@@ -246,7 +254,7 @@ export default function ProjectsList() {
                                             target='_blank'
                                             rel='noopener noreferrer'
                                             onClick={e => e.stopPropagation()}
-                                            className='text-primary_green underline hover:text-contrast_green'
+                                            className='text-brand_main underline hover:text-brand_main/80'
                                         >
                                             {p.externalAuctionId}
                                         </a>
@@ -257,7 +265,7 @@ export default function ProjectsList() {
                                 <td className='px-4 py-3'>
                                     <Link
                                         href={`/crm/projects/${p.id}`}
-                                        className='font-medium text-night_green hover:text-primary_green'
+                                        className='font-medium text-night_green hover:text-brand_main'
                                     >
                                         {p.internalName}
                                     </Link>

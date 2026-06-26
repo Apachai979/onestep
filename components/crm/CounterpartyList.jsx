@@ -1,7 +1,10 @@
 "use client"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { LuPlus, LuSearch, LuUsers } from "react-icons/lu"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
+import { EmptyState, TableSkeleton } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -12,6 +15,7 @@ function safeJson(text) {
 }
 
 export default function CounterpartyList({ type, newHref }) {
+    const router = useRouter()
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
     const [q, setQ] = useState("")
@@ -43,37 +47,45 @@ export default function CounterpartyList({ type, newHref }) {
 
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3'>
+            <div className='flex flex-wrap items-end gap-3 rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
                 <div className='flex-1 min-w-[220px]'>
-                    <label className='mb-1 block text-xs text-gray-600'>Поиск</label>
-                    <input
-                        value={q}
-                        onChange={e => setQ(e.target.value)}
-                        placeholder='Название, ИНН, контактное лицо'
-                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
-                    />
+                    <label className='mb-1 block text-xs text-night_green/65'>Поиск</label>
+                    <div className='relative'>
+                        <LuSearch className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-night_green/40' />
+                        <input
+                            value={q}
+                            onChange={e => setQ(e.target.value)}
+                            placeholder='Название, ИНН, контактное лицо'
+                            className='w-full rounded-lg border border-brand_soft/60 bg-white pl-9 pr-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                        />
+                    </div>
                 </div>
                 <div className='min-w-[200px]'>
-                    <label className='mb-1 block text-xs text-gray-600'>Регион</label>
+                    <label className='mb-1 block text-xs text-night_green/65'>Регион</label>
                     <input
                         value={region}
                         onChange={e => setRegion(e.target.value)}
-                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     />
                 </div>
                 <Link
                     href={newHref}
-                    className='rounded-lg bg-primary_green px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-contrast_green'
+                    className='inline-flex items-center gap-2 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                 >
+                    <LuPlus className='h-4 w-4' />
                     Добавить
                 </Link>
             </div>
 
-            {error && <p className='text-sm text-red-600'>{error}</p>}
+            {error && (
+                <p className='rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                    {error}
+                </p>
+            )}
 
-            <div className='overflow-x-auto rounded-xl border border-gray-200 bg-white'>
+            <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
                 <table className='w-full text-sm'>
-                    <thead className='bg-gray-50 text-left text-xs uppercase text-gray-500'>
+                    <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
                         <tr>
                             <th className='px-4 py-3'>Название</th>
                             <th className='px-4 py-3'>Регион</th>
@@ -85,19 +97,14 @@ export default function CounterpartyList({ type, newHref }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {items === null && (
-                            <tr>
-                                <td colSpan={7} className='px-4 py-6 text-center text-gray-400'>
-                                    Загрузка...
-                                </td>
-                            </tr>
-                        )}
+                        {items === null && <TableSkeleton rows={5} cols={7} />}
                         {items?.length === 0 && (
-                            <tr>
-                                <td colSpan={7} className='px-4 py-6 text-center text-gray-400'>
-                                    Записей не найдено
-                                </td>
-                            </tr>
+                            <EmptyState
+                                colSpan={7}
+                                icon={LuUsers}
+                                title='Записей не найдено'
+                                hint='Попробуйте изменить запрос или сбросить фильтры.'
+                            />
                         )}
                         {items?.map(item => {
                             const primary = item.contacts?.[0]
@@ -110,12 +117,15 @@ export default function CounterpartyList({ type, newHref }) {
                             return (
                                 <tr
                                     key={item.id}
-                                    className='border-t border-gray-100 hover:bg-gray-50'
+                                    onClick={() =>
+                                        router.push(`/crm/counterparties/${item.id}`)
+                                    }
+                                    className='cursor-pointer border-t border-brand_soft/30 transition hover:bg-brand_soft/15'
                                 >
                                     <td className='px-4 py-3'>
                                         <Link
                                             href={`/crm/counterparties/${item.id}`}
-                                            className='font-medium text-night_green hover:text-primary_green'
+                                            className='font-medium text-night_green hover:text-brand_main'
                                         >
                                             {item.name}
                                         </Link>

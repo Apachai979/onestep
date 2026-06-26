@@ -244,7 +244,7 @@ export default function TaskForm({
     }
 
     const fieldClass =
-        "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none"
+        "w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none"
     const labelClass = "mb-1 block text-xs text-gray-600"
 
     return (
@@ -459,7 +459,7 @@ export default function TaskForm({
                     <button
                         type='button'
                         onClick={onCancel}
-                        className='rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100'
+                        className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
                     >
                         Отмена
                     </button>
@@ -467,7 +467,7 @@ export default function TaskForm({
                 <button
                     type='submit'
                     disabled={loading}
-                    className='rounded-lg bg-primary_green px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-contrast_green disabled:cursor-not-allowed disabled:opacity-60'
+                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
                 >
                     {loading ? "Сохраняем..." : isEdit ? "Сохранить" : "Создать"}
                 </button>

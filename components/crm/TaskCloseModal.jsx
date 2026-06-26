@@ -130,7 +130,7 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                 onClick={e => e.stopPropagation()}
                 className='w-full max-w-md space-y-4 rounded-xl bg-white p-5 shadow-2xl'
             >
-                <div className='space-y-2 border-b border-gray-100 pb-3'>
+                <div className='space-y-2 border-b border-brand_soft/30 pb-3'>
                     <div className='flex flex-wrap items-center gap-2'>
                         <TaskTypeBadge type={task.type} />
                         <span
@@ -158,7 +158,7 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                                     <Link
                                         href={rel.href}
                                         onClick={onClose}
-                                        className='text-night_green underline hover:text-primary_green'
+                                        className='text-night_green underline hover:text-brand_main'
                                     >
                                         {rel.label}
                                     </Link>
@@ -181,7 +181,7 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                                     className={`flex-1 rounded-lg border px-3 py-2 text-sm ${
                                         status === "DONE"
                                             ? "border-green-500 bg-green-50 text-green-800"
-                                            : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                                            : "border-brand_soft/60 text-gray-700 hover:bg-brand_soft/15"
                                     }`}
                                 >
                                     Выполнена
@@ -192,7 +192,7 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                                     className={`flex-1 rounded-lg border px-3 py-2 text-sm ${
                                         status === "FAILED"
                                             ? "border-red-500 bg-red-50 text-red-800"
-                                            : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                                            : "border-brand_soft/60 text-gray-700 hover:bg-brand_soft/15"
                                     }`}
                                 >
                                     Не выполнена
@@ -217,7 +217,7 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                                         ? "Почему не получилось"
                                         : "Что сделали (опц.)"
                                 }
-                                className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                             />
                         </div>
                     </>
@@ -229,7 +229,7 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                     <button
                         type='button'
                         onClick={onClose}
-                        className='rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100'
+                        className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
                     >
                         {readOnly ? "Закрыть" : "Отмена"}
                     </button>
@@ -237,7 +237,7 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                         <button
                             type='submit'
                             disabled={loading}
-                            className='rounded-lg bg-primary_green px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-contrast_green disabled:opacity-60'
+                            className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand_main/90 disabled:opacity-60'
                         >
                             {loading ? "Закрываем..." : "Закрыть задачу"}
                         </button>

@@ -1,6 +1,8 @@
 "use client"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
+import { LuBriefcase, LuSearch } from "react-icons/lu"
 import {
     DEAL_STATUSES,
     DEAL_STATUS_COLORS,
@@ -9,6 +11,7 @@ import {
 } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
 import SearchableSelect from "./SearchableSelect"
+import { EmptyState, TableSkeleton } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -29,6 +32,7 @@ function fmtDate(d) {
 }
 
 export default function DealsList({ currentUserId }) {
+    const router = useRouter()
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
     const [filters, setFilters] = useState({
@@ -105,23 +109,26 @@ export default function DealsList({ currentUserId }) {
 
     return (
         <div className='space-y-4'>
-            <div className='grid gap-3 rounded-xl border border-gray-200 bg-white p-4 sm:grid-cols-4'>
+            <div className='grid gap-3 rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:grid-cols-4'>
                 <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-xs text-gray-600'>Поиск</label>
-                    <input
-                        value={filters.q}
-                        onChange={e => setFilters(p => ({ ...p, q: e.target.value }))}
-                        onKeyDown={e => e.key === "Enter" && load()}
-                        placeholder='Название сделки или клиента'
-                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
-                    />
+                    <label className='mb-1 block text-xs text-night_green/65'>Поиск</label>
+                    <div className='relative'>
+                        <LuSearch className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-night_green/40' />
+                        <input
+                            value={filters.q}
+                            onChange={e => setFilters(p => ({ ...p, q: e.target.value }))}
+                            onKeyDown={e => e.key === "Enter" && load()}
+                            placeholder='Название сделки или клиента'
+                            className='w-full rounded-lg border border-brand_soft/60 bg-white pl-9 pr-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                        />
+                    </div>
                 </div>
                 <div>
-                    <label className='mb-1 block text-xs text-gray-600'>Статус</label>
+                    <label className='mb-1 block text-xs text-night_green/65'>Статус</label>
                     <select
                         value={filters.status}
                         onChange={e => setFilters(p => ({ ...p, status: e.target.value }))}
-                        className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     >
                         <option value=''>Все</option>
                         {DEAL_STATUSES.map(s => (
@@ -144,8 +151,8 @@ export default function DealsList({ currentUserId }) {
                             }
                             className={`w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition ${
                                 filters.managerId === currentUserId
-                                    ? "border-primary_green bg-primary_green text-white"
-                                    : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                                    ? "border-primary_green bg-brand_main text-white"
+                                    : "border-brand_soft/60 text-gray-700 hover:bg-brand_soft/30"
                             }`}
                         >
                             Только мои
@@ -153,7 +160,7 @@ export default function DealsList({ currentUserId }) {
                     )}
                 </div>
                 <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-xs text-gray-600'>Клиент</label>
+                    <label className='mb-1 block text-xs text-night_green/65'>Клиент</label>
                     <SearchableSelect
                         value={filters.counterpartyId}
                         onChange={id => setFilters(p => ({ ...p, counterpartyId: id }))}
@@ -163,7 +170,7 @@ export default function DealsList({ currentUserId }) {
                     />
                 </div>
                 <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-xs text-gray-600'>Менеджер</label>
+                    <label className='mb-1 block text-xs text-night_green/65'>Менеджер</label>
                     <SearchableSelect
                         value={filters.managerId}
                         onChange={id => setFilters(p => ({ ...p, managerId: id }))}
@@ -174,11 +181,15 @@ export default function DealsList({ currentUserId }) {
                 </div>
             </div>
 
-            {error && <p className='text-sm text-red-600'>{error}</p>}
+            {error && (
+                <p className='rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                    {error}
+                </p>
+            )}
 
-            <div className='overflow-x-auto rounded-xl border border-gray-200 bg-white'>
+            <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
                 <table className='w-full text-sm'>
-                    <thead className='bg-gray-50 text-left text-xs uppercase text-gray-500'>
+                    <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
                         <tr>
                             <th className='px-4 py-3'>Название</th>
                             <th className='px-4 py-3'>Клиент</th>
@@ -189,29 +200,25 @@ export default function DealsList({ currentUserId }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {items === null && (
-                            <tr>
-                                <td colSpan={6} className='px-4 py-6 text-center text-gray-400'>
-                                    Загрузка...
-                                </td>
-                            </tr>
-                        )}
+                        {items === null && <TableSkeleton rows={5} cols={6} />}
                         {items?.length === 0 && (
-                            <tr>
-                                <td colSpan={6} className='px-4 py-6 text-center text-gray-400'>
-                                    Ничего не найдено.
-                                </td>
-                            </tr>
+                            <EmptyState
+                                colSpan={6}
+                                icon={LuBriefcase}
+                                title='Сделок не найдено'
+                                hint='Попробуйте сбросить фильтры или создайте новую сделку.'
+                            />
                         )}
                         {items?.map(d => (
                             <tr
                                 key={d.id}
-                                className='border-t border-gray-100 hover:bg-gray-50'
+                                onClick={() => router.push(`/crm/deals/${d.id}`)}
+                                className='cursor-pointer border-t border-brand_soft/30 transition hover:bg-brand_soft/15'
                             >
                                 <td className='px-4 py-3'>
                                     <Link
                                         href={`/crm/deals/${d.id}`}
-                                        className='font-medium text-night_green hover:text-primary_green'
+                                        className='font-medium text-night_green hover:text-brand_main'
                                     >
                                         {dealDisplayTitle(d, d.counterparty?.name)}
                                     </Link>

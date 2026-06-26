@@ -180,21 +180,21 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
                     <button
                         type='button'
                         onClick={() => shift(-1)}
-                        className='rounded-md border border-gray-300 px-2 py-1 text-sm hover:bg-gray-100'
+                        className='rounded-md border border-brand_soft/60 px-2 py-1 text-sm hover:bg-brand_soft/30'
                     >
                         ←
                     </button>
                     <button
                         type='button'
                         onClick={goToday}
-                        className='rounded-md border border-gray-300 px-3 py-1 text-sm hover:bg-gray-100'
+                        className='rounded-md border border-brand_soft/60 px-3 py-1 text-sm hover:bg-brand_soft/30'
                     >
                         Сегодня
                     </button>
                     <button
                         type='button'
                         onClick={() => shift(1)}
-                        className='rounded-md border border-gray-300 px-2 py-1 text-sm hover:bg-gray-100'
+                        className='rounded-md border border-brand_soft/60 px-2 py-1 text-sm hover:bg-brand_soft/30'
                     >
                         →
                     </button>
@@ -214,8 +214,8 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
                             onClick={() => setView(v)}
                             className={`rounded-md px-3 py-1 text-sm ${
                                 view === v
-                                    ? "bg-primary_green text-white"
-                                    : "border border-gray-300 text-gray-700 hover:bg-gray-100"
+                                    ? "bg-brand_main text-white"
+                                    : "border border-brand_soft/60 text-gray-700 hover:bg-brand_soft/30"
                             }`}
                         >
                             {label}
@@ -340,7 +340,7 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
     }
 
     return (
-        <div className='overflow-hidden rounded-xl border border-gray-200 bg-white'>
+        <div className='overflow-hidden rounded-xl border border-brand_soft/40 bg-white/70'>
             <div className='grid grid-cols-7 border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500'>
                 {DOW_SHORT.map(d => (
                     <div key={d} className='px-2 py-2 text-center'>
@@ -362,7 +362,7 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
                 return (
                     <div
                         key={wi}
-                        className='relative border-b border-gray-100 last:border-b-0'
+                        className='relative border-b border-brand_soft/30 last:border-b-0'
                     >
                         <div className='grid grid-cols-7'>
                             {days.map((d, di) => {
@@ -377,7 +377,7 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
                                         }}
                                         className={`group cursor-pointer border-r border-gray-100 text-xs last:border-r-0 ${
                                             inMonth
-                                                ? "bg-white hover:bg-gray-50"
+                                                ? "bg-white hover:bg-brand_soft/15"
                                                 : "bg-gray-50 text-gray-400"
                                         }`}
                                     >
@@ -385,7 +385,7 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
                                             <div
                                                 className={`inline-flex h-6 w-6 items-center justify-center rounded-full ${
                                                     isToday
-                                                        ? "bg-primary_green font-semibold text-white"
+                                                        ? "bg-brand_main font-semibold text-white"
                                                         : ""
                                                 }`}
                                             >
@@ -474,7 +474,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
         Math.max(MIN_LANES_AREA, allDayLanes) * (LANE_HEIGHT + LANE_GAP) + 4
 
     return (
-        <div className='overflow-x-auto rounded-xl border border-gray-200 bg-white'>
+        <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
             <div className='min-w-[640px]'>
                 {/* Шапка с датами */}
                 <div
@@ -488,7 +488,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
                             <div
                                 key={i}
                                 className={`border-l border-gray-200 px-2 py-2 text-center ${
-                                    isToday ? "bg-primary_green/10" : "bg-gray-50"
+                                    isToday ? "bg-brand_main/10" : "bg-gray-50"
                                 }`}
                             >
                                 <div className='text-xs uppercase text-gray-500'>
@@ -552,7 +552,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
                             <div
                                 key={h}
                                 style={{ height: HOUR_HEIGHT }}
-                                className='border-b border-gray-100 pr-2 text-right text-[10px] text-gray-500'
+                                className='border-b border-brand_soft/30 pr-2 text-right text-[10px] text-gray-500'
                             >
                                 {String(h).padStart(2, "0")}:00
                             </div>
@@ -571,7 +571,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
                                     <div
                                         key={h}
                                         onClick={() => onCreateAt?.({ date: ymd(d), hour: h })}
-                                        className='cursor-pointer border-b border-gray-100 hover:bg-gray-50'
+                                        className='cursor-pointer border-b border-brand_soft/30 hover:bg-brand_soft/15'
                                         style={{ height: HOUR_HEIGHT }}
                                         title={`Создать задачу в ${String(h).padStart(2, "0")}:00`}
                                     />

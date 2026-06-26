@@ -13,7 +13,7 @@ export default function DealsTabs({ currentUserId }) {
 
     return (
         <div className='space-y-4'>
-            <div className='inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm'>
+            <div className='inline-flex rounded-lg border border-brand_soft/40 bg-white p-0.5 text-sm'>
                 {TABS.map(t => (
                     <button
                         key={t.key}
@@ -21,8 +21,8 @@ export default function DealsTabs({ currentUserId }) {
                         onClick={() => setTab(t.key)}
                         className={`rounded-md px-4 py-1.5 transition ${
                             tab === t.key
-                                ? "bg-primary_green text-white shadow-sm"
-                                : "text-gray-700 hover:bg-gray-100"
+                                ? "bg-brand_main text-white shadow-sm"
+                                : "text-gray-700 hover:bg-brand_soft/30"
                         }`}
                     >
                         {t.label}

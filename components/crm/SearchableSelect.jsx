@@ -103,7 +103,7 @@ export default function SearchableSelect({
                     type='button'
                     onClick={openDropdown}
                     disabled={disabled}
-                    className='flex w-full items-center justify-between gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-left text-sm shadow-sm focus:border-primary_green focus:outline-none disabled:bg-gray-50 disabled:text-gray-400'
+                    className='flex w-full items-center justify-between gap-2 rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-left text-sm shadow-sm focus:border-brand_main focus:outline-none disabled:bg-gray-50 disabled:text-gray-400'
                 >
                     <span className={selected ? "text-gray-900" : "text-gray-400"}>
                         {selected ? selected.label : placeholder}
@@ -115,7 +115,7 @@ export default function SearchableSelect({
                                 if (!disabled) clear()
                             }}
                             role='button'
-                            className='cursor-pointer rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700'
+                            className='cursor-pointer rounded p-1 text-gray-400 hover:bg-brand_soft/30 hover:text-gray-700'
                             aria-label='Очистить'
                         >
                             ×
@@ -138,7 +138,7 @@ export default function SearchableSelect({
             {open && (
                 <ul
                     ref={listRef}
-                    className='absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg'
+                    className='absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-brand_soft/40 bg-white shadow-lg'
                 >
                     {filtered.length === 0 && (
                         <li className='px-3 py-2 text-sm text-gray-400'>{emptyLabel}</li>
@@ -152,7 +152,7 @@ export default function SearchableSelect({
                             }}
                             onMouseEnter={() => setActiveIdx(idx)}
                             className={`cursor-pointer px-3 py-2 text-sm ${
-                                idx === activeIdx ? "bg-primary_green/10" : "hover:bg-gray-50"
+                                idx === activeIdx ? "bg-brand_main/10" : "hover:bg-brand_soft/15"
                             }`}
                         >
                             <div className='font-medium text-night_green'>{opt.label}</div>

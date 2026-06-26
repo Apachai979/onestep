@@ -38,12 +38,12 @@ export default function TasksNavLink() {
     const overdue = counts?.mineOverdue || 0
     const open = counts?.mineOpen || 0
     const showBadge = open > 0
-    const badgeClass = overdue > 0 ? "bg-red-500 text-white" : "bg-primary_green text-white"
+    const badgeClass = overdue > 0 ? "bg-red-500 text-white" : "bg-brand_main text-white"
 
     return (
         <Link
             href='/crm/tasks'
-            className='relative inline-flex items-center gap-2 text-gray-600 hover:text-primary_green'
+            className='relative inline-flex items-center gap-2 text-gray-600 hover:text-brand_main'
         >
             Задачи
             {showBadge && (

@@ -22,14 +22,14 @@ export default function TasksTabs({ currentUserId, currentUserRole }) {
     return (
         <div className='space-y-4'>
             <div className='flex flex-wrap items-center justify-between gap-3'>
-                <div className='flex gap-1 rounded-lg border border-gray-200 bg-white p-1'>
+                <div className='flex gap-1 rounded-lg border border-brand_soft/40 bg-white p-1'>
                     <button
                         type='button'
                         onClick={() => setView("list")}
                         className={`rounded-md px-3 py-1.5 text-sm ${
                             view === "list"
-                                ? "bg-primary_green text-white"
-                                : "text-gray-700 hover:bg-gray-100"
+                                ? "bg-brand_main text-white"
+                                : "text-gray-700 hover:bg-brand_soft/30"
                         }`}
                     >
                         Список
@@ -39,8 +39,8 @@ export default function TasksTabs({ currentUserId, currentUserRole }) {
                         onClick={() => setView("calendar")}
                         className={`rounded-md px-3 py-1.5 text-sm ${
                             view === "calendar"
-                                ? "bg-primary_green text-white"
-                                : "text-gray-700 hover:bg-gray-100"
+                                ? "bg-brand_main text-white"
+                                : "text-gray-700 hover:bg-brand_soft/30"
                         }`}
                     >
                         Календарь
@@ -49,7 +49,7 @@ export default function TasksTabs({ currentUserId, currentUserRole }) {
                 <button
                     type='button'
                     onClick={() => openCreate(null)}
-                    className='rounded-lg bg-primary_green px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-contrast_green'
+                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                 >
                     Новая задача
                 </button>

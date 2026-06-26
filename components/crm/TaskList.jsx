@@ -1,6 +1,7 @@
 "use client"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
+import { LuListTodo } from "react-icons/lu"
 import {
     TASK_STATUSES,
     TASK_STATUS_COLORS,
@@ -12,6 +13,7 @@ import { onTasksChanged } from "@/lib/crm/tasks-events"
 import SearchableSelect from "./SearchableSelect"
 import { TaskTypeBadge } from "./TaskTypeIcon"
 import TaskCloseModal from "./TaskCloseModal"
+import { EmptyState, TableSkeleton } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -121,15 +123,15 @@ export default function TaskList({ currentUserId, currentUserRole }) {
 
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3 rounded-xl border border-gray-200 bg-white p-4'>
+            <div className='flex flex-wrap items-end gap-3 rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
                 <div className='flex-1 min-w-[180px]'>
-                    <label className='mb-1 block text-xs text-gray-600'>Статус</label>
+                    <label className='mb-1 block text-xs text-night_green/65'>Статус</label>
                     <select
                         value={filters.status}
                         onChange={e =>
                             setFilters(prev => ({ ...prev, status: e.target.value }))
                         }
-                        className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     >
                         <option value=''>Все</option>
                         {TASK_STATUSES.map(s => (
@@ -140,13 +142,13 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                     </select>
                 </div>
                 <div className='flex-1 min-w-[180px]'>
-                    <label className='mb-1 block text-xs text-gray-600'>Тип</label>
+                    <label className='mb-1 block text-xs text-night_green/65'>Тип</label>
                     <select
                         value={filters.type}
                         onChange={e =>
                             setFilters(prev => ({ ...prev, type: e.target.value }))
                         }
-                        className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     >
                         <option value=''>Все</option>
                         {TASK_TYPES.map(t => (
@@ -157,7 +159,7 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                     </select>
                 </div>
                 <div className='flex-1 min-w-[220px]'>
-                    <label className='mb-1 block text-xs text-gray-600'>Ответственный</label>
+                    <label className='mb-1 block text-xs text-night_green/65'>Ответственный</label>
                     <SearchableSelect
                         value={filters.assigneeId}
                         onChange={id =>
@@ -180,8 +182,8 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                         }
                         className={`rounded-lg border px-3 py-2 text-sm shadow-sm transition ${
                             filters.assigneeId === currentUserId
-                                ? "border-primary_green bg-primary_green text-white"
-                                : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                                ? "border-primary_green bg-brand_main text-white"
+                                : "border-brand_soft/60 text-gray-700 hover:bg-brand_soft/30"
                         }`}
                         title='Показать только мои задачи'
                     >
@@ -190,11 +192,15 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                 )}
             </div>
 
-            {error && <p className='text-sm text-red-600'>{error}</p>}
+            {error && (
+                <p className='rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                    {error}
+                </p>
+            )}
 
-            <div className='overflow-x-auto rounded-xl border border-gray-200 bg-white'>
+            <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
                 <table className='w-full text-sm'>
-                    <thead className='bg-gray-50 text-left text-xs uppercase text-gray-500'>
+                    <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
                         <tr>
                             <th className='px-4 py-3'>Заголовок</th>
                             <th className='px-4 py-3'>Тип</th>
@@ -205,19 +211,14 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                         </tr>
                     </thead>
                     <tbody>
-                        {items === null && (
-                            <tr>
-                                <td colSpan={6} className='px-4 py-6 text-center text-gray-400'>
-                                    Загрузка...
-                                </td>
-                            </tr>
-                        )}
+                        {items === null && <TableSkeleton rows={5} cols={6} />}
                         {items?.length === 0 && (
-                            <tr>
-                                <td colSpan={6} className='px-4 py-6 text-center text-gray-400'>
-                                    Задач не найдено
-                                </td>
-                            </tr>
+                            <EmptyState
+                                colSpan={6}
+                                icon={LuListTodo}
+                                title='Задач не найдено'
+                                hint='Попробуйте сбросить фильтры — или создайте задачу из карточки сделки/проекта.'
+                            />
                         )}
                         {items?.map(t => {
                             const rel = relationLink(t)
@@ -226,7 +227,7 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                                 <tr
                                     key={t.id}
                                     onClick={() => setClosing(t)}
-                                    className='cursor-pointer border-t border-gray-100 hover:bg-gray-50'
+                                    className='cursor-pointer border-t border-brand_soft/30 hover:bg-brand_soft/15'
                                     title='Открыть задачу'
                                 >
                                     <td className='px-4 py-3'>
@@ -255,7 +256,7 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                                             <Link
                                                 href={rel.href}
                                                 onClick={e => e.stopPropagation()}
-                                                className='text-night_green underline hover:text-primary_green'
+                                                className='text-night_green underline hover:text-brand_main'
                                             >
                                                 {rel.label}
                                             </Link>

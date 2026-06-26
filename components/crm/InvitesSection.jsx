@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { USER_ROLE_LABELS, USER_ROLES } from "@/lib/crm/invite"
+import { useConfirm, useToast } from "@/components/crm/ui"
 
 const STATUS_LABELS = {
     ACTIVE: "Активен",
@@ -39,6 +40,8 @@ function inviteLink(token) {
 }
 
 export default function InvitesSection() {
+    const toast = useToast()
+    const confirm = useConfirm()
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
     const [showCreate, setShowCreate] = useState(false)
@@ -85,14 +88,22 @@ export default function InvitesSection() {
     }
 
     async function handleCancel(id) {
-        if (!confirm("Отменить приглашение?")) return
+        const ok = await confirm({
+            title: "Отменить приглашение?",
+            description: "Ссылка перестанет работать. Это действие нельзя отменить.",
+            confirmText: "Отменить приглашение",
+            cancelText: "Не сейчас",
+            variant: "danger",
+        })
+        if (!ok) return
         const r = await fetch(`/api/crm/invites/${id}`, { method: "DELETE" })
         if (!r.ok) {
             const text = await r.text()
             const data = text ? safeJson(text) : {}
-            alert(data?.error || "Не удалось отменить")
+            toast.error(data?.error || "Не удалось отменить")
             return
         }
+        toast.success("Приглашение отменено")
         await load()
     }
 
@@ -108,8 +119,8 @@ export default function InvitesSection() {
     }
 
     return (
-        <section className='rounded-xl border border-gray-200 bg-white'>
-            <div className='flex items-center justify-between border-b border-gray-100 px-5 py-3'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70'>
+            <div className='flex items-center justify-between border-b border-brand_soft/30 px-5 py-3'>
                 <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
                     Приглашения
                 </h2>
@@ -117,7 +128,7 @@ export default function InvitesSection() {
                     <button
                         type='button'
                         onClick={() => setShowCreate(true)}
-                        className='rounded-lg bg-primary_green px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-contrast_green'
+                        className='rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                     >
                         Создать приглашение
                     </button>
@@ -127,7 +138,7 @@ export default function InvitesSection() {
             {showCreate && (
                 <form
                     onSubmit={handleCreate}
-                    className='space-y-3 border-b border-gray-100 bg-gray-50 p-5'
+                    className='space-y-3 border-b border-brand_soft/30 bg-gray-50 p-5'
                 >
                     <div className='grid gap-3 sm:grid-cols-3'>
                         <Field
@@ -146,7 +157,7 @@ export default function InvitesSection() {
                                 onChange={e =>
                                     setForm(prev => ({ ...prev, role: e.target.value }))
                                 }
-                                className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                             >
                                 {USER_ROLES.map(r => (
                                     <option key={r} value={r}>
@@ -167,7 +178,7 @@ export default function InvitesSection() {
                                         ttlDays: Number(e.target.value),
                                     }))
                                 }
-                                className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                             >
                                 {[3, 7, 14, 30].map(n => (
                                     <option key={n} value={n}>
@@ -185,14 +196,14 @@ export default function InvitesSection() {
                                 setShowCreate(false)
                                 setError("")
                             }}
-                            className='rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100'
+                            className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
                         >
                             Отмена
                         </button>
                         <button
                             type='submit'
                             disabled={creating}
-                            className='rounded-lg bg-primary_green px-3 py-1.5 text-sm font-semibold text-white hover:bg-contrast_green disabled:opacity-60'
+                            className='rounded-lg bg-brand_main px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand_main/90 disabled:opacity-60'
                         >
                             {creating ? "Создаём..." : "Создать"}
                         </button>
@@ -202,7 +213,7 @@ export default function InvitesSection() {
 
             <div className='overflow-x-auto'>
                 <table className='w-full text-sm'>
-                    <thead className='bg-gray-50 text-left text-xs uppercase text-gray-500'>
+                    <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
                         <tr>
                             <th className='px-4 py-3'>Email</th>
                             <th className='px-4 py-3'>Роль</th>
@@ -233,7 +244,7 @@ export default function InvitesSection() {
                             return (
                                 <tr
                                     key={inv.id}
-                                    className='border-t border-gray-100 hover:bg-gray-50'
+                                    className='border-t border-brand_soft/30 hover:bg-brand_soft/15'
                                 >
                                     <td className='px-4 py-3 text-gray-700'>
                                         {inv.email || "—"}
@@ -273,7 +284,7 @@ export default function InvitesSection() {
                                                     <button
                                                         type='button'
                                                         onClick={() => copyLink(inv.token)}
-                                                        className='rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100'
+                                                        className='rounded-md border border-brand_soft/60 px-2 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
                                                     >
                                                         {copied === inv.token
                                                             ? "Скопировано!"
@@ -306,7 +317,7 @@ function Field({ label, ...props }) {
             <label className='mb-1 block text-xs text-gray-600'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
             />
         </div>
     )

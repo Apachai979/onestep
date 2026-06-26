@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { formatMoney } from "@/lib/crm/format"
+import { useConfirm, useToast } from "@/components/crm/ui"
 
 const EMPTY = { sku: "", name: "", quantity: "1", unitPrice: "", amount: "0", productId: "" }
 
@@ -24,6 +25,8 @@ function fmt(n) {
 
 export default function DealItemsSection({ dealId, initialItems }) {
     const router = useRouter()
+    const toast = useToast()
+    const confirm = useConfirm()
     const [items, setItems] = useState(initialItems)
     const [products, setProducts] = useState([])
     const [form, setForm] = useState(EMPTY)
@@ -169,13 +172,21 @@ export default function DealItemsSection({ dealId, initialItems }) {
     }
 
     async function handleDelete(id) {
-        if (!confirm("Удалить позицию?")) return
+        const it = items.find(x => x.id === id)
+        const ok = await confirm({
+            title: "Удалить позицию?",
+            description: it?.name || undefined,
+            confirmText: "Удалить",
+            variant: "danger",
+        })
+        if (!ok) return
         const res = await fetch(`/api/crm/deals/${dealId}/items/${id}`, { method: "DELETE" })
         if (!res.ok) {
             const data = await res.json().catch(() => ({}))
-            alert(data.error || "Не удалось удалить")
+            toast.error(data.error || "Не удалось удалить")
             return
         }
+        toast.success("Позиция удалена")
         await refresh()
         router.refresh()
     }
@@ -183,7 +194,7 @@ export default function DealItemsSection({ dealId, initialItems }) {
     const formOpen = showAdd || editingId !== null
 
     return (
-        <section className='rounded-xl border border-gray-200 bg-white p-5'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
             <div className='mb-4 flex items-center justify-between'>
                 <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
                     Товарные позиции
@@ -192,16 +203,16 @@ export default function DealItemsSection({ dealId, initialItems }) {
                     <button
                         type='button'
                         onClick={startAdd}
-                        className='rounded-lg bg-primary_green px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-contrast_green'
+                        className='rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                     >
                         Добавить позицию
                     </button>
                 )}
             </div>
 
-            <div className='overflow-x-auto rounded-lg border border-gray-100'>
+            <div className='overflow-x-auto rounded-lg border border-brand_soft/30'>
                 <table className='w-full text-sm'>
-                    <thead className='bg-gray-50 text-left text-xs uppercase text-gray-500'>
+                    <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
                         <tr>
                             <th className='px-3 py-2'>Артикул</th>
                             <th className='px-3 py-2'>Наименование</th>
@@ -219,7 +230,7 @@ export default function DealItemsSection({ dealId, initialItems }) {
                             </tr>
                         )}
                         {items.map(it => (
-                            <tr key={it.id} className='border-t border-gray-100'>
+                            <tr key={it.id} className='border-t border-brand_soft/30'>
                                 <td className='px-3 py-2 text-gray-700'>
                                     {it.sku || "—"}
                                     {it.productId && (
@@ -240,7 +251,7 @@ export default function DealItemsSection({ dealId, initialItems }) {
                                         <button
                                             type='button'
                                             onClick={() => startEdit(it)}
-                                            className='rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100'
+                                            className='rounded-md border border-brand_soft/60 px-2 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
                                         >
                                             Изменить
                                         </button>
@@ -271,7 +282,7 @@ export default function DealItemsSection({ dealId, initialItems }) {
                         <select
                             value={form.productId}
                             onChange={e => pickProduct(e.target.value)}
-                            className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                            className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                         >
                             <option value=''>— Свободный ввод —</option>
                             {products.map(p => (
@@ -325,14 +336,14 @@ export default function DealItemsSection({ dealId, initialItems }) {
                         <button
                             type='button'
                             onClick={cancel}
-                            className='rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100'
+                            className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
                         >
                             Отмена
                         </button>
                         <button
                             type='submit'
                             disabled={loading}
-                            className='rounded-lg bg-primary_green px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-contrast_green disabled:opacity-60'
+                            className='rounded-lg bg-brand_main px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:opacity-60'
                         >
                             {loading ? "Сохраняем..." : editingId ? "Сохранить" : "Добавить"}
                         </button>
@@ -349,7 +360,7 @@ function Field({ label, className = "", ...props }) {
             <label className='mb-1 block text-xs text-gray-600'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
             />
         </div>
     )

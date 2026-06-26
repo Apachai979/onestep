@@ -135,21 +135,21 @@ export default function ProposalView({
             <div className='flex items-center justify-between gap-3 print:hidden'>
                 <Link
                     href={`/crm/deals/${dealId}`}
-                    className='text-sm text-gray-500 hover:text-primary_green'
+                    className='text-sm text-gray-500 hover:text-brand_main'
                 >
                     ← К сделке
                 </Link>
                 <button
                     type='button'
                     onClick={handlePrint}
-                    className='rounded-lg bg-primary_green px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-contrast_green'
+                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                     title='В открывшемся диалоге выберите принтер «Сохранить как PDF»'
                 >
                     Сохранить в PDF
                 </button>
             </div>
 
-            <section className='space-y-4 rounded-xl border border-gray-200 bg-white p-5 print:hidden'>
+            <section className='space-y-4 rounded-xl border border-brand_soft/40 bg-white/70 p-5 print:hidden'>
                 <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
                     Параметры КП
                 </h2>
@@ -194,7 +194,7 @@ export default function ProposalView({
                         rows={2}
                         value={form.intro}
                         onChange={update("intro")}
-                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     />
                 </Field>
                 <div className='grid gap-3 sm:grid-cols-4'>
@@ -455,7 +455,7 @@ function Input(props) {
     return (
         <input
             {...props}
-            className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+            className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
         />
     )
 }

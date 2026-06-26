@@ -60,7 +60,7 @@ export default function ChangeHistorySection({ entityType, entityId, includeChil
     }, [open])
 
     return (
-        <section className='rounded-xl border border-gray-200 bg-white'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70'>
             <button
                 type='button'
                 onClick={() => setOpen(o => !o)}
@@ -73,7 +73,7 @@ export default function ChangeHistorySection({ entityType, entityId, includeChil
             </button>
 
             {open && (
-                <div className='border-t border-gray-100 p-5'>
+                <div className='border-t border-brand_soft/30 p-5'>
                     {error && <p className='text-sm text-red-600'>{error}</p>}
                     {items === null && (
                         <p className='text-sm text-gray-400'>Загрузка...</p>
@@ -92,7 +92,7 @@ export default function ChangeHistorySection({ entityType, entityId, includeChil
                             return (
                                 <li
                                     key={it.id}
-                                    className='rounded-lg border border-gray-100 p-3 text-sm'
+                                    className='rounded-lg border border-brand_soft/30 p-3 text-sm'
                                 >
                                     <div className='flex flex-wrap items-center gap-2 text-xs text-gray-500'>
                                         <span>{fmtDate(it.createdAt)}</span>

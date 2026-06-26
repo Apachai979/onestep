@@ -72,7 +72,7 @@ export default function RelatedTasksSection({
     }
 
     return (
-        <section className='rounded-xl border border-gray-200 bg-white p-5'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
             <div className='mb-4 flex items-center justify-between'>
                 <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
                     Задачи
@@ -81,7 +81,7 @@ export default function RelatedTasksSection({
                     <button
                         type='button'
                         onClick={() => setCreating(true)}
-                        className='rounded-lg bg-primary_green px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-contrast_green'
+                        className='rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                     >
                         + Задача
                     </button>
@@ -118,7 +118,7 @@ export default function RelatedTasksSection({
                             <li
                                 key={t.id}
                                 onClick={() => setClosing(t)}
-                                className='cursor-pointer rounded-lg border border-gray-100 p-3 text-sm hover:bg-gray-50'
+                                className='cursor-pointer rounded-lg border border-brand_soft/30 p-3 text-sm hover:bg-brand_soft/15'
                                 title='Открыть задачу'
                             >
                                 <div className='flex flex-wrap items-center gap-2'>

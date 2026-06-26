@@ -189,7 +189,7 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                         onChange={update("bik")}
                         inputMode='numeric'
                         placeholder='9 цифр — поиск автоматически'
-                        className='w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-primary_green focus:outline-none'
+                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
                     />
                     {bankLookup.status !== "idle" && (
                         <p
@@ -246,7 +246,7 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                     rows={3}
                     value={form.note}
                     onChange={update("note")}
-                    className='w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-primary_green focus:outline-none'
+                    className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
                 />
             </div>
 
@@ -256,14 +256,14 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                 <button
                     type='button'
                     onClick={() => router.back()}
-                    className='rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100'
+                    className='rounded-lg border border-brand_soft/60 px-4 py-2 text-sm text-gray-700 hover:bg-brand_soft/30'
                 >
                     Отмена
                 </button>
                 <button
                     type='submit'
                     disabled={loading}
-                    className='rounded-lg bg-primary_green px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-contrast_green disabled:cursor-not-allowed disabled:opacity-60'
+                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
                 >
                     {loading ? "Сохраняем..." : mode === "create" ? "Создать" : "Сохранить"}
                 </button>
@@ -274,7 +274,7 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
 
 function Section({ title, children }) {
     return (
-        <section className='rounded-xl border border-gray-200 bg-white p-5'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
             <h2 className='mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500'>
                 {title}
             </h2>
@@ -289,7 +289,7 @@ function Field({ label, className = "", ...props }) {
             <label className='mb-1 block text-sm text-gray-700'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-primary_green focus:outline-none'
+                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
             />
         </div>
     )

@@ -1,6 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { useConfirm, useToast } from "@/components/crm/ui"
 
 const EMPTY = {
     firstName: "",
@@ -25,6 +26,8 @@ function fullName(c) {
 
 export default function ContactsSection({ counterpartyId, initialContacts }) {
     const router = useRouter()
+    const toast = useToast()
+    const confirm = useConfirm()
     const [contacts, setContacts] = useState(initialContacts)
     const [editingId, setEditingId] = useState(null)
     const [showAdd, setShowAdd] = useState(false)
@@ -97,13 +100,27 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
     }
 
     async function handleDelete(id) {
-        if (!confirm("Удалить контакт?")) return
+        const c = contacts.find(x => x.id === id)
+        const fullName = c
+            ? `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim() ||
+              c.email ||
+              c.phone ||
+              ""
+            : ""
+        const ok = await confirm({
+            title: "Удалить контакт?",
+            description: fullName || undefined,
+            confirmText: "Удалить",
+            variant: "danger",
+        })
+        if (!ok) return
         const res = await fetch(`/api/crm/contacts/${id}`, { method: "DELETE" })
         if (!res.ok) {
             const data = await res.json().catch(() => ({}))
-            alert(data.error || "Не удалось удалить")
+            toast.error(data.error || "Не удалось удалить")
             return
         }
+        toast.success("Контакт удалён")
         await refresh()
         router.refresh()
     }
@@ -120,7 +137,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
     const formOpen = showAdd || editing
 
     return (
-        <section className='rounded-xl border border-gray-200 bg-white p-5'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
             <div className='mb-4 flex items-center justify-between'>
                 <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
                     Контакты
@@ -129,7 +146,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                     <button
                         type='button'
                         onClick={startAdd}
-                        className='rounded-lg bg-primary_green px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-contrast_green'
+                        className='rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                     >
                         Добавить контакт
                     </button>
@@ -144,7 +161,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                 {contacts.map(c => (
                     <li
                         key={c.id}
-                        className='flex flex-col gap-2 rounded-lg border border-gray-100 p-3 sm:flex-row sm:items-start sm:justify-between'
+                        className='flex flex-col gap-2 rounded-lg border border-brand_soft/30 p-3 sm:flex-row sm:items-start sm:justify-between'
                     >
                         <div className='flex-1'>
                             <div className='flex flex-wrap items-center gap-2'>
@@ -174,7 +191,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                             <button
                                 type='button'
                                 onClick={() => startEdit(c)}
-                                className='rounded-md border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-100'
+                                className='rounded-md border border-brand_soft/60 px-3 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
                             >
                                 Изменить
                             </button>
@@ -234,14 +251,14 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                         <button
                             type='button'
                             onClick={cancelForm}
-                            className='rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100'
+                            className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
                         >
                             Отмена
                         </button>
                         <button
                             type='submit'
                             disabled={loading}
-                            className='rounded-lg bg-primary_green px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-contrast_green disabled:cursor-not-allowed disabled:opacity-60'
+                            className='rounded-lg bg-brand_main px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
                         >
                             {loading
                                 ? "Сохраняем..."
@@ -262,7 +279,7 @@ function Field({ label, ...props }) {
             <label className='mb-1 block text-xs text-gray-600'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
             />
         </div>
     )

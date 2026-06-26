@@ -8,6 +8,7 @@ import {
     calculateDealShipmentProgress,
     isShipmentOverdue,
 } from "@/lib/crm/shipment"
+import { useConfirm, useToast } from "@/components/crm/ui"
 
 function num(v) {
     if (v === null || v === undefined || v === "") return 0
@@ -65,6 +66,8 @@ export default function DealShipmentsSection({
     initialDeliveryAddress,
 }) {
     const router = useRouter()
+    const toast = useToast()
+    const confirm = useConfirm()
     const [shipments, setShipments] = useState([])
     const [contacts, setContacts] = useState([])
     const [loading, setLoading] = useState(true)
@@ -238,21 +241,30 @@ export default function DealShipmentsSection({
         })
         if (!res.ok) {
             const data = await res.json().catch(() => ({}))
-            alert(data.error || "Не удалось изменить статус")
+            toast.error(data.error || "Не удалось изменить статус")
             return
         }
+        toast.success("Статус отгрузки обновлён")
         await load()
         router.refresh()
     }
 
     async function remove(id) {
-        if (!confirm("Удалить отгрузку?")) return
+        const sh = shipments.find(s => s.id === id)
+        const ok = await confirm({
+            title: "Удалить отгрузку?",
+            description: sh?.number ? `Номер: ${sh.number}` : undefined,
+            confirmText: "Удалить",
+            variant: "danger",
+        })
+        if (!ok) return
         const res = await fetch(`/api/crm/shipments/${id}`, { method: "DELETE" })
         if (!res.ok) {
             const data = await res.json().catch(() => ({}))
-            alert(data.error || "Не удалось удалить")
+            toast.error(data.error || "Не удалось удалить")
             return
         }
+        toast.success("Отгрузка удалена")
         await load()
         router.refresh()
     }
@@ -262,7 +274,7 @@ export default function DealShipmentsSection({
     const fullyShippedBanner = progress.isFullyShipped
 
     return (
-        <section className='rounded-xl border border-gray-200 bg-white p-5'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
             <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
                 <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
                     Отгрузки
@@ -271,7 +283,7 @@ export default function DealShipmentsSection({
                     <button
                         type='button'
                         onClick={startAdd}
-                        className='rounded-lg bg-primary_green px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-contrast_green'
+                        className='rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                     >
                         + Новая отгрузка
                     </button>
@@ -306,7 +318,7 @@ export default function DealShipmentsSection({
                                     <select
                                         value={form.status}
                                         onChange={updateField("status")}
-                                        className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                     >
                                         <option value='DRAFT'>Черновик</option>
                                         <option value='SHIPPED'>Отгружена</option>
@@ -318,14 +330,14 @@ export default function DealShipmentsSection({
                                         type='date'
                                         value={form.plannedDate}
                                         onChange={updateField("plannedDate")}
-                                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                     />
                                 </Field>
                                 <Field label='Получатель (контакт)'>
                                     <select
                                         value={form.recipientContactId}
                                         onChange={updateField("recipientContactId")}
-                                        className='w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                     >
                                         <option value=''>— Не выбран —</option>
                                         {contacts.map(c => (
@@ -342,7 +354,7 @@ export default function DealShipmentsSection({
                                     value={form.deliveryAddress}
                                     onChange={updateField("deliveryAddress")}
                                     placeholder='По умолчанию — адрес контрагента'
-                                    className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                    className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                 />
                             </Field>
 
@@ -351,21 +363,21 @@ export default function DealShipmentsSection({
                                     <input
                                         value={form.carrier}
                                         onChange={updateField("carrier")}
-                                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                     />
                                 </Field>
                                 <Field label='Трек-номер'>
                                     <input
                                         value={form.trackingNumber}
                                         onChange={updateField("trackingNumber")}
-                                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                     />
                                 </Field>
                                 <Field label='№ ТТН / документа'>
                                     <input
                                         value={form.docNumber}
                                         onChange={updateField("docNumber")}
-                                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                     />
                                 </Field>
                             </div>
@@ -375,7 +387,7 @@ export default function DealShipmentsSection({
                                     rows={2}
                                     value={form.note}
                                     onChange={updateField("note")}
-                                    className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                    className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                 />
                             </Field>
 
@@ -388,7 +400,7 @@ export default function DealShipmentsSection({
                                         <button
                                             type='button'
                                             onClick={addItemRow}
-                                            className='rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100'
+                                            className='rounded-md border border-brand_soft/60 px-2 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
                                         >
                                             + Добавить позицию
                                         </button>
@@ -417,7 +429,7 @@ export default function DealShipmentsSection({
                                     return (
                                         <div
                                             key={idx}
-                                            className='mb-2 grid items-end gap-2 rounded-md border border-gray-100 p-2 sm:grid-cols-12'
+                                            className='mb-2 grid items-end gap-2 rounded-md border border-brand_soft/30 p-2 sm:grid-cols-12'
                                         >
                                             <div className='sm:col-span-6'>
                                                 <label className='mb-1 block text-[10px] uppercase text-gray-500'>
@@ -428,7 +440,7 @@ export default function DealShipmentsSection({
                                                     onChange={e =>
                                                         updateItem(idx, "dealItemId", e.target.value)
                                                     }
-                                                    className='w-full rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                                    className='w-full rounded-md border border-brand_soft/60 bg-white px-2 py-1.5 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                                 >
                                                     {dealItems.map(opt => (
                                                         <option
@@ -458,7 +470,7 @@ export default function DealShipmentsSection({
                                                     onChange={e =>
                                                         updateItem(idx, "quantity", e.target.value)
                                                     }
-                                                    className='w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                                    className='w-full rounded-md border border-brand_soft/60 px-2 py-1.5 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                                 />
                                                 <p className='mt-0.5 text-[10px] text-gray-500'>
                                                     Остаток: {fmtQty(max)}
@@ -473,7 +485,7 @@ export default function DealShipmentsSection({
                                                     onChange={e =>
                                                         updateItem(idx, "note", e.target.value)
                                                     }
-                                                    className='w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                                                    className='w-full rounded-md border border-brand_soft/60 px-2 py-1.5 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                                 />
                                             </div>
                                             <div className='sm:col-span-1 text-right'>
@@ -496,14 +508,14 @@ export default function DealShipmentsSection({
                                 <button
                                     type='button'
                                     onClick={cancel}
-                                    className='rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100'
+                                    className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
                                 >
                                     Отмена
                                 </button>
                                 <button
                                     type='submit'
                                     disabled={saving}
-                                    className='rounded-lg bg-primary_green px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-contrast_green disabled:opacity-60'
+                                    className='rounded-lg bg-brand_main px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:opacity-60'
                                 >
                                     {saving
                                         ? "Сохраняем..."
@@ -543,7 +555,7 @@ export default function DealShipmentsSection({
 
 function ProgressBlock({ progress, dealItems }) {
     return (
-        <div className='rounded-lg border border-gray-100 bg-gray-50 p-3'>
+        <div className='rounded-lg border border-brand_soft/30 bg-gray-50 p-3'>
             <div className='mb-2 flex items-center justify-between text-xs'>
                 <span className='font-medium text-gray-700'>
                     Прогресс отгрузки: {progress.percent}%
@@ -557,7 +569,7 @@ function ProgressBlock({ progress, dealItems }) {
             </div>
             <div className='h-2 w-full overflow-hidden rounded-full bg-gray-200'>
                 <div
-                    className='h-full bg-primary_green transition-all'
+                    className='h-full bg-brand_main transition-all'
                     style={{ width: `${progress.percent}%` }}
                 />
             </div>
@@ -588,7 +600,7 @@ function ProgressBlock({ progress, dealItems }) {
                             <div className='h-1.5 w-full overflow-hidden rounded-full bg-gray-200'>
                                 <div
                                     className={`h-full transition-all ${
-                                        pct === 100 ? "bg-green-500" : "bg-primary_green"
+                                        pct === 100 ? "bg-green-500" : "bg-brand_main"
                                     }`}
                                     style={{ width: `${pct}%` }}
                                 />
@@ -629,14 +641,14 @@ function ShipmentRow({ shipment, dealItems, onEdit, onShip, onCancel, onReopen, 
                 <div className='flex flex-wrap gap-1.5'>
                     <Link
                         href={`/crm/shipments/${shipment.id}`}
-                        className='rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100'
+                        className='rounded-md border border-brand_soft/60 px-2 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
                     >
                         Открыть
                     </Link>
                     <button
                         type='button'
                         onClick={onEdit}
-                        className='rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100'
+                        className='rounded-md border border-brand_soft/60 px-2 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
                     >
                         Изменить
                     </button>
@@ -662,7 +674,7 @@ function ShipmentRow({ shipment, dealItems, onEdit, onShip, onCancel, onReopen, 
                         <button
                             type='button'
                             onClick={onReopen}
-                            className='rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100'
+                            className='rounded-md border border-brand_soft/60 px-2 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
                         >
                             В черновик
                         </button>
@@ -705,7 +717,7 @@ function ShipmentRow({ shipment, dealItems, onEdit, onShip, onCancel, onReopen, 
                 )}
             </dl>
 
-            <div className='mt-2 rounded-md border border-gray-100 bg-white px-3 py-2 text-xs'>
+            <div className='mt-2 rounded-md border border-brand_soft/30 bg-white px-3 py-2 text-xs'>
                 {(shipment.items || []).map(it => {
                     const di = itemsById.get(it.dealItemId)
                     const name = di

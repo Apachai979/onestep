@@ -6,9 +6,11 @@ import {
     PROJECT_STATUS_COLORS,
     PROJECT_STATUS_LABELS,
 } from "@/lib/crm/project"
+import { useToast } from "@/components/crm/ui"
 
 export default function ProjectStatusControl({ projectId, currentStatus }) {
     const router = useRouter()
+    const toast = useToast()
     const [status, setStatus] = useState(currentStatus)
     const [loading, setLoading] = useState(false)
 
@@ -22,10 +24,11 @@ export default function ProjectStatusControl({ projectId, currentStatus }) {
         })
         if (res.ok) {
             setStatus(next)
+            toast.success("Статус обновлён")
             router.refresh()
         } else {
             const d = await res.json().catch(() => ({}))
-            alert(d.error || "Не удалось сменить статус")
+            toast.error(d.error || "Не удалось сменить статус")
         }
         setLoading(false)
     }

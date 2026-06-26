@@ -47,14 +47,14 @@ export default function AdminUsersTable({ currentUserId }) {
     }, [])
 
     return (
-        <section className='rounded-xl border border-gray-200 bg-white'>
-            <h2 className='border-b border-gray-100 px-5 py-3 text-sm font-semibold uppercase tracking-wide text-gray-500'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70'>
+            <h2 className='border-b border-brand_soft/30 px-5 py-3 text-sm font-semibold uppercase tracking-wide text-gray-500'>
                 Сотрудники
             </h2>
             {error && <p className='px-5 py-2 text-sm text-red-600'>{error}</p>}
             <div className='overflow-x-auto'>
                 <table className='w-full text-sm'>
-                    <thead className='bg-gray-50 text-left text-xs uppercase text-gray-500'>
+                    <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
                         <tr>
                             <th className='px-4 py-3'>ФИО</th>
                             <th className='px-4 py-3'>Email</th>
@@ -81,7 +81,7 @@ export default function AdminUsersTable({ currentUserId }) {
                             </tr>
                         )}
                         {items?.map(u => (
-                            <tr key={u.id} className='border-t border-gray-100 hover:bg-gray-50'>
+                            <tr key={u.id} className='border-t border-brand_soft/30 hover:bg-brand_soft/15'>
                                 <td className='px-4 py-3 text-gray-800'>
                                     {fullName(u)}
                                     {u.id === currentUserId && (
@@ -108,7 +108,7 @@ export default function AdminUsersTable({ currentUserId }) {
                                 <td className='px-4 py-3 text-right'>
                                     <Link
                                         href={`/crm/users/${u.id}/edit`}
-                                        className='rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100'
+                                        className='rounded-md border border-brand_soft/60 px-2 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
                                     >
                                         Редактировать
                                     </Link>

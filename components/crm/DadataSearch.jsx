@@ -93,7 +93,7 @@ export default function DadataSearch({ target = "party", onPick }) {
     }
 
     return (
-        <section className='rounded-xl border border-gray-200 bg-white p-5'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
             <h2 className='mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500'>
                 {cfg.title}
             </h2>
@@ -104,13 +104,13 @@ export default function DadataSearch({ target = "party", onPick }) {
                     onChange={e => setQuery(e.target.value)}
                     onKeyDown={onKeyDown}
                     placeholder={cfg.placeholder}
-                    className='flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                    className='flex-1 rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                 />
                 <button
                     type='button'
                     onClick={runSearch}
                     disabled={loading || !query.trim()}
-                    className='rounded-lg bg-primary_green px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-contrast_green disabled:cursor-not-allowed disabled:opacity-60'
+                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
                 >
                     {loading ? "Ищем..." : "Найти"}
                 </button>
@@ -127,7 +127,7 @@ export default function DadataSearch({ target = "party", onPick }) {
                     {items.map((it, idx) => (
                         <li
                             key={`${it.inn || it.bik || idx}`}
-                            className='rounded-lg border border-gray-100 p-3 text-sm'
+                            className='rounded-lg border border-brand_soft/30 p-3 text-sm'
                         >
                             <div className='flex flex-wrap items-start justify-between gap-2'>
                                 <div className='flex-1'>
@@ -141,7 +141,7 @@ export default function DadataSearch({ target = "party", onPick }) {
                                 <button
                                     type='button'
                                     onClick={() => pick(it)}
-                                    className='rounded-md bg-primary_green px-3 py-1 text-xs font-semibold text-white hover:bg-contrast_green'
+                                    className='rounded-md bg-brand_main px-3 py-1 text-xs font-semibold text-white hover:bg-brand_main/90'
                                 >
                                     Подставить
                                 </button>

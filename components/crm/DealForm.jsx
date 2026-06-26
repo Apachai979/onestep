@@ -9,7 +9,8 @@ const EMPTY = {
     counterpartyId: "",
     contactId: "",
     managerId: "",
-    status: "NEW",
+    status: "NEGOTIATION",
+    sourceProjectId: "",
     note: "",
 }
 
@@ -30,29 +31,44 @@ function contactName(c) {
     return fn || c.email || c.phone || "Контакт без имени"
 }
 
-export default function DealForm({ initial, mode = "create", currentUserId, defaultStatus }) {
+export default function DealForm({
+    initial,
+    mode = "create",
+    currentUserId,
+    defaultStatus,
+    fromProject,
+}) {
     const router = useRouter()
 
     const [form, setForm] = useState(() => {
         if (!initial) {
-            return {
+            const base = {
                 ...EMPTY,
                 managerId: currentUserId || "",
-                status: defaultStatus || "NEW",
+                status: defaultStatus || "NEGOTIATION",
             }
+            if (fromProject) {
+                base.title = `По проекту: ${fromProject.internalName}`
+                base.counterpartyId = fromProject.distributorId
+                base.managerId = fromProject.managerId || currentUserId || ""
+                base.sourceProjectId = fromProject.id
+            }
+            return base
         }
         return {
             title: initial.title ?? "",
             counterpartyId: initial.counterpartyId ?? "",
             contactId: initial.contactId ?? "",
             managerId: initial.managerId ?? "",
-            status: initial.status ?? "NEW",
+            status: initial.status ?? "NEGOTIATION",
+            sourceProjectId: initial.sourceProjectId ?? "",
             note: initial.note ?? "",
         }
     })
     const [counterparties, setCounterparties] = useState([])
     const [managers, setManagers] = useState([])
     const [contacts, setContacts] = useState([])
+    const [projects, setProjects] = useState([])
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
 
@@ -60,10 +76,12 @@ export default function DealForm({ initial, mode = "create", currentUserId, defa
         Promise.all([
             fetch("/api/crm/counterparties").then(r => r.json()),
             fetch("/api/crm/users").then(r => r.json()),
+            fetch("/api/crm/projects").then(r => r.json()),
         ])
-            .then(([c, u]) => {
+            .then(([c, u, p]) => {
                 setCounterparties(c.items || [])
                 setManagers(u.items || [])
+                setProjects(p.items || [])
             })
             .catch(() => {})
     }, [])
@@ -93,7 +111,7 @@ export default function DealForm({ initial, mode = "create", currentUserId, defa
                 }${c.region ? ` · ${c.region}` : ""}`,
                 search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
             })),
-        [counterparties],
+        [counterparties]
     )
 
     async function handleSubmit(e) {
@@ -101,7 +119,11 @@ export default function DealForm({ initial, mode = "create", currentUserId, defa
         setError("")
         setLoading(true)
 
-        const payload = { ...form, contactId: form.contactId || null }
+        const payload = {
+            ...form,
+            contactId: form.contactId || null,
+            sourceProjectId: form.sourceProjectId || null,
+        }
         const url = mode === "create" ? "/api/crm/deals" : `/api/crm/deals/${initial.id}`
         const method = mode === "create" ? "POST" : "PATCH"
 
@@ -177,6 +199,23 @@ export default function DealForm({ initial, mode = "create", currentUserId, defa
                             id: m.id,
                             label: managerName(m),
                             search: `${m.firstName ?? ""} ${m.lastName ?? ""} ${m.email ?? ""}`,
+                        }))}
+                    />
+                </div>
+                <div className='sm:col-span-2'>
+                    <label className='mb-1 block text-sm text-gray-700'>Проект-источник</label>
+                    <SearchableSelect
+                        value={form.sourceProjectId}
+                        onChange={id => setForm(prev => ({ ...prev, sourceProjectId: id }))}
+                        placeholder='— Без привязки —'
+                        emptyLabel='Проект не найден'
+                        options={projects.map(p => ({
+                            id: p.id,
+                            label: p.internalName,
+                            sublabel: `Аукцион ${p.externalAuctionId}${
+                                p.endCustomer?.name ? ` · ${p.endCustomer.name}` : ""
+                            }`,
+                            search: `${p.internalName} ${p.externalAuctionId} ${p.distributor?.name ?? ""} ${p.endCustomer?.name ?? ""}`,
                         }))}
                     />
                 </div>

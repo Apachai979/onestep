@@ -37,6 +37,12 @@ export default async function CrmLayout({ children }) {
                             Сделки
                         </Link>
                         <Link
+                            href='/crm/shipments'
+                            className='text-gray-600 hover:text-primary_green'
+                        >
+                            Отгрузки
+                        </Link>
+                        <Link
                             href='/crm/projects'
                             className='text-gray-600 hover:text-primary_green'
                         >

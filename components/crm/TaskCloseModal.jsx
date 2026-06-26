@@ -90,7 +90,7 @@ function relationLink(t) {
     return null
 }
 
-export default function TaskCloseModal({ task, onClose, onClosed }) {
+export default function TaskCloseModal({ task, onClose, onClosed, canClose = true }) {
     const [status, setStatus] = useState("DONE")
     const [result, setResult] = useState("")
     const [error, setError] = useState("")
@@ -98,6 +98,7 @@ export default function TaskCloseModal({ task, onClose, onClosed }) {
 
     const ts = timeStatus(task)
     const rel = relationLink(task)
+    const readOnly = !canClose
 
     async function submit(e) {
         e.preventDefault()
@@ -167,52 +168,60 @@ export default function TaskCloseModal({ task, onClose, onClosed }) {
                     </dl>
                 </div>
 
-                <div>
-                    <label className='mb-1 block text-sm text-gray-700'>Результат</label>
-                    <div className='flex gap-2'>
-                        <button
-                            type='button'
-                            onClick={() => setStatus("DONE")}
-                            className={`flex-1 rounded-lg border px-3 py-2 text-sm ${
-                                status === "DONE"
-                                    ? "border-green-500 bg-green-50 text-green-800"
-                                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                            }`}
-                        >
-                            Выполнена
-                        </button>
-                        <button
-                            type='button'
-                            onClick={() => setStatus("FAILED")}
-                            className={`flex-1 rounded-lg border px-3 py-2 text-sm ${
-                                status === "FAILED"
-                                    ? "border-red-500 bg-red-50 text-red-800"
-                                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                            }`}
-                        >
-                            Не выполнена
-                        </button>
-                    </div>
-                </div>
+                {!readOnly && (
+                    <>
+                        <div>
+                            <label className='mb-1 block text-sm text-gray-700'>
+                                Результат
+                            </label>
+                            <div className='flex gap-2'>
+                                <button
+                                    type='button'
+                                    onClick={() => setStatus("DONE")}
+                                    className={`flex-1 rounded-lg border px-3 py-2 text-sm ${
+                                        status === "DONE"
+                                            ? "border-green-500 bg-green-50 text-green-800"
+                                            : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                                    }`}
+                                >
+                                    Выполнена
+                                </button>
+                                <button
+                                    type='button'
+                                    onClick={() => setStatus("FAILED")}
+                                    className={`flex-1 rounded-lg border px-3 py-2 text-sm ${
+                                        status === "FAILED"
+                                            ? "border-red-500 bg-red-50 text-red-800"
+                                            : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                                    }`}
+                                >
+                                    Не выполнена
+                                </button>
+                            </div>
+                        </div>
 
-                <div>
-                    <label className='mb-1 block text-sm text-gray-700'>
-                        Комментарий{" "}
-                        {status === "FAILED" && <span className='text-red-600'>*</span>}
-                    </label>
-                    <textarea
-                        rows={4}
-                        value={result}
-                        onChange={e => setResult(e.target.value)}
-                        required={status === "FAILED"}
-                        placeholder={
-                            status === "FAILED"
-                                ? "Почему не получилось"
-                                : "Что сделали (опц.)"
-                        }
-                        className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
-                    />
-                </div>
+                        <div>
+                            <label className='mb-1 block text-sm text-gray-700'>
+                                Комментарий{" "}
+                                {status === "FAILED" && (
+                                    <span className='text-red-600'>*</span>
+                                )}
+                            </label>
+                            <textarea
+                                rows={4}
+                                value={result}
+                                onChange={e => setResult(e.target.value)}
+                                required={status === "FAILED"}
+                                placeholder={
+                                    status === "FAILED"
+                                        ? "Почему не получилось"
+                                        : "Что сделали (опц.)"
+                                }
+                                className='w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-primary_green focus:outline-none'
+                            />
+                        </div>
+                    </>
+                )}
 
                 {error && <p className='text-sm text-red-600'>{error}</p>}
 
@@ -222,15 +231,17 @@ export default function TaskCloseModal({ task, onClose, onClosed }) {
                         onClick={onClose}
                         className='rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100'
                     >
-                        Отмена
+                        {readOnly ? "Закрыть" : "Отмена"}
                     </button>
-                    <button
-                        type='submit'
-                        disabled={loading}
-                        className='rounded-lg bg-primary_green px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-contrast_green disabled:opacity-60'
-                    >
-                        {loading ? "Закрываем..." : "Закрыть задачу"}
-                    </button>
+                    {!readOnly && (
+                        <button
+                            type='submit'
+                            disabled={loading}
+                            className='rounded-lg bg-primary_green px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-contrast_green disabled:opacity-60'
+                        >
+                            {loading ? "Закрываем..." : "Закрыть задачу"}
+                        </button>
+                    )}
                 </div>
             </form>
         </div>

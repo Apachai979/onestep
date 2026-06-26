@@ -1,6 +1,28 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { COUNTERPARTY_TYPES, parseCounterpartyPayload } from "@/lib/crm/counterparty"
+import { logChange, snapshotEntity } from "@/lib/crm/change-log"
+
+const COUNTERPARTY_TRACKED_FIELDS = [
+    "type",
+    "name",
+    "region",
+    "inn",
+    "kpp",
+    "ogrn",
+    "okpo",
+    "okved",
+    "bankName",
+    "bankAccount",
+    "bankCorrAccount",
+    "bik",
+    "totalRevenue",
+    "discount",
+    "phone",
+    "email",
+    "address",
+    "note",
+]
 
 export async function GET(request) {
     const { session, response } = await requireCrmSession()
@@ -77,11 +99,21 @@ export async function POST(request) {
     const { data, error } = parseCounterpartyPayload(body)
     if (error) return Response.json({ error }, { status: 400 })
 
-    const created = await prisma.counterparty.create({
-        data: {
-            ...data,
-            createdById: session.user.id ?? null,
-        },
+    const created = await prisma.$transaction(async tx => {
+        const cp = await tx.counterparty.create({
+            data: {
+                ...data,
+                createdById: session.user.id ?? null,
+            },
+        })
+        await logChange(tx, {
+            entityType: "Counterparty",
+            entityId: cp.id,
+            action: "CREATE",
+            payload: snapshotEntity(cp, COUNTERPARTY_TRACKED_FIELDS),
+            authorId: session.user.id,
+        })
+        return cp
     })
     return Response.json({ item: created }, { status: 201 })
 }

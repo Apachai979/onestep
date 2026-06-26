@@ -7,7 +7,9 @@ import { dealDisplayTitle } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
 import DealItemsSection from "@/components/crm/DealItemsSection"
 import DealStatusControl from "@/components/crm/DealStatusControl"
+import DealShipmentsSection from "@/components/crm/DealShipmentsSection"
 import RelatedTasksSection from "@/components/crm/RelatedTasksSection"
+import ChangeHistorySection from "@/components/crm/ChangeHistorySection"
 
 export const metadata = { title: "Сделка | CRM" }
 
@@ -31,10 +33,21 @@ export default async function DealPage({ params }) {
             contact: true,
             manager: true,
             createdBy: true,
+            updatedBy: true,
             items: { orderBy: { createdAt: "asc" } },
+            sourceProject: {
+                select: { id: true, internalName: true, externalAuctionId: true },
+            },
         },
     })
     if (!item) notFound()
+
+    const dealItemsForClient = item.items.map(i => ({
+        id: i.id,
+        sku: i.sku,
+        name: i.name,
+        quantity: i.quantity.toString(),
+    }))
 
     const itemsForClient = item.items.map(i => ({
         ...i,
@@ -71,15 +84,37 @@ export default async function DealPage({ params }) {
                             ? "Дистрибьютор"
                             : "Конечный потребитель"}
                     </p>
+                    {item.sourceProject && (
+                        <p className='mt-1 text-sm text-blue-700'>
+                            По проекту:{" "}
+                            <Link
+                                href={`/crm/projects/${item.sourceProject.id}`}
+                                className='underline hover:text-blue-900'
+                            >
+                                {item.sourceProject.internalName}
+                            </Link>{" "}
+                            <span className='text-gray-500'>
+                                (аукцион {item.sourceProject.externalAuctionId})
+                            </span>
+                        </p>
+                    )}
                 </div>
                 <div className='flex flex-col items-end gap-2'>
                     <DealStatusControl dealId={item.id} currentStatus={item.status} />
-                    <Link
-                        href={`/crm/deals/${item.id}/edit`}
-                        className='rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100'
-                    >
-                        Редактировать
-                    </Link>
+                    <div className='flex flex-wrap justify-end gap-2'>
+                        <Link
+                            href={`/crm/deals/${item.id}/edit`}
+                            className='rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-100'
+                        >
+                            Редактировать
+                        </Link>
+                        <Link
+                            href={`/crm/deals/${item.id}/proposal`}
+                            className='rounded-lg bg-primary_green px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-contrast_green'
+                        >
+                            Сформировать КП
+                        </Link>
+                    </div>
                 </div>
             </div>
 
@@ -90,6 +125,11 @@ export default async function DealPage({ params }) {
                 <Row
                     label='Создана'
                     value={new Date(item.createdAt).toLocaleString("ru-RU")}
+                />
+                <Row label='Изменил' value={fullName(item.updatedBy)} />
+                <Row
+                    label='Изменена'
+                    value={new Date(item.updatedAt).toLocaleString("ru-RU")}
                 />
                 <Row label='Сумма сделки' value={formatMoney(item.totalAmount)} />
             </Section>
@@ -104,12 +144,21 @@ export default async function DealPage({ params }) {
 
             <DealItemsSection dealId={item.id} initialItems={itemsForClient} />
 
+            <DealShipmentsSection
+                dealId={item.id}
+                dealItems={dealItemsForClient}
+                counterpartyId={item.counterparty.id}
+                initialDeliveryAddress={item.counterparty.address || ""}
+            />
+
             <RelatedTasksSection
                 relationKind='deal'
                 relationId={item.id}
                 currentUserId={session?.user?.id}
                 currentUserRole={session?.user?.role}
             />
+
+            <ChangeHistorySection entityType='Deal' entityId={item.id} includeChildren />
         </div>
     )
 }

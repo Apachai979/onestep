@@ -27,24 +27,24 @@ export default function DealStatusControl({ dealId, currentStatus }) {
     }
 
     return (
-        <div className='flex flex-wrap items-center gap-2'>
-            <span
-                className={`rounded-full px-3 py-1 text-xs font-medium ${DEAL_STATUS_COLORS[status]}`}
-            >
-                {DEAL_STATUS_LABELS[status]}
-            </span>
-            <select
-                value={status}
-                onChange={e => change(e.target.value)}
-                disabled={loading}
-                className='rounded-lg border border-gray-300 bg-white px-3 py-1 text-xs shadow-sm focus:border-primary_green focus:outline-none disabled:opacity-60'
-            >
-                {DEAL_STATUSES.map(s => (
-                    <option key={s} value={s}>
-                        {DEAL_STATUS_LABELS[s]}
-                    </option>
-                ))}
-            </select>
-        </div>
+        <select
+            value={status}
+            onChange={e => change(e.target.value)}
+            disabled={loading}
+            title='Сменить статус сделки'
+            className={`cursor-pointer appearance-none rounded-full border-0 bg-no-repeat px-3 py-1 pr-8 text-xs font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-primary_green/50 disabled:opacity-60 ${DEAL_STATUS_COLORS[status]}`}
+            style={{
+                backgroundImage:
+                    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E\")",
+                backgroundPosition: "right 0.65rem center",
+                backgroundSize: "10px 6px",
+            }}
+        >
+            {DEAL_STATUSES.map(s => (
+                <option key={s} value={s} className='bg-white text-gray-900'>
+                    {DEAL_STATUS_LABELS[s]}
+                </option>
+            ))}
+        </select>
     )
 }

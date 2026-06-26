@@ -23,15 +23,39 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  counterparties   Counterparty[] @relation("CounterpartyCreatedBy")
-  projects         Project[]      @relation("ProjectManager")
-  dealsAsManager   Deal[]         @relation("DealManager")
-  dealsAsAuthor    Deal[]         @relation("DealCreatedBy")
-  invites          Invite[]       @relation("InviteCreatedBy")
-  tasksAsAssignee  Task[]         @relation("TaskAssignee")
-  tasksAsAuthor    Task[]         @relation("TaskCreatedBy")
+  counterparties         Counterparty[] @relation("CounterpartyCreatedBy")
+  counterpartiesUpdated  Counterparty[] @relation("CounterpartyUpdatedBy")
+  projects               Project[]      @relation("ProjectManager")
+  projectsUpdated        Project[]      @relation("ProjectUpdatedBy")
+  dealsAsManager         Deal[]         @relation("DealManager")
+  dealsAsAuthor          Deal[]         @relation("DealCreatedBy")
+  dealsUpdated           Deal[]         @relation("DealUpdatedBy")
+  invites                Invite[]       @relation("InviteCreatedBy")
+  tasksAsAssignee        Task[]         @relation("TaskAssignee")
+  tasksAsAuthor          Task[]         @relation("TaskCreatedBy")
+  shipmentsCreated       Shipment[]     @relation("ShipmentCreatedBy")
+  shipmentsUpdated       Shipment[]     @relation("ShipmentUpdatedBy")
+  changeLogs             ChangeLog[]    @relation("ChangeLogAuthor")
 
   @@map("users")
+}
+
+model ChangeLog {
+  id               String   @id @default(cuid())
+  entityType       String
+  entityId         String
+  parentEntityType String?
+  parentEntityId   String?
+  action           String
+  changes          String?
+  authorId         String?
+  author           User?    @relation("ChangeLogAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([parentEntityType, parentEntityId])
+  @@index([createdAt])
+  @@map("change_logs")
 }
 
 model Invite {
@@ -73,6 +97,8 @@ model Counterparty {
   contacts        Contact[]
   createdById     String?
   createdBy       User?    @relation("CounterpartyCreatedBy", fields: [createdById], references: [id])
+  updatedById     String?
+  updatedBy       User?    @relation("CounterpartyUpdatedBy", fields: [updatedById], references: [id])
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -102,10 +128,13 @@ model Project {
   endCustomer       Counterparty  @relation("ProjectEndCustomer", fields: [endCustomerId], references: [id])
   managerId         String
   manager           User          @relation("ProjectManager", fields: [managerId], references: [id])
+  updatedById       String?
+  updatedBy         User?         @relation("ProjectUpdatedBy", fields: [updatedById], references: [id])
 
   items             ProjectItem[]
   contacts          Contact[]
   tasks             Task[]
+  deals             Deal[]        @relation("ProjectDeals")
 
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -145,6 +174,8 @@ model Product {
   packagePrice        Decimal       @default(0)
   recommendedLpuPrice Decimal?
   transportPackQty    Int           @default(0)
+  unitWeightKg        Decimal?
+  unitVolumeM3        Decimal?
   contents            String?
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
@@ -172,6 +203,7 @@ model Contact {
 
   projects       Project[]
   deals          Deal[]    @relation("DealContact")
+  shipments      Shipment[] @relation("ShipmentRecipient")
 
   @@index([counterpartyId])
   @@map("contacts")
@@ -180,7 +212,7 @@ model Contact {
 model Deal {
   id             String   @id @default(cuid())
   title          String?
-  status         String   @default("NEW")
+  status         String   @default("NEGOTIATION")
   totalAmount    Decimal  @default(0)
   note           String?
 
@@ -192,9 +224,14 @@ model Deal {
   manager        User         @relation("DealManager", fields: [managerId], references: [id])
   createdById    String
   createdBy      User         @relation("DealCreatedBy", fields: [createdById], references: [id])
+  updatedById    String?
+  updatedBy      User?        @relation("DealUpdatedBy", fields: [updatedById], references: [id])
+  sourceProjectId String?
+  sourceProject   Project?    @relation("ProjectDeals", fields: [sourceProjectId], references: [id], onDelete: SetNull)
 
   items          DealItem[]
   tasks          Task[]
+  shipments      Shipment[]
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -202,6 +239,7 @@ model Deal {
   @@index([status])
   @@index([counterpartyId])
   @@index([managerId])
+  @@index([sourceProjectId])
   @@map("deals")
 }
 
@@ -218,9 +256,58 @@ model DealItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  shipmentItems ShipmentItem[]
+
   @@index([dealId])
   @@index([productId])
   @@map("deal_items")
+}
+
+model Shipment {
+  id                 String   @id @default(cuid())
+  number             String   @unique
+  dealId             String
+  deal               Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  status             String   @default("DRAFT")
+  plannedDate        DateTime?
+  shippedAt          DateTime?
+  deliveryAddress    String?
+  carrier            String?
+  trackingNumber     String?
+  recipientContactId String?
+  recipientContact   Contact? @relation("ShipmentRecipient", fields: [recipientContactId], references: [id], onDelete: SetNull)
+  docNumber          String?
+  note               String?
+
+  items              ShipmentItem[]
+
+  createdById        String?
+  createdBy          User?    @relation("ShipmentCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById        String?
+  updatedBy          User?    @relation("ShipmentUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([dealId])
+  @@index([status])
+  @@index([plannedDate])
+  @@map("shipments")
+}
+
+model ShipmentItem {
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  dealItemId String
+  dealItem   DealItem @relation(fields: [dealItemId], references: [id], onDelete: Cascade)
+  quantity   Decimal  @default(0)
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([shipmentId])
+  @@index([dealItemId])
+  @@map("shipment_items")
 }
 
 model Task {

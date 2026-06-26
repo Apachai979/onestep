@@ -1,6 +1,6 @@
 "use client"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
     TASK_STATUSES,
     TASK_STATUS_COLORS,
@@ -8,6 +8,8 @@ import {
     TASK_TYPES,
     allDayDateLabel,
 } from "@/lib/crm/task"
+import { onTasksChanged } from "@/lib/crm/tasks-events"
+import SearchableSelect from "./SearchableSelect"
 import { TaskTypeBadge } from "./TaskTypeIcon"
 import TaskCloseModal from "./TaskCloseModal"
 
@@ -57,14 +59,36 @@ export default function TaskList({ currentUserId, currentUserRole }) {
     const [filters, setFilters] = useState({
         status: "OPEN",
         type: "",
-        mine: false,
+        assigneeId: "",
     })
+    const [users, setUsers] = useState([])
+
+    useEffect(() => {
+        fetch("/api/crm/users")
+            .then(r => (r.ok ? r.json() : { items: [] }))
+            .then(d => setUsers(d.items || []))
+            .catch(() => setUsers([]))
+    }, [])
+
+    const assigneeOptions = useMemo(
+        () =>
+            users.map(u => {
+                const name = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
+                return {
+                    id: u.id,
+                    label:
+                        u.id === currentUserId ? `${name} (вы)` : name,
+                    search: `${u.firstName ?? ""} ${u.lastName ?? ""} ${u.email ?? ""}`,
+                }
+            }),
+        [users, currentUserId],
+    )
 
     async function load() {
         const params = new URLSearchParams()
         if (filters.status) params.set("status", filters.status)
         if (filters.type) params.set("type", filters.type)
-        if (filters.mine) params.set("mine", "1")
+        if (filters.assigneeId) params.set("assigneeId", filters.assigneeId)
         setError("")
         const r = await fetch(`/api/crm/tasks?${params.toString()}`)
         const text = await r.text()
@@ -79,6 +103,10 @@ export default function TaskList({ currentUserId, currentUserRole }) {
 
     useEffect(() => {
         load()
+    }, [filters])
+
+    useEffect(() => {
+        return onTasksChanged(() => load())
     }, [filters])
 
     function canClose(t) {
@@ -128,16 +156,38 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                         ))}
                     </select>
                 </div>
-                <label className='flex items-center gap-2 text-sm text-gray-700'>
-                    <input
-                        type='checkbox'
-                        checked={filters.mine}
-                        onChange={e =>
-                            setFilters(prev => ({ ...prev, mine: e.target.checked }))
+                <div className='flex-1 min-w-[220px]'>
+                    <label className='mb-1 block text-xs text-gray-600'>Ответственный</label>
+                    <SearchableSelect
+                        value={filters.assigneeId}
+                        onChange={id =>
+                            setFilters(prev => ({ ...prev, assigneeId: id }))
                         }
+                        options={assigneeOptions}
+                        placeholder='Все'
+                        emptyLabel='Сотрудник не найден'
                     />
-                    Только мои
-                </label>
+                </div>
+                {currentUserId && (
+                    <button
+                        type='button'
+                        onClick={() =>
+                            setFilters(prev => ({
+                                ...prev,
+                                assigneeId:
+                                    prev.assigneeId === currentUserId ? "" : currentUserId,
+                            }))
+                        }
+                        className={`rounded-lg border px-3 py-2 text-sm shadow-sm transition ${
+                            filters.assigneeId === currentUserId
+                                ? "border-primary_green bg-primary_green text-white"
+                                : "border-gray-300 text-gray-700 hover:bg-gray-100"
+                        }`}
+                        title='Показать только мои задачи'
+                    >
+                        Только мои
+                    </button>
+                )}
             </div>
 
             {error && <p className='text-sm text-red-600'>{error}</p>}
@@ -172,26 +222,19 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                         {items?.map(t => {
                             const rel = relationLink(t)
                             const overdue = isOverdue(t)
-                            const clickable = t.status === "OPEN" && canClose(t)
                             return (
                                 <tr
                                     key={t.id}
-                                    onClick={() => {
-                                        if (clickable) setClosing(t)
-                                    }}
-                                    className={`border-t border-gray-100 ${
-                                        clickable
-                                            ? "cursor-pointer hover:bg-gray-50"
-                                            : "cursor-default"
-                                    }`}
-                                    title={clickable ? "Открыть и закрыть задачу" : ""}
+                                    onClick={() => setClosing(t)}
+                                    className='cursor-pointer border-t border-gray-100 hover:bg-gray-50'
+                                    title='Открыть задачу'
                                 >
                                     <td className='px-4 py-3'>
                                         <div className='font-medium text-night_green'>
                                             {t.title}
                                         </div>
                                         {t.description && (
-                                            <div className='mt-0.5 line-clamp-1 text-xs text-gray-500'>
+                                            <div className='mt-0.5 whitespace-pre-wrap text-xs text-gray-500'>
                                                 {t.description}
                                             </div>
                                         )}
@@ -237,6 +280,7 @@ export default function TaskList({ currentUserId, currentUserRole }) {
             {closing && (
                 <TaskCloseModal
                     task={closing}
+                    canClose={closing.status === "OPEN" && canClose(closing)}
                     onClose={() => setClosing(null)}
                     onClosed={() => {
                         setClosing(null)

@@ -3,11 +3,13 @@ import { notFound } from "next/navigation"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
+import { DEAL_STATUS_LABELS } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
 import { looksLikeUrl } from "@/lib/crm/project"
 import ProjectItemsSection from "@/components/crm/ProjectItemsSection"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
 import RelatedTasksSection from "@/components/crm/RelatedTasksSection"
+import ChangeHistorySection from "@/components/crm/ChangeHistorySection"
 
 export const metadata = { title: "Проект | CRM" }
 
@@ -29,8 +31,16 @@ export default async function ProjectPage({ params }) {
             distributor: true,
             endCustomer: true,
             manager: true,
+            updatedBy: true,
             items: { orderBy: { createdAt: "asc" } },
             contacts: { orderBy: [{ lastName: "asc" }, { firstName: "asc" }] },
+            deals: {
+                orderBy: { createdAt: "desc" },
+                include: {
+                    counterparty: { select: { id: true, name: true } },
+                    manager: { select: { firstName: true, lastName: true, email: true } },
+                },
+            },
         },
     })
     if (!item) notFound()
@@ -94,6 +104,12 @@ export default async function ProjectPage({ params }) {
                     >
                         Редактировать
                     </Link>
+                    <Link
+                        href={`/crm/deals/new?fromProjectId=${item.id}`}
+                        className='rounded-lg bg-primary_green px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-contrast_green'
+                    >
+                        + Создать сделку
+                    </Link>
                 </div>
             </div>
 
@@ -132,6 +148,11 @@ export default async function ProjectPage({ params }) {
             <Section title='Финансы'>
                 <Row label='Сумма проекта' value={formatMoney(item.totalAmount)} />
                 <Row label='Создан' value={fmtDate(item.createdAt)} />
+                <Row label='Изменил' value={fullName(item.updatedBy)} />
+                <Row
+                    label='Изменён'
+                    value={new Date(item.updatedAt).toLocaleString("ru-RU")}
+                />
             </Section>
 
             <section className='rounded-xl border border-gray-200 bg-white p-5'>
@@ -152,12 +173,68 @@ export default async function ProjectPage({ params }) {
 
             <ProjectItemsSection projectId={item.id} initialItems={itemsForClient} />
 
+            <section className='rounded-xl border border-gray-200 bg-white p-5'>
+                <h2 className='mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500'>
+                    Сделки по проекту
+                </h2>
+                {item.deals.length === 0 ? (
+                    <p className='text-sm text-gray-400'>
+                        Связанных сделок ещё нет. Используйте «+ Создать сделку» в шапке.
+                    </p>
+                ) : (
+                    <div className='overflow-x-auto rounded-lg border border-gray-100'>
+                        <table className='w-full text-sm'>
+                            <thead className='bg-gray-50 text-left text-xs uppercase text-gray-500'>
+                                <tr>
+                                    <th className='px-3 py-2'>Название</th>
+                                    <th className='px-3 py-2'>Клиент</th>
+                                    <th className='px-3 py-2'>Менеджер</th>
+                                    <th className='px-3 py-2'>Статус</th>
+                                    <th className='px-3 py-2 text-right'>Сумма</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {item.deals.map(d => (
+                                    <tr
+                                        key={d.id}
+                                        className='border-t border-gray-100 hover:bg-gray-50'
+                                    >
+                                        <td className='px-3 py-2'>
+                                            <Link
+                                                href={`/crm/deals/${d.id}`}
+                                                className='font-medium text-night_green hover:text-primary_green'
+                                            >
+                                                {d.title || `Сделка с ${d.counterparty?.name || "клиентом"}`}
+                                            </Link>
+                                        </td>
+                                        <td className='px-3 py-2 text-gray-700'>
+                                            {d.counterparty?.name || "—"}
+                                        </td>
+                                        <td className='px-3 py-2 text-gray-700'>
+                                            {fullName(d.manager)}
+                                        </td>
+                                        <td className='px-3 py-2 text-gray-700'>
+                                            {DEAL_STATUS_LABELS[d.status] || d.status}
+                                        </td>
+                                        <td className='px-3 py-2 text-right text-gray-700'>
+                                            {formatMoney(d.totalAmount)}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
+
             <RelatedTasksSection
                 relationKind='project'
                 relationId={item.id}
                 currentUserId={session?.user?.id}
                 currentUserRole={session?.user?.role}
             />
+
+            <ChangeHistorySection entityType='Project' entityId={item.id} includeChildren />
         </div>
     )
 }

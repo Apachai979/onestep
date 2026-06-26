@@ -8,6 +8,7 @@ import { formatMoney, formatPercent } from "@/lib/crm/format"
 import { PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import ContactsSection from "@/components/crm/ContactsSection"
 import RelatedTasksSection from "@/components/crm/RelatedTasksSection"
+import ChangeHistorySection from "@/components/crm/ChangeHistorySection"
 
 export const metadata = { title: "Контрагент | CRM" }
 
@@ -17,6 +18,7 @@ export default async function CounterpartyPage({ params }) {
         where: { id: params.id },
         include: {
             createdBy: { select: { firstName: true, lastName: true, email: true } },
+            updatedBy: { select: { firstName: true, lastName: true, email: true } },
             contacts: { orderBy: [{ isPrimary: "desc" }, { lastName: "asc" }, { firstName: "asc" }] },
         },
     })
@@ -51,6 +53,11 @@ export default async function CounterpartyPage({ params }) {
         ? `${item.createdBy.firstName ?? ""} ${item.createdBy.lastName ?? ""}`.trim() ||
           item.createdBy.email
         : "—"
+
+    const updatedByName = item.updatedBy
+        ? `${item.updatedBy.firstName ?? ""} ${item.updatedBy.lastName ?? ""}`.trim() ||
+          item.updatedBy.email
+        : null
 
     return (
         <div className='max-w-4xl space-y-6'>
@@ -198,7 +205,14 @@ export default async function CounterpartyPage({ params }) {
                     label='Создан'
                     value={new Date(item.createdAt).toLocaleString("ru-RU")}
                 />
+                <Row label='Изменил' value={updatedByName || "—"} />
+                <Row
+                    label='Изменён'
+                    value={new Date(item.updatedAt).toLocaleString("ru-RU")}
+                />
             </Section>
+
+            <ChangeHistorySection entityType='Counterparty' entityId={item.id} />
 
             {item.note && (
                 <Section title='Примечание'>

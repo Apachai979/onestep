@@ -10,6 +10,8 @@ const EMPTY = {
     packagePrice: "",
     recommendedLpuPrice: "",
     transportPackQty: "",
+    unitWeightKg: "",
+    unitVolumeM3: "",
     contents: "",
 }
 
@@ -32,6 +34,8 @@ export default function ProductForm({ initial, mode = "create" }) {
             packagePrice: toFormValue(initial.packagePrice),
             recommendedLpuPrice: toFormValue(initial.recommendedLpuPrice),
             transportPackQty: toFormValue(initial.transportPackQty),
+            unitWeightKg: toFormValue(initial.unitWeightKg),
+            unitVolumeM3: toFormValue(initial.unitVolumeM3),
             contents: initial.contents ?? "",
         }
     })
@@ -138,6 +142,24 @@ export default function ProductForm({ initial, mode = "create" }) {
                     inputMode='decimal'
                     value={form.recommendedLpuPrice}
                     onChange={update("recommendedLpuPrice")}
+                />
+                <Field
+                    label='Вес единицы, кг'
+                    type='number'
+                    step='0.001'
+                    min='0'
+                    inputMode='decimal'
+                    value={form.unitWeightKg}
+                    onChange={update("unitWeightKg")}
+                />
+                <Field
+                    label='Объём единицы, м³'
+                    type='number'
+                    step='0.0001'
+                    min='0'
+                    inputMode='decimal'
+                    value={form.unitVolumeM3}
+                    onChange={update("unitVolumeM3")}
                 />
             </Section>
 

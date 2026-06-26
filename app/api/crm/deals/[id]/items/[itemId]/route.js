@@ -1,11 +1,15 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
-import { parseDealItemPayload } from "@/lib/crm/deal"
+import { DEAL_ITEM_TRACKED_FIELDS, parseDealItemPayload } from "@/lib/crm/deal"
+import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
 
-async function recalcTotal(tx, dealId) {
+async function recalcTotalAndBump(tx, dealId, authorId) {
     const items = await tx.dealItem.findMany({ where: { dealId }, select: { amount: true } })
     const total = items.reduce((s, it) => s + Number(it.amount), 0)
-    await tx.deal.update({ where: { id: dealId }, data: { totalAmount: total.toString() } })
+    await tx.deal.update({
+        where: { id: dealId },
+        data: { totalAmount: total.toString(), updatedById: authorId ?? null },
+    })
 }
 
 export async function PATCH(request, { params }) {
@@ -37,7 +41,19 @@ export async function PATCH(request, { params }) {
 
     const updated = await prisma.$transaction(async tx => {
         const item = await tx.dealItem.update({ where: { id: params.itemId }, data })
-        await recalcTotal(tx, params.id)
+        const changes = diffEntities(existing, item, DEAL_ITEM_TRACKED_FIELDS)
+        if (Object.keys(changes).length > 0) {
+            await logChange(tx, {
+                entityType: "DealItem",
+                entityId: item.id,
+                parentEntityType: "Deal",
+                parentEntityId: params.id,
+                action: "UPDATE",
+                payload: changes,
+                authorId: session.user.id,
+            })
+        }
+        await recalcTotalAndBump(tx, params.id, session.user.id)
         return item
     })
     return Response.json({ item: updated })
@@ -54,7 +70,16 @@ export async function DELETE(_request, { params }) {
 
     await prisma.$transaction(async tx => {
         await tx.dealItem.delete({ where: { id: params.itemId } })
-        await recalcTotal(tx, params.id)
+        await logChange(tx, {
+            entityType: "DealItem",
+            entityId: existing.id,
+            parentEntityType: "Deal",
+            parentEntityId: params.id,
+            action: "DELETE",
+            payload: snapshotEntity(existing, DEAL_ITEM_TRACKED_FIELDS),
+            authorId: session.user.id,
+        })
+        await recalcTotalAndBump(tx, params.id, session.user.id)
     })
     return Response.json({ ok: true })
 }

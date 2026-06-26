@@ -8,7 +8,6 @@ export default function TasksTabs({ currentUserId, currentUserRole }) {
     const [view, setView] = useState("list")
     const [creating, setCreating] = useState(false)
     const [defaultStart, setDefaultStart] = useState(null)
-    const [version, setVersion] = useState(0)
 
     function openCreate(start) {
         setDefaultStart(start || null)
@@ -72,10 +71,7 @@ export default function TasksTabs({ currentUserId, currentUserRole }) {
                             currentUserId={currentUserId}
                             defaultStart={defaultStart}
                             onCancel={closeCreate}
-                            onSaved={() => {
-                                closeCreate()
-                                setVersion(v => v + 1)
-                            }}
+                            onSaved={closeCreate}
                         />
                     </div>
                 </div>
@@ -83,13 +79,11 @@ export default function TasksTabs({ currentUserId, currentUserRole }) {
 
             {view === "list" ? (
                 <TaskList
-                    key={version}
                     currentUserId={currentUserId}
                     currentUserRole={currentUserRole}
                 />
             ) : (
                 <TaskCalendar
-                    key={version}
                     currentUserId={currentUserId}
                     currentUserRole={currentUserRole}
                     onCreateAt={openCreate}

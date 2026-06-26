@@ -2,9 +2,11 @@ import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import {
     PROJECT_STATUSES,
+    PROJECT_TRACKED_FIELDS,
     buildInternalName,
     parseProjectPayload,
 } from "@/lib/crm/project"
+import { logChange, snapshotEntity } from "@/lib/crm/change-log"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
@@ -167,25 +169,37 @@ export async function POST(request) {
         contactsToConnect = valid.map(c => ({ id: c.id }))
     }
 
-    const created = await prisma.project.create({
-        data: {
-            externalAuctionId: data.externalAuctionId,
-            internalName,
-            status,
-            totalAmount: data.totalAmount ?? "0",
-            auctionDate: data.auctionDate ?? null,
-            duplicateComment: data.duplicateComment ?? null,
-            distributorId: data.distributorId,
-            endCustomerId: data.endCustomerId,
-            managerId: data.managerId,
-            contacts: contactsToConnect.length ? { connect: contactsToConnect } : undefined,
-        },
-        include: {
-            distributor: { select: COUNTERPARTY_SELECT },
-            endCustomer: { select: COUNTERPARTY_SELECT },
-            manager: { select: MANAGER_SELECT },
-            contacts: true,
-        },
+    const created = await prisma.$transaction(async tx => {
+        const project = await tx.project.create({
+            data: {
+                externalAuctionId: data.externalAuctionId,
+                internalName,
+                status,
+                totalAmount: data.totalAmount ?? "0",
+                auctionDate: data.auctionDate ?? null,
+                duplicateComment: data.duplicateComment ?? null,
+                distributorId: data.distributorId,
+                endCustomerId: data.endCustomerId,
+                managerId: data.managerId,
+                contacts: contactsToConnect.length
+                    ? { connect: contactsToConnect }
+                    : undefined,
+            },
+            include: {
+                distributor: { select: COUNTERPARTY_SELECT },
+                endCustomer: { select: COUNTERPARTY_SELECT },
+                manager: { select: MANAGER_SELECT },
+                contacts: true,
+            },
+        })
+        await logChange(tx, {
+            entityType: "Project",
+            entityId: project.id,
+            action: "CREATE",
+            payload: snapshotEntity(project, PROJECT_TRACKED_FIELDS),
+            authorId: session.user.id,
+        })
+        return project
     })
 
     return Response.json({ item: created }, { status: 201 })

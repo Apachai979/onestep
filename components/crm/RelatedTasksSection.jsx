@@ -106,54 +106,55 @@ export default function RelatedTasksSection({
             )}
 
             {items === null && <p className='text-sm text-gray-400'>Загрузка...</p>}
-            {items?.length === 0 && (
-                <p className='text-sm text-gray-400'>Задач по этой записи нет.</p>
+            {items !== null && items.filter(t => t.status !== "DONE").length === 0 && (
+                <p className='text-sm text-gray-400'>Активных задач нет.</p>
             )}
 
             <ul className='space-y-2'>
-                {items?.map(t => (
-                    <li
-                        key={t.id}
-                        className='flex flex-col gap-2 rounded-lg border border-gray-100 p-3 text-sm sm:flex-row sm:items-start sm:justify-between'
-                    >
-                        <div className='flex-1'>
-                            <div className='flex flex-wrap items-center gap-2'>
-                                <TaskTypeBadge type={t.type} />
-                                <span
-                                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${TASK_STATUS_COLORS[t.status]}`}
-                                >
-                                    {TASK_STATUS_LABELS[t.status]}
-                                </span>
-                            </div>
-                            <p className='mt-1 font-medium text-night_green'>{t.title}</p>
-                            {t.description && (
-                                <p className='mt-0.5 text-xs text-gray-600'>{t.description}</p>
-                            )}
-                            <p className='mt-1 text-xs text-gray-500'>
-                                {fmtRange(t)} · {fullName(t.assignee)}
-                            </p>
-                            {t.result && (
-                                <p className='mt-1 text-xs italic text-gray-600'>
-                                    Результат: {t.result}
-                                </p>
-                            )}
-                        </div>
-                        {t.status === "OPEN" && canClose(t) && (
-                            <button
-                                type='button'
+                {items
+                    ?.filter(t => t.status !== "DONE")
+                    .map(t => {
+                        return (
+                            <li
+                                key={t.id}
                                 onClick={() => setClosing(t)}
-                                className='rounded-md border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-100'
+                                className='cursor-pointer rounded-lg border border-gray-100 p-3 text-sm hover:bg-gray-50'
+                                title='Открыть задачу'
                             >
-                                Закрыть
-                            </button>
-                        )}
-                    </li>
-                ))}
+                                <div className='flex flex-wrap items-center gap-2'>
+                                    <TaskTypeBadge type={t.type} />
+                                    <span
+                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${TASK_STATUS_COLORS[t.status]}`}
+                                    >
+                                        {TASK_STATUS_LABELS[t.status]}
+                                    </span>
+                                    <span className='text-xs text-gray-500'>
+                                        {fmtRange(t)}
+                                    </span>
+                                </div>
+                                <p className='mt-1 font-medium text-night_green'>{t.title}</p>
+                                {t.description && (
+                                    <p className='mt-0.5 text-xs text-gray-600'>
+                                        {t.description}
+                                    </p>
+                                )}
+                                <p className='mt-1 text-xs text-gray-500'>
+                                    {fullName(t.assignee)}
+                                </p>
+                                {t.result && (
+                                    <p className='mt-1 text-xs italic text-gray-600'>
+                                        Результат: {t.result}
+                                    </p>
+                                )}
+                            </li>
+                        )
+                    })}
             </ul>
 
             {closing && (
                 <TaskCloseModal
                     task={closing}
+                    canClose={closing.status === "OPEN" && canClose(closing)}
                     onClose={() => setClosing(null)}
                     onClosed={() => {
                         setClosing(null)

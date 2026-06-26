@@ -1,8 +1,9 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
-import { parseProjectItemPayload } from "@/lib/crm/project"
+import { PROJECT_ITEM_TRACKED_FIELDS, parseProjectItemPayload } from "@/lib/crm/project"
+import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
 
-async function recalcTotal(tx, projectId) {
+async function recalcTotalAndBump(tx, projectId, authorId) {
     const items = await tx.projectItem.findMany({
         where: { projectId },
         select: { amount: true },
@@ -10,7 +11,7 @@ async function recalcTotal(tx, projectId) {
     const total = items.reduce((s, it) => s + Number(it.amount), 0)
     await tx.project.update({
         where: { id: projectId },
-        data: { totalAmount: total.toString() },
+        data: { totalAmount: total.toString(), updatedById: authorId ?? null },
     })
 }
 
@@ -45,7 +46,19 @@ export async function PATCH(request, { params }) {
 
     const updated = await prisma.$transaction(async tx => {
         const item = await tx.projectItem.update({ where: { id: params.itemId }, data })
-        await recalcTotal(tx, params.id)
+        const changes = diffEntities(existing, item, PROJECT_ITEM_TRACKED_FIELDS)
+        if (Object.keys(changes).length > 0) {
+            await logChange(tx, {
+                entityType: "ProjectItem",
+                entityId: item.id,
+                parentEntityType: "Project",
+                parentEntityId: params.id,
+                action: "UPDATE",
+                payload: changes,
+                authorId: session.user.id,
+            })
+        }
+        await recalcTotalAndBump(tx, params.id, session.user.id)
         return item
     })
 
@@ -63,7 +76,16 @@ export async function DELETE(_request, { params }) {
 
     await prisma.$transaction(async tx => {
         await tx.projectItem.delete({ where: { id: params.itemId } })
-        await recalcTotal(tx, params.id)
+        await logChange(tx, {
+            entityType: "ProjectItem",
+            entityId: existing.id,
+            parentEntityType: "Project",
+            parentEntityId: params.id,
+            action: "DELETE",
+            payload: snapshotEntity(existing, PROJECT_ITEM_TRACKED_FIELDS),
+            authorId: session.user.id,
+        })
+        await recalcTotalAndBump(tx, params.id, session.user.id)
     })
 
     return Response.json({ ok: true })

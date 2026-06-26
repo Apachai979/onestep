@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useMemo, useState } from "react"
 import { TASK_TYPE_MAP } from "@/lib/crm/task"
+import { onTasksChanged } from "@/lib/crm/tasks-events"
 import TaskTypeIcon from "./TaskTypeIcon"
 import TaskCloseModal from "./TaskCloseModal"
 
@@ -96,6 +97,7 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
         const params = new URLSearchParams()
         params.set("from", ymd(range.start))
         params.set("to", ymd(addDays(range.end, -1)))
+        params.set("mine", "1")
         const r = await fetch(`/api/crm/tasks?${params.toString()}`)
         const text = await r.text()
         const data = text ? safeJson(text) : {}
@@ -110,6 +112,10 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
 
     useEffect(() => {
         load()
+    }, [range.start.getTime(), range.end.getTime()])
+
+    useEffect(() => {
+        return onTasksChanged(() => load())
     }, [range.start.getTime(), range.end.getTime()])
 
     const tasksByDay = useMemo(() => {
@@ -254,6 +260,7 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
             {closing && (
                 <TaskCloseModal
                     task={closing}
+                    canClose={closing.status === "OPEN" && canClose(closing)}
                     onClose={() => setClosing(null)}
                     onClosed={() => {
                         setClosing(null)
@@ -404,7 +411,7 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
                                     colCount={7}
                                     onClick={e => {
                                         e.stopPropagation()
-                                        if (canClose(seg.task)) onPick(seg.task)
+                                        onPick(seg.task)
                                     }}
                                 />
                             ))}
@@ -446,6 +453,20 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const totalHeight = (HOUR_END - HOUR_START + 1) * HOUR_HEIGHT
+
+    const [now, setNow] = useState(null)
+    useEffect(() => {
+        setNow(new Date())
+        const id = setInterval(() => setNow(new Date()), 60_000)
+        return () => clearInterval(id)
+    }, [])
+    const nowHour = now?.getHours()
+    const nowMinute = now?.getMinutes()
+    const nowOffset =
+        now != null
+            ? (nowHour - HOUR_START) * HOUR_HEIGHT + (nowMinute / 60) * HOUR_HEIGHT
+            : null
+    const nowInRange = now != null && nowHour >= HOUR_START && nowHour <= HOUR_END
 
     const allDaySegments = layoutSegments(items || [], days[0], days.length, t => t.allDay)
     const allDayLanes = allDaySegments.reduce((m, s) => Math.max(m, s.lane + 1), 0)
@@ -513,7 +534,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
                                 colCount={days.length}
                                 onClick={e => {
                                     e.stopPropagation()
-                                    if (canClose(seg.task)) onPick(seg.task)
+                                    onPick(seg.task)
                                 }}
                             />
                         ))}
@@ -565,11 +586,20 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
                                             pos={pos}
                                             onClick={e => {
                                                 e.stopPropagation()
-                                                if (canClose(t)) onPick(t)
+                                                onPick(t)
                                             }}
                                         />
                                     )
                                 })}
+                                {now && nowInRange && isSameDay(d, now) && (
+                                    <div
+                                        className='pointer-events-none absolute left-0 right-0 z-10 flex items-center'
+                                        style={{ top: nowOffset }}
+                                    >
+                                        <div className='-ml-1 h-2 w-2 rounded-full bg-red-400' />
+                                        <div className='h-px flex-1 bg-red-400/60' />
+                                    </div>
+                                )}
                             </div>
                         )
                     })}

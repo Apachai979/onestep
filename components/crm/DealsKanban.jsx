@@ -4,9 +4,11 @@ import { useEffect, useMemo, useState } from "react"
 import {
     DEAL_STATUSES,
     DEAL_STATUS_COLORS,
+    DEAL_STATUS_HINTS,
     DEAL_STATUS_LABELS,
     dealDisplayTitle,
 } from "@/lib/crm/deal"
+import { calculateDealShipmentProgress, isShipmentOverdue } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
 
 function safeJson(text) {
@@ -160,7 +162,7 @@ export default function DealsKanban() {
                                     : "border-gray-200"
                             }`}
                         >
-                            <div className='mb-3 flex items-center justify-between'>
+                            <div className='mb-1 flex items-center justify-between'>
                                 <div className='flex items-center gap-2'>
                                     <span
                                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${DEAL_STATUS_COLORS[status]}`}
@@ -177,6 +179,11 @@ export default function DealsKanban() {
                                     +
                                 </Link>
                             </div>
+                            {DEAL_STATUS_HINTS[status] && (
+                                <p className='mb-1 text-[10px] leading-tight text-gray-500'>
+                                    {DEAL_STATUS_HINTS[status]}
+                                </p>
+                            )}
                             <p className='mb-3 text-xs text-gray-500'>
                                 Итого: {formatMoney(sum)}
                             </p>
@@ -207,6 +214,11 @@ export default function DealsKanban() {
 
 function DealCard({ deal, dragging, onDragStart, onDragEnd }) {
     const title = dealDisplayTitle(deal, deal.counterparty?.name)
+    const hasItems = Array.isArray(deal.items) && deal.items.length > 0
+    const progress = hasItems ? calculateDealShipmentProgress(deal) : null
+    const hasOverdue =
+        Array.isArray(deal.shipments) && deal.shipments.some(isShipmentOverdue)
+
     return (
         <Link
             href={`/crm/deals/${deal.id}`}
@@ -227,6 +239,31 @@ function DealCard({ deal, dragging, onDragStart, onDragEnd }) {
                     {formatMoney(deal.totalAmount)}
                 </span>
             </div>
+            {progress && progress.totalOrdered > 0 && (
+                <div className='mt-2'>
+                    <div className='flex items-center justify-between text-[10px] text-gray-500'>
+                        <span>
+                            Отгружено {progress.percent}%
+                            {progress.isFullyShipped && (
+                                <span className='ml-1 text-green-700'>· готово</span>
+                            )}
+                        </span>
+                        {hasOverdue && (
+                            <span className='rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-semibold text-red-700'>
+                                Просрочка
+                            </span>
+                        )}
+                    </div>
+                    <div className='mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200'>
+                        <div
+                            className={`h-full transition-all ${
+                                progress.isFullyShipped ? "bg-green-500" : "bg-primary_green"
+                            }`}
+                            style={{ width: `${progress.percent}%` }}
+                        />
+                    </div>
+                </div>
+            )}
         </Link>
     )
 }

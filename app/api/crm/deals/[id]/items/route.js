@@ -1,11 +1,15 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
-import { parseDealItemPayload } from "@/lib/crm/deal"
+import { DEAL_ITEM_TRACKED_FIELDS, parseDealItemPayload } from "@/lib/crm/deal"
+import { logChange, snapshotEntity } from "@/lib/crm/change-log"
 
-async function recalcTotal(tx, dealId) {
+async function recalcTotalAndBump(tx, dealId, authorId) {
     const items = await tx.dealItem.findMany({ where: { dealId }, select: { amount: true } })
     const total = items.reduce((s, it) => s + Number(it.amount), 0)
-    await tx.deal.update({ where: { id: dealId }, data: { totalAmount: total.toString() } })
+    await tx.deal.update({
+        where: { id: dealId },
+        data: { totalAmount: total.toString(), updatedById: authorId ?? null },
+    })
 }
 
 export async function POST(request, { params }) {
@@ -35,7 +39,16 @@ export async function POST(request, { params }) {
 
     const created = await prisma.$transaction(async tx => {
         const item = await tx.dealItem.create({ data: { ...data, dealId: params.id } })
-        await recalcTotal(tx, params.id)
+        await logChange(tx, {
+            entityType: "DealItem",
+            entityId: item.id,
+            parentEntityType: "Deal",
+            parentEntityId: params.id,
+            action: "CREATE",
+            payload: snapshotEntity(item, DEAL_ITEM_TRACKED_FIELDS),
+            authorId: session.user.id,
+        })
+        await recalcTotalAndBump(tx, params.id, session.user.id)
         return item
     })
 

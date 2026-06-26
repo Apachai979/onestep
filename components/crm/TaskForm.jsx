@@ -12,6 +12,23 @@ const todayDateTime = () => {
     return d.toISOString().slice(0, 16)
 }
 
+function dateOnly(v) {
+    if (!v) return ""
+    return String(v).slice(0, 10)
+}
+
+function timeOnly(v) {
+    if (!v) return ""
+    const s = String(v)
+    if (s.length >= 16 && s.includes("T")) return s.slice(11, 16)
+    return ""
+}
+
+function composeDateTime(date, time) {
+    if (!date) return ""
+    return `${date}T${time || "00:00"}`
+}
+
 function safeJson(text) {
     try {
         return JSON.parse(text)
@@ -274,8 +291,8 @@ export default function TaskForm({
                 </div>
             </div>
 
-            <div className='grid gap-3 sm:grid-cols-3'>
-                <label className='flex items-center gap-2 text-sm text-gray-700 sm:col-span-1'>
+            <div className='space-y-2'>
+                <label className='flex items-center gap-2 text-sm text-gray-700'>
                     <input
                         type='checkbox'
                         checked={form.allDay}
@@ -283,30 +300,111 @@ export default function TaskForm({
                     />
                     Весь день
                 </label>
-                <div>
-                    <label className={labelClass}>
-                        {form.allDay ? "Дата начала" : "Начало"}
-                    </label>
-                    <input
-                        type={form.allDay ? "date" : "datetime-local"}
-                        value={form.startAt}
-                        onChange={update("startAt")}
-                        required
-                        className={fieldClass}
-                    />
-                </div>
-                <div>
-                    <label className={labelClass}>
-                        {form.allDay ? "Дата окончания" : "Окончание"}
-                    </label>
-                    <input
-                        type={form.allDay ? "date" : "datetime-local"}
-                        value={form.endAt}
-                        onChange={update("endAt")}
-                        required
-                        className={fieldClass}
-                    />
-                </div>
+                {form.allDay ? (
+                    <div className='grid gap-3 sm:grid-cols-2'>
+                        <div>
+                            <label className={labelClass}>Дата начала</label>
+                            <input
+                                type='date'
+                                value={form.startAt}
+                                onChange={update("startAt")}
+                                required
+                                className={fieldClass}
+                            />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Дата окончания</label>
+                            <input
+                                type='date'
+                                value={form.endAt}
+                                onChange={update("endAt")}
+                                required
+                                className={fieldClass}
+                            />
+                        </div>
+                    </div>
+                ) : (
+                    <div className='grid gap-3 sm:grid-cols-4'>
+                        <div>
+                            <label className={labelClass}>Дата начала</label>
+                            <input
+                                type='date'
+                                value={dateOnly(form.startAt)}
+                                onChange={e =>
+                                    setForm(prev => ({
+                                        ...prev,
+                                        startAt: composeDateTime(
+                                            e.target.value,
+                                            timeOnly(prev.startAt) || "09:00",
+                                        ),
+                                        endAt: composeDateTime(
+                                            dateOnly(prev.endAt) < e.target.value
+                                                ? e.target.value
+                                                : dateOnly(prev.endAt),
+                                            timeOnly(prev.endAt) || "10:00",
+                                        ),
+                                    }))
+                                }
+                                required
+                                className={fieldClass}
+                            />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Время начала</label>
+                            <input
+                                type='time'
+                                value={timeOnly(form.startAt)}
+                                onChange={e =>
+                                    setForm(prev => ({
+                                        ...prev,
+                                        startAt: composeDateTime(
+                                            dateOnly(prev.startAt),
+                                            e.target.value,
+                                        ),
+                                    }))
+                                }
+                                required
+                                className={fieldClass}
+                            />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Дата окончания</label>
+                            <input
+                                type='date'
+                                value={dateOnly(form.endAt)}
+                                onChange={e =>
+                                    setForm(prev => ({
+                                        ...prev,
+                                        endAt: composeDateTime(
+                                            e.target.value,
+                                            timeOnly(prev.endAt) || "10:00",
+                                        ),
+                                    }))
+                                }
+                                required
+                                className={fieldClass}
+                            />
+                        </div>
+                        <div>
+                            <label className={labelClass}>Время окончания</label>
+                            <input
+                                type='time'
+                                value={timeOnly(form.endAt)}
+                                onChange={e =>
+                                    setForm(prev => ({
+                                        ...prev,
+                                        endAt: composeDateTime(
+                                            dateOnly(prev.endAt),
+                                            e.target.value,
+                                        ),
+                                    }))
+                                }
+                                required
+                                className={fieldClass}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
 
             {!fixedRelation && (

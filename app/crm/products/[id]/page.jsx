@@ -50,6 +50,14 @@ export default async function ProductPage({ params }) {
                         label='Рекомендованная цена ЛПУ'
                         value={item.recommendedLpuPrice ? formatMoney(item.recommendedLpuPrice) : "—"}
                     />
+                    <Row
+                        label='Вес единицы, кг'
+                        value={item.unitWeightKg ? item.unitWeightKg.toString() : "—"}
+                    />
+                    <Row
+                        label='Объём единицы, м³'
+                        value={item.unitVolumeM3 ? item.unitVolumeM3.toString() : "—"}
+                    />
                 </dl>
             </section>
 

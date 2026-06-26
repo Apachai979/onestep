@@ -1,15 +1,16 @@
 "use client"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { PROJECT_STATUS_LABELS, PROJECT_STATUSES, looksLikeUrl } from "@/lib/crm/project"
+import {
+    PROJECT_STATUS_COLORS,
+    PROJECT_STATUS_LABELS,
+    PROJECT_STATUSES,
+    looksLikeUrl,
+} from "@/lib/crm/project"
 import { formatMoney } from "@/lib/crm/format"
 import SearchableSelect from "./SearchableSelect"
 
-const STATUS_CLASS = {
-    IN_PROGRESS: "bg-blue-100 text-blue-800",
-    COMPLETED: "bg-green-100 text-green-800",
-    CANCELLED: "bg-gray-200 text-gray-700",
-}
+const STATUS_CLASS = PROJECT_STATUS_COLORS
 
 function fullName(u) {
     if (!u) return "—"

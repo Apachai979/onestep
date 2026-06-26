@@ -1,6 +1,11 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
-import { parseProjectPayload, buildInternalName } from "@/lib/crm/project"
+import {
+    PROJECT_TRACKED_FIELDS,
+    buildInternalName,
+    parseProjectPayload,
+} from "@/lib/crm/project"
+import { diffEntities, logChange } from "@/lib/crm/change-log"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
@@ -15,8 +20,19 @@ export async function GET(_request, { params }) {
             distributor: { select: COUNTERPARTY_SELECT },
             endCustomer: { select: COUNTERPARTY_SELECT },
             manager: { select: MANAGER_SELECT },
+            updatedBy: { select: MANAGER_SELECT },
             items: { orderBy: { createdAt: "asc" } },
             contacts: { orderBy: [{ lastName: "asc" }, { firstName: "asc" }] },
+            deals: {
+                orderBy: { createdAt: "desc" },
+                select: {
+                    id: true,
+                    title: true,
+                    status: true,
+                    totalAmount: true,
+                    counterparty: { select: { id: true, name: true } },
+                },
+            },
         },
     })
     if (!item) return Response.json({ error: "Не найдено" }, { status: 404 })
@@ -100,19 +116,34 @@ export async function PATCH(request, { params }) {
         contactsSet = valid.map(c => ({ id: c.id }))
     }
 
-    const updated = await prisma.project.update({
-        where: { id: params.id },
-        data: {
-            ...scalar,
-            contacts: contactsSet !== undefined ? { set: contactsSet } : undefined,
-        },
-        include: {
-            distributor: { select: COUNTERPARTY_SELECT },
-            endCustomer: { select: COUNTERPARTY_SELECT },
-            manager: { select: MANAGER_SELECT },
-            items: true,
-            contacts: { orderBy: [{ lastName: "asc" }, { firstName: "asc" }] },
-        },
+    const updated = await prisma.$transaction(async tx => {
+        const project = await tx.project.update({
+            where: { id: params.id },
+            data: {
+                ...scalar,
+                updatedById: session.user.id ?? null,
+                contacts: contactsSet !== undefined ? { set: contactsSet } : undefined,
+            },
+            include: {
+                distributor: { select: COUNTERPARTY_SELECT },
+                endCustomer: { select: COUNTERPARTY_SELECT },
+                manager: { select: MANAGER_SELECT },
+                updatedBy: { select: MANAGER_SELECT },
+                items: true,
+                contacts: { orderBy: [{ lastName: "asc" }, { firstName: "asc" }] },
+            },
+        })
+        const changes = diffEntities(existing, project, PROJECT_TRACKED_FIELDS)
+        if (Object.keys(changes).length > 0) {
+            await logChange(tx, {
+                entityType: "Project",
+                entityId: project.id,
+                action: "UPDATE",
+                payload: changes,
+                authorId: session.user.id,
+            })
+        }
+        return project
     })
     return Response.json({ item: updated })
 }

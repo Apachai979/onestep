@@ -1,6 +1,28 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { parseCounterpartyPayload } from "@/lib/crm/counterparty"
+import { diffEntities, logChange } from "@/lib/crm/change-log"
+
+const COUNTERPARTY_TRACKED_FIELDS = [
+    "type",
+    "name",
+    "region",
+    "inn",
+    "kpp",
+    "ogrn",
+    "okpo",
+    "okved",
+    "bankName",
+    "bankAccount",
+    "bankCorrAccount",
+    "bik",
+    "totalRevenue",
+    "discount",
+    "phone",
+    "email",
+    "address",
+    "note",
+]
 
 export async function GET(_request, { params }) {
     const { session, response } = await requireCrmSession()
@@ -10,6 +32,7 @@ export async function GET(_request, { params }) {
         where: { id: params.id },
         include: {
             createdBy: { select: { id: true, firstName: true, lastName: true, email: true } },
+            updatedBy: { select: { id: true, firstName: true, lastName: true, email: true } },
             contacts: { orderBy: [{ isPrimary: "desc" }, { lastName: "asc" }, { firstName: "asc" }] },
         },
     })
@@ -34,9 +57,25 @@ export async function PATCH(request, { params }) {
     const { data, error } = parseCounterpartyPayload(body, { partial: true })
     if (error) return Response.json({ error }, { status: 400 })
 
-    const updated = await prisma.counterparty.update({
-        where: { id: params.id },
-        data,
+    const updated = await prisma.$transaction(async tx => {
+        const cp = await tx.counterparty.update({
+            where: { id: params.id },
+            data: {
+                ...data,
+                updatedById: session.user.id ?? null,
+            },
+        })
+        const changes = diffEntities(existing, cp, COUNTERPARTY_TRACKED_FIELDS)
+        if (Object.keys(changes).length > 0) {
+            await logChange(tx, {
+                entityType: "Counterparty",
+                entityId: cp.id,
+                action: "UPDATE",
+                payload: changes,
+                authorId: session.user.id,
+            })
+        }
+        return cp
     })
     return Response.json({ item: updated })
 }

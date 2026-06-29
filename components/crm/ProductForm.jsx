@@ -104,13 +104,13 @@ export default function ProductForm({ initial, mode = "create" }) {
             <Section title='Основное'>
                 <Field label='Артикул *' value={form.sku} onChange={update("sku")} required />
                 <Field
-                    label='Категория *'
+                    label='Наименование *'
                     value={form.category}
                     onChange={update("category")}
                     required
                 />
                 <Field
-                    label='Название (по умолчанию = категория)'
+                    label='Внутреннее обозначение (опц.)'
                     value={form.name}
                     onChange={update("name")}
                     className='sm:col-span-2'

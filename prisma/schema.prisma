@@ -35,6 +35,8 @@ model User {
   tasksAsAuthor          Task[]         @relation("TaskCreatedBy")
   shipmentsCreated       Shipment[]     @relation("ShipmentCreatedBy")
   shipmentsUpdated       Shipment[]     @relation("ShipmentUpdatedBy")
+  notes                  Note[]         @relation("NoteAuthor")
+  attachments            Attachment[]   @relation("AttachmentUploadedBy")
   changeLogs             ChangeLog[]    @relation("ChangeLogAuthor")
 
   @@map("users")
@@ -182,9 +184,23 @@ model Product {
 
   projectItems        ProjectItem[]
   dealItems           DealItem[]    @relation("DealItemProduct")
+  stocks              Stock[]
 
   @@index([category])
   @@map("products")
+}
+
+model Stock {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse  String
+  quantity   Int      @default(0)
+  syncedAt   DateTime @default(now())
+
+  @@unique([productId, warehouse])
+  @@index([productId])
+  @@map("stocks")
 }
 
 model Contact {
@@ -444,4 +460,41 @@ model Post {
   section    Section?  @relation(fields: [sectionId], references: [id])
 
   @@map("posts")
+}
+
+model Note {
+  id          String       @id @default(cuid())
+  body        String
+  entityType  String
+  entityId    String
+  pinned      Boolean      @default(false)
+  authorId    String
+  author      User         @relation("NoteAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  attachments Attachment[] @relation("NoteAttachments")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([authorId])
+  @@map("notes")
+}
+
+model Attachment {
+  id            String   @id @default(cuid())
+  fileName      String
+  mimeType      String
+  size          Int
+  storageKey    String
+  entityType    String?
+  entityId      String?
+  noteId        String?
+  note          Note?    @relation("NoteAttachments", fields: [noteId], references: [id], onDelete: Cascade)
+  uploadedById  String
+  uploadedBy    User     @relation("AttachmentUploadedBy", fields: [uploadedById], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([noteId])
+  @@index([uploadedById])
+  @@map("attachments")
 }

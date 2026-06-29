@@ -1,74 +1,154 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { LuPencil, LuWarehouse } from "react-icons/lu"
 import prisma from "@/lib/client"
 import { formatMoney } from "@/lib/crm/format"
 import { contentLines } from "@/lib/crm/product"
+import { totalStockPieces } from "@/lib/crm/stock"
 
 export const metadata = { title: "Товар | CRM" }
 
 export default async function ProductPage({ params }) {
-    const item = await prisma.product.findUnique({ where: { id: params.id } })
+    const item = await prisma.product.findUnique({
+        where: { id: params.id },
+        include: {
+            stocks: {
+                orderBy: { warehouse: "asc" },
+            },
+        },
+    })
     if (!item) notFound()
 
     const lines = contentLines(item.contents)
+    const totalPieces = totalStockPieces(item.stocks)
+    const lastSync = item.stocks.length
+        ? new Date(
+              Math.max(...item.stocks.map(s => new Date(s.syncedAt).getTime())),
+          )
+        : null
 
     return (
-        <div className='max-w-3xl space-y-6'>
-            <div className='text-sm'>
-                <Link href='/crm/products' className='text-gray-500 hover:text-primary_green'>
-                    ← Товары
-                </Link>
-            </div>
+        <div className='space-y-5'>
+            <Link
+                href='/crm/products'
+                className='inline-flex text-xs text-night_green/55 hover:text-brand_main'
+            >
+                ← Товары
+            </Link>
 
-            <div className='flex flex-wrap items-start justify-between gap-4'>
-                <div>
-                    <p className='text-xs uppercase text-gray-500'>Артикул {item.sku}</p>
-                    <h1 className='mt-1 text-2xl font-semibold text-night_green'>
+            <div className='flex flex-wrap items-start justify-between gap-3'>
+                <div className='min-w-0'>
+                    <p className='text-xs uppercase tracking-wider text-night_green/55'>
+                        Артикул {item.sku}
+                    </p>
+                    <h1 className='mt-0.5 text-2xl font-semibold text-night_green sm:text-3xl'>
                         {item.category}
                     </h1>
                     {item.name && item.name !== item.category && (
-                        <p className='mt-1 text-sm text-gray-600'>{item.name}</p>
+                        <p className='mt-1 text-sm text-night_green/65'>{item.name}</p>
                     )}
                 </div>
                 <Link
                     href={`/crm/products/${item.id}/edit`}
-                    className='rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100'
+                    className='inline-flex items-center gap-1.5 rounded-lg border border-brand_soft/60 bg-white px-3 py-1.5 text-sm font-medium text-night_green/75 hover:bg-brand_soft/30'
                 >
+                    <LuPencil className='h-3.5 w-3.5' />
                     Редактировать
                 </Link>
             </div>
 
-            <section className='rounded-xl border border-gray-200 bg-white p-5'>
-                <h2 className='mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500'>
-                    Цены и упаковка
-                </h2>
-                <dl className='grid gap-4 sm:grid-cols-2'>
-                    <Row label='Базовая цена' value={formatMoney(item.basePrice)} />
-                    <Row label='Цена упаковки' value={formatMoney(item.packagePrice)} />
-                    <Row label='В транспортной упаковке, шт.' value={item.transportPackQty} />
-                    <Row
-                        label='Рекомендованная цена ЛПУ'
-                        value={item.recommendedLpuPrice ? formatMoney(item.recommendedLpuPrice) : "—"}
-                    />
-                    <Row
-                        label='Вес единицы, кг'
-                        value={item.unitWeightKg ? item.unitWeightKg.toString() : "—"}
-                    />
-                    <Row
-                        label='Объём единицы, м³'
-                        value={item.unitVolumeM3 ? item.unitVolumeM3.toString() : "—"}
-                    />
-                </dl>
-            </section>
+            <div className='grid items-start gap-5 lg:grid-cols-2'>
+                <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
+                    <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+                        Цены и упаковка
+                    </h2>
+                    <dl className='grid gap-3 sm:grid-cols-2'>
+                        <Row label='Базовая цена' value={formatMoney(item.basePrice)} />
+                        <Row label='Цена упаковки' value={formatMoney(item.packagePrice)} />
+                        <Row label='В транспортной упаковке, шт.' value={item.transportPackQty} />
+                        <Row
+                            label='Рекомендованная цена ЛПУ'
+                            value={item.recommendedLpuPrice ? formatMoney(item.recommendedLpuPrice) : "—"}
+                        />
+                        <Row
+                            label='Вес единицы, кг'
+                            value={item.unitWeightKg ? item.unitWeightKg.toString() : "—"}
+                        />
+                        <Row
+                            label='Объём единицы, м³'
+                            value={item.unitVolumeM3 ? item.unitVolumeM3.toString() : "—"}
+                        />
+                    </dl>
+                </section>
 
-            <section className='rounded-xl border border-gray-200 bg-white p-5'>
-                <h2 className='mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500'>
+                <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
+                    <div className='mb-3 flex items-center justify-between gap-2'>
+                        <h2 className='flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+                            <LuWarehouse className='h-4 w-4 text-brand_main' />
+                            Остатки на складах
+                        </h2>
+                        {lastSync && (
+                            <span className='text-[10px] text-night_green/55'>
+                                Обновлено {lastSync.toLocaleString("ru-RU")}
+                            </span>
+                        )}
+                    </div>
+
+                    {item.stocks.length === 0 ? (
+                        <p className='text-sm text-night_green/55'>
+                            Остатков нет. Нажмите «Обновить остатки» в списке товаров,
+                            чтобы подтянуть данные из 1С.
+                        </p>
+                    ) : (
+                        <>
+                            <div className='overflow-x-auto rounded-lg border border-brand_soft/40'>
+                                <table className='w-full text-sm'>
+                                    <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
+                                        <tr>
+                                            <th className='px-3 py-2'>Склад</th>
+                                            <th className='px-3 py-2 text-right'>Шт.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {item.stocks.map(s => (
+                                            <tr
+                                                key={s.id}
+                                                className='border-t border-brand_soft/30'
+                                            >
+                                                <td className='px-3 py-2 text-night_green/80'>
+                                                    {s.warehouse}
+                                                </td>
+                                                <td className='px-3 py-2 text-right font-medium text-night_green'>
+                                                    {s.quantity.toLocaleString("ru-RU")}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr className='border-t-2 border-brand_main/30 bg-brand_soft/20'>
+                                            <td className='px-3 py-2 text-sm font-semibold uppercase text-night_green/70'>
+                                                Итого
+                                            </td>
+                                            <td className='px-3 py-2 text-right text-base font-semibold text-night_green'>
+                                                {totalPieces.toLocaleString("ru-RU")} шт.
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </>
+                    )}
+                </section>
+            </div>
+
+            <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
+                <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
                     Состав набора
                 </h2>
                 {lines.length === 0 ? (
-                    <p className='text-sm text-gray-400'>Состав не указан.</p>
+                    <p className='text-sm text-night_green/55'>Состав не указан.</p>
                 ) : (
-                    <ul className='list-disc space-y-1 pl-5 text-sm text-gray-800'>
+                    <ul className='list-disc space-y-1 pl-5 text-sm text-night_green/85'>
                         {lines.map((line, i) => (
                             <li key={i}>{line}</li>
                         ))}
@@ -82,8 +162,10 @@ export default async function ProductPage({ params }) {
 function Row({ label, value }) {
     return (
         <div>
-            <dt className='text-xs uppercase text-gray-500'>{label}</dt>
-            <dd className='mt-1 text-sm text-gray-800'>{value || "—"}</dd>
+            <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
+                {label}
+            </dt>
+            <dd className='mt-0.5 text-sm text-night_green'>{value || "—"}</dd>
         </div>
     )
 }

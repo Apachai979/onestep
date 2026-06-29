@@ -38,6 +38,8 @@ export default function RelatedTasksSection({
     relationId,
     currentUserId,
     currentUserRole,
+    bare = false,
+    onCountChange,
 }) {
     const [items, setItems] = useState(null)
     const [creating, setCreating] = useState(false)
@@ -66,17 +68,30 @@ export default function RelatedTasksSection({
         load()
     }, [relationKind, relationId])
 
+    useEffect(() => {
+        if (onCountChange && items) {
+            onCountChange(items.filter(t => t.status !== "DONE").length)
+        }
+    }, [items, onCountChange])
+
     function canClose(t) {
         if (currentUserRole === "ADMIN") return true
         return t.assigneeId === currentUserId || t.createdById === currentUserId
     }
 
+    const Wrapper = bare ? "div" : "section"
+    const wrapperCls = bare ? "" : "rounded-xl border border-brand_soft/40 bg-white/70 p-5"
+
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
+        <Wrapper className={wrapperCls}>
             <div className='mb-4 flex items-center justify-between'>
-                <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
-                    Задачи
-                </h2>
+                {bare ? (
+                    <span />
+                ) : (
+                    <h2 className='text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+                        Задачи
+                    </h2>
+                )}
                 {!creating && (
                     <button
                         type='button'
@@ -162,6 +177,6 @@ export default function RelatedTasksSection({
                     }}
                 />
             )}
-        </section>
+        </Wrapper>
     )
 }

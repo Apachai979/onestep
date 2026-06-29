@@ -17,15 +17,27 @@ export async function GET(request) {
     }
 
     const [items, categories] = await Promise.all([
-        prisma.product.findMany({ where, orderBy: { sku: "asc" } }),
+        prisma.product.findMany({
+            where,
+            orderBy: { sku: "asc" },
+            include: {
+                stocks: {
+                    select: { warehouse: true, quantity: true, syncedAt: true },
+                },
+            },
+        }),
         prisma.product.findMany({
             distinct: ["category"],
             select: { category: true },
             orderBy: { category: "asc" },
         }),
     ])
+    const itemsWithTotal = items.map(p => ({
+        ...p,
+        stockTotal: (p.stocks || []).reduce((s, x) => s + (x.quantity || 0), 0),
+    }))
     return Response.json({
-        items,
+        items: itemsWithTotal,
         categories: categories.map(c => c.category).filter(Boolean),
     })
 }

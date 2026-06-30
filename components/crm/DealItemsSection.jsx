@@ -285,16 +285,30 @@ export default function DealItemsSection({ dealId, initialItems }) {
                             className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                         >
                             <option value=''>— Свободный ввод —</option>
-                            {products.map(p => (
-                                <option key={p.id} value={p.id}>
-                                    {p.sku} · {p.category}
-                                </option>
-                            ))}
+                            {products.map(p => {
+                                const stock = Number(p.stockTotal) || 0
+                                return (
+                                    <option key={p.id} value={p.id}>
+                                        {p.sku} · {p.category} · остаток: {stock.toLocaleString("ru-RU")} шт.
+                                    </option>
+                                )
+                            })}
                         </select>
                     </div>
 
                     <div className='grid gap-3 sm:grid-cols-4'>
-                        <Field label='Артикул' value={form.sku} onChange={update("sku")} />
+                        <Field
+                            label='Артикул'
+                            value={form.sku}
+                            onChange={update("sku")}
+                            readOnly={!!form.productId}
+                            title={
+                                form.productId
+                                    ? "Артикул заполнен из справочника. Выберите «Свободный ввод», чтобы редактировать."
+                                    : undefined
+                            }
+                            className={form.productId ? "opacity-70" : undefined}
+                        />
                         <Field
                             label='Наименование *'
                             value={form.name}

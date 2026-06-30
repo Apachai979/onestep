@@ -73,7 +73,12 @@ export default async function ProposalPage({ params }) {
     const subtotal = itemsForClient.reduce((s, x) => s + x.amount, 0)
     const totalWeight = itemsForClient.reduce((s, x) => s + x.unitWeight * x.qty, 0)
     const totalVolume = itemsForClient.reduce((s, x) => s + x.unitVolume * x.qty, 0)
-    const counterpartyDiscount = toNum(deal.counterparty?.discount)
+    // Скидка в КП берётся из сделки. Если в сделке не задана —
+    // фоллбэк на скидку контрагента (для старых сделок).
+    const discountForProposal =
+        deal.discount !== null && deal.discount !== undefined
+            ? toNum(deal.discount)
+            : toNum(deal.counterparty?.discount)
 
     let senderName = session?.user?.name || ""
     let senderEmail = session?.user?.email || ""
@@ -97,7 +102,7 @@ export default async function ProposalPage({ params }) {
             buyer={deal.counterparty.name}
             items={itemsForClient}
             subtotal={subtotal}
-            defaultDiscount={counterpartyDiscount}
+            defaultDiscount={discountForProposal}
             defaultWeight={totalWeight}
             defaultVolume={totalVolume}
             senderName={senderName}

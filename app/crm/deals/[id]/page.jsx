@@ -5,7 +5,7 @@ import { LuPencil, LuFileText } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { dealDisplayTitle } from "@/lib/crm/deal"
-import { formatMoney } from "@/lib/crm/format"
+import { formatMoney, formatPercent } from "@/lib/crm/format"
 import DealItemsSection from "@/components/crm/DealItemsSection"
 import DealStatusControl from "@/components/crm/DealStatusControl"
 import DealShipmentsSection from "@/components/crm/DealShipmentsSection"
@@ -131,6 +131,12 @@ export default async function DealPage({ params }) {
                 <div className='min-w-0 space-y-5'>
                     <Section title='Параметры'>
                         <Row label='Сумма сделки' value={formatMoney(item.totalAmount)} />
+                        <Row
+                            label='Скидка'
+                            value={
+                                item.discount != null ? formatPercent(item.discount) : "—"
+                            }
+                        />
                         <Row label='Менеджер' value={fullName(item.manager)} />
                         <Row label='Контактное лицо' value={contactDisplay(item.contact)} />
                         <Row label='Создал' value={fullName(item.createdBy)} />
@@ -145,11 +151,28 @@ export default async function DealPage({ params }) {
                         />
                     </Section>
 
-                    {item.note && (
-                        <Section title='Примечание'>
-                            <p className='whitespace-pre-wrap text-sm text-night_green/85 sm:col-span-2'>
-                                {item.note}
-                            </p>
+                    {(item.deliveryAddress || item.note) && (
+                        <Section title='Доставка и примечание'>
+                            {item.deliveryAddress && (
+                                <div className='sm:col-span-2'>
+                                    <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
+                                        Адрес доставки
+                                    </dt>
+                                    <dd className='mt-0.5 whitespace-pre-wrap text-sm text-night_green'>
+                                        {item.deliveryAddress}
+                                    </dd>
+                                </div>
+                            )}
+                            {item.note && (
+                                <div className='sm:col-span-2'>
+                                    <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
+                                        Примечание
+                                    </dt>
+                                    <dd className='mt-0.5 whitespace-pre-wrap text-sm text-night_green'>
+                                        {item.note}
+                                    </dd>
+                                </div>
+                            )}
                         </Section>
                     )}
 
@@ -159,7 +182,9 @@ export default async function DealPage({ params }) {
                         dealId={item.id}
                         dealItems={dealItemsForClient}
                         counterpartyId={item.counterparty.id}
-                        initialDeliveryAddress={item.counterparty.address || ""}
+                        initialDeliveryAddress={
+                            item.deliveryAddress || item.counterparty.address || ""
+                        }
                     />
                 </div>
 

@@ -141,7 +141,7 @@ export default function ShipmentsList() {
                             <th className='px-3 py-2'>Менеджер</th>
                             <th className='px-3 py-2'>Плановая</th>
                             <th className='px-3 py-2'>Отгружена</th>
-                            <th className='px-3 py-2 text-right'>Позиций</th>
+                            <th className='px-3 py-2 text-right'>Позиций / шт.</th>
                         </tr>
                     </thead>
                     <tbody>

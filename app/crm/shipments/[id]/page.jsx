@@ -33,6 +33,21 @@ function contactName(c) {
     return fn || c.email || c.phone || "Контакт"
 }
 
+function recipientDisplay(item) {
+    if (item.recipientContact) {
+        const c = item.recipientContact
+        const name = contactName(c)
+        const extras = [c.phone, c.email].filter(Boolean).join(" · ")
+        return extras ? `${name} (${extras})` : name
+    }
+    const parts = [
+        item.recipientName,
+        item.recipientPhone,
+        item.recipientEmail,
+    ].filter(Boolean)
+    return parts.length ? parts.join(" · ") : null
+}
+
 function fmtQty(v) {
     if (v === null || v === undefined) return "0"
     const s = typeof v === "object" && v.toString ? v.toString() : String(v)
@@ -130,7 +145,7 @@ export default async function ShipmentPage({ params }) {
                         <Row label='Перевозчик' value={item.carrier} />
                         <Row label='Трек-номер' value={item.trackingNumber} />
                         <Row label='№ ТТН / документа' value={item.docNumber} />
-                        <Row label='Получатель' value={contactName(item.recipientContact)} />
+                        <Row label='Получатель' value={recipientDisplay(item)} />
                         <Row
                             label='Адрес доставки'
                             value={item.deliveryAddress}

@@ -226,11 +226,13 @@ model Contact {
 }
 
 model Deal {
-  id             String   @id @default(cuid())
-  title          String?
-  status         String   @default("NEGOTIATION")
-  totalAmount    Decimal  @default(0)
-  note           String?
+  id              String   @id @default(cuid())
+  title           String?
+  status          String   @default("NEGOTIATION")
+  totalAmount     Decimal  @default(0)
+  discount        Decimal?
+  note            String?
+  deliveryAddress String?
 
   counterpartyId String
   counterparty   Counterparty @relation("DealCounterparty", fields: [counterpartyId], references: [id])
@@ -292,6 +294,9 @@ model Shipment {
   trackingNumber     String?
   recipientContactId String?
   recipientContact   Contact? @relation("ShipmentRecipient", fields: [recipientContactId], references: [id], onDelete: SetNull)
+  recipientName      String?
+  recipientPhone     String?
+  recipientEmail     String?
   docNumber          String?
   note               String?
 

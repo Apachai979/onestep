@@ -12,6 +12,8 @@ const EMPTY = {
     status: "NEGOTIATION",
     sourceProjectId: "",
     note: "",
+    deliveryAddress: "",
+    discount: "",
 }
 
 function safeJson(text) {
@@ -63,6 +65,11 @@ export default function DealForm({
             status: initial.status ?? "NEGOTIATION",
             sourceProjectId: initial.sourceProjectId ?? "",
             note: initial.note ?? "",
+            deliveryAddress: initial.deliveryAddress ?? "",
+            discount:
+                initial.discount === null || initial.discount === undefined
+                    ? ""
+                    : String(initial.discount),
         }
     })
     const [counterparties, setCounterparties] = useState([])
@@ -93,7 +100,17 @@ export default function DealForm({
         }
         fetch(`/api/crm/counterparties/${form.counterpartyId}`)
             .then(r => r.json())
-            .then(d => setContacts(d.item?.contacts || []))
+            .then(d => {
+                setContacts(d.item?.contacts || [])
+                // Если у сделки скидка ещё не задана — подтягиваем из контрагента.
+                const cpDiscount = d.item?.discount
+                if (cpDiscount !== null && cpDiscount !== undefined) {
+                    setForm(prev => {
+                        if (prev.discount !== "") return prev
+                        return { ...prev, discount: String(cpDiscount) }
+                    })
+                }
+            })
             .catch(() => setContacts([]))
     }, [form.counterpartyId])
 
@@ -221,7 +238,7 @@ export default function DealForm({
                 </div>
             </Section>
 
-            <Section title='Статус и примечание'>
+            <Section title='Статус, доставка, примечание'>
                 <div className='sm:col-span-2'>
                     <label className='mb-1 block text-sm text-gray-700'>Статус</label>
                     <select
@@ -235,6 +252,41 @@ export default function DealForm({
                             </option>
                         ))}
                     </select>
+                </div>
+                <div className='sm:col-span-2'>
+                    <label className='mb-1 block text-sm text-gray-700'>
+                        Скидка, %
+                    </label>
+                    <input
+                        type='number'
+                        min='0'
+                        max='100'
+                        step='0.01'
+                        inputMode='decimal'
+                        value={form.discount}
+                        onChange={update("discount")}
+                        placeholder='Подтянется из карточки клиента'
+                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
+                    />
+                    <p className='mt-1 text-xs text-night_green/55'>
+                        Используется в КП. Меняйте здесь, если клиенту согласована особая
+                        скидка на эту сделку.
+                    </p>
+                </div>
+                <div className='sm:col-span-2'>
+                    <label className='mb-1 block text-sm text-gray-700'>
+                        Адрес доставки
+                    </label>
+                    <textarea
+                        rows={2}
+                        value={form.deliveryAddress}
+                        onChange={update("deliveryAddress")}
+                        placeholder='По умолчанию для новых отгрузок этой сделки'
+                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
+                    />
+                    <p className='mt-1 text-xs text-night_green/55'>
+                        Подставится в форму новой отгрузки. Уже созданные отгрузки не меняются.
+                    </p>
                 </div>
                 <div className='sm:col-span-2'>
                     <label className='mb-1 block text-sm text-gray-700'>Примечание</label>

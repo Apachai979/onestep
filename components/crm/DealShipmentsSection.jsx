@@ -54,7 +54,11 @@ const EMPTY_FORM = {
     deliveryAddress: "",
     carrier: "",
     trackingNumber: "",
+    recipientMode: "contact", // "contact" | "manual"
     recipientContactId: "",
+    recipientName: "",
+    recipientPhone: "",
+    recipientEmail: "",
     docNumber: "",
     note: "",
 }
@@ -138,13 +142,18 @@ export default function DealShipmentsSection({
 
     function startEdit(sh) {
         setEditingId(sh.id)
+        const hasManual = sh.recipientName || sh.recipientPhone || sh.recipientEmail
         setForm({
             status: sh.status,
             plannedDate: dateForInput(sh.plannedDate),
             deliveryAddress: sh.deliveryAddress || "",
             carrier: sh.carrier || "",
             trackingNumber: sh.trackingNumber || "",
+            recipientMode: sh.recipientContactId || !hasManual ? "contact" : "manual",
             recipientContactId: sh.recipientContactId || "",
+            recipientName: sh.recipientName || "",
+            recipientPhone: sh.recipientPhone || "",
+            recipientEmail: sh.recipientEmail || "",
             docNumber: sh.docNumber || "",
             note: sh.note || "",
         })
@@ -199,10 +208,15 @@ export default function DealShipmentsSection({
         setError("")
         setSaving(true)
 
+        const useContact = form.recipientMode === "contact"
+        const { recipientMode: _ignored, ...rest } = form
         const payload = {
-            ...form,
+            ...rest,
             plannedDate: form.plannedDate || null,
-            recipientContactId: form.recipientContactId || null,
+            recipientContactId: useContact ? form.recipientContactId || null : null,
+            recipientName: useContact ? null : form.recipientName || null,
+            recipientPhone: useContact ? null : form.recipientPhone || null,
+            recipientEmail: useContact ? null : form.recipientEmail || null,
             items: items
                 .filter(i => i.dealItemId && Number(i.quantity) > 0)
                 .map(i => ({
@@ -313,7 +327,7 @@ export default function DealShipmentsSection({
                                 {editingId ? "Изменить отгрузку" : "Новая отгрузка"}
                             </h3>
 
-                            <div className='grid gap-3 sm:grid-cols-3'>
+                            <div className='grid gap-3 sm:grid-cols-2'>
                                 <Field label='Статус'>
                                     <select
                                         value={form.status}
@@ -333,30 +347,114 @@ export default function DealShipmentsSection({
                                         className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                     />
                                 </Field>
-                                <Field label='Получатель (контакт)'>
-                                    <select
-                                        value={form.recipientContactId}
-                                        onChange={updateField("recipientContactId")}
-                                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                                    >
-                                        <option value=''>— Не выбран —</option>
-                                        {contacts.map(c => (
-                                            <option key={c.id} value={c.id}>
-                                                {contactName(c)}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </Field>
                             </div>
 
                             <Field label='Адрес доставки'>
                                 <input
                                     value={form.deliveryAddress}
                                     onChange={updateField("deliveryAddress")}
-                                    placeholder='По умолчанию — адрес контрагента'
+                                    placeholder='По умолчанию — адрес из сделки или контрагента'
                                     className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                 />
                             </Field>
+
+                            <div className='rounded-lg border border-brand_soft/40 bg-white/60 p-3'>
+                                <div className='mb-2 flex flex-wrap items-center justify-between gap-2'>
+                                    <p className='text-xs font-semibold uppercase tracking-wide text-night_green/65'>
+                                        Получатель
+                                    </p>
+                                    <div className='inline-flex rounded-md border border-brand_soft/50 bg-white p-0.5 text-xs'>
+                                        <button
+                                            type='button'
+                                            onClick={() =>
+                                                setForm(p => ({
+                                                    ...p,
+                                                    recipientMode: "contact",
+                                                }))
+                                            }
+                                            className={`rounded px-2 py-1 transition ${
+                                                form.recipientMode === "contact"
+                                                    ? "bg-brand_main text-white"
+                                                    : "text-night_green/70 hover:bg-brand_soft/30"
+                                            }`}
+                                        >
+                                            Из контактов клиента
+                                        </button>
+                                        <button
+                                            type='button'
+                                            onClick={() =>
+                                                setForm(p => ({
+                                                    ...p,
+                                                    recipientMode: "manual",
+                                                }))
+                                            }
+                                            className={`rounded px-2 py-1 transition ${
+                                                form.recipientMode === "manual"
+                                                    ? "bg-brand_main text-white"
+                                                    : "text-night_green/70 hover:bg-brand_soft/30"
+                                            }`}
+                                        >
+                                            Свободный ввод
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {form.recipientMode === "contact" ? (
+                                    <>
+                                        <select
+                                            value={form.recipientContactId}
+                                            onChange={updateField("recipientContactId")}
+                                            className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                        >
+                                            <option value=''>— Не выбран —</option>
+                                            {contacts.map(c => (
+                                                <option key={c.id} value={c.id}>
+                                                    {contactName(c)}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {(() => {
+                                            const c = contacts.find(
+                                                x => x.id === form.recipientContactId,
+                                            )
+                                            if (!c) return null
+                                            const phones = [c.phone, c.email]
+                                                .filter(Boolean)
+                                                .join(" · ")
+                                            return phones ? (
+                                                <p className='mt-1.5 text-xs text-night_green/65'>
+                                                    {phones}
+                                                </p>
+                                            ) : (
+                                                <p className='mt-1.5 text-xs italic text-night_green/45'>
+                                                    У контакта не указаны телефон/email
+                                                </p>
+                                            )
+                                        })()}
+                                    </>
+                                ) : (
+                                    <div className='grid gap-2 sm:grid-cols-3'>
+                                        <input
+                                            value={form.recipientName}
+                                            onChange={updateField("recipientName")}
+                                            placeholder='Имя'
+                                            className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                        />
+                                        <input
+                                            value={form.recipientPhone}
+                                            onChange={updateField("recipientPhone")}
+                                            placeholder='Телефон'
+                                            className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                        />
+                                        <input
+                                            value={form.recipientEmail}
+                                            onChange={updateField("recipientEmail")}
+                                            placeholder='Email'
+                                            className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                        />
+                                    </div>
+                                )}
+                            </div>
 
                             <div className='grid gap-3 sm:grid-cols-3'>
                                 <Field label='Перевозчик'>
@@ -458,9 +556,14 @@ export default function DealShipmentsSection({
                                                 </select>
                                             </div>
                                             <div className='sm:col-span-2'>
-                                                <label className='mb-1 block text-[10px] uppercase text-gray-500'>
-                                                    Кол-во
-                                                </label>
+                                                <div className='mb-1 flex items-baseline justify-between gap-1'>
+                                                    <label className='block text-[10px] uppercase text-gray-500'>
+                                                        Кол-во
+                                                    </label>
+                                                    <span className='text-[10px] text-gray-500'>
+                                                        ост. {fmtQty(max)}
+                                                    </span>
+                                                </div>
                                                 <input
                                                     type='number'
                                                     step='0.001'
@@ -472,9 +575,6 @@ export default function DealShipmentsSection({
                                                     }
                                                     className='w-full rounded-md border border-brand_soft/60 px-2 py-1.5 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                                 />
-                                                <p className='mt-0.5 text-[10px] text-gray-500'>
-                                                    Остаток: {fmtQty(max)}
-                                                </p>
                                             </div>
                                             <div className='sm:col-span-3'>
                                                 <label className='mb-1 block text-[10px] uppercase text-gray-500'>
@@ -702,12 +802,23 @@ function ShipmentRow({ shipment, dealItems, onEdit, onShip, onCancel, onReopen, 
                 {shipment.docNumber && (
                     <Meta label='ТТН' value={shipment.docNumber} />
                 )}
-                {shipment.recipientContact && (
-                    <Meta
-                        label='Получатель'
-                        value={contactName(shipment.recipientContact) || "—"}
-                    />
-                )}
+                {(() => {
+                    let value = null
+                    if (shipment.recipientContact) {
+                        const c = shipment.recipientContact
+                        const name = contactName(c) || "—"
+                        const extras = [c.phone, c.email].filter(Boolean).join(" · ")
+                        value = extras ? `${name} (${extras})` : name
+                    } else {
+                        const parts = [
+                            shipment.recipientName,
+                            shipment.recipientPhone,
+                            shipment.recipientEmail,
+                        ].filter(Boolean)
+                        if (parts.length) value = parts.join(" · ")
+                    }
+                    return value ? <Meta label='Получатель' value={value} /> : null
+                })()}
                 {shipment.deliveryAddress && (
                     <Meta
                         label='Адрес'

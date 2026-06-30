@@ -80,6 +80,16 @@ export async function PATCH(request, { params }) {
             data.shippedAt = new Date()
         }
     }
+    // Возврат в черновик или отмена — фактическая дата отгрузки очищается,
+    // если её не передали явно в запросе.
+    if (
+        data.status &&
+        data.status !== "SHIPPED" &&
+        existing.status === "SHIPPED" &&
+        body.shippedAt === undefined
+    ) {
+        data.shippedAt = null
+    }
 
     let itemsUpdate = null
     if (Array.isArray(body.items)) {

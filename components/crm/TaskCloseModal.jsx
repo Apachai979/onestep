@@ -1,7 +1,11 @@
 "use client"
 import Link from "next/link"
 import { useState } from "react"
-import { allDayDateLabel } from "@/lib/crm/task"
+import {
+    TASK_STATUS_COLORS,
+    TASK_STATUS_LABELS,
+    allDayDateLabel,
+} from "@/lib/crm/task"
 import { notifyTasksChanged } from "@/lib/crm/tasks-events"
 import { TaskTypeBadge } from "./TaskTypeIcon"
 
@@ -133,11 +137,19 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                 <div className='space-y-2 border-b border-brand_soft/30 pb-3'>
                     <div className='flex flex-wrap items-center gap-2'>
                         <TaskTypeBadge type={task.type} />
-                        <span
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${ts.className}`}
-                        >
-                            {ts.label}
-                        </span>
+                        {task.status === "OPEN" ? (
+                            <span
+                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${ts.className}`}
+                            >
+                                {ts.label}
+                            </span>
+                        ) : (
+                            <span
+                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${TASK_STATUS_COLORS[task.status]}`}
+                            >
+                                {TASK_STATUS_LABELS[task.status] || task.status}
+                            </span>
+                        )}
                     </div>
                     <h2 className='text-lg font-semibold text-night_green'>{task.title}</h2>
                     {task.description && (
@@ -167,6 +179,38 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                         )}
                     </dl>
                 </div>
+
+                {task.status !== "OPEN" && (
+                    <div
+                        className={`rounded-lg border p-3 text-sm ${
+                            task.status === "DONE"
+                                ? "border-green-200 bg-green-50/50"
+                                : "border-red-200 bg-red-50/50"
+                        }`}
+                    >
+                        <div className='flex items-center justify-between gap-2'>
+                            <span className='text-xs font-semibold uppercase tracking-wide text-night_green/65'>
+                                Комментарий о {task.status === "DONE" ? "выполнении" : "невыполнении"}
+                            </span>
+                            {task.closedAt && (
+                                <span className='text-[11px] text-night_green/55'>
+                                    закрыто{" "}
+                                    {new Date(task.closedAt).toLocaleString("ru-RU", {
+                                        dateStyle: "short",
+                                        timeStyle: "short",
+                                    })}
+                                </span>
+                            )}
+                        </div>
+                        <p className='mt-1 whitespace-pre-wrap text-night_green/85'>
+                            {task.result || (
+                                <span className='italic text-night_green/55'>
+                                    Комментарий не оставлен
+                                </span>
+                            )}
+                        </p>
+                    </div>
+                )}
 
                 {!readOnly && (
                     <>

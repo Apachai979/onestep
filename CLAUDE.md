@@ -19,7 +19,7 @@ npm run migrate            # prisma migrate deploy (production)
 
 `dev` and `build` always run `prisma generate` first — no need to invoke it manually after schema edits.
 
-Deployment is PM2-based via [ecosystem.config.js](ecosystem.config.js) (`pm2 deploy production`); a Dockerfile exists but `output: "standalone"` is currently commented out in [next.config.mjs](next.config.mjs), so the Docker image won't build as-is.
+Deployment is PM2-based via [ecosystem.config.js](ecosystem.config.js) (`pm2 deploy production`). Docker artifacts were removed — сервер держит один инстанс Next.js под PM2, база SQLite и файлы вложений живут на локальном диске сервера. Если понадобится контейнер — восстановить Dockerfile из истории git.
 
 ## Architecture
 

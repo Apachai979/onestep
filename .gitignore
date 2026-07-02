@@ -19,12 +19,14 @@
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # local env files
 .env*.local
@@ -39,3 +41,16 @@ next-env.d.ts
 
 # crm: locally uploaded files
 /uploads/
+
+# sqlite dev database и её бэкапы — только код, данные локальные
+/prisma/dev.db
+/prisma/dev.db-journal
+/prisma/dev.db.bak-*
+
+# IDE / editors
+.vscode/
+.idea/
+*.swp
+
+# Claude Code local metadata
+.claude/

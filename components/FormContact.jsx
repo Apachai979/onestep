@@ -86,7 +86,6 @@ export default function FormContact({ titleForForm }) {
             }
         }
         query = query.slice(0, -1);
-        console.log(query)
 
         const url = `https://neoset.bitrix24.ru/rest/1/${api}/crm.lead.add.json?${query}`;
         try {
@@ -94,7 +93,6 @@ export default function FormContact({ titleForForm }) {
                 method: 'GET'
             });
             if (response.ok) {
-                console.log('Данные успешно отправлены');
                 setSuccess(true)
             } else {
                 console.error('Ошибка при отправке данных');

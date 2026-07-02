@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { signOut } from "next-auth/react"
 import {
+    LuInbox,
     LuLayoutDashboard,
     LuListTodo,
     LuBriefcase,
@@ -79,6 +80,7 @@ export default function CrmShell({ user, role, children }) {
     const navItems = useMemo(() => {
         const base = [
             { href: "/crm", label: "Главная", icon: LuLayoutDashboard, exact: true },
+            { href: "/crm/leads", label: "Заявки с сайта", icon: LuInbox },
             { href: "/crm/tasks", label: "Задачи", icon: LuListTodo, badge: taskBadge },
             { href: "/crm/deals", label: "Сделки", icon: LuBriefcase },
             { href: "/crm/shipments", label: "Отгрузки", icon: LuTruck },

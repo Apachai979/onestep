@@ -375,6 +375,25 @@ model Task {
   @@map("tasks")
 }
 
+// Заявка с публичной формы обратной связи на сайте
+model Lead {
+  id          String    @id @default(cuid())
+  firstName   String
+  lastName    String?
+  email       String?
+  phone       String?
+  company     String?
+  message     String?
+  source      String    @default("Веб-сайт (форма на сайте)")
+  status      String    @default("NEW")
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("leads")
+}
+
 model Neoset {
   id          Int      @id @default(autoincrement())
   name        String

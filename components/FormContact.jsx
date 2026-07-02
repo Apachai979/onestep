@@ -5,10 +5,10 @@ import { ImSpinner2 } from "react-icons/im";
 
 export default function FormContact({ titleForForm }) {
 
-    const api = process.env.API_KEY_BITRIX
     const code = '+7 ';
     const [spinner, setSpinner] = useState(false);
     const [success, setSuccess] = useState(false)
+    const [submitError, setSubmitError] = useState('');
     const [hasErrorEmail, sethasErrorEmail] = useState(true);
     const [hasErrorName, setHasErrorName] = useState(true);
     const [hasErrorTel, setHasErrorTel] = useState(true);
@@ -19,8 +19,6 @@ export default function FormContact({ titleForForm }) {
         EMAIL: '',
         PHONE: '+7 ',
         COMPANY_TITLE: '',
-        MESSAGE: '',
-        SOURCE_ID: 'Веб-сайт(форма на сайте)'
     });
 
     function handleCheckInput(e) {
@@ -71,38 +69,31 @@ export default function FormContact({ titleForForm }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSpinner(true)
+        setSubmitError('');
 
-        // const query = new URLSearchParams(formData).toString();
-        let query = '';
-        for (const key in formData) {
-            if (formData.hasOwnProperty(key)) {
-
-                const formattedStr = key !== 'TITLE' && key !== 'SOURCE_ID' ? formData[key].replace(/[\s!#$%^&*()\-]/g, '') : formData[key];
-
-                query += key === 'PHONE' || key === 'EMAIL'
-                    ? `FIELDS[${key}][0][VALUE]=${formattedStr}&`
-                    : `FIELDS[${key}]=${formattedStr}&`;
-
-            }
-        }
-        query = query.slice(0, -1);
-
-        const url = `https://neoset.bitrix24.ru/rest/1/${api}/crm.lead.add.json?${query}`;
         try {
-            const response = await fetch(url, {
-                method: 'GET'
+            const response = await fetch('/api/leads', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    firstName: formData.NAME,
+                    lastName: formData.LAST_NAME,
+                    email: formData.EMAIL,
+                    phone: formData.PHONE,
+                    company: formData.COMPANY_TITLE,
+                    message: formData.TITLE,
+                }),
             });
             if (response.ok) {
                 setSuccess(true)
             } else {
-                console.error('Ошибка при отправке данных');
-                // Действия в случае неудачной отправки
+                const data = await response.json().catch(() => ({}));
+                setSubmitError(data.error || 'Не удалось отправить данные, попробуйте позже');
             }
         } catch (error) {
-            console.error('Ошибка при отправке данных:', error);
-            // Обработка ошибок
+            setSubmitError('Не удалось отправить данные, проверьте соединение');
         } finally {
-            setSpinner(false); // Устанавливаем состояние загрузки в false после выполнения запроса
+            setSpinner(false);
         }
     };
 
@@ -163,6 +154,10 @@ export default function FormContact({ titleForForm }) {
                             )}
 
                     </button>
+
+                    {submitError && (
+                        <p className="text-center text-red-500">{submitError}</p>
+                    )}
                 </form>
             </section>
     )

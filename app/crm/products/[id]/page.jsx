@@ -5,6 +5,7 @@ import prisma from "@/lib/client"
 import { formatMoney } from "@/lib/crm/format"
 import { contentLines } from "@/lib/crm/product"
 import { totalStockPieces } from "@/lib/crm/stock"
+import CrmBackLink from "@/components/crm/CrmBackLink"
 
 export const metadata = { title: "Товар | CRM" }
 
@@ -29,12 +30,11 @@ export default async function ProductPage({ params }) {
 
     return (
         <div className='space-y-5'>
-            <Link
-                href='/crm/products'
-                className='inline-flex text-xs text-night_green/55 hover:text-brand_main'
-            >
-                ← Товары
-            </Link>
+            <CrmBackLink
+                fallback='/crm/products'
+                fallbackLabel='Товары'
+                className='inline-flex items-center gap-1 text-xs text-night_green/55 hover:text-brand_main'
+            />
 
             <div className='flex flex-wrap items-start justify-between gap-3'>
                 <div className='min-w-0'>

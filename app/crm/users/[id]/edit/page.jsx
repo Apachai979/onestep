@@ -1,9 +1,9 @@
-import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import AdminUserForm from "@/components/crm/AdminUserForm"
+import CrmBackLink from "@/components/crm/CrmBackLink"
 
 export const metadata = { title: "Редактирование сотрудника | CRM" }
 
@@ -33,11 +33,11 @@ export default async function EditUserPage({ params }) {
 
     return (
         <div className='max-w-3xl space-y-4'>
-            <div className='text-sm'>
-                <Link href='/crm/users' className='text-gray-500 hover:text-primary_green'>
-                    ← Пользователи
-                </Link>
-            </div>
+            <CrmBackLink
+                fallback='/crm/users'
+                fallbackLabel='Пользователи'
+                className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary_green'
+            />
             <h1 className='text-2xl font-semibold text-night_green'>
                 Редактирование сотрудника
             </h1>

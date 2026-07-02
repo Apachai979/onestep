@@ -4,12 +4,18 @@ import { getServerSession } from "next-auth"
 import { LuPencil } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
-import { COUNTERPARTY_TYPE_LABELS } from "@/lib/crm/counterparty"
+import {
+    ACTIVITY_AREA_LABELS,
+    COMPANY_KIND_LABELS,
+    COUNTERPARTY_SOURCE_LABELS,
+    COUNTERPARTY_TYPE_LABELS,
+} from "@/lib/crm/counterparty"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import { PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import ContactsSection from "@/components/crm/ContactsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import ChangeHistorySection from "@/components/crm/ChangeHistorySection"
+import CrmBackLink from "@/components/crm/CrmBackLink"
 
 export const metadata = { title: "Контрагент | CRM" }
 
@@ -65,12 +71,11 @@ export default async function CounterpartyPage({ params }) {
 
     return (
         <div className='space-y-5'>
-            <Link
-                href={backHref}
-                className='inline-flex text-xs text-night_green/55 hover:text-brand_main'
-            >
-                ← {backLabel}
-            </Link>
+            <CrmBackLink
+                fallback={backHref}
+                fallbackLabel={backLabel}
+                className='inline-flex items-center gap-1 text-xs text-night_green/55 hover:text-brand_main'
+            />
 
             <div className='flex flex-wrap items-start justify-between gap-3'>
                 <div className='min-w-0'>
@@ -102,6 +107,23 @@ export default async function CounterpartyPage({ params }) {
                         <Row label='Телефон' value={item.phone} />
                         <Row label='Email' value={item.email} />
                         <Row label='Адрес' value={item.address} className='sm:col-span-2' />
+                        <Row
+                            label='Источник'
+                            value={COUNTERPARTY_SOURCE_LABELS[item.source] || null}
+                            className='sm:col-span-2'
+                        />
+                        {item.type === "END_CUSTOMER" && (
+                            <>
+                                <Row
+                                    label='Тип компании'
+                                    value={COMPANY_KIND_LABELS[item.companyKind] || null}
+                                />
+                                <Row
+                                    label='Сфера деятельности'
+                                    value={ACTIVITY_AREA_LABELS[item.activityArea] || null}
+                                />
+                            </>
+                        )}
                     </Section>
 
                     <Section title='Реквизиты'>

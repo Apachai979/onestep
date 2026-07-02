@@ -1,7 +1,7 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import prisma from "@/lib/client"
 import CounterpartyForm from "@/components/crm/CounterpartyForm"
+import CrmBackLink from "@/components/crm/CrmBackLink"
 import { COUNTERPARTY_TYPE_LABELS } from "@/lib/crm/counterparty"
 
 export const metadata = { title: "Редактирование | CRM" }
@@ -12,14 +12,11 @@ export default async function EditCounterpartyPage({ params }) {
 
     return (
         <div className='max-w-3xl space-y-4'>
-            <div className='text-sm'>
-                <Link
-                    href={`/crm/counterparties/${item.id}`}
-                    className='text-gray-500 hover:text-primary_green'
-                >
-                    ← {item.name}
-                </Link>
-            </div>
+            <CrmBackLink
+                fallback={`/crm/counterparties/${item.id}`}
+                fallbackLabel={item.name}
+                className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary_green'
+            />
             <div>
                 <p className='text-xs uppercase text-gray-500'>
                     {COUNTERPARTY_TYPE_LABELS[item.type]}

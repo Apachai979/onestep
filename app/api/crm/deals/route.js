@@ -1,6 +1,11 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
-import { DEAL_STATUSES, DEAL_TRACKED_FIELDS, parseDealPayload } from "@/lib/crm/deal"
+import {
+    DEAL_STATUSES,
+    DEAL_TRACKED_FIELDS,
+    autoArchiveStaleFinalDeals,
+    parseDealPayload,
+} from "@/lib/crm/deal"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
@@ -33,6 +38,10 @@ export async function GET(request) {
     }
     if (counterpartyId) where.counterpartyId = counterpartyId
     if (managerId) where.managerId = managerId
+
+    // Ленивая архивация: старые CLOSED/CANCELLED → ARCHIVED. Одна короткая
+    // UPDATE-строка, чтобы Kanban/список не приходилось чистить руками.
+    await autoArchiveStaleFinalDeals(prisma)
 
     const items = await prisma.deal.findMany({
         where,
@@ -176,6 +185,20 @@ export async function POST(request) {
                     authorId: session.user.id,
                 })
             }
+
+            // Пересчёт суммы сделки по перенесённым из проекта позициям —
+            // иначе deal.totalAmount остался бы либо тем, что пришло в форме,
+            // либо нулём, и не соответствовал бы фактической сумме items.
+            const total = sourceProjectItems.reduce(
+                (s, it) => s + Number(it.amount),
+                0,
+            )
+            const totalStr = total.toString()
+            await tx.deal.update({
+                where: { id: deal.id },
+                data: { totalAmount: totalStr },
+            })
+            deal.totalAmount = totalStr
         }
 
         return deal

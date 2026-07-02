@@ -1,7 +1,7 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import prisma from "@/lib/client"
 import ProjectForm from "@/components/crm/ProjectForm"
+import CrmBackLink from "@/components/crm/CrmBackLink"
 
 export const metadata = { title: "Редактирование проекта | CRM" }
 
@@ -22,14 +22,11 @@ export default async function EditProjectPage({ params }) {
 
     return (
         <div className='max-w-4xl space-y-4'>
-            <div className='text-sm'>
-                <Link
-                    href={`/crm/projects/${item.id}`}
-                    className='text-gray-500 hover:text-primary_green'
-                >
-                    ← {item.internalName}
-                </Link>
-            </div>
+            <CrmBackLink
+                fallback={`/crm/projects/${item.id}`}
+                fallbackLabel={item.internalName}
+                className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary_green'
+            />
             <h1 className='text-2xl font-semibold text-night_green'>Редактирование проекта</h1>
             <ProjectForm mode='edit' initial={initial} />
         </div>

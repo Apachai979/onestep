@@ -41,7 +41,7 @@ The `/api/neosets` route ([app/api/neosets/route.js](app/api/neosets/route.js)) 
 
 ### Auth
 
-NextAuth with GitHub, Google, and Mail.ru providers, configured in [configs/auth.ts](configs/auth.ts) and mounted at [app/api/auth/[...nextauth]/route.js](app/api/auth/%5B...nextauth%5D/route.js). Required env vars: `GITHUB_ID`, `GITHUB_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_SECRET`, `MAILRU_CLIENT_ID`, `MAILRU_CLIENT_SECRET`, plus `NEXTAUTH_URL` / `NEXTAUTH_SECRET`. Remote images from `avatars.githubusercontent.com` and `lh3.googleusercontent.com` are allowlisted in [next.config.mjs](next.config.mjs) — add any new auth provider avatar host there.
+NextAuth with only the **Credentials** provider (email + пароль), configured in [configs/auth.ts](configs/auth.ts) and mounted at [app/api/auth/[...nextauth]/route.js](app/api/auth/%5B...nextauth%5D/route.js). Required env vars: `NEXTAUTH_URL`, `NEXTAUTH_SECRET`. Публичной регистрации нет — новые пользователи создаются админом через приглашения ([components/crm/InvitesSection.jsx](components/crm/InvitesSection.jsx) генерирует ссылку `/register?invite=<token>`, которую отправляют вручную). Кнопка «Войти» в шапке ([components/AuthComponent.jsx](components/AuthComponent.jsx)) ведёт на `/authorize?callbackUrl=/crm`.
 
 ### CRM external integrations
 

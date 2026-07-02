@@ -11,6 +11,7 @@ import ProjectItemsSection from "@/components/crm/ProjectItemsSection"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import ChangeHistorySection from "@/components/crm/ChangeHistorySection"
+import CrmBackLink from "@/components/crm/CrmBackLink"
 
 export const metadata = { title: "Проект | CRM" }
 
@@ -66,12 +67,11 @@ export default async function ProjectPage({ params }) {
 
     return (
         <div className='space-y-5'>
-            <Link
-                href='/crm/projects'
-                className='inline-flex text-xs text-night_green/55 hover:text-brand_main'
-            >
-                ← Проекты
-            </Link>
+            <CrmBackLink
+                fallback='/crm/projects'
+                fallbackLabel='Проекты'
+                className='inline-flex items-center gap-1 text-xs text-night_green/55 hover:text-brand_main'
+            />
 
             <div className='flex flex-wrap items-start justify-between gap-3'>
                 <div className='min-w-0'>

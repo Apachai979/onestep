@@ -1,8 +1,5 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import GithubProvider from "next-auth/providers/github"
-import GoogleProvider from "next-auth/providers/google"
-import MailRuProvider from "next-auth/providers/mailru"
 import bcrypt from "bcryptjs"
 import prisma from "@/lib/client"
 
@@ -54,18 +51,6 @@ export const authOptions: NextAuthOptions = {
                     role: user.role,
                 } as never
             },
-        }),
-        GithubProvider({
-            clientId: process.env.GITHUB_ID as string,
-            clientSecret: process.env.GITHUB_SECRET as string,
-        }),
-        GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID as string,
-            clientSecret: process.env.GOOGLE_SECRET as string,
-        }),
-        MailRuProvider({
-            clientId: process.env.MAILRU_CLIENT_ID,
-            clientSecret: process.env.MAILRU_CLIENT_SECRET,
         }),
     ],
     callbacks: {

@@ -5,6 +5,7 @@ import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_STATUSES } from "@/lib/crm/deal"
 import DealForm from "@/components/crm/DealForm"
+import CrmBackLink from "@/components/crm/CrmBackLink"
 
 export const metadata = { title: "Новая сделка | CRM" }
 
@@ -39,11 +40,11 @@ export default async function NewDealPage({ searchParams }) {
 
     return (
         <div className='max-w-4xl space-y-4'>
-            <div className='text-sm'>
-                <Link href='/crm/deals' className='text-gray-500 hover:text-primary_green'>
-                    ← Сделки
-                </Link>
-            </div>
+            <CrmBackLink
+                fallback='/crm/deals'
+                fallbackLabel='Сделки'
+                className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary_green'
+            />
             <h1 className='text-2xl font-semibold text-night_green'>Новая сделка</h1>
             {fromProject && (
                 <div className='rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900'>

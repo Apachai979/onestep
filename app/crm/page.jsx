@@ -17,6 +17,7 @@ import {
     DEAL_STATUSES,
     DEAL_STATUS_COLORS,
     DEAL_STATUS_LABELS,
+    autoArchiveStaleFinalDeals,
     dealDisplayTitle,
 } from "@/lib/crm/deal"
 import {
@@ -82,6 +83,10 @@ export default async function CrmHome() {
     const firstName =
         session?.user?.name?.split(" ")[0] || session?.user?.email || "коллега"
     const { start: dayStart, end: dayEnd, now } = todayBounds()
+
+    // Ленивая архивация старых CLOSED/CANCELLED — до чтения сделок,
+    // чтобы дашборд сразу увидел актуальные статусы.
+    await autoArchiveStaleFinalDeals(prisma)
 
     // --- Parallel data load ---
     const [

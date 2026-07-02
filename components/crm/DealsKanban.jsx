@@ -8,6 +8,10 @@ import {
     DEAL_STATUS_LABELS,
     dealDisplayTitle,
 } from "@/lib/crm/deal"
+
+// Kanban показывает пять активных колонок; ARCHIVED — свалка старых
+// CLOSED/CANCELLED (заполняется автоархиватором), из доски скрыт.
+const KANBAN_STATUSES = DEAL_STATUSES.filter(s => s !== "ARCHIVED")
 import { calculateDealShipmentProgress, isShipmentOverdue } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
 import { useToast } from "@/components/crm/ui"
@@ -149,7 +153,7 @@ export default function DealsKanban() {
             {error && <p className='text-sm text-red-600'>{error}</p>}
 
             <div className='flex gap-3 overflow-x-auto pb-3'>
-                {DEAL_STATUSES.map(status => {
+                {KANBAN_STATUSES.map(status => {
                     const list = byStatus[status] || []
                     const sum = list.reduce((s, d) => s + Number(d.totalAmount || 0), 0)
                     return (
@@ -173,13 +177,15 @@ export default function DealsKanban() {
                                     </span>
                                     <span className='text-xs text-gray-500'>{list.length}</span>
                                 </div>
-                                <Link
-                                    href={`/crm/deals/new?status=${status}`}
-                                    className='rounded-md border border-brand_soft/60 px-2 py-0.5 text-xs text-gray-600 hover:bg-white hover:text-brand_main'
-                                    title='Добавить сделку с этим статусом'
-                                >
-                                    +
-                                </Link>
+                                {(status === "NEGOTIATION" || status === "CONTRACT") && (
+                                    <Link
+                                        href={`/crm/deals/new?status=${status}`}
+                                        className='rounded-md border border-brand_soft/60 px-2 py-0.5 text-xs text-gray-600 hover:bg-white hover:text-brand_main'
+                                        title='Добавить сделку с этим статусом'
+                                    >
+                                        +
+                                    </Link>
+                                )}
                             </div>
                             {DEAL_STATUS_HINTS[status] && (
                                 <p className='mb-1 text-[10px] leading-tight text-gray-500'>

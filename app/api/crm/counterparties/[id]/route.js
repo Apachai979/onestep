@@ -21,6 +21,9 @@ const COUNTERPARTY_TRACKED_FIELDS = [
     "phone",
     "email",
     "address",
+    "source",
+    "companyKind",
+    "activityArea",
     "note",
 ]
 
@@ -57,25 +60,58 @@ export async function PATCH(request, { params }) {
     const { data, error } = parseCounterpartyPayload(body, { partial: true })
     if (error) return Response.json({ error }, { status: 400 })
 
-    const updated = await prisma.$transaction(async tx => {
-        const cp = await tx.counterparty.update({
-            where: { id: params.id },
-            data: {
-                ...data,
-                updatedById: session.user.id ?? null,
+    const nextInn = "inn" in data ? data.inn : existing.inn
+    const nextKpp = "kpp" in data ? data.kpp : existing.kpp
+    const pairChanged = nextInn !== existing.inn || nextKpp !== existing.kpp
+    if (nextInn && pairChanged) {
+        const clash = await prisma.counterparty.findFirst({
+            where: {
+                inn: nextInn,
+                kpp: nextKpp ?? null,
+                NOT: { id: params.id },
             },
+            select: { id: true, name: true, type: true, inn: true, kpp: true },
         })
-        const changes = diffEntities(existing, cp, COUNTERPARTY_TRACKED_FIELDS)
-        if (Object.keys(changes).length > 0) {
-            await logChange(tx, {
-                entityType: "Counterparty",
-                entityId: cp.id,
-                action: "UPDATE",
-                payload: changes,
-                authorId: session.user.id,
-            })
+        if (clash) {
+            const kppText = nextKpp ? `, КПП ${nextKpp}` : " (без КПП)"
+            return Response.json(
+                {
+                    error: "counterparty_exists",
+                    message: `Контрагент с ИНН ${nextInn}${kppText} уже есть: «${clash.name}»`,
+                    existing: clash,
+                },
+                { status: 409 },
+            )
         }
-        return cp
-    })
-    return Response.json({ item: updated })
+    }
+
+    try {
+        const updated = await prisma.$transaction(async tx => {
+            const cp = await tx.counterparty.update({
+                where: { id: params.id },
+                data: {
+                    ...data,
+                    updatedById: session.user.id ?? null,
+                },
+            })
+            const changes = diffEntities(existing, cp, COUNTERPARTY_TRACKED_FIELDS)
+            if (Object.keys(changes).length > 0) {
+                await logChange(tx, {
+                    entityType: "Counterparty",
+                    entityId: cp.id,
+                    action: "UPDATE",
+                    payload: changes,
+                    authorId: session.user.id,
+                })
+            }
+            return cp
+        })
+        return Response.json({ item: updated })
+    } catch (err) {
+        console.error("[counterparties.PATCH] error:", err)
+        return Response.json(
+            { error: `Ошибка сохранения: ${err.message}` },
+            { status: 500 },
+        )
+    }
 }

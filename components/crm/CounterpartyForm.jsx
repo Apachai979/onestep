@@ -1,9 +1,30 @@
 "use client"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import DadataSearch from "./DadataSearch"
+import {
+    ACTIVITY_AREAS,
+    ACTIVITY_AREA_LABELS,
+    COMPANY_KINDS,
+    COMPANY_KIND_LABELS,
+    COUNTERPARTY_SOURCES,
+    COUNTERPARTY_SOURCE_LABELS,
+    guessCompanyKind,
+} from "@/lib/crm/counterparty"
 
-const DADATA_PARTY_FIELDS = ["name", "inn", "kpp", "ogrn", "okpo", "okved", "region", "address"]
+const DADATA_PARTY_FIELDS = [
+    "name",
+    "inn",
+    "kpp",
+    "ogrn",
+    "okpo",
+    "okved",
+    "region",
+    "address",
+    "phone",
+    "email",
+]
 const BIK_RE = /^\d{9}$/
 
 const EMPTY = {
@@ -23,6 +44,9 @@ const EMPTY = {
     phone: "",
     email: "",
     address: "",
+    source: "",
+    companyKind: "",
+    activityArea: "",
     note: "",
 }
 
@@ -34,6 +58,8 @@ function toFormValue(v) {
 
 export default function CounterpartyForm({ type, initial, mode = "create" }) {
     const router = useRouter()
+    const effectiveType = mode === "edit" ? initial?.type : type
+    const isEndCustomer = effectiveType === "END_CUSTOMER"
     const [form, setForm] = useState(() => ({
         ...EMPTY,
         ...Object.fromEntries(
@@ -41,6 +67,7 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
         ),
     }))
     const [error, setError] = useState("")
+    const [duplicate, setDuplicate] = useState(null)
     const [loading, setLoading] = useState(false)
 
     function update(field) {
@@ -54,6 +81,12 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                 if (party[f] !== undefined && party[f] !== null && party[f] !== "") {
                     next[f] = party[f]
                 }
+            }
+            // Автоопределение типа медучреждения по ОКОПФ — только для
+            // END_CUSTOMER и только если пользователь ещё не выбрал вручную.
+            if (isEndCustomer && !next.companyKind) {
+                const kind = guessCompanyKind(party.opfCode)
+                if (kind) next.companyKind = kind
             }
             return next
         })
@@ -113,6 +146,7 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
     async function handleSubmit(e) {
         e.preventDefault()
         setError("")
+        setDuplicate(null)
         setLoading(true)
 
         const payload = { ...form, type: mode === "create" ? type : undefined }
@@ -130,7 +164,14 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
 
         if (!res.ok) {
             const data = await res.json().catch(() => ({}))
-            setError(data.error || "Не удалось сохранить")
+            if (data.error === "counterparty_exists" && data.existing) {
+                setDuplicate(data.existing)
+                setError("")
+            } else {
+                const msg = data.error || `Не удалось сохранить (HTTP ${res.status})`
+                console.error("[CounterpartyForm] save failed:", res.status, data)
+                setError(msg)
+            }
             setLoading(false)
             return
         }
@@ -160,6 +201,59 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                     onChange={update("address")}
                     className='sm:col-span-2'
                 />
+                <div className='sm:col-span-2'>
+                    <label className='mb-1 block text-sm text-gray-700'>Источник</label>
+                    <select
+                        value={form.source}
+                        onChange={update("source")}
+                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
+                    >
+                        <option value=''>— не указан —</option>
+                        {COUNTERPARTY_SOURCES.map(v => (
+                            <option key={v} value={v}>
+                                {COUNTERPARTY_SOURCE_LABELS[v]}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                {isEndCustomer && (
+                    <>
+                        <div>
+                            <label className='mb-1 block text-sm text-gray-700'>
+                                Тип компании
+                            </label>
+                            <select
+                                value={form.companyKind}
+                                onChange={update("companyKind")}
+                                className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
+                            >
+                                <option value=''>— не указан —</option>
+                                {COMPANY_KINDS.map(v => (
+                                    <option key={v} value={v}>
+                                        {COMPANY_KIND_LABELS[v]}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className='mb-1 block text-sm text-gray-700'>
+                                Сфера деятельности
+                            </label>
+                            <select
+                                value={form.activityArea}
+                                onChange={update("activityArea")}
+                                className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
+                            >
+                                <option value=''>— не указана —</option>
+                                {ACTIVITY_AREAS.map(v => (
+                                    <option key={v} value={v}>
+                                        {ACTIVITY_AREA_LABELS[v]}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </>
+                )}
             </Section>
 
             <Section title='Реквизиты'>
@@ -249,6 +343,34 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                     className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
                 />
             </div>
+
+            {duplicate && (
+                <div className='rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm'>
+                    <p className='font-semibold text-amber-900'>
+                        Контрагент с такой парой ИНН + КПП уже есть
+                    </p>
+                    <p className='mt-1 text-amber-900'>
+                        «{duplicate.name}» —{" "}
+                        {duplicate.type === "DISTRIBUTOR"
+                            ? "Дистрибьютор"
+                            : "Конечный потребитель"}
+                    </p>
+                    <p className='mt-1 text-xs text-amber-800'>
+                        ИНН {duplicate.inn || "—"}
+                        {duplicate.kpp ? ` · КПП ${duplicate.kpp}` : " · без КПП"}
+                    </p>
+                    <p className='mt-2 text-xs text-amber-800'>
+                        Если это другой филиал того же юрлица — измените КПП, и сохранение
+                        пройдёт.
+                    </p>
+                    <Link
+                        href={`/crm/counterparties/${duplicate.id}`}
+                        className='mt-2 inline-block font-semibold text-brand_main hover:underline'
+                    >
+                        Открыть карточку →
+                    </Link>
+                </div>
+            )}
 
             {error && <p className='text-sm text-red-600'>{error}</p>}
 

@@ -15,7 +15,7 @@ export default function SignInPage() {
 function SignIn() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const callbackUrl = searchParams.get("callbackUrl") || "/"
+    const callbackUrl = searchParams.get("callbackUrl") || "/crm"
 
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -94,27 +94,6 @@ function SignIn() {
                     <p className='text-center text-sm text-gray-500'>
                         Доступ предоставляется по приглашению администратора.
                     </p>
-                    <div className='flex w-80 items-center justify-center'>
-                        <hr className='h-0.5 w-full bg-gray-300' />
-                        <p className='px-2'>или</p>
-                        <hr className='h-0.5 w-full bg-gray-300' />
-                    </div>
-                    <div className='w-80 space-y-2 pb-2 pt-1'>
-                        <button
-                            type='button'
-                            onClick={() => signIn("google", { callbackUrl })}
-                            className='h-10 w-full rounded-lg border border-gray-300 px-1 shadow-sm transition-all ease-in-out hover:bg-mainGreen hover:font-semibold active:scale-95'
-                        >
-                            Google
-                        </button>
-                        <button
-                            type='button'
-                            onClick={() => signIn("mailru", { callbackUrl })}
-                            className='h-10 w-full rounded-lg border border-gray-300 px-1 shadow-sm transition-all ease-in-out hover:bg-mainGreen hover:font-semibold active:scale-95'
-                        >
-                            MailRu
-                        </button>
-                    </div>
                 </form>
             </div>
         </div>

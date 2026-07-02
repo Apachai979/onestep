@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { LuPrinter, LuSave } from "react-icons/lu"
 import { rublesToWords } from "@/lib/crm/number-to-words"
 import { useToast } from "@/components/crm/ui"
+import CrmBackLink from "@/components/crm/CrmBackLink"
 
 const SELLER = {
     name: 'ООО «OneStep»',
@@ -133,66 +134,42 @@ export default function ProposalView({
     }
 
     const toast = useToast()
-    const proposalRef = useRef(null)
     const [saving, setSaving] = useState(false)
 
     async function handleSaveToDeal() {
         if (typeof window === "undefined") return
-        if (!proposalRef.current) return
         setSaving(true)
         try {
-            const html2pdf = (await import("html2pdf.js")).default
             const fileName = `${fileNameRef.current || "Коммерческое предложение"}.pdf`
 
-            // Дождаться, пока браузер действительно загрузит/применит шрифты —
-            // иначе html2canvas снимает «сырое» состояние и буквы сдвигаются.
-            if (document.fonts?.ready) await document.fonts.ready
+            // Серверный рендер через @react-pdf/renderer — даёт настоящий
+            // vector-PDF с корректной кириллицей, без сдвигов и мыла.
+            const pdfRes = await fetch(`/api/crm/deals/${dealId}/proposal/pdf`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(form),
+            })
+            if (!pdfRes.ok) {
+                const data = await pdfRes.json().catch(() => ({}))
+                toast.error(data?.error || "Не удалось сгенерировать PDF")
+                return
+            }
+            const blob = await pdfRes.blob()
 
-            // 210 мм при 96 dpi ≈ 794 px. Фиксируем ширину «вьюпорта» для
-            // html2canvas, чтобы .proposal (max-w-[210mm]) гарантированно
-            // отрисовался на полную A4-ширину независимо от размера окна.
-            const A4_WIDTH_PX = 794
-
-            const blob = await html2pdf()
-                .from(proposalRef.current)
-                .set({
-                    // [top, right, bottom, left] в мм.
-                    // По горизонтали 0 — у .proposal свои px-10 ≈ 10.6мм.
-                    // По вертикали даём поля, чтобы текст не упирался в край
-                    // на разрывах между страницами и на последней странице.
-                    margin: [8, 0, 14, 0],
-                    filename: fileName,
-                    image: { type: "jpeg", quality: 0.98 },
-                    html2canvas: {
-                        scale: 2,
-                        useCORS: true,
-                        backgroundColor: "#ffffff",
-                        windowWidth: A4_WIDTH_PX,
-                        width: A4_WIDTH_PX,
-                        scrollX: 0,
-                        scrollY: 0,
-                    },
-                    jsPDF: {
-                        unit: "mm",
-                        format: "a4",
-                        orientation: "portrait",
-                        compress: true,
-                    },
-                    pagebreak: {
-                        mode: ["css", "legacy"],
-                        avoid: ["tr", "thead", "h1", "h2"],
-                    },
-                })
-                .outputPdf("blob")
-
-            const form = new FormData()
-            form.append("entityType", "Deal")
-            form.append("entityId", dealId)
-            form.append("file", new File([blob], fileName, { type: "application/pdf" }))
-            const r = await fetch("/api/crm/attachments", { method: "POST", body: form })
-            const data = await r.json().catch(() => ({}))
-            if (!r.ok) {
-                toast.error(data?.error || "Не удалось сохранить в сделку")
+            const uploadForm = new FormData()
+            uploadForm.append("entityType", "Deal")
+            uploadForm.append("entityId", dealId)
+            uploadForm.append(
+                "file",
+                new File([blob], fileName, { type: "application/pdf" }),
+            )
+            const upRes = await fetch("/api/crm/attachments", {
+                method: "POST",
+                body: uploadForm,
+            })
+            const upData = await upRes.json().catch(() => ({}))
+            if (!upRes.ok) {
+                toast.error(upData?.error || "Не удалось сохранить в сделку")
                 return
             }
             toast.success("КП сохранено в документы сделки", { title: fileName })
@@ -206,12 +183,11 @@ export default function ProposalView({
     return (
         <div className='space-y-6 print:space-y-0'>
             <div className='flex items-center justify-between gap-3 print:hidden'>
-                <Link
-                    href={`/crm/deals/${dealId}`}
-                    className='text-sm text-gray-500 hover:text-brand_main'
-                >
-                    ← К сделке
-                </Link>
+                <CrmBackLink
+                    fallback={`/crm/deals/${dealId}`}
+                    fallbackLabel='К сделке'
+                    className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand_main'
+                />
                 <div className='flex flex-wrap gap-2'>
                     <button
                         type='button'
@@ -342,7 +318,6 @@ export default function ProposalView({
             </section>
 
             <article
-                ref={proposalRef}
                 className='proposal mx-auto max-w-[210mm] bg-white px-10 py-8 text-[10.5pt] leading-snug text-black shadow-sm print:max-w-none print:p-0 print:shadow-none'
             >
                 <header className='flex items-start justify-between gap-6 border-b border-black/10 pb-4'>

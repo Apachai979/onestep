@@ -1,7 +1,7 @@
-import Link from "next/link"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/configs/auth"
 import ProjectForm from "@/components/crm/ProjectForm"
+import CrmBackLink from "@/components/crm/CrmBackLink"
 
 export const metadata = { title: "Новый проект | CRM" }
 
@@ -9,11 +9,11 @@ export default async function NewProjectPage() {
     const session = await getServerSession(authOptions)
     return (
         <div className='max-w-4xl space-y-4'>
-            <div className='text-sm'>
-                <Link href='/crm/projects' className='text-gray-500 hover:text-primary_green'>
-                    ← Проекты
-                </Link>
-            </div>
+            <CrmBackLink
+                fallback='/crm/projects'
+                fallbackLabel='Проекты'
+                className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary_green'
+            />
             <h1 className='text-2xl font-semibold text-night_green'>Новый проект</h1>
             <ProjectForm mode='create' currentUserId={session?.user?.id} />
         </div>

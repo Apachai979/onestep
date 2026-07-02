@@ -6,6 +6,7 @@ import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { dealDisplayTitle } from "@/lib/crm/deal"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
+import CrmBackLink from "@/components/crm/CrmBackLink"
 import DealItemsSection from "@/components/crm/DealItemsSection"
 import DealStatusControl from "@/components/crm/DealStatusControl"
 import DealShipmentsSection from "@/components/crm/DealShipmentsSection"
@@ -60,13 +61,11 @@ export default async function DealPage({ params }) {
 
     return (
         <div className='space-y-5'>
-            {/* Back link */}
-            <Link
-                href='/crm/deals'
-                className='inline-flex text-xs text-night_green/55 hover:text-brand_main'
-            >
-                ← Сделки
-            </Link>
+            <CrmBackLink
+                fallback='/crm/deals'
+                fallbackLabel='Сделки'
+                className='inline-flex items-center gap-1 text-xs text-night_green/55 hover:text-brand_main'
+            />
 
             {/* Title row */}
             <div className='flex flex-wrap items-start justify-between gap-3'>

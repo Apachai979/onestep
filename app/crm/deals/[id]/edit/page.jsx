@@ -1,7 +1,7 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import prisma from "@/lib/client"
 import DealForm from "@/components/crm/DealForm"
+import CrmBackLink from "@/components/crm/CrmBackLink"
 import { dealDisplayTitle } from "@/lib/crm/deal"
 
 export const metadata = { title: "Редактирование сделки | CRM" }
@@ -22,14 +22,11 @@ export default async function EditDealPage({ params }) {
 
     return (
         <div className='max-w-4xl space-y-4'>
-            <div className='text-sm'>
-                <Link
-                    href={`/crm/deals/${item.id}`}
-                    className='text-gray-500 hover:text-primary_green'
-                >
-                    ← {dealDisplayTitle(item, item.counterparty?.name)}
-                </Link>
-            </div>
+            <CrmBackLink
+                fallback={`/crm/deals/${item.id}`}
+                fallbackLabel={dealDisplayTitle(item, item.counterparty?.name)}
+                className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary_green'
+            />
             <h1 className='text-2xl font-semibold text-night_green'>Редактирование сделки</h1>
             <DealForm mode='edit' initial={initial} />
         </div>

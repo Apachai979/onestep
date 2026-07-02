@@ -21,6 +21,9 @@ const COUNTERPARTY_TRACKED_FIELDS = [
     "phone",
     "email",
     "address",
+    "source",
+    "companyKind",
+    "activityArea",
     "note",
 ]
 
@@ -99,21 +102,47 @@ export async function POST(request) {
     const { data, error } = parseCounterpartyPayload(body)
     if (error) return Response.json({ error }, { status: 400 })
 
-    const created = await prisma.$transaction(async tx => {
-        const cp = await tx.counterparty.create({
-            data: {
-                ...data,
-                createdById: session.user.id ?? null,
-            },
+    if (data.inn) {
+        const existing = await prisma.counterparty.findFirst({
+            where: { inn: data.inn, kpp: data.kpp ?? null },
+            select: { id: true, name: true, type: true, inn: true, kpp: true },
         })
-        await logChange(tx, {
-            entityType: "Counterparty",
-            entityId: cp.id,
-            action: "CREATE",
-            payload: snapshotEntity(cp, COUNTERPARTY_TRACKED_FIELDS),
-            authorId: session.user.id,
+        if (existing) {
+            const kppText = data.kpp ? `, КПП ${data.kpp}` : " (без КПП)"
+            return Response.json(
+                {
+                    error: "counterparty_exists",
+                    message: `Контрагент с ИНН ${data.inn}${kppText} уже есть: «${existing.name}»`,
+                    existing,
+                },
+                { status: 409 },
+            )
+        }
+    }
+
+    try {
+        const created = await prisma.$transaction(async tx => {
+            const cp = await tx.counterparty.create({
+                data: {
+                    ...data,
+                    createdById: session.user.id ?? null,
+                },
+            })
+            await logChange(tx, {
+                entityType: "Counterparty",
+                entityId: cp.id,
+                action: "CREATE",
+                payload: snapshotEntity(cp, COUNTERPARTY_TRACKED_FIELDS),
+                authorId: session.user.id,
+            })
+            return cp
         })
-        return cp
-    })
-    return Response.json({ item: created }, { status: 201 })
+        return Response.json({ item: created }, { status: 201 })
+    } catch (err) {
+        console.error("[counterparties.POST] error:", err)
+        return Response.json(
+            { error: `Ошибка сохранения: ${err.message}` },
+            { status: 500 },
+        )
+    }
 }

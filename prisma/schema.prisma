@@ -95,6 +95,9 @@ model Counterparty {
   phone           String?
   email           String?
   address         String?
+  source          String?
+  companyKind     String?
+  activityArea    String?
   note            String?
   contacts        Contact[]
   createdById     String?
@@ -110,6 +113,7 @@ model Counterparty {
   tasksAsDistributor    Task[]    @relation("TaskDistributor")
   tasksAsEndCustomer    Task[]    @relation("TaskEndCustomer")
 
+  @@unique([inn, kpp])
   @@index([type])
   @@index([region])
   @@map("counterparties")

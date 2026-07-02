@@ -20,6 +20,7 @@ import {
 } from "react-icons/lu"
 import { onTasksChanged } from "@/lib/crm/tasks-events"
 import { ConfirmProvider, ToastProvider } from "@/components/crm/ui"
+import { CrmNavTracker } from "@/components/crm/CrmBackLink"
 
 function safeJson(text) {
     try {
@@ -230,6 +231,7 @@ export default function CrmShell({ user, role, children }) {
     return (
         <ToastProvider>
             <ConfirmProvider>
+                <CrmNavTracker />
                 <div className='relative min-h-screen bg-body_bg'>
             {/* page-wide soft brand wash so the translucent sidebar has something to filter */}
             <div

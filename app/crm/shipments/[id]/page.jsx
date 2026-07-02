@@ -9,6 +9,7 @@ import {
     isShipmentOverdue,
 } from "@/lib/crm/shipment"
 import ActivityPanel from "@/components/crm/ActivityPanel"
+import CrmBackLink from "@/components/crm/CrmBackLink"
 
 export const metadata = { title: "Отгрузка | CRM" }
 
@@ -87,12 +88,11 @@ export default async function ShipmentPage({ params }) {
 
     return (
         <div className='space-y-5'>
-            <Link
-                href='/crm/shipments'
-                className='inline-flex text-xs text-night_green/55 hover:text-brand_main'
-            >
-                ← Отгрузки
-            </Link>
+            <CrmBackLink
+                fallback='/crm/shipments'
+                fallbackLabel='Отгрузки'
+                className='inline-flex items-center gap-1 text-xs text-night_green/55 hover:text-brand_main'
+            />
 
             <div className='flex flex-wrap items-start justify-between gap-3'>
                 <div className='min-w-0'>

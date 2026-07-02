@@ -121,10 +121,12 @@ export default function ImageCarousel({ slides = baseSlides, w = "400", h = "280
                 </div>
             </div>
             <div
-                className={`max-w-[${w}px] float-right select-none space-y-2 pb-2 lg:mb-5 lg:ml-6`}
+                className='float-right select-none space-y-2 pb-2 lg:mb-5 lg:ml-6'
+                style={{ maxWidth: `${w}px` }}
             >
                 <div
-                    className={`relative max-h-[${h}px] max-w-[${w}px] overflow-hidden rounded-xl`}
+                    className='relative overflow-hidden rounded-xl'
+                    style={{ maxHeight: `${h}px`, maxWidth: `${w}px` }}
                 >
                     <div
                         className={`group absolute left-0 h-full cursor-pointer ${isZoomed ? "z-20 h-full w-full bg-gray-200/95" : ""}`}
@@ -162,12 +164,13 @@ export default function ImageCarousel({ slides = baseSlides, w = "400", h = "280
                             alt={slides[count].alt}
                             width={1920}
                             height={1080}
-                            className={` h-[${h}px] w-[${w}px] object-cover opacity-0 shadow-lg ${animating ? "opacity-0 transition-opacity duration-150 ease-in-out" : "opacity-100 transition-opacity duration-150 ease-in-out"} `}
+                            style={{ height: `${h}px`, width: `${w}px` }}
+                            className={`object-cover shadow-lg ${animating ? "opacity-0 transition-opacity duration-150 ease-in-out" : "opacity-100 transition-opacity duration-150 ease-in-out"} `}
                         ></Image>
                     </div>
                 </div>
                 <hr />
-                <div className={`flex max-w-[550px] max-w-[${w}px] justify-center space-x-2`}>
+                <div className='flex justify-center space-x-2' style={{ maxWidth: `${w}px` }}>
                     {slides.map((el, index) => {
                         return (
                             // el.id !== slides[count].id &&

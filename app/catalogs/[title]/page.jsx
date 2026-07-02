@@ -8,7 +8,7 @@ import Image from "next/image"
 
 export async function generateStaticParams() {
     return parsedData.map(set => ({
-        slug: set.href,
+        title: set.href,
     }))
 }
 

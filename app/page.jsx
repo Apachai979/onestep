@@ -84,7 +84,7 @@ export default function Home() {
                     <div className="grid gap-6 sm:gap-10 lg:grid-cols-2 lg:gap-12">
                         {features.map((feature, index) => (
                             <div
-                                key={feature.id} // Используйте уникальный идентификатор, если он доступен
+                                key={feature.title}
                                 className="relative h-72 w-96 cursor-pointer overflow-hidden rounded-2xl bg-white drop-shadow-md"
                             >
                                 <div className="absolute w-full z-20 bg-white transition-opacity duration-500 hover:opacity-0 ">
@@ -106,7 +106,7 @@ export default function Home() {
                                 </div>
                                 <ul className="absolute inset-0 z-10 mx-10 py-5 list-inside list-disc text-lg font-semibold leading-relaxed text-txtMiddle">
                                     {feature.points.map((point, i) => (
-                                        <li key={point.id} className={i === 0 && index === 1 || i === 0 && index === 3 ? "list-none pb-3" : ""}>
+                                        <li key={point} className={i === 0 && index === 1 || i === 0 && index === 3 ? "list-none pb-3" : ""}>
                                             {point}
                                         </li>
                                     ))}

@@ -6,7 +6,7 @@ export default function TheHeader() {
     return (
         <header className="sticky top-0 z-20 bg-white sm920:bg-body_bg w-full">
             <nav className="flex justify-center">
-                <div className="flex min-h-16 max-w-[1200px] flex-1 items-center justify-between whitespace-nowrap sm:whitespace-normal bg-white px-6 sm920:bg-body_bg sm920:px-2">
+                <div className="flex min-h-16 max-w-[1200px] flex-1 items-center justify-between whitespace-nowrap sm:whitespace-normal bg-white px-6 sm920:bg-body_bg sm920:px-2 sm920:pr-28">
                     <Link href="/" className="flex-none">
                         <span className="sr-only">Onestep Logo</span>
                         <Image

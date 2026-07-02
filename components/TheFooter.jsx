@@ -9,14 +9,14 @@ export default function TheFooter() {
         { href: "/partners", label: "Партнерам" },
         { href: "/partners/specialist", label: "Специалисту" },
         { href: "/partners/doctors", label: "Главному врачу" },
-        { href: "/reviews", label: "Отзывы" },
         { href: "/academy", label: "Академия" },
         { href: "/about", label: "О Компании" },
         { href: "/partners/patient", label: "Пациенту" },
         { href: "/catalogs", label: "Каталог" },
-        { href: "/documents", label: "Документы" },
+        { href: "/documentation", label: "Документы" },
         { href: "/manufacture", label: "Производство" },
-        { href: "/vacancies", label: "Вакансии" },
+        { href: "/contacts", label: "Контакты" },
+        { href: "/feedbackform", label: "Обратная связь" },
     ];
 
     const socialLinks = [
@@ -32,7 +32,7 @@ export default function TheFooter() {
                     {/* Логотип */}
                     <div className="flex-shrink-0">
                         <Link href="/">
-                            <Image src="/logo_name.svg" alt="OneStep Logo" width={110} height={47} priority />
+                            <Image src="/logo_name.svg" alt="OneStep Logo" width={110} height={47} />
                         </Link>
                     </div>
 

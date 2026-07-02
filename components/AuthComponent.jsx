@@ -8,7 +8,7 @@ export default function AuthComponent() {
     const { data: session } = useSession()
 
     return (
-        <div className='container mx-auto px-4'>
+        <div className='flex-none'>
             {session ? (
                 <div className='flex items-center justify-end space-x-3'>
                     <Link

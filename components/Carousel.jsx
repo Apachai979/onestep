@@ -68,7 +68,7 @@ export default function Carousel() {
                         className={slide === el.id ? 'absolute right-0 object-cover h-120 w-auto z-10 opacity-1 transition-opacity duration-1000' : 'absolute right-0 object-cover h-120 w-auto z-10 opacity-0 transition-opacity duration-1000'}
                         width={1043}
                         height={569}
-                        priority
+                        priority={el.id === 1}
                     />
                 ))}
 

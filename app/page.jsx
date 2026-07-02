@@ -204,7 +204,6 @@ export default function Home() {
                                 className='h-auto w-auto object-cover object-center'
                                 width={160}
                                 height={70}
-                                priority
                             />
                         </div>
                     ))}

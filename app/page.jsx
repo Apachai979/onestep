@@ -69,7 +69,7 @@ export default function Home() {
 
             {/* nextblock */}
 
-            <h1 className='container mx-auto p-x-4 my-14 text-center text-3xl font-semibold text-night_green'>
+            <h1 className='container mx-auto px-4 my-14 text-center text-3xl font-semibold text-night_green'>
                 OneStep —{" "}
                 <span className='text-primary_green'>
                     российский производитель медицинских <br /> одноразовых перевязочных материалов
@@ -125,12 +125,12 @@ export default function Home() {
 
             <div className='container mx-auto px-4'>
                 <div className="flex justify-center">
-                    <div className='flex max-w-[1000px] flex-col items-center justify-center space-y-5 rounded-3xl bg-white p-14 drop-shadow-lg lg:shrink lg:flex-row lg:space-y-0 xl:w-[1200px]'>
+                    <div className='flex max-w-[1000px] flex-col items-center justify-center space-y-5 rounded-3xl bg-white p-6 sm:p-14 drop-shadow-lg lg:shrink lg:flex-row lg:space-y-0 xl:w-[1200px]'>
                         <div className='flex flex-1 justify-center'>
                             <Image
                                 src='/home/worldexp.png'
                                 alt='Neoset'
-                                className='h-[330px] w-[330px] rounded-3xl object-cover object-center'
+                                className='aspect-square w-full max-w-[330px] rounded-3xl object-cover object-center'
                                 width={1280}
                                 height={720}
                             ></Image>
@@ -149,7 +149,7 @@ export default function Home() {
                             </h2>
                             <Link
                                 href='/about'
-                                className='min-w-80 rounded-full border-[3px] border-mainGreen bg-white py-3 text-center text-xl sm:text-2xl text-mainGreen transition duration-300 hover:bg-mainGreen hover:text-white'
+                                className='w-full max-w-80 rounded-full border-[3px] border-mainGreen bg-white py-3 text-center text-xl sm:text-2xl text-mainGreen transition duration-300 hover:bg-mainGreen hover:text-white'
                             >
                                 Подробнее компании
                             </Link>

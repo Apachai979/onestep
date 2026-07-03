@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
     SHIPMENT_STATUS_COLORS,
     SHIPMENT_STATUS_LABELS,
@@ -82,7 +82,7 @@ export default function DealShipmentsSection({
     const [error, setError] = useState("")
     const [saving, setSaving] = useState(false)
 
-    async function load() {
+    const load = useCallback(async () => {
         setLoading(true)
         try {
             const r = await fetch(`/api/crm/shipments?dealId=${dealId}`)
@@ -92,11 +92,11 @@ export default function DealShipmentsSection({
             setShipments([])
         }
         setLoading(false)
-    }
+    }, [dealId])
 
     useEffect(() => {
         load()
-    }, [dealId])
+    }, [load])
 
     useEffect(() => {
         if (!counterpartyId) return

@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import {
     TASK_STATUS_COLORS,
     TASK_STATUS_LABELS,
@@ -46,7 +46,7 @@ export default function RelatedTasksSection({
     const [closing, setClosing] = useState(null)
     const [error, setError] = useState("")
 
-    async function load() {
+    const load = useCallback(async () => {
         setError("")
         const params = new URLSearchParams()
         if (relationKind === "deal") params.set("dealId", relationId)
@@ -62,11 +62,11 @@ export default function RelatedTasksSection({
             return
         }
         setItems(data.items || [])
-    }
+    }, [relationKind, relationId])
 
     useEffect(() => {
         load()
-    }, [relationKind, relationId])
+    }, [load])
 
     useEffect(() => {
         if (onCountChange && items) {

@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 function fullName(c) {
     return (
@@ -29,7 +29,7 @@ export default function ProjectContactsPicker({
     const [error, setError] = useState("")
     const [saving, setSaving] = useState(false)
 
-    async function load() {
+    const load = useCallback(async () => {
         if (!counterpartyId) {
             setContacts([])
             return
@@ -43,13 +43,13 @@ export default function ProjectContactsPicker({
             setContacts([])
         }
         setLoading(false)
-    }
+    }, [counterpartyId])
 
     useEffect(() => {
         load()
         setShowAdd(false)
         setError("")
-    }, [counterpartyId])
+    }, [load])
 
     function toggle(id) {
         const set = new Set(selectedIds)

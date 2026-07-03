@@ -75,7 +75,10 @@ export default function CrmShell({ user, role, children }) {
 
     const overdue = counts?.mineOverdue || 0
     const open = counts?.mineOpen || 0
-    const taskBadge = open > 0 ? { count: open, urgent: overdue > 0 } : null
+    const taskBadge = useMemo(
+        () => (open > 0 ? { count: open, urgent: overdue > 0 } : null),
+        [open, overdue],
+    )
 
     const navItems = useMemo(() => {
         const base = [

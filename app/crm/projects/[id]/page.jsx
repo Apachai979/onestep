@@ -8,6 +8,7 @@ import { DEAL_STATUS_LABELS } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
 import { looksLikeUrl } from "@/lib/crm/project"
 import ProjectItemsSection from "@/components/crm/ProjectItemsSection"
+import { CardRow, MobileCard } from "@/components/crm/ui/MobileCards"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import ChangeHistorySection from "@/components/crm/ChangeHistorySection"
@@ -189,7 +190,38 @@ export default async function ProjectPage({ params }) {
                                 Связанных сделок ещё нет. Используйте «+ Создать сделку» в шапке.
                             </p>
                         ) : (
-                            <div className='overflow-x-auto rounded-lg border border-brand_soft/40'>
+                            <>
+                            {/* Мобильные карточки */}
+                            <div className='space-y-3 md:hidden'>
+                                {item.deals.map(d => (
+                                    <MobileCard key={d.id}>
+                                        <div className='flex items-start justify-between gap-2'>
+                                            <Link
+                                                href={`/crm/deals/${d.id}`}
+                                                className='min-w-0 font-medium text-night_green hover:text-brand_main'
+                                            >
+                                                {d.title || `Сделка с ${d.counterparty?.name || "клиентом"}`}
+                                            </Link>
+                                            <span className='shrink-0 rounded-full bg-brand_soft/40 px-2 py-0.5 text-xs font-medium text-night_green/80'>
+                                                {DEAL_STATUS_LABELS[d.status] || d.status}
+                                            </span>
+                                        </div>
+                                        <div className='mt-2 space-y-1'>
+                                            <CardRow label='Клиент'>
+                                                {d.counterparty?.name || "—"}
+                                            </CardRow>
+                                            <CardRow label='Менеджер'>{fullName(d.manager)}</CardRow>
+                                            <CardRow label='Сумма'>
+                                                <span className='font-medium text-gray-800'>
+                                                    {formatMoney(d.totalAmount)}
+                                                </span>
+                                            </CardRow>
+                                        </div>
+                                    </MobileCard>
+                                ))}
+                            </div>
+
+                            <div className='hidden overflow-x-auto rounded-lg border border-brand_soft/40 md:block'>
                                 <table className='w-full text-sm'>
                                     <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
                                         <tr>
@@ -231,6 +263,7 @@ export default async function ProjectPage({ params }) {
                                     </tbody>
                                 </table>
                             </div>
+                            </>
                         )}
                     </section>
                 </div>

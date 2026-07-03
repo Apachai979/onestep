@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { CHANGE_ACTION_LABELS, ENTITY_LABELS, fieldLabel } from "@/lib/crm/change-log"
 
 function safeJson(text) {
@@ -40,7 +40,7 @@ export default function ChangeHistorySection({ entityType, entityId, includeChil
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
 
-    async function load() {
+    const load = useCallback(async () => {
         setError("")
         const params = new URLSearchParams({ entityType, entityId })
         if (includeChildren) params.set("includeChildren", "1")
@@ -53,11 +53,11 @@ export default function ChangeHistorySection({ entityType, entityId, includeChil
             return
         }
         setItems(data.items || [])
-    }
+    }, [entityType, entityId, includeChildren])
 
     useEffect(() => {
         if (open && items === null) load()
-    }, [open])
+    }, [open, items, load])
 
     return (
         <section className='rounded-xl border border-brand_soft/40 bg-white/70'>

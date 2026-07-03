@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { TASK_TYPE_MAP } from "@/lib/crm/task"
 import { onTasksChanged } from "@/lib/crm/tasks-events"
 import TaskTypeIcon from "./TaskTypeIcon"
@@ -93,7 +93,7 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
         return { start: gridStart, end: addDays(gridStart, 42) }
     }, [view, cursor])
 
-    async function load() {
+    const load = useCallback(async () => {
         const params = new URLSearchParams()
         params.set("from", ymd(range.start))
         params.set("to", ymd(addDays(range.end, -1)))
@@ -108,15 +108,15 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
         }
         setError("")
         setItems(data.items || [])
-    }
+    }, [range])
 
     useEffect(() => {
         load()
-    }, [range.start.getTime(), range.end.getTime()])
+    }, [load])
 
     useEffect(() => {
         return onTasksChanged(() => load())
-    }, [range.start.getTime(), range.end.getTime()])
+    }, [load])
 
     const tasksByDay = useMemo(() => {
         const map = new Map()

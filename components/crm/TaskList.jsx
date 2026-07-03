@@ -1,6 +1,6 @@
 "use client"
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { LuListTodo } from "react-icons/lu"
 import {
     TASK_STATUSES,
@@ -87,7 +87,7 @@ export default function TaskList({ currentUserId, currentUserRole }) {
         [users, currentUserId],
     )
 
-    async function load() {
+    const load = useCallback(async () => {
         const params = new URLSearchParams()
         if (filters.status) params.set("status", filters.status)
         if (filters.type) params.set("type", filters.type)
@@ -112,15 +112,15 @@ export default function TaskList({ currentUserId, currentUserRole }) {
             return
         }
         setItems(data.items || [])
-    }
+    }, [filters, todayOnly])
 
     useEffect(() => {
         load()
-    }, [filters, todayOnly])
+    }, [load])
 
     useEffect(() => {
         return onTasksChanged(() => load())
-    }, [filters, todayOnly])
+    }, [load])
 
     function canClose(t) {
         if (currentUserRole === "ADMIN") return true

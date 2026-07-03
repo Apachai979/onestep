@@ -183,7 +183,7 @@ export default function AttachmentsSection({
                 </p>
             )}
 
-            <ul className='grid gap-2 sm:grid-cols-2'>
+            <ul className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
                 {items?.map(att => {
                     const key = fileIconKey(att.mimeType)
                     const Icon = ICONS[key]

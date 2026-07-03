@@ -17,7 +17,7 @@ export default function ImageModal({ children }) {
                 if (onDismiss) onDismiss()
             }
         },
-        [onDismiss, overlay, wrapper]
+        [onDismiss]
     )
 
     const onKeyDown = useCallback(

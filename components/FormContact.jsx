@@ -1,6 +1,6 @@
 'use client'
 import { useState } from "react";
-import { FaPhone } from "react-icons/fa6";
+import { FaPhone, FaCircleCheck } from "react-icons/fa6";
 import { ImSpinner2 } from "react-icons/im";
 
 export default function FormContact({ titleForForm }) {
@@ -100,13 +100,17 @@ export default function FormContact({ titleForForm }) {
 
     return (
         success ?
-            <div className="flex justify-center items-center h-500">
-                <h2 className="text-xl text-primary_green">Данные успешно отправлены!</h2>
+            <div className="flex min-h-60 w-full flex-col items-center justify-center space-y-3 py-8 text-center animate-apparition">
+                <FaCircleCheck className="h-12 w-12 text-primary_green" />
+                <h2 className="text-xl font-semibold text-night_green">Заявка отправлена!</h2>
+                <p className="max-w-72 text-sm text-gray-500">
+                    Спасибо за обращение — наш специалист свяжется с вами в ближайшее время.
+                </p>
             </div>
             :
             <section>
 
-                <h1 className="text-2xl mb-4 text-center">{titleForForm}</h1>
+                <h1 className="mb-5 text-center text-2xl font-semibold text-night_green">{titleForForm}</h1>
                 <form onSubmit={handleSubmit} className=" space-y-4 max-w-96">
 
                     <div className="relative">
@@ -143,11 +147,15 @@ export default function FormContact({ titleForForm }) {
                     </div>
 
 
-                    <button type="submit" className="py-4 bg-primary_green text-xl shadow-md text-white w-full rounded-full cursor-pointer transition duration-300 hover:bg-contrast_green active:shadow-inner active:shadow-dark_green active:scale-95">
+                    <button
+                        type="submit"
+                        disabled={spinner}
+                        className="w-full cursor-pointer rounded-full bg-primary_green py-3 text-lg font-semibold text-white shadow-md transition duration-300 hover:bg-contrast_green active:scale-95 active:shadow-inner active:shadow-dark_green disabled:cursor-not-allowed disabled:opacity-70"
+                    >
                         {spinner
                             ? (
                                 <div className="flex justify-center items-center">
-                                    <ImSpinner2 className="animate-spin h-7 w-7 mr-3" />
+                                    <ImSpinner2 className="animate-spin h-6 w-6 mr-3" />
                                     <span>Отправляем...</span>
                                 </div>) : (
                                 <span>Отправить</span>
@@ -156,8 +164,12 @@ export default function FormContact({ titleForForm }) {
                     </button>
 
                     {submitError && (
-                        <p className="text-center text-red-500">{submitError}</p>
+                        <p className="text-center text-sm text-red-500">{submitError}</p>
                     )}
+
+                    <p className="text-center text-xs leading-snug text-gray-400">
+                        Нажимая «Отправить», вы соглашаетесь на обработку персональных данных.
+                    </p>
                 </form>
             </section>
     )

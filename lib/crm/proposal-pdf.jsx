@@ -405,6 +405,8 @@ export function ProposalDoc({ data }) {
         <Document>
             <Page size='A4' style={s.page}>
                 <View style={s.header} fixed>
+                    {/* Image из @react-pdf/renderer — alt в PDF не существует */}
+                    {/* eslint-disable-next-line jsx-a11y/alt-text */}
                     {logoSrc && <Image src={logoSrc} style={s.logo} />}
                     <View style={s.sellerAddr}>
                         <Text>{seller.address}</Text>

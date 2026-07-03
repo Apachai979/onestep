@@ -237,14 +237,27 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
                 />
             )}
             {view === "week" && (
-                <HoursGrid
-                    days={Array.from({ length: 7 }, (_, i) => addDays(range.start, i))}
-                    items={items}
-                    tasksByDay={tasksByDay}
-                    onPick={setClosing}
-                    canClose={canClose}
-                    onCreateAt={onCreateAt}
-                />
+                <>
+                    {/* Мобильная повестка: дни недели вертикальным списком */}
+                    <div className='md:hidden'>
+                        <WeekAgenda
+                            days={Array.from({ length: 7 }, (_, i) => addDays(range.start, i))}
+                            tasksByDay={tasksByDay}
+                            onPick={setClosing}
+                            onCreateAt={onCreateAt}
+                        />
+                    </div>
+                    <div className='hidden md:block'>
+                        <HoursGrid
+                            days={Array.from({ length: 7 }, (_, i) => addDays(range.start, i))}
+                            items={items}
+                            tasksByDay={tasksByDay}
+                            onPick={setClosing}
+                            canClose={canClose}
+                            onCreateAt={onCreateAt}
+                        />
+                    </div>
+                </>
             )}
             {view === "day" && (
                 <HoursGrid
@@ -475,7 +488,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
 
     return (
         <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
-            <div className='min-w-[640px]'>
+            <div className={days.length > 1 ? "min-w-[640px]" : ""}>
                 {/* Шапка с датами */}
                 <div
                     className='grid border-b border-gray-200'
@@ -655,6 +668,59 @@ function TimedTask({ task, pos, onClick }) {
                 {timeStr} · {fullName(task.assignee)}
             </div>
         </button>
+    )
+}
+
+function WeekAgenda({ days, tasksByDay, onPick, onCreateAt }) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return (
+        <div className='overflow-hidden rounded-xl border border-brand_soft/40 bg-white/70'>
+            {days.map((d, i) => {
+                const list = [...(tasksByDay.get(ymd(d)) || [])].sort(
+                    (a, b) =>
+                        (b.allDay ? 1 : 0) - (a.allDay ? 1 : 0) ||
+                        new Date(a.startAt) - new Date(b.startAt),
+                )
+                const isToday = isSameDay(d, today)
+                return (
+                    <div key={i} className='border-b border-brand_soft/30 last:border-b-0'>
+                        <div
+                            className={`flex items-center justify-between px-3 py-1.5 text-xs uppercase ${
+                                isToday
+                                    ? "bg-brand_main/10 font-semibold text-brand_main"
+                                    : "bg-gray-50 text-gray-500"
+                            }`}
+                        >
+                            <span>
+                                {DOW_SHORT[(d.getDay() + 6) % 7]},{" "}
+                                {d.getDate()}.{String(d.getMonth() + 1).padStart(2, "0")}
+                            </span>
+                            <button
+                                type='button'
+                                onClick={() => onCreateAt?.({ date: ymd(d) })}
+                                className='normal-case text-primary_green'
+                            >
+                                + задача
+                            </button>
+                        </div>
+                        <div className='space-y-1 p-2'>
+                            {list.length === 0 && (
+                                <p className='px-1 text-xs text-gray-400'>Нет задач</p>
+                            )}
+                            {list.map(t => (
+                                <TaskChip
+                                    key={t.id}
+                                    task={t}
+                                    detailed
+                                    onClick={() => onPick(t)}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )
+            })}
+        </div>
     )
 }
 

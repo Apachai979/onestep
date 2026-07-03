@@ -346,7 +346,7 @@ export default function Manufacture() {
                 <div className='container mx-auto max-w-[1200px] px-4'>
                     <div className='flex flex-col justify-center lg:flex-row'>
                         <div className='flex flex-1 flex-col lg:items-center'>
-                            <h1 className='w-[420px] whitespace-nowrap pt-1 text-center text-5xl font-semibold text-txtGreen md:text-left'>
+                            <h1 className='pt-1 text-center text-4xl font-semibold text-txtGreen sm:text-5xl md:w-[420px] md:whitespace-nowrap md:text-left'>
                                 О стерилизации
                             </h1>
                             <p className='mt-5 text-sm font-semibold text-gray-600 lg:w-[420px] lg:text-center'>

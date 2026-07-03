@@ -98,7 +98,7 @@ export default async function DealPage({ params }) {
                             >
                                 {item.sourceProject.internalName}
                             </Link>{" "}
-                            <span className='text-night_green/50'>
+                            <span className='break-all text-night_green/50'>
                                 (аукцион {item.sourceProject.externalAuctionId})
                             </span>
                         </p>
@@ -126,7 +126,7 @@ export default async function DealPage({ params }) {
             </div>
 
             {/* Two-column body */}
-            <div className='grid items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]'>
+            <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]'>
                 <div className='min-w-0 space-y-5'>
                     <Section title='Параметры'>
                         <Row label='Сумма сделки' value={formatMoney(item.totalAmount)} />

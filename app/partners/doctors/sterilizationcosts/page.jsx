@@ -3,10 +3,11 @@ import Block from "@/components/Block"
 export default function Sterilizationcosts() {
     return (
         <Block>
-            <div className="flex justify-center py-4 h-screen">
-                <div className="flex flex-col text-lg">
+            <div className="flex justify-center py-4">
+                <div className="flex w-full max-w-4xl flex-col text-lg">
                     <h1 className="text-2xl font-semibold py-3">Применение готовых стерильных материалов и инструментов существенно снижает данный вид расходов.</h1>
-                    <table class="table-auto ">
+                    <div className="w-full overflow-x-auto">
+                    <table className="w-full table-auto">
                         <thead>
                             <tr className="border border-b-gray-600 border-t-0 border-l-0 border-r-0">
                                 <th className="border border-r-gray-600 border-t-0 border-b-0 border-l-0 "> </th>
@@ -37,6 +38,7 @@ export default function Sterilizationcosts() {
                             </tr>
                         </tbody>
                     </table>
+                    </div>
                     <p className="py-3 font-semibold">Cтатья на стерилизацию - одна из самых затратных статей расходов в клинике.</p>
                 </div>
             </div>

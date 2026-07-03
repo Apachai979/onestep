@@ -63,6 +63,7 @@ export default function TaskList({ currentUserId, currentUserRole }) {
         type: "",
         assigneeId: "",
     })
+    const [todayOnly, setTodayOnly] = useState(false)
     const [users, setUsers] = useState([])
 
     useEffect(() => {
@@ -91,6 +92,16 @@ export default function TaskList({ currentUserId, currentUserRole }) {
         if (filters.status) params.set("status", filters.status)
         if (filters.type) params.set("type", filters.type)
         if (filters.assigneeId) params.set("assigneeId", filters.assigneeId)
+        if (todayOnly) {
+            const now = new Date()
+            const y = now.getFullYear()
+            const m = String(now.getMonth() + 1).padStart(2, "0")
+            const d = String(now.getDate()).padStart(2, "0")
+            const today = `${y}-${m}-${d}`
+            params.set("from", today)
+            params.set("to", today)
+            params.set("mine", "1")
+        }
         setError("")
         const r = await fetch(`/api/crm/tasks?${params.toString()}`)
         const text = await r.text()
@@ -105,11 +116,11 @@ export default function TaskList({ currentUserId, currentUserRole }) {
 
     useEffect(() => {
         load()
-    }, [filters])
+    }, [filters, todayOnly])
 
     useEffect(() => {
         return onTasksChanged(() => load())
-    }, [filters])
+    }, [filters, todayOnly])
 
     function canClose(t) {
         if (currentUserRole === "ADMIN") return true
@@ -188,6 +199,20 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                         title='Показать только мои задачи'
                     >
                         Только мои
+                    </button>
+                )}
+                {currentUserId && (
+                    <button
+                        type='button'
+                        onClick={() => setTodayOnly(prev => !prev)}
+                        className={`rounded-lg border px-3 py-2 text-sm shadow-sm transition ${
+                            todayOnly
+                                ? "border-primary_green bg-brand_main text-white"
+                                : "border-brand_soft/60 text-gray-700 hover:bg-brand_soft/30"
+                        }`}
+                        title='Мои задачи на сегодня'
+                    >
+                        На сегодня
                     </button>
                 )}
             </div>

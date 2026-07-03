@@ -182,18 +182,18 @@ export default function ProposalView({
 
     return (
         <div className='space-y-6 print:space-y-0'>
-            <div className='flex items-center justify-between gap-3 print:hidden'>
+            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between print:hidden'>
                 <CrmBackLink
                     fallback={`/crm/deals/${dealId}`}
                     fallbackLabel='К сделке'
-                    className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-brand_main'
+                    className='inline-flex items-center gap-1 self-start whitespace-nowrap text-sm text-gray-500 hover:text-brand_main'
                 />
-                <div className='flex flex-wrap gap-2'>
+                <div className='flex flex-col gap-2 sm:flex-row sm:flex-wrap'>
                     <button
                         type='button'
                         onClick={handleSaveToDeal}
                         disabled={saving}
-                        className='inline-flex items-center gap-1.5 rounded-lg border border-brand_main/40 bg-white px-4 py-2 text-sm font-semibold text-brand_main shadow-sm transition hover:bg-brand_main/5 disabled:opacity-50'
+                        className='inline-flex items-center justify-center gap-1.5 rounded-lg border border-brand_main/40 bg-white px-4 py-2 text-sm font-semibold text-brand_main shadow-sm transition hover:bg-brand_main/5 disabled:opacity-50'
                         title='Сформировать PDF и приложить к документам сделки'
                     >
                         <LuSave className={`h-4 w-4 ${saving ? "animate-spin" : ""}`} />
@@ -202,7 +202,7 @@ export default function ProposalView({
                     <button
                         type='button'
                         onClick={handlePrint}
-                        className='inline-flex items-center gap-1.5 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
+                        className='inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                         title='В открывшемся диалоге выберите принтер «Сохранить как PDF»'
                     >
                         <LuPrinter className='h-4 w-4' />
@@ -317,8 +317,10 @@ export default function ProposalView({
                 </div>
             </section>
 
+            {/* На мобильном КП листается по горизонтали как документ A4 */}
+            <div className='overflow-x-auto rounded-xl print:overflow-visible'>
             <article
-                className='proposal mx-auto max-w-[210mm] bg-white px-10 py-8 text-[10.5pt] leading-snug text-black shadow-sm print:max-w-none print:p-0 print:shadow-none'
+                className='proposal mx-auto min-w-[210mm] max-w-[210mm] bg-white px-10 py-8 text-[10.5pt] leading-snug text-black shadow-sm print:min-w-0 print:max-w-none print:p-0 print:shadow-none'
             >
                 <header className='flex items-start justify-between gap-6 border-b border-black/10 pb-4'>
                     <div className='shrink-0'>
@@ -466,6 +468,7 @@ export default function ProposalView({
                     {form.senderEmail && <p>Email: {form.senderEmail}</p>}
                 </div>
             </article>
+            </div>
 
             <style jsx global>{`
                 .proposal table th,

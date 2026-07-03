@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { formatMoney } from "@/lib/crm/format"
-import { useConfirm, useToast } from "@/components/crm/ui"
+import { CardRow, MobileCard, useConfirm, useToast } from "@/components/crm/ui"
 
 const EMPTY = { sku: "", name: "", quantity: "1", unitPrice: "", amount: "0", productId: "" }
 
@@ -210,7 +210,51 @@ export default function DealItemsSection({ dealId, initialItems }) {
                 )}
             </div>
 
-            <div className='overflow-x-auto rounded-lg border border-brand_soft/30'>
+            {/* Мобильные карточки */}
+            <div className='space-y-3 md:hidden'>
+                {items.length === 0 && (
+                    <p className='rounded-lg border border-brand_soft/30 px-3 py-4 text-center text-sm text-gray-400'>
+                        Позиций пока нет
+                    </p>
+                )}
+                {items.map(it => (
+                    <MobileCard key={it.id}>
+                        <div className='flex items-start justify-between gap-2'>
+                            <span className='font-medium text-night_green'>
+                                {it.sku || "—"}
+                            </span>
+                            {it.productId && (
+                                <span className='shrink-0 rounded-full bg-light_green/30 px-2 py-0.5 text-[10px] font-medium text-night_green'>
+                                    из справочника
+                                </span>
+                            )}
+                        </div>
+                        <p className='mt-1 text-sm text-gray-800'>{it.name}</p>
+                        <div className='mt-2 space-y-1'>
+                            <CardRow label='Кол-во'>{toFormValue(it.quantity)}</CardRow>
+                            <CardRow label='Сумма'>{formatMoney(it.amount)}</CardRow>
+                        </div>
+                        <div className='mt-3 flex justify-end gap-2'>
+                            <button
+                                type='button'
+                                onClick={() => startEdit(it)}
+                                className='rounded-md border border-brand_soft/60 px-3 py-1.5 text-xs text-gray-700 hover:bg-brand_soft/30'
+                            >
+                                Изменить
+                            </button>
+                            <button
+                                type='button'
+                                onClick={() => handleDelete(it.id)}
+                                className='rounded-md border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50'
+                            >
+                                Удалить
+                            </button>
+                        </div>
+                    </MobileCard>
+                ))}
+            </div>
+
+            <div className='hidden overflow-x-auto rounded-lg border border-brand_soft/30 md:block'>
                 <table className='w-full text-sm'>
                     <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
                         <tr>

@@ -219,7 +219,7 @@ export default function AttachmentsSection({
                                 <button
                                     type='button'
                                     onClick={() => removeAttachment(att)}
-                                    className='inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-night_green/40 opacity-0 transition group-hover:opacity-100 hover:bg-red-50 hover:text-red-600'
+                                    className='inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-night_green/40 transition hover:bg-red-50 hover:text-red-600 md:opacity-0 md:group-hover:opacity-100'
                                     title='Удалить'
                                 >
                                     <LuTrash2 className='h-3.5 w-3.5' />

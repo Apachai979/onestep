@@ -1,7 +1,9 @@
 "use client"
-import { useEffect, useState } from "react"
-import { LuCheck, LuTrash2, LuUndo2 } from "react-icons/lu"
+import { useEffect, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
+import { LuBriefcase, LuCheck, LuTrash2, LuUndo2 } from "react-icons/lu"
 import { CardListSkeleton, CardRow, EmptyState, MobileCard, useConfirm, useToast } from "@/components/crm/ui"
+import SearchableSelect from "./SearchableSelect"
 
 const DATE_FMT = new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
@@ -20,9 +22,11 @@ const FILTERS = [
 export default function LeadsList() {
     const toast = useToast()
     const confirm = useConfirm()
+    const router = useRouter()
     const [items, setItems] = useState(null)
     const [status, setStatus] = useState("NEW")
     const [error, setError] = useState("")
+    const [converting, setConverting] = useState(null)
 
     useEffect(() => {
         const controller = new AbortController()
@@ -169,7 +173,17 @@ export default function LeadsList() {
                                     {lead.message}
                                 </p>
                             )}
-                            <div className='mt-3 flex justify-end gap-2'>
+                            <div className='mt-3 flex flex-wrap justify-end gap-2'>
+                                {lead.status === "NEW" && (
+                                    <button
+                                        type='button'
+                                        onClick={() => setConverting(lead)}
+                                        className='inline-flex items-center gap-1.5 rounded-md bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand_main/90'
+                                    >
+                                        <LuBriefcase className='h-4 w-4' />
+                                        В сделку
+                                    </button>
+                                )}
                                 {lead.status === "NEW" ? (
                                     <button
                                         type='button'
@@ -264,6 +278,16 @@ export default function LeadsList() {
                                         </span>
                                     </td>
                                     <td className='whitespace-nowrap px-4 py-3 text-right'>
+                                        {lead.status === "NEW" && (
+                                            <button
+                                                type='button'
+                                                onClick={() => setConverting(lead)}
+                                                title='Создать сделку из заявки'
+                                                className='inline-flex h-8 w-8 items-center justify-center rounded-md text-brand_main hover:bg-brand_main/10'
+                                            >
+                                                <LuBriefcase className='h-4 w-4' />
+                                            </button>
+                                        )}
                                         {lead.status === "NEW" ? (
                                             <button
                                                 type='button'
@@ -299,6 +323,223 @@ export default function LeadsList() {
                 </div>
                 </>
             )}
+
+            {converting && (
+                <ConvertDialog
+                    lead={converting}
+                    onClose={() => setConverting(null)}
+                    onDone={dealId => {
+                        setConverting(null)
+                        toast.success("Сделка создана", { title: "Заявка сконвертирована" })
+                        router.push(`/crm/deals/${dealId}`)
+                    }}
+                />
+            )}
+        </div>
+    )
+}
+
+const CP_TYPES = [
+    { value: "END_CUSTOMER", label: "Конечный потребитель" },
+    { value: "DISTRIBUTOR", label: "Дистрибьютор" },
+]
+
+function ConvertDialog({ lead, onClose, onDone }) {
+    const toast = useToast()
+    const [mode, setMode] = useState("new")
+    const [counterparties, setCounterparties] = useState([])
+    const [counterpartyId, setCounterpartyId] = useState("")
+    const [form, setForm] = useState({
+        name: lead.company || `${lead.firstName} ${lead.lastName || ""}`.trim(),
+        type: "END_CUSTOMER",
+        region: "",
+    })
+    const [saving, setSaving] = useState(false)
+    const [error, setError] = useState("")
+
+    useEffect(() => {
+        fetch("/api/crm/counterparties")
+            .then(r => (r.ok ? r.json() : { items: [] }))
+            .then(d => setCounterparties(d.items || []))
+            .catch(() => setCounterparties([]))
+    }, [])
+
+    const options = useMemo(
+        () =>
+            counterparties.map(c => ({
+                id: c.id,
+                label: c.name,
+                sublabel: `${
+                    c.type === "DISTRIBUTOR" ? "Дистрибьютор" : "Конечный потребитель"
+                }${c.region ? " · " + c.region : ""}`,
+                search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
+            })),
+        [counterparties],
+    )
+
+    async function handleSubmit(e) {
+        e.preventDefault()
+        setError("")
+        if (mode === "existing" && !counterpartyId) {
+            setError("Выберите контрагента")
+            return
+        }
+        setSaving(true)
+        try {
+            const payload =
+                mode === "existing"
+                    ? { counterpartyId }
+                    : { newCounterparty: form }
+            const res = await fetch(`/api/crm/leads/${lead.id}/convert`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            })
+            const data = await res.json().catch(() => ({}))
+            if (!res.ok) {
+                setError(data?.error || "Не удалось создать сделку")
+                return
+            }
+            onDone(data.dealId)
+        } catch (err) {
+            toast.error(err?.message || "Сбой сети")
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    return (
+        <div
+            className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'
+            onClick={onClose}
+        >
+            <div
+                onClick={e => e.stopPropagation()}
+                className='max-h-[90vh] w-full max-w-lg overflow-auto rounded-xl bg-white p-5 shadow-2xl'
+            >
+                <h2 className='mb-1 text-lg font-semibold text-night_green'>
+                    Сделка из заявки
+                </h2>
+                <p className='mb-4 text-sm text-night_green/60'>
+                    {lead.firstName}
+                    {lead.lastName ? ` ${lead.lastName}` : ""}
+                    {lead.company ? ` · ${lead.company}` : ""}
+                    {lead.phone ? ` · ${lead.phone}` : ""}
+                </p>
+
+                <div className='mb-4 flex gap-1 rounded-lg border border-brand_soft/40 bg-gray-50 p-1'>
+                    {[
+                        ["new", "Новый контрагент"],
+                        ["existing", "Существующий"],
+                    ].map(([m, label]) => (
+                        <button
+                            key={m}
+                            type='button'
+                            onClick={() => setMode(m)}
+                            className={`flex-1 rounded-md px-3 py-1.5 text-sm transition ${
+                                mode === m
+                                    ? "bg-brand_main font-medium text-white"
+                                    : "text-gray-700 hover:bg-brand_soft/30"
+                            }`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+
+                <form onSubmit={handleSubmit} className='space-y-3'>
+                    {mode === "existing" ? (
+                        <div>
+                            <label className='mb-1 block text-xs text-gray-600'>
+                                Контрагент
+                            </label>
+                            <SearchableSelect
+                                value={counterpartyId}
+                                onChange={setCounterpartyId}
+                                options={options}
+                                placeholder='Название, ИНН, регион'
+                                emptyLabel='Контрагент не найден'
+                            />
+                        </div>
+                    ) : (
+                        <>
+                            <div>
+                                <label className='mb-1 block text-xs text-gray-600'>
+                                    Название *
+                                </label>
+                                <input
+                                    value={form.name}
+                                    onChange={e =>
+                                        setForm(p => ({ ...p, name: e.target.value }))
+                                    }
+                                    required
+                                    className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                />
+                            </div>
+                            <div className='grid gap-3 sm:grid-cols-2'>
+                                <div>
+                                    <label className='mb-1 block text-xs text-gray-600'>
+                                        Тип
+                                    </label>
+                                    <select
+                                        value={form.type}
+                                        onChange={e =>
+                                            setForm(p => ({ ...p, type: e.target.value }))
+                                        }
+                                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                    >
+                                        {CP_TYPES.map(t => (
+                                            <option key={t.value} value={t.value}>
+                                                {t.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className='mb-1 block text-xs text-gray-600'>
+                                        Регион *
+                                    </label>
+                                    <input
+                                        value={form.region}
+                                        onChange={e =>
+                                            setForm(p => ({ ...p, region: e.target.value }))
+                                        }
+                                        required
+                                        placeholder='Например: Томская обл'
+                                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    <p className='rounded-lg bg-brand_soft/15 p-3 text-xs leading-relaxed text-night_green/70'>
+                        Будут созданы: контакт ({lead.firstName}
+                        {lead.lastName ? ` ${lead.lastName}` : ""}) и сделка «Переговоры /
+                        КП» с вами как менеджером. Текст заявки попадёт в примечание
+                        сделки, заявка станет «Обработана».
+                    </p>
+
+                    {error && <p className='text-sm text-red-600'>{error}</p>}
+
+                    <div className='flex justify-end gap-2'>
+                        <button
+                            type='button'
+                            onClick={onClose}
+                            className='rounded-lg border border-brand_soft/60 px-4 py-2 text-sm text-gray-700 hover:bg-brand_soft/30'
+                        >
+                            Отмена
+                        </button>
+                        <button
+                            type='submit'
+                            disabled={saving}
+                            className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:opacity-60'
+                        >
+                            {saving ? "Создаём..." : "Создать сделку"}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     )
 }

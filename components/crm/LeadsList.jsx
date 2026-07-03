@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { LuCheck, LuTrash2, LuUndo2 } from "react-icons/lu"
-import { EmptyState, TableSkeleton, useConfirm, useToast } from "@/components/crm/ui"
+import { CardListSkeleton, CardRow, EmptyState, MobileCard, useConfirm, useToast } from "@/components/crm/ui"
 
 const DATE_FMT = new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
@@ -105,7 +105,9 @@ export default function LeadsList() {
             {error && <p className='text-sm text-red-500'>{error}</p>}
 
             {items === null ? (
-                <TableSkeleton />
+                <div className='space-y-3'>
+                    <CardListSkeleton />
+                </div>
             ) : items.length === 0 ? (
                 <EmptyState
                     title='Заявок нет'
@@ -116,7 +118,91 @@ export default function LeadsList() {
                     }
                 />
             ) : (
-                <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
+                <>
+                {/* Мобильные карточки */}
+                <div className='space-y-3 md:hidden'>
+                    {items.map(lead => (
+                        <MobileCard key={lead.id}>
+                            <div className='flex items-start justify-between gap-2'>
+                                <span className='font-medium text-night_green'>
+                                    {lead.firstName}
+                                    {lead.lastName ? ` ${lead.lastName}` : ""}
+                                </span>
+                                <span
+                                    className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                        lead.status === "NEW"
+                                            ? "bg-brand_main/10 text-brand_main"
+                                            : "bg-night_green/10 text-night_green/60"
+                                    }`}
+                                >
+                                    {lead.status === "NEW" ? "Новая" : "Обработана"}
+                                </span>
+                            </div>
+                            <p className='mt-0.5 text-xs text-night_green/60'>
+                                {DATE_FMT.format(new Date(lead.createdAt))}
+                                {lead.company ? ` · ${lead.company}` : ""}
+                            </p>
+                            <div className='mt-2 space-y-1'>
+                                {lead.phone && (
+                                    <CardRow label='Телефон'>
+                                        <a
+                                            href={`tel:${lead.phone.replace(/\s/g, "")}`}
+                                            className='text-brand_main hover:underline'
+                                        >
+                                            {lead.phone}
+                                        </a>
+                                    </CardRow>
+                                )}
+                                {lead.email && (
+                                    <CardRow label='E-mail'>
+                                        <a
+                                            href={`mailto:${lead.email}`}
+                                            className='text-brand_main hover:underline'
+                                        >
+                                            {lead.email}
+                                        </a>
+                                    </CardRow>
+                                )}
+                            </div>
+                            {lead.message && (
+                                <p className='mt-2 whitespace-pre-wrap rounded-lg bg-brand_soft/15 p-2 text-sm text-night_green/80'>
+                                    {lead.message}
+                                </p>
+                            )}
+                            <div className='mt-3 flex justify-end gap-2'>
+                                {lead.status === "NEW" ? (
+                                    <button
+                                        type='button'
+                                        onClick={() => setLeadStatus(lead, "PROCESSED")}
+                                        className='inline-flex items-center gap-1.5 rounded-md border border-brand_main/40 px-3 py-1.5 text-xs font-medium text-brand_main hover:bg-brand_main/10'
+                                    >
+                                        <LuCheck className='h-4 w-4' />
+                                        Обработана
+                                    </button>
+                                ) : (
+                                    <button
+                                        type='button'
+                                        onClick={() => setLeadStatus(lead, "NEW")}
+                                        className='inline-flex items-center gap-1.5 rounded-md border border-brand_soft/60 px-3 py-1.5 text-xs font-medium text-night_green/70 hover:bg-brand_soft/30'
+                                    >
+                                        <LuUndo2 className='h-4 w-4' />
+                                        Вернуть
+                                    </button>
+                                )}
+                                <button
+                                    type='button'
+                                    onClick={() => removeLead(lead)}
+                                    className='inline-flex items-center gap-1.5 rounded-md border border-red-200 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50'
+                                >
+                                    <LuTrash2 className='h-4 w-4' />
+                                    Удалить
+                                </button>
+                            </div>
+                        </MobileCard>
+                    ))}
+                </div>
+
+                <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
                     <table className='w-full min-w-max table-auto text-sm'>
                         <thead>
                             <tr className='border-b border-brand_soft/40 text-left text-xs text-night_green/60'>
@@ -211,6 +297,7 @@ export default function LeadsList() {
                         </tbody>
                     </table>
                 </div>
+                </>
             )}
         </div>
     )

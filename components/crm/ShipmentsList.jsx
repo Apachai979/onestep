@@ -9,7 +9,7 @@ import {
     SHIPMENT_STATUS_LABELS,
     isShipmentOverdue,
 } from "@/lib/crm/shipment"
-import { EmptyState, TableSkeleton } from "@/components/crm/ui"
+import { CardListSkeleton, CardRow, EmptyState, MobileCard, TableSkeleton } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -130,7 +130,66 @@ export default function ShipmentsList() {
                 </p>
             )}
 
-            <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
+            {/* Мобильные карточки */}
+            <div className='space-y-3 md:hidden'>
+                {items === null && <CardListSkeleton />}
+                {filtered && filtered.length === 0 && (
+                    <EmptyState
+                        icon={LuTruck}
+                        title='Отгрузок не найдено'
+                        hint='Попробуйте изменить фильтры — или зайдите в нужную сделку и добавьте отгрузку.'
+                    />
+                )}
+                {filtered?.map(sh => {
+                    const totalQty = (sh.items || []).reduce((s, it) => s + num(it.quantity), 0)
+                    const overdue = isShipmentOverdue(sh)
+                    return (
+                        <MobileCard
+                            key={sh.id}
+                            onClick={() => router.push(`/crm/shipments/${sh.id}`)}
+                            className={overdue ? "bg-red-50/40" : ""}
+                        >
+                            <div className='flex items-start justify-between gap-2'>
+                                <span className='font-mono font-medium text-night_green'>
+                                    {sh.number}
+                                </span>
+                                <span className='flex shrink-0 flex-wrap justify-end gap-1'>
+                                    <span
+                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${SHIPMENT_STATUS_COLORS[sh.status]}`}
+                                    >
+                                        {SHIPMENT_STATUS_LABELS[sh.status]}
+                                    </span>
+                                    {overdue && (
+                                        <span className='rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700'>
+                                            Просрочена
+                                        </span>
+                                    )}
+                                </span>
+                            </div>
+                            <div className='mt-2 space-y-1'>
+                                <CardRow label='Сделка'>
+                                    <Link
+                                        href={`/crm/deals/${sh.deal.id}`}
+                                        onClick={e => e.stopPropagation()}
+                                        className='text-night_green underline hover:text-brand_main'
+                                    >
+                                        {sh.deal.title || `Сделка #${sh.deal.id.slice(-6)}`}
+                                    </Link>
+                                </CardRow>
+                                <CardRow label='Клиент'>{sh.deal.counterparty?.name || "—"}</CardRow>
+                                <CardRow label='Менеджер'>{managerName(sh.deal.manager)}</CardRow>
+                                <CardRow label='Плановая'>{fmtDate(sh.plannedDate)}</CardRow>
+                                <CardRow label='Отгружена'>{fmtDate(sh.shippedAt)}</CardRow>
+                                <CardRow label='Позиций / шт.'>
+                                    {sh.items?.length || 0} ({fmtQty(totalQty)})
+                                </CardRow>
+                            </div>
+                        </MobileCard>
+                    )
+                })}
+            </div>
+
+            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
                 <table className='w-full text-sm'>
                     <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
                         <tr>

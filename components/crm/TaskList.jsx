@@ -13,7 +13,7 @@ import { onTasksChanged } from "@/lib/crm/tasks-events"
 import SearchableSelect from "./SearchableSelect"
 import { TaskTypeBadge } from "./TaskTypeIcon"
 import TaskCloseModal from "./TaskCloseModal"
-import { EmptyState, TableSkeleton } from "@/components/crm/ui"
+import { CardListSkeleton, CardRow, EmptyState, MobileCard, TableSkeleton } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -198,7 +198,60 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                 </p>
             )}
 
-            <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
+            {/* Мобильные карточки */}
+            <div className='space-y-3 md:hidden'>
+                {items === null && <CardListSkeleton />}
+                {items?.length === 0 && (
+                    <EmptyState
+                        icon={LuListTodo}
+                        title='Задач не найдено'
+                        hint='Попробуйте сбросить фильтры — или создайте задачу из карточки сделки/проекта.'
+                    />
+                )}
+                {items?.map(t => {
+                    const rel = relationLink(t)
+                    const overdue = isOverdue(t)
+                    return (
+                        <MobileCard key={t.id} onClick={() => setClosing(t)}>
+                            <div className='flex items-start justify-between gap-2'>
+                                <span className='font-medium text-night_green'>{t.title}</span>
+                                <span
+                                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${TASK_STATUS_COLORS[t.status]}`}
+                                >
+                                    {TASK_STATUS_LABELS[t.status]}
+                                </span>
+                            </div>
+                            {t.description && (
+                                <p className='mt-1 line-clamp-2 text-xs text-gray-500'>
+                                    {t.description}
+                                </p>
+                            )}
+                            <div className='mt-2 flex flex-wrap items-center gap-2 text-xs'>
+                                <TaskTypeBadge type={t.type} />
+                                <span className={overdue ? "text-red-600" : "text-gray-600"}>
+                                    {fmtRange(t)}
+                                </span>
+                            </div>
+                            <div className='mt-2 space-y-1'>
+                                <CardRow label='Ответственный'>{fullName(t.assignee)}</CardRow>
+                                {rel && (
+                                    <CardRow label='Связь'>
+                                        <Link
+                                            href={rel.href}
+                                            onClick={e => e.stopPropagation()}
+                                            className='text-night_green underline hover:text-brand_main'
+                                        >
+                                            {rel.label}
+                                        </Link>
+                                    </CardRow>
+                                )}
+                            </div>
+                        </MobileCard>
+                    )
+                })}
+            </div>
+
+            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
                 <table className='w-full text-sm'>
                     <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
                         <tr>

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { LuPlus, LuSearch, LuUsers } from "react-icons/lu"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
-import { EmptyState, TableSkeleton } from "@/components/crm/ui"
+import { CardListSkeleton, CardRow, EmptyState, MobileCard, TableSkeleton } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -83,7 +83,50 @@ export default function CounterpartyList({ type, newHref }) {
                 </p>
             )}
 
-            <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
+            {/* Мобильные карточки */}
+            <div className='space-y-3 md:hidden'>
+                {items === null && <CardListSkeleton />}
+                {items?.length === 0 && (
+                    <EmptyState
+                        icon={LuUsers}
+                        title='Записей не найдено'
+                        hint='Попробуйте изменить запрос или сбросить фильтры.'
+                    />
+                )}
+                {items?.map(item => {
+                    const primary = item.contacts?.[0]
+                    const primaryName = primary
+                        ? `${primary.firstName ?? ""} ${primary.lastName ?? ""}`.trim() ||
+                          primary.email ||
+                          primary.phone ||
+                          "—"
+                        : "—"
+                    return (
+                        <MobileCard
+                            key={item.id}
+                            onClick={() => router.push(`/crm/counterparties/${item.id}`)}
+                        >
+                            <div className='flex items-start justify-between gap-2'>
+                                <span className='font-medium text-night_green'>{item.name}</span>
+                                <span className='min-w-0 max-w-[45%] truncate text-right text-xs text-gray-500'>
+                                    {item.region}
+                                </span>
+                            </div>
+                            <div className='mt-2 space-y-1'>
+                                <CardRow label='ИНН'>{item.inn || "—"}</CardRow>
+                                <CardRow label='Контакт'>{primaryName}</CardRow>
+                                <CardRow label='Телефон'>
+                                    {item.phone || primary?.phone || "—"}
+                                </CardRow>
+                                <CardRow label='Бюджет'>{formatMoney(item.totalRevenue)}</CardRow>
+                                <CardRow label='Скидка'>{formatPercent(item.discount)}</CardRow>
+                            </div>
+                        </MobileCard>
+                    )
+                })}
+            </div>
+
+            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
                 <table className='w-full text-sm'>
                     <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
                         <tr>

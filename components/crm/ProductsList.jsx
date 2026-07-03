@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { LuPackage, LuPlus, LuRefreshCw, LuSearch } from "react-icons/lu"
 import { formatMoney } from "@/lib/crm/format"
-import { EmptyState, TableSkeleton, useToast } from "@/components/crm/ui"
+import { CardListSkeleton, CardRow, EmptyState, MobileCard, TableSkeleton, useToast } from "@/components/crm/ui"
 
 export default function ProductsList() {
     const router = useRouter()
@@ -127,7 +127,53 @@ export default function ProductsList() {
                 </p>
             )}
 
-            <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
+            {/* Мобильные карточки */}
+            <div className='space-y-3 md:hidden'>
+                {items === null && <CardListSkeleton />}
+                {items?.length === 0 && (
+                    <EmptyState
+                        icon={LuPackage}
+                        title='Товаров не найдено'
+                        hint='Попробуйте другой запрос или добавьте новую позицию справочника.'
+                    />
+                )}
+                {items?.map(p => {
+                    const stock = Number(p.stockTotal) || 0
+                    return (
+                        <MobileCard
+                            key={p.id}
+                            onClick={() => router.push(`/crm/products/${p.id}`)}
+                        >
+                            <div className='flex items-start justify-between gap-2'>
+                                <span className='font-medium text-night_green'>{p.sku}</span>
+                                <span
+                                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                        stock === 0
+                                            ? "bg-red-50 text-red-700"
+                                            : stock < 50
+                                              ? "bg-amber-50 text-amber-800"
+                                              : "bg-green-50 text-green-800"
+                                    }`}
+                                >
+                                    {stock.toLocaleString("ru-RU")} шт.
+                                </span>
+                            </div>
+                            <p className='mt-1 text-sm text-night_green/80'>{p.category}</p>
+                            <div className='mt-2 space-y-1'>
+                                <CardRow label='Цена за шт.'>{formatMoney(p.basePrice)}</CardRow>
+                                <CardRow label='В упак., шт.'>{p.transportPackQty}</CardRow>
+                                <CardRow label='Реком. цена ЛПУ'>
+                                    {p.recommendedLpuPrice
+                                        ? formatMoney(p.recommendedLpuPrice)
+                                        : "—"}
+                                </CardRow>
+                            </div>
+                        </MobileCard>
+                    )
+                })}
+            </div>
+
+            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
                 <table className='w-full text-sm'>
                     <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
                         <tr>

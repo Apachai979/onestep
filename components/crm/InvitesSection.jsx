@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { USER_ROLE_LABELS, USER_ROLES } from "@/lib/crm/invite"
-import { useConfirm, useToast } from "@/components/crm/ui"
+import { CardListSkeleton, CardRow, MobileCard, useConfirm, useToast } from "@/components/crm/ui"
 
 const STATUS_LABELS = {
     ACTIVE: "Активен",
@@ -211,7 +211,72 @@ export default function InvitesSection() {
                 </form>
             )}
 
-            <div className='overflow-x-auto'>
+            {/* Мобильные карточки */}
+            <div className='space-y-3 p-4 md:hidden'>
+                {items === null && <CardListSkeleton rows={2} />}
+                {items?.length === 0 && (
+                    <p className='py-4 text-center text-sm text-gray-400'>
+                        Приглашений ещё нет
+                    </p>
+                )}
+                {items?.map(inv => {
+                    const status = statusOf(inv)
+                    return (
+                        <MobileCard key={inv.id}>
+                            <div className='flex items-start justify-between gap-2'>
+                                <span className='min-w-0 truncate font-medium text-gray-800'>
+                                    {inv.email || "Без email"}
+                                </span>
+                                <span
+                                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[status]}`}
+                                >
+                                    {STATUS_LABELS[status]}
+                                </span>
+                            </div>
+                            <div className='mt-2 space-y-1'>
+                                <CardRow label='Роль'>
+                                    {USER_ROLE_LABELS[inv.role] || inv.role}
+                                </CardRow>
+                                <CardRow label='Истекает'>{fmtDate(inv.expiresAt)}</CardRow>
+                                {inv.usedAt && (
+                                    <CardRow label='Использован'>
+                                        {fmtDate(inv.usedAt)}
+                                        {inv.usedByEmail ? ` · ${inv.usedByEmail}` : ""}
+                                    </CardRow>
+                                )}
+                                <CardRow label='Кем создан'>
+                                    {inv.createdBy
+                                        ? `${inv.createdBy.firstName ?? ""} ${inv.createdBy.lastName ?? ""}`.trim() ||
+                                          inv.createdBy.email
+                                        : "—"}
+                                </CardRow>
+                            </div>
+                            {status === "ACTIVE" && (
+                                <div className='mt-3 flex justify-end gap-2'>
+                                    <button
+                                        type='button'
+                                        onClick={() => copyLink(inv.token)}
+                                        className='rounded-md border border-brand_soft/60 px-3 py-1.5 text-xs text-gray-700 hover:bg-brand_soft/30'
+                                    >
+                                        {copied === inv.token
+                                            ? "Скопировано!"
+                                            : "Копировать ссылку"}
+                                    </button>
+                                    <button
+                                        type='button'
+                                        onClick={() => handleCancel(inv.id)}
+                                        className='rounded-md border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50'
+                                    >
+                                        Отменить
+                                    </button>
+                                </div>
+                            )}
+                        </MobileCard>
+                    )
+                })}
+            </div>
+
+            <div className='hidden overflow-x-auto md:block'>
                 <table className='w-full text-sm'>
                     <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
                         <tr>

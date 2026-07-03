@@ -11,7 +11,7 @@ import {
 } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
 import SearchableSelect from "./SearchableSelect"
-import { EmptyState, TableSkeleton } from "@/components/crm/ui"
+import { CardListSkeleton, CardRow, EmptyState, MobileCard, TableSkeleton } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -187,7 +187,53 @@ export default function DealsList({ currentUserId }) {
                 </p>
             )}
 
-            <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
+            {/* Мобильные карточки */}
+            <div className='space-y-3 md:hidden'>
+                {items === null && <CardListSkeleton />}
+                {items?.length === 0 && (
+                    <EmptyState
+                        icon={LuBriefcase}
+                        title='Сделок не найдено'
+                        hint='Попробуйте сбросить фильтры или создайте новую сделку.'
+                    />
+                )}
+                {items?.map(d => (
+                    <MobileCard key={d.id} onClick={() => router.push(`/crm/deals/${d.id}`)}>
+                        <div className='flex items-start justify-between gap-2'>
+                            <span className='font-medium text-night_green'>
+                                {dealDisplayTitle(d, d.counterparty?.name)}
+                            </span>
+                            <span
+                                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${DEAL_STATUS_COLORS[d.status]}`}
+                            >
+                                {DEAL_STATUS_LABELS[d.status] || d.status}
+                            </span>
+                        </div>
+                        <div className='mt-2 space-y-1'>
+                            <CardRow label='Клиент'>{d.counterparty?.name || "—"}</CardRow>
+                            <CardRow label='Менеджер'>{managerName(d.manager)}</CardRow>
+                            <CardRow label='Создана'>{fmtDate(d.createdAt)}</CardRow>
+                            <CardRow label='Сумма'>
+                                <span className='font-medium text-gray-800'>
+                                    {formatMoney(d.totalAmount)}
+                                </span>
+                            </CardRow>
+                        </div>
+                    </MobileCard>
+                ))}
+                {items && items.length > 0 && (
+                    <div className='flex items-center justify-between rounded-xl bg-gray-50 px-4 py-2 text-sm'>
+                        <span className='text-xs font-semibold uppercase text-gray-500'>
+                            Итого ({items.length})
+                        </span>
+                        <span className='font-semibold text-night_green'>
+                            {formatMoney(total)}
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
                 <table className='w-full text-sm'>
                     <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
                         <tr>

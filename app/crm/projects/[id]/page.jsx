@@ -6,7 +6,7 @@ import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_STATUS_LABELS } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
-import { looksLikeUrl } from "@/lib/crm/project"
+import { PROJECT_LOSS_REASON_LABELS, looksLikeUrl } from "@/lib/crm/project"
 import ProjectItemsSection from "@/components/crm/ProjectItemsSection"
 import { CardRow, MobileCard } from "@/components/crm/ui/MobileCards"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
@@ -128,6 +128,20 @@ export default async function ProjectPage({ params }) {
                         Создан как дубль действующего проекта
                     </p>
                     <p className='mt-1 text-yellow-800'>{item.duplicateComment}</p>
+                </div>
+            )}
+
+            {item.status === "LOST" && item.lossReason && (
+                <div className='rounded-xl border border-red-200 bg-red-50/60 px-4 py-3'>
+                    <p className='text-xs font-semibold uppercase tracking-wide text-red-700'>
+                        Причина проигрыша
+                    </p>
+                    <p className='mt-1 text-sm text-red-900'>
+                        {PROJECT_LOSS_REASON_LABELS[item.lossReason] || item.lossReason}
+                        {item.lossComment && (
+                            <span className='text-red-900/75'> — {item.lossComment}</span>
+                        )}
+                    </p>
                 </div>
             )}
 

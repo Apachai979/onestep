@@ -53,6 +53,19 @@ export async function PATCH(request, { params }) {
     const { data, error } = parseDealPayload(body, { partial: true })
     if (error) return Response.json({ error }, { status: 400 })
 
+    // Причина проигрыша: обязательна при переводе в CANCELLED,
+    // очищается при возврате сделки в работу.
+    if (data.status === "CANCELLED" && !data.lossReason && !existing.lossReason) {
+        return Response.json(
+            { error: "Укажите причину, по которой сделка не реализована" },
+            { status: 400 },
+        )
+    }
+    if (data.status && data.status !== "CANCELLED" && data.status !== "ARCHIVED") {
+        if (existing.lossReason && data.lossReason === undefined) data.lossReason = null
+        if (existing.lossComment && data.lossComment === undefined) data.lossComment = null
+    }
+
     if (data.counterpartyId) {
         const cp = await prisma.counterparty.findUnique({
             where: { id: data.counterpartyId },

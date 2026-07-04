@@ -127,6 +127,8 @@ model Project {
   totalAmount       Decimal       @default(0)
   auctionDate       DateTime?
   duplicateComment  String?
+  lossReason        String?
+  lossComment       String?
 
   distributorId     String
   distributor       Counterparty  @relation("ProjectDistributor", fields: [distributorId], references: [id])
@@ -237,6 +239,8 @@ model Deal {
   discount        Decimal?
   note            String?
   deliveryAddress String?
+  lossReason      String?
+  lossComment     String?
 
   counterpartyId String
   counterparty   Counterparty @relation("DealCounterparty", fields: [counterpartyId], references: [id])

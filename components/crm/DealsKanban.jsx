@@ -15,6 +15,7 @@ const KANBAN_STATUSES = DEAL_STATUSES.filter(s => s !== "ARCHIVED")
 import { calculateDealShipmentProgress, isShipmentOverdue } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
 import { useToast } from "@/components/crm/ui"
+import DealLossDialog from "./DealLossDialog"
 
 function safeJson(text) {
     try {
@@ -36,6 +37,7 @@ export default function DealsKanban() {
     const [q, setQ] = useState("")
     const [draggingId, setDraggingId] = useState(null)
     const [dragOver, setDragOver] = useState(null)
+    const [losingDeal, setLosingDeal] = useState(null)
 
     async function load() {
         setError("")
@@ -76,14 +78,14 @@ export default function DealsKanban() {
         return map
     }, [filtered])
 
-    async function moveDeal(dealId, newStatus) {
+    async function moveDeal(dealId, newStatus, extra = {}) {
         const prev = deals
         setDeals(curr => curr.map(d => (d.id === dealId ? { ...d, status: newStatus } : d)))
         try {
             const r = await fetch(`/api/crm/deals/${dealId}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: newStatus }),
+                body: JSON.stringify({ status: newStatus, ...extra }),
             })
             if (!r.ok) {
                 const text = await r.text()
@@ -126,6 +128,11 @@ export default function DealsKanban() {
             if (!id) return
             const deal = deals?.find(d => d.id === id)
             if (!deal || deal.status === status) return
+            // Перенос в «Не реализована» — только с причиной.
+            if (status === "CANCELLED") {
+                setLosingDeal(deal)
+                return
+            }
             moveDeal(id, status)
         }
     }
@@ -216,6 +223,17 @@ export default function DealsKanban() {
                     )
                 })}
             </div>
+
+            {losingDeal && (
+                <DealLossDialog
+                    dealTitle={dealDisplayTitle(losingDeal, losingDeal.counterparty?.name)}
+                    onCancel={() => setLosingDeal(null)}
+                    onConfirm={({ lossReason, lossComment }) => {
+                        moveDeal(losingDeal.id, "CANCELLED", { lossReason, lossComment })
+                        setLosingDeal(null)
+                    }}
+                />
+            )}
         </div>
     )
 }

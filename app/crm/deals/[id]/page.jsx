@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth"
 import { LuPencil, LuFileText } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
-import { dealDisplayTitle } from "@/lib/crm/deal"
+import { DEAL_LOSS_REASON_LABELS, dealDisplayTitle } from "@/lib/crm/deal"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import DealItemsSection from "@/components/crm/DealItemsSection"
@@ -124,6 +124,21 @@ export default async function DealPage({ params }) {
                     </div>
                 </div>
             </div>
+
+            {(item.status === "CANCELLED" || item.status === "ARCHIVED") &&
+                item.lossReason && (
+                    <div className='rounded-xl border border-red-200 bg-red-50/60 px-4 py-3'>
+                        <p className='text-xs font-semibold uppercase tracking-wide text-red-700'>
+                            Причина проигрыша
+                        </p>
+                        <p className='mt-1 text-sm text-red-900'>
+                            {DEAL_LOSS_REASON_LABELS[item.lossReason] || item.lossReason}
+                            {item.lossComment && (
+                                <span className='text-red-900/75'> — {item.lossComment}</span>
+                            )}
+                        </p>
+                    </div>
+                )}
 
             {/* Two-column body */}
             <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]'>

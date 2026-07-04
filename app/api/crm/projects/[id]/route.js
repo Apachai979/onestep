@@ -56,6 +56,19 @@ export async function PATCH(request, { params }) {
     const { data, error } = parseProjectPayload(body, { partial: true })
     if (error) return Response.json({ error }, { status: 400 })
 
+    // Причина проигрыша: обязательна при переводе в LOST,
+    // очищается при любом другом статусе.
+    if (data.status === "LOST" && !data.lossReason && !existing.lossReason) {
+        return Response.json(
+            { error: "Укажите причину, по которой проект проигран" },
+            { status: 400 },
+        )
+    }
+    if (data.status && data.status !== "LOST") {
+        if (existing.lossReason && data.lossReason === undefined) data.lossReason = null
+        if (existing.lossComment && data.lossComment === undefined) data.lossComment = null
+    }
+
     if (data.distributorId) {
         const d = await prisma.counterparty.findUnique({
             where: { id: data.distributorId },

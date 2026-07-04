@@ -1,4 +1,4 @@
-import ProjectsList from "@/components/crm/ProjectsList"
+import ProjectsTabs from "@/components/crm/ProjectsTabs"
 import { PageHeader } from "@/components/crm/ui"
 
 export const metadata = { title: "Проекты | CRM" }
@@ -10,7 +10,7 @@ export default function ProjectsPage() {
                 title='Проекты'
                 subtitle='Аукционные проекты: связки дистрибьютор — конечный потребитель.'
             />
-            <ProjectsList />
+            <ProjectsTabs />
         </div>
     )
 }

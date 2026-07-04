@@ -96,10 +96,16 @@ export default async function ProposalPage({ params }) {
         }
     }
 
+    const contactName = deal.contact
+        ? `${deal.contact.firstName ?? ""} ${deal.contact.lastName ?? ""}`.trim()
+        : ""
+
     return (
         <ProposalView
             dealId={deal.id}
             buyer={deal.counterparty.name}
+            contactName={contactName}
+            contactEmail={deal.contact?.email || deal.counterparty?.email || ""}
             items={itemsForClient}
             subtotal={subtotal}
             defaultDiscount={discountForProposal}

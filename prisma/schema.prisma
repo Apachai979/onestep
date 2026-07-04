@@ -379,6 +379,15 @@ model Task {
   @@map("tasks")
 }
 
+// Настройки CRM: простое key-value хранилище (шаблоны писем и т.п.)
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
 // Заявка с публичной формы обратной связи на сайте
 model Lead {
   id          String    @id @default(cuid())

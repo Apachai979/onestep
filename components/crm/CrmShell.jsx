@@ -14,6 +14,7 @@ import {
     LuStore,
     LuStethoscope,
     LuPackage,
+    LuSettings,
     LuUsers,
     LuLogOut,
     LuMenu,
@@ -94,6 +95,7 @@ export default function CrmShell({ user, role, children }) {
         ]
         if (role === "ADMIN") {
             base.push({ href: "/crm/users", label: "Пользователи", icon: LuUsers })
+            base.push({ href: "/crm/settings", label: "Настройки", icon: LuSettings })
         }
         return base
     }, [role, taskBadge])

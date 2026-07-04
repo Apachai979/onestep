@@ -14,6 +14,7 @@ import {
     LuStore,
     LuStethoscope,
     LuPackage,
+    LuSearch,
     LuSettings,
     LuUsers,
     LuLogOut,
@@ -23,6 +24,7 @@ import {
 import { onTasksChanged } from "@/lib/crm/tasks-events"
 import { ConfirmProvider, ToastProvider } from "@/components/crm/ui"
 import { CrmNavTracker } from "@/components/crm/CrmBackLink"
+import GlobalSearch from "@/components/crm/GlobalSearch"
 
 function safeJson(text) {
     try {
@@ -69,10 +71,23 @@ export default function CrmShell({ user, role, children }) {
     const pathname = usePathname()
     const counts = useTaskCounts()
     const [mobileOpen, setMobileOpen] = useState(false)
+    const [searchOpen, setSearchOpen] = useState(false)
 
     useEffect(() => {
         setMobileOpen(false)
     }, [pathname])
+
+    // Ctrl+K / Cmd+K — глобальный поиск.
+    useEffect(() => {
+        function onKey(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+                e.preventDefault()
+                setSearchOpen(o => !o)
+            }
+        }
+        window.addEventListener("keydown", onKey)
+        return () => window.removeEventListener("keydown", onKey)
+    }, [])
 
     const overdue = counts?.mineOverdue || 0
     const open = counts?.mineOpen || 0
@@ -151,6 +166,27 @@ export default function CrmShell({ user, role, children }) {
                 </div>
 
                 <nav className='relative flex-1 overflow-y-auto overflow-x-hidden px-2 py-3'>
+                    <button
+                        type='button'
+                        onClick={() => {
+                            setSearchOpen(true)
+                            onClose?.()
+                        }}
+                        title={alwaysExpanded ? undefined : "Поиск (Ctrl+K)"}
+                        className='group/item mb-2 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-night_green/75 transition hover:bg-brand_soft/40 hover:text-night_green'
+                    >
+                        <LuSearch className='h-5 w-5 shrink-0 text-brand_main/80 group-hover/item:text-brand_main' />
+                        <span
+                            className={`flex-1 truncate whitespace-nowrap text-left font-medium transition-opacity duration-150 ${showLabels}`}
+                        >
+                            Поиск
+                        </span>
+                        <kbd
+                            className={`shrink-0 rounded border border-brand_soft/60 px-1.5 py-0.5 text-[10px] text-night_green/45 transition-opacity duration-150 ${showLabels}`}
+                        >
+                            Ctrl K
+                        </kbd>
+                    </button>
                     <ul className='space-y-0.5'>
                         {navItems.map(item => {
                             const Icon = item.icon
@@ -239,6 +275,7 @@ export default function CrmShell({ user, role, children }) {
         <ToastProvider>
             <ConfirmProvider>
                 <CrmNavTracker />
+                <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
                 <div className='relative min-h-screen bg-body_bg'>
             {/* page-wide soft brand wash so the translucent sidebar has something to filter */}
             <div
@@ -279,6 +316,14 @@ export default function CrmShell({ user, role, children }) {
                         <LuMenu className='h-5 w-5' />
                     </button>
                     <span className='font-semibold text-night_green'>ONESTEP CRM</span>
+                    <button
+                        type='button'
+                        onClick={() => setSearchOpen(true)}
+                        className='ml-auto inline-flex h-9 w-9 items-center justify-center rounded-md border border-brand_soft/50 text-night_green/75 hover:bg-brand_soft/40 hover:text-night_green'
+                        aria-label='Поиск'
+                    >
+                        <LuSearch className='h-5 w-5' />
+                    </button>
                 </header>
                 <main className='flex-1 overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8'>
                     {children}

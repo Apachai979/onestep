@@ -11,7 +11,6 @@ import DealItemsSection from "@/components/crm/DealItemsSection"
 import DealStatusControl from "@/components/crm/DealStatusControl"
 import DealShipmentsSection from "@/components/crm/DealShipmentsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
-import ChangeHistorySection from "@/components/crm/ChangeHistorySection"
 
 export const metadata = { title: "Сделка | CRM" }
 
@@ -60,7 +59,7 @@ export default async function DealPage({ params }) {
     }))
 
     return (
-        <div className='space-y-5'>
+        <div className='space-y-4'>
             <CrmBackLink
                 fallback='/crm/deals'
                 fallbackLabel='Сделки'
@@ -73,7 +72,7 @@ export default async function DealPage({ params }) {
                     <p className='text-xs uppercase tracking-wider text-night_green/55'>
                         Сделка
                     </p>
-                    <h1 className='mt-0.5 truncate text-2xl font-semibold text-night_green sm:text-3xl'>
+                    <h1 className='mt-0.5 truncate text-xl font-semibold text-night_green sm:text-2xl'>
                         {dealDisplayTitle(item, item.counterparty?.name)}
                     </h1>
                     <p className='mt-1 text-sm text-night_green/70'>
@@ -141,9 +140,16 @@ export default async function DealPage({ params }) {
                 )}
 
             {/* Two-column body */}
-            <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]'>
-                <div className='min-w-0 space-y-5'>
-                    <Section title='Параметры'>
+            <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
+                <div className='min-w-0 space-y-4'>
+                    <Section
+                        title='Параметры'
+                        footer={`Создал ${fullName(item.createdBy)} · ${new Date(item.createdAt).toLocaleString("ru-RU")}${
+                            item.updatedBy
+                                ? ` · изменил ${fullName(item.updatedBy)} · ${new Date(item.updatedAt).toLocaleString("ru-RU")}`
+                                : ""
+                        }`}
+                    >
                         <Row label='Сумма сделки' value={formatMoney(item.totalAmount)} />
                         <Row
                             label='Скидка'
@@ -153,22 +159,12 @@ export default async function DealPage({ params }) {
                         />
                         <Row label='Менеджер' value={fullName(item.manager)} />
                         <Row label='Контактное лицо' value={contactDisplay(item.contact)} />
-                        <Row label='Создал' value={fullName(item.createdBy)} />
-                        <Row
-                            label='Создана'
-                            value={new Date(item.createdAt).toLocaleString("ru-RU")}
-                        />
-                        <Row label='Изменил' value={fullName(item.updatedBy)} />
-                        <Row
-                            label='Изменена'
-                            value={new Date(item.updatedAt).toLocaleString("ru-RU")}
-                        />
                     </Section>
 
                     {(item.deliveryAddress || item.note) && (
                         <Section title='Доставка и примечание'>
                             {item.deliveryAddress && (
-                                <div className='sm:col-span-2'>
+                                <div className='sm:col-span-2 lg:col-span-3'>
                                     <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
                                         Адрес доставки
                                     </dt>
@@ -178,7 +174,7 @@ export default async function DealPage({ params }) {
                                 </div>
                             )}
                             {item.note && (
-                                <div className='sm:col-span-2'>
+                                <div className='sm:col-span-2 lg:col-span-3'>
                                     <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
                                         Примечание
                                     </dt>
@@ -208,21 +204,25 @@ export default async function DealPage({ params }) {
                     taskRelationKind='deal'
                     currentUserId={session?.user?.id}
                     currentUserRole={session?.user?.role}
+                    historyIncludeChildren
                 />
             </div>
-
-            <ChangeHistorySection entityType='Deal' entityId={item.id} includeChildren />
         </div>
     )
 }
 
-function Section({ title, children }) {
+function Section({ title, footer, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
-            <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+            <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-night_green/70'>
                 {title}
             </h2>
-            <dl className='grid gap-3 sm:grid-cols-2'>{children}</dl>
+            <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>{children}</dl>
+            {footer && (
+                <p className='mt-3 border-t border-brand_soft/30 pt-2 text-[11px] text-night_green/50'>
+                    {footer}
+                </p>
+            )}
         </section>
     )
 }

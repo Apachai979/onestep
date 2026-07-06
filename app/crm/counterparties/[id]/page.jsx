@@ -14,7 +14,6 @@ import { formatMoney, formatPercent } from "@/lib/crm/format"
 import { PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import ContactsSection from "@/components/crm/ContactsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
-import ChangeHistorySection from "@/components/crm/ChangeHistorySection"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 
 export const metadata = { title: "Контрагент | CRM" }
@@ -70,7 +69,7 @@ export default async function CounterpartyPage({ params }) {
         item.type === "DISTRIBUTOR" ? "distributor" : "endCustomer"
 
     return (
-        <div className='space-y-5'>
+        <div className='space-y-4'>
             <CrmBackLink
                 fallback={backHref}
                 fallbackLabel={backLabel}
@@ -82,7 +81,7 @@ export default async function CounterpartyPage({ params }) {
                     <p className='text-xs uppercase tracking-wider text-night_green/55'>
                         {COUNTERPARTY_TYPE_LABELS[item.type]}
                     </p>
-                    <h1 className='mt-0.5 text-2xl font-semibold text-night_green sm:text-3xl'>
+                    <h1 className='mt-0.5 text-xl font-semibold text-night_green sm:text-2xl'>
                         {item.name}
                     </h1>
                     <p className='mt-1 text-sm text-night_green/65'>
@@ -100,17 +99,27 @@ export default async function CounterpartyPage({ params }) {
                 </Link>
             </div>
 
-            <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]'>
-                <div className='min-w-0 space-y-5'>
-                    <Section title='Основное'>
+            <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
+                <div className='min-w-0 space-y-4'>
+                    <Section
+                        title='Основное'
+                        footer={`Создал ${createdByName} · ${new Date(item.createdAt).toLocaleString("ru-RU")}${
+                            updatedByName
+                                ? ` · изменил ${updatedByName} · ${new Date(item.updatedAt).toLocaleString("ru-RU")}`
+                                : ""
+                        }`}
+                    >
                         <Row label='Регион' value={item.region} />
                         <Row label='Телефон' value={item.phone} />
                         <Row label='Email' value={item.email} />
-                        <Row label='Адрес' value={item.address} className='sm:col-span-2' />
+                        <Row
+                            label='Адрес'
+                            value={item.address}
+                            className='sm:col-span-2 lg:col-span-2'
+                        />
                         <Row
                             label='Источник'
                             value={COUNTERPARTY_SOURCE_LABELS[item.source] || null}
-                            className='sm:col-span-2'
                         />
                         {item.type === "END_CUSTOMER" && (
                             <>
@@ -126,30 +135,19 @@ export default async function CounterpartyPage({ params }) {
                         )}
                     </Section>
 
-                    <Section title='Реквизиты'>
+                    <Section title='Реквизиты и финансы'>
                         <Row label='ИНН' value={item.inn} />
                         <Row label='КПП' value={item.kpp} />
                         <Row label='ОГРН' value={item.ogrn} />
                         <Row label='ОКПО' value={item.okpo} />
-                        <Row label='ОКВЭД' value={item.okved} className='sm:col-span-2' />
-                    </Section>
-
-                    <Section title='Банковские реквизиты'>
-                        <Row
-                            label='Название банка'
-                            value={item.bankName}
-                            className='sm:col-span-2'
-                        />
+                        <Row label='ОКВЭД' value={item.okved} />
                         <Row label='БИК' value={item.bik} />
                         <Row label='Расчётный счёт' value={item.bankAccount} />
                         <Row
                             label='Корреспондентский счёт'
                             value={item.bankCorrAccount}
-                            className='sm:col-span-2'
                         />
-                    </Section>
-
-                    <Section title='Финансы'>
+                        <Row label='Название банка' value={item.bankName} />
                         <Row
                             label='Бюджет (сумма сделок)'
                             value={formatMoney(item.totalRevenue)}
@@ -162,8 +160,8 @@ export default async function CounterpartyPage({ params }) {
                         initialContacts={contactsForClient}
                     />
 
-                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
-                        <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+                        <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-night_green/70'>
                             История связок ({projects.length})
                         </h2>
                         {projects.length === 0 ? (
@@ -242,24 +240,11 @@ export default async function CounterpartyPage({ params }) {
 
                     {item.note && (
                         <Section title='Примечание'>
-                            <p className='whitespace-pre-wrap text-sm text-night_green/85 sm:col-span-2'>
+                            <p className='whitespace-pre-wrap text-sm text-night_green/85 sm:col-span-2 lg:col-span-3'>
                                 {item.note}
                             </p>
                         </Section>
                     )}
-
-                    <Section title='Служебное'>
-                        <Row label='Создал' value={createdByName} />
-                        <Row
-                            label='Создан'
-                            value={new Date(item.createdAt).toLocaleString("ru-RU")}
-                        />
-                        <Row label='Изменил' value={updatedByName || "—"} />
-                        <Row
-                            label='Изменён'
-                            value={new Date(item.updatedAt).toLocaleString("ru-RU")}
-                        />
-                    </Section>
                 </div>
 
                 <ActivityPanel
@@ -268,21 +253,25 @@ export default async function CounterpartyPage({ params }) {
                     taskRelationKind={taskRelationKind}
                     currentUserId={session?.user?.id}
                     currentUserRole={session?.user?.role}
+                    historyIncludeChildren
                 />
             </div>
-
-            <ChangeHistorySection entityType='Counterparty' entityId={item.id} />
         </div>
     )
 }
 
-function Section({ title, children }) {
+function Section({ title, footer, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
-            <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+            <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-night_green/70'>
                 {title}
             </h2>
-            <dl className='grid gap-3 sm:grid-cols-2'>{children}</dl>
+            <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>{children}</dl>
+            {footer && (
+                <p className='mt-3 border-t border-brand_soft/30 pt-2 text-[11px] text-night_green/50'>
+                    {footer}
+                </p>
+            )}
         </section>
     )
 }

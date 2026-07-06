@@ -1,6 +1,7 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { deleteFile } from "@/lib/crm/storage/local"
+import { logChange } from "@/lib/crm/change-log"
 
 function canDelete(session, att) {
     return att.uploadedById === session.user.id || session.user.role === "ADMIN"
@@ -18,5 +19,18 @@ export async function DELETE(_request, { params }) {
 
     await prisma.attachment.delete({ where: { id: params.id } })
     await deleteFile(existing.storageKey)
+
+    if (existing.entityType && existing.entityId) {
+        await logChange(prisma, {
+            entityType: "Attachment",
+            entityId: existing.id,
+            parentEntityType: existing.entityType,
+            parentEntityId: existing.entityId,
+            action: "DELETE",
+            payload: { fileName: existing.fileName },
+            authorId: session.user.id,
+        })
+    }
+
     return Response.json({ ok: true })
 }

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/configs/auth"
 import { PROPOSAL_EMAIL_PLACEHOLDERS } from "@/lib/crm/settings"
 import ProposalEmailSettings from "@/components/crm/ProposalEmailSettings"
+import ImportExportSettings from "@/components/crm/ImportExportSettings"
 import { PageHeader } from "@/components/crm/ui"
 
 export const metadata = { title: "Настройки | CRM" }
@@ -17,6 +18,7 @@ export default async function SettingsPage() {
                 title='Настройки'
                 subtitle='Шаблоны и параметры CRM. Доступно только администратору.'
             />
+            <ImportExportSettings />
             <ProposalEmailSettings placeholders={PROPOSAL_EMAIL_PLACEHOLDERS} />
         </div>
     )

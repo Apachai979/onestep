@@ -77,7 +77,8 @@ export default function CrmShell({ user, role, children }) {
         setMobileOpen(false)
     }, [pathname])
 
-    // Ctrl+K / Cmd+K — глобальный поиск.
+    // Ctrl+K / Cmd+K — глобальный поиск. Плюс событие от кнопок на страницах
+    // (например, строка поиска на дашборде).
     useEffect(() => {
         function onKey(e) {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -85,8 +86,15 @@ export default function CrmShell({ user, role, children }) {
                 setSearchOpen(o => !o)
             }
         }
+        function onOpen() {
+            setSearchOpen(true)
+        }
         window.addEventListener("keydown", onKey)
-        return () => window.removeEventListener("keydown", onKey)
+        window.addEventListener("crm:open-search", onOpen)
+        return () => {
+            window.removeEventListener("keydown", onKey)
+            window.removeEventListener("crm:open-search", onOpen)
+        }
     }, [])
 
     const overdue = counts?.mineOverdue || 0

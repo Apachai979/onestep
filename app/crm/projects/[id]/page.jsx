@@ -11,7 +11,6 @@ import ProjectItemsSection from "@/components/crm/ProjectItemsSection"
 import { CardRow, MobileCard } from "@/components/crm/ui/MobileCards"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
 import ActivityPanel from "@/components/crm/ActivityPanel"
-import ChangeHistorySection from "@/components/crm/ChangeHistorySection"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 
 export const metadata = { title: "Проект | CRM" }
@@ -67,7 +66,7 @@ export default async function ProjectPage({ params }) {
     }))
 
     return (
-        <div className='space-y-5'>
+        <div className='space-y-4'>
             <CrmBackLink
                 fallback='/crm/projects'
                 fallbackLabel='Проекты'
@@ -79,7 +78,7 @@ export default async function ProjectPage({ params }) {
                     <p className='text-xs uppercase tracking-wider text-night_green/55'>
                         Проект
                     </p>
-                    <h1 className='mt-0.5 text-2xl font-semibold text-night_green sm:text-3xl'>
+                    <h1 className='mt-0.5 text-xl font-semibold text-night_green sm:text-2xl'>
                         {item.internalName}
                     </h1>
                     <p className='mt-1 text-sm text-night_green/70'>
@@ -145,9 +144,16 @@ export default async function ProjectPage({ params }) {
                 </div>
             )}
 
-            <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]'>
-                <div className='min-w-0 space-y-5'>
-                    <Section title='Связка'>
+            <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
+                <div className='min-w-0 space-y-4'>
+                    <Section
+                        title='Связка'
+                        footer={`Создан ${fmtDate(item.createdAt)}${
+                            item.updatedBy
+                                ? ` · изменил ${fullName(item.updatedBy)} · ${new Date(item.updatedAt).toLocaleString("ru-RU")}`
+                                : ""
+                        }`}
+                    >
                         <Row label='Конечный потребитель'>
                             <Link
                                 href={`/crm/counterparties/${item.endCustomer.id}`}
@@ -169,16 +175,10 @@ export default async function ProjectPage({ params }) {
                         <Row label='Менеджер' value={fullName(item.manager)} />
                         <Row label='Дата аукциона' value={fmtDate(item.auctionDate)} />
                         <Row label='Сумма проекта' value={formatMoney(item.totalAmount)} />
-                        <Row label='Создан' value={fmtDate(item.createdAt)} />
-                        <Row label='Изменил' value={fullName(item.updatedBy)} />
-                        <Row
-                            label='Изменён'
-                            value={new Date(item.updatedAt).toLocaleString("ru-RU")}
-                        />
                     </Section>
 
-                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
-                        <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+                        <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-night_green/70'>
                             Контактные лица
                         </h2>
                         <div className='grid gap-4 sm:grid-cols-2'>
@@ -288,21 +288,25 @@ export default async function ProjectPage({ params }) {
                     taskRelationKind='project'
                     currentUserId={session?.user?.id}
                     currentUserRole={session?.user?.role}
+                    historyIncludeChildren
                 />
             </div>
-
-            <ChangeHistorySection entityType='Project' entityId={item.id} includeChildren />
         </div>
     )
 }
 
-function Section({ title, children }) {
+function Section({ title, footer, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
-            <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+            <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-night_green/70'>
                 {title}
             </h2>
-            <dl className='grid gap-3 sm:grid-cols-2'>{children}</dl>
+            <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>{children}</dl>
+            {footer && (
+                <p className='mt-3 border-t border-brand_soft/30 pt-2 text-[11px] text-night_green/50'>
+                    {footer}
+                </p>
+            )}
         </section>
     )
 }

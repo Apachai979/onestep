@@ -31,14 +31,46 @@ function formatValue(v) {
 
 const ACTION_COLOR = {
     CREATE: "bg-green-100 text-green-800",
-    UPDATE: "bg-blue-100 text-blue-800",
+    UPDATE: "bg-blue-100 text-blue-700",
     DELETE: "bg-red-100 text-red-700",
 }
 
-export default function ChangeHistorySection({ entityType, entityId, includeChildren = false }) {
-    const [open, setOpen] = useState(false)
+// Категории для фильтра ленты.
+const FILTER_OF = {
+    Task: "tasks",
+    Note: "notes",
+    Attachment: "files",
+    Email: "mail",
+}
+
+const FILTERS = [
+    ["all", "Все"],
+    ["card", "Карточка"],
+    ["tasks", "Задачи"],
+    ["notes", "Заметки"],
+    ["files", "Файлы"],
+    ["mail", "КП"],
+]
+
+function categoryOf(it) {
+    return FILTER_OF[it.entityType] || "card"
+}
+
+function isDiffValue(v) {
+    return v && typeof v === "object" && ("from" in v || "to" in v)
+}
+
+// Компактная лента истории изменений. Встраивается вкладкой в «Активность»:
+// грузится лениво — при первом открытии вкладки (prop `active`).
+export default function ChangeHistorySection({
+    entityType,
+    entityId,
+    includeChildren = false,
+    active = true,
+}) {
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
+    const [filter, setFilter] = useState("all")
 
     const load = useCallback(async () => {
         setError("")
@@ -56,95 +88,108 @@ export default function ChangeHistorySection({ entityType, entityId, includeChil
     }, [entityType, entityId, includeChildren])
 
     useEffect(() => {
-        if (open && items === null) load()
-    }, [open, items, load])
+        if (active && items === null) load()
+    }, [active, items, load])
+
+    const presentCategories = new Set((items || []).map(categoryOf))
+    const visible =
+        filter === "all" ? items : items?.filter(it => categoryOf(it) === filter)
 
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70'>
-            <button
-                type='button'
-                onClick={() => setOpen(o => !o)}
-                className='flex w-full items-center justify-between px-5 py-3 text-left'
-            >
-                <span className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
-                    История изменений
-                </span>
-                <span className='text-xs text-gray-400'>{open ? "Скрыть ▴" : "Показать ▾"}</span>
-            </button>
+        <div>
+            {error && <p className='text-sm text-red-600'>{error}</p>}
+            {items === null && <p className='text-sm text-gray-400'>Загрузка...</p>}
+            {items?.length === 0 && (
+                <p className='text-sm text-gray-400'>Записей нет.</p>
+            )}
 
-            {open && (
-                <div className='border-t border-brand_soft/30 p-5'>
-                    {error && <p className='text-sm text-red-600'>{error}</p>}
-                    {items === null && (
-                        <p className='text-sm text-gray-400'>Загрузка...</p>
-                    )}
-                    {items?.length === 0 && (
-                        <p className='text-sm text-gray-400'>Записей нет.</p>
-                    )}
-                    <ul className='space-y-3'>
-                        {items?.map(it => {
-                            const changes = it.changes
-                            const isDiff =
-                                it.action === "UPDATE" &&
-                                changes &&
-                                typeof changes === "object" &&
-                                !Array.isArray(changes)
-                            return (
-                                <li
-                                    key={it.id}
-                                    className='rounded-lg border border-brand_soft/30 p-3 text-sm'
+            {items?.length > 0 && presentCategories.size > 1 && (
+                <div className='mb-2 flex flex-wrap gap-1'>
+                    {FILTERS.filter(
+                        ([key]) => key === "all" || presentCategories.has(key),
+                    ).map(([key, label]) => (
+                        <button
+                            key={key}
+                            type='button'
+                            onClick={() => setFilter(key)}
+                            className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium transition ${
+                                filter === key
+                                    ? "bg-brand_main text-white"
+                                    : "bg-brand_soft/25 text-night_green/65 hover:bg-brand_soft/45"
+                            }`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            <ul>
+                {visible?.map(it => {
+                    const changes =
+                        it.changes && typeof it.changes === "object" && !Array.isArray(it.changes)
+                            ? it.changes
+                            : null
+                    return (
+                        <li
+                            key={it.id}
+                            className='border-b border-brand_soft/25 py-2 first:pt-0 last:border-b-0'
+                        >
+                            <div className='flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-gray-500'>
+                                <span
+                                    className={`rounded-full px-1.5 py-px text-[10px] font-medium ${ACTION_COLOR[it.action] || ""}`}
                                 >
-                                    <div className='flex flex-wrap items-center gap-2 text-xs text-gray-500'>
-                                        <span>{fmtDate(it.createdAt)}</span>
-                                        <span>·</span>
-                                        <span className='font-medium text-night_green'>
-                                            {fullName(it.author)}
-                                        </span>
-                                        <span
-                                            className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${ACTION_COLOR[it.action] || ""}`}
-                                        >
-                                            {CHANGE_ACTION_LABELS[it.action] || it.action}
-                                        </span>
-                                        {it.entityType !== entityType && (
-                                            <span className='rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700'>
-                                                {ENTITY_LABELS[it.entityType] || it.entityType}
-                                            </span>
-                                        )}
-                                    </div>
-                                    {isDiff && (
-                                        <ul className='mt-2 space-y-1 text-xs'>
-                                            {Object.entries(changes).map(([field, val]) => (
+                                    {CHANGE_ACTION_LABELS[it.action] || it.action}
+                                </span>
+                                {it.entityType !== entityType && (
+                                    <span className='rounded-full bg-gray-100 px-1.5 py-px text-[10px] font-medium text-gray-700'>
+                                        {ENTITY_LABELS[it.entityType] || it.entityType}
+                                    </span>
+                                )}
+                                <span className='font-medium text-night_green'>
+                                    {fullName(it.author)}
+                                </span>
+                                <span>·</span>
+                                <span>{fmtDate(it.createdAt)}</span>
+                            </div>
+                            {changes && (
+                                <ul className='mt-1 space-y-0.5 text-xs leading-snug'>
+                                    {Object.entries(changes).map(([field, val]) => {
+                                        if (isDiffValue(val)) {
+                                            return (
                                                 <li key={field}>
-                                                    <span className='text-gray-700'>
+                                                    <span className='text-gray-600'>
                                                         {fieldLabel(it.entityType, field)}:
                                                     </span>{" "}
-                                                    <span className='text-gray-500 line-through'>
+                                                    <span className='text-gray-400 line-through'>
                                                         {formatValue(val.from)}
                                                     </span>{" "}
                                                     <span className='text-gray-400'>→</span>{" "}
-                                                    <span className='font-medium text-gray-900'>
+                                                    <span className='font-medium text-gray-800'>
                                                         {formatValue(val.to)}
                                                     </span>
                                                 </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                    {!isDiff && changes && (
-                                        <details className='mt-2 text-xs text-gray-600'>
-                                            <summary className='cursor-pointer'>
-                                                Подробности
-                                            </summary>
-                                            <pre className='mt-1 max-h-60 overflow-auto whitespace-pre-wrap rounded bg-gray-50 p-2 text-[11px]'>
-                                                {JSON.stringify(changes, null, 2)}
-                                            </pre>
-                                        </details>
-                                    )}
-                                </li>
-                            )
-                        })}
-                    </ul>
-                </div>
-            )}
-        </section>
+                                            )
+                                        }
+                                        if (val === null || val === undefined || val === "")
+                                            return null
+                                        return (
+                                            <li key={field}>
+                                                <span className='text-gray-600'>
+                                                    {fieldLabel(it.entityType, field)}:
+                                                </span>{" "}
+                                                <span className='font-medium text-gray-800'>
+                                                    {formatValue(val)}
+                                                </span>
+                                            </li>
+                                        )
+                                    })}
+                                </ul>
+                            )}
+                        </li>
+                    )
+                })}
+            </ul>
+        </div>
     )
 }

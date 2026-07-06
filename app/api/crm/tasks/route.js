@@ -5,7 +5,9 @@ import {
     TASK_TYPE_KEYS,
     TASK_RELATION_KINDS,
     parseTaskPayload,
+    taskLogParents,
 } from "@/lib/crm/task"
+import { logChange } from "@/lib/crm/change-log"
 
 const USER_SELECT = { id: true, firstName: true, lastName: true, email: true }
 const CP_SELECT = { id: true, name: true, type: true }
@@ -144,5 +146,17 @@ export async function POST(request) {
         },
         include: INCLUDE,
     })
+
+    for (const parent of taskLogParents(created)) {
+        await logChange(prisma, {
+            entityType: "Task",
+            entityId: created.id,
+            ...parent,
+            action: "CREATE",
+            payload: { title: created.title, type: created.type },
+            authorId: session.user.id,
+        })
+    }
+
     return Response.json({ item: created }, { status: 201 })
 }

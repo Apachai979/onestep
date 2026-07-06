@@ -1,10 +1,17 @@
 "use client"
 import { useState } from "react"
-import { LuActivity, LuListTodo, LuMessageSquare, LuPaperclip } from "react-icons/lu"
+import {
+    LuActivity,
+    LuHistory,
+    LuListTodo,
+    LuMessageSquare,
+    LuPaperclip,
+} from "react-icons/lu"
 import { Section, Tabs } from "@/components/crm/ui"
 import RelatedTasksSection from "./RelatedTasksSection"
 import NotesSection from "./NotesSection"
 import AttachmentsSection from "./AttachmentsSection"
+import ChangeHistorySection from "./ChangeHistorySection"
 
 /**
  * Объединённая правая колонка карточек: Задачи / Заметки / Документы.
@@ -24,6 +31,8 @@ export default function ActivityPanel({
     currentUserRole,
     taskRelationKind,
     taskRelationId,
+    showHistory = true,
+    historyIncludeChildren = false,
 }) {
     const showTasks = !!taskRelationKind
     const [tab, setTab] = useState(showTasks ? "tasks" : "notes")
@@ -54,6 +63,9 @@ export default function ActivityPanel({
         icon: LuPaperclip,
         badge: counts.docs,
     })
+    if (showHistory) {
+        items.push({ key: "history", label: "История", icon: LuHistory })
+    }
 
     return (
         <Section title='Активность' icon={LuActivity} className='lg:sticky lg:top-4'>
@@ -93,6 +105,17 @@ export default function ActivityPanel({
                     onCountChange={setCount("docs")}
                 />
             </div>
+
+            {showHistory && (
+                <div hidden={tab !== "history"}>
+                    <ChangeHistorySection
+                        entityType={entityType}
+                        entityId={entityId}
+                        includeChildren={historyIncludeChildren}
+                        active={tab === "history"}
+                    />
+                </div>
+            )}
         </Section>
     )
 }

@@ -1,6 +1,9 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
-import { canCloseTask, parseTaskPayload } from "@/lib/crm/task"
+import { canCloseTask, parseTaskPayload, taskLogParents } from "@/lib/crm/task"
+import { diffEntities, logChange } from "@/lib/crm/change-log"
+
+const TASK_LOG_FIELDS = ["title", "type", "status", "result", "assigneeId", "startAt", "endAt"]
 
 const USER_SELECT = { id: true, firstName: true, lastName: true, email: true }
 const CP_SELECT = { id: true, name: true, type: true }
@@ -55,6 +58,21 @@ export async function PATCH(request, { params }) {
         data,
         include: INCLUDE,
     })
+
+    const changes = diffEntities(existing, updated, TASK_LOG_FIELDS)
+    if (Object.keys(changes).length > 0) {
+        for (const parent of taskLogParents(updated)) {
+            await logChange(prisma, {
+                entityType: "Task",
+                entityId: updated.id,
+                ...parent,
+                action: "UPDATE",
+                payload: { title: updated.title, ...changes },
+                authorId: session.user.id,
+            })
+        }
+    }
+
     return Response.json({ item: updated })
 }
 
@@ -70,5 +88,17 @@ export async function DELETE(_request, { params }) {
     }
 
     await prisma.task.delete({ where: { id: params.id } })
+
+    for (const parent of taskLogParents(existing)) {
+        await logChange(prisma, {
+            entityType: "Task",
+            entityId: existing.id,
+            ...parent,
+            action: "DELETE",
+            payload: { title: existing.title, type: existing.type },
+            authorId: session.user.id,
+        })
+    }
+
     return Response.json({ ok: true })
 }

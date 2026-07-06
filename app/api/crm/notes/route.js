@@ -1,6 +1,7 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { validateNoteTarget } from "@/lib/crm/attachment"
+import { excerpt, logChange } from "@/lib/crm/change-log"
 
 const USER_SELECT = { id: true, firstName: true, lastName: true, email: true }
 const ATTACH_SELECT = {
@@ -64,6 +65,16 @@ export async function POST(request) {
             author: { select: USER_SELECT },
             attachments: { select: ATTACH_SELECT },
         },
+    })
+
+    await logChange(prisma, {
+        entityType: "Note",
+        entityId: note.id,
+        parentEntityType: entityType,
+        parentEntityId: entityId,
+        action: "CREATE",
+        payload: { body: excerpt(note.body) },
+        authorId: session.user.id,
     })
 
     if (Array.isArray(attachmentIds) && attachmentIds.length) {

@@ -4,6 +4,7 @@ import { buildProposalDoc } from "@/lib/crm/proposal-doc"
 import { renderProposalPdf } from "@/lib/crm/proposal-pdf"
 import { isMailConfigured, sendMail } from "@/lib/crm/mailer"
 import { saveFile } from "@/lib/crm/storage/local"
+import { logChange } from "@/lib/crm/change-log"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -78,9 +79,18 @@ export async function POST(request, { params }) {
         )
     }
 
-    // След в сделке: заметка + (опционально) копия PDF в документах.
+    // След в сделке: событие в истории + заметка + (опционально) копия PDF.
     const noteBody = `КП № ${built.number} от ${built.dateText} отправлено на ${to}\nТема: ${subject}`
     try {
+        await logChange(prisma, {
+            entityType: "Email",
+            entityId: params.id,
+            parentEntityType: "Deal",
+            parentEntityId: params.id,
+            action: "CREATE",
+            payload: { number: built.number, to, subject },
+            authorId: session.user.id,
+        })
         await prisma.note.create({
             data: {
                 body: noteBody,

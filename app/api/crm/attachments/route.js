@@ -6,6 +6,7 @@ import {
     validateUpload,
 } from "@/lib/crm/attachment"
 import { saveFile } from "@/lib/crm/storage/local"
+import { logChange } from "@/lib/crm/change-log"
 
 const USER_SELECT = { id: true, firstName: true, lastName: true, email: true }
 const ATTACH_PUBLIC = {
@@ -102,6 +103,19 @@ export async function POST(request) {
             select: ATTACH_PUBLIC,
         })
         created.push(att)
+
+        // Файлы, привязанные к карточке (не к заметке), — в историю карточки.
+        if (!noteId && entityType && entityId) {
+            await logChange(prisma, {
+                entityType: "Attachment",
+                entityId: att.id,
+                parentEntityType: entityType,
+                parentEntityId: entityId,
+                action: "CREATE",
+                payload: { fileName: att.fileName },
+                authorId: session.user.id,
+            })
+        }
     }
 
     return Response.json({ items: created }, { status: 201 })

@@ -121,6 +121,21 @@ export async function POST(request, { params }) {
             payload: snapshotEntity(deal, DEAL_TRACKED_FIELDS),
             authorId: session.user.id,
         })
+        // Отметка о происхождении: сделка создана из заявки с сайта.
+        await logChange(tx, {
+            entityType: "Lead",
+            entityId: lead.id,
+            parentEntityType: "Deal",
+            parentEntityId: deal.id,
+            action: "CREATE",
+            payload: {
+                name: `${lead.firstName || ""} ${lead.lastName || ""}`.trim() || null,
+                company: lead.company,
+                email: lead.email,
+                phone: lead.phone,
+            },
+            authorId: session.user.id,
+        })
 
         // 4. Заявка — обработана
         await tx.lead.update({

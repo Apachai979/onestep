@@ -20,11 +20,10 @@ import {
     autoArchiveStaleFinalDeals,
     dealDisplayTitle,
 } from "@/lib/crm/deal"
-import {
-    SHIPMENT_STATUS_LABELS,
-} from "@/lib/crm/shipment"
+import { SHIPMENT_STATUS_LABELS } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
 import { CHANGE_ACTION_LABELS, ENTITY_LABELS, CHILD_OF } from "@/lib/crm/change-log"
+import DashboardSearch from "@/components/crm/DashboardSearch"
 
 export const metadata = { title: "Главная | CRM" }
 
@@ -80,8 +79,7 @@ export default async function CrmHome() {
     const session = await getServerSession(authOptions)
     const userId = session?.user?.id
     const role = session?.user?.role
-    const firstName =
-        session?.user?.name?.split(" ")[0] || session?.user?.email || "коллега"
+    const firstName = session?.user?.name?.split(" ")[0] || session?.user?.email || "коллега"
     const { start: dayStart, end: dayEnd, now } = todayBounds()
 
     // Ленивая архивация старых CLOSED/CANCELLED — до чтения сделок,
@@ -89,82 +87,77 @@ export default async function CrmHome() {
     await autoArchiveStaleFinalDeals(prisma)
 
     // --- Parallel data load ---
-    const [
-        myOpenTasks,
-        myDealsGrouped,
-        myDealsList,
-        overdueShipments,
-        recentChanges,
-    ] = await Promise.all([
-        userId
-            ? prisma.task.findMany({
-                  where: { assigneeId: userId, status: "OPEN" },
-                  orderBy: { endAt: "asc" },
-                  take: 50,
-                  include: {
-                      deal: {
-                          select: {
-                              id: true,
-                              title: true,
-                              counterparty: { select: { name: true } },
+    const [myOpenTasks, myDealsGrouped, myDealsList, overdueShipments, recentChanges] =
+        await Promise.all([
+            userId
+                ? prisma.task.findMany({
+                      where: { assigneeId: userId, status: "OPEN" },
+                      orderBy: { endAt: "asc" },
+                      take: 50,
+                      include: {
+                          deal: {
+                              select: {
+                                  id: true,
+                                  title: true,
+                                  counterparty: { select: { name: true } },
+                              },
                           },
+                          project: { select: { id: true, internalName: true } },
+                          distributor: { select: { id: true, name: true } },
+                          endCustomer: { select: { id: true, name: true } },
                       },
-                      project: { select: { id: true, internalName: true } },
-                      distributor: { select: { id: true, name: true } },
-                      endCustomer: { select: { id: true, name: true } },
-                  },
-              })
-            : [],
-        userId
-            ? prisma.deal.groupBy({
-                  by: ["status"],
-                  where: { managerId: userId },
-                  _count: { _all: true },
-                  _sum: { totalAmount: true },
-              })
-            : [],
-        userId
-            ? prisma.deal.findMany({
-                  where: { managerId: userId },
-                  orderBy: { updatedAt: "desc" },
-                  take: 50,
-                  select: {
-                      id: true,
-                      title: true,
-                      status: true,
-                      totalAmount: true,
-                      counterparty: { select: { name: true } },
-                  },
-              })
-            : [],
-        prisma.shipment.findMany({
-            where: {
-                status: "DRAFT",
-                plannedDate: { lt: now, not: null },
-            },
-            orderBy: { plannedDate: "asc" },
-            take: 8,
-            include: {
-                deal: {
-                    select: {
-                        id: true,
-                        title: true,
-                        managerId: true,
-                        counterparty: { select: { id: true, name: true } },
+                  })
+                : [],
+            userId
+                ? prisma.deal.groupBy({
+                      by: ["status"],
+                      where: { managerId: userId },
+                      _count: { _all: true },
+                      _sum: { totalAmount: true },
+                  })
+                : [],
+            userId
+                ? prisma.deal.findMany({
+                      where: { managerId: userId },
+                      orderBy: { updatedAt: "desc" },
+                      take: 50,
+                      select: {
+                          id: true,
+                          title: true,
+                          status: true,
+                          totalAmount: true,
+                          counterparty: { select: { name: true } },
+                      },
+                  })
+                : [],
+            prisma.shipment.findMany({
+                where: {
+                    status: "DRAFT",
+                    plannedDate: { lt: now, not: null },
+                },
+                orderBy: { plannedDate: "asc" },
+                take: 8,
+                include: {
+                    deal: {
+                        select: {
+                            id: true,
+                            title: true,
+                            managerId: true,
+                            counterparty: { select: { id: true, name: true } },
+                        },
                     },
                 },
-            },
-        }),
-        prisma.changeLog.findMany({
-            orderBy: { createdAt: "desc" },
-            take: 12,
-            include: {
-                author: {
-                    select: { firstName: true, lastName: true, email: true },
+            }),
+            prisma.changeLog.findMany({
+                orderBy: { createdAt: "desc" },
+                take: 12,
+                include: {
+                    author: {
+                        select: { firstName: true, lastName: true, email: true },
+                    },
                 },
-            },
-        }),
-    ])
+            }),
+        ])
 
     // --- Resolve entity names for activity feed (batched) ---
     const dealIds = new Set()
@@ -212,9 +205,7 @@ export default async function CrmHome() {
 
     // --- Derived data ---
     const overdueTasks = myOpenTasks.filter(isOverdueTask)
-    const todayTasks = myOpenTasks.filter(t =>
-        isTodayTask(t, { start: dayStart, end: dayEnd }),
-    )
+    const todayTasks = myOpenTasks.filter(t => isTodayTask(t, { start: dayStart, end: dayEnd }))
 
     const dealsListByStatus = {}
     for (const s of DEAL_STATUSES) dealsListByStatus[s] = []
@@ -229,9 +220,10 @@ export default async function CrmHome() {
         dealStatusStats[g.status].sum = Number(g._sum?.totalAmount || 0)
     }
 
-    const activeDeals = DEAL_STATUSES.filter(
-        s => s !== "ARCHIVED" && s !== "CANCELLED",
-    ).reduce((acc, s) => acc + (dealStatusStats[s]?.count || 0), 0)
+    const activeDeals = DEAL_STATUSES.filter(s => s !== "ARCHIVED" && s !== "CANCELLED").reduce(
+        (acc, s) => acc + (dealStatusStats[s]?.count || 0),
+        0
+    )
 
     // --- KPIs ---
     const kpis = [
@@ -266,7 +258,7 @@ export default async function CrmHome() {
     ]
 
     return (
-        <div className='space-y-6'>
+        <div className='space-y-4 sm:space-y-5'>
             {/* Header */}
             <div className='flex flex-wrap items-end justify-between gap-3'>
                 <div>
@@ -277,7 +269,7 @@ export default async function CrmHome() {
                             month: "long",
                         })}
                     </p>
-                    <h1 className='mt-1 text-2xl font-semibold text-night_green sm:text-3xl'>
+                    <h1 className='mt-1 text-xl font-semibold text-night_green sm:text-2xl'>
                         Привет, {firstName} 👋
                     </h1>
                 </div>
@@ -299,20 +291,18 @@ export default async function CrmHome() {
                 </div>
             </div>
 
+            {/* Глобальный поиск */}
+            <DashboardSearch />
+
             {/* KPIs */}
-            <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+            <div className='grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4'>
                 {kpis.map(k => (
                     <KpiTile key={k.label} {...k} />
                 ))}
             </div>
 
             {/* Row 1: My tasks */}
-            <Widget
-                title='Мои задачи'
-                icon={LuListTodo}
-                href='/crm/tasks'
-                action='Все задачи'
-            >
+            <Widget title='Мои задачи' icon={LuListTodo} href='/crm/tasks' action='Все задачи'>
                 {overdueTasks.length === 0 && todayTasks.length === 0 ? (
                     <EmptyState
                         icon={LuCheck}
@@ -353,7 +343,7 @@ export default async function CrmHome() {
                         hint='Создайте новую сделку — она появится здесь.'
                     />
                 ) : (
-                    <div className='grid gap-2 sm:grid-cols-3 lg:grid-cols-6'>
+                    <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6'>
                         {DEAL_STATUSES.map(s => {
                             const stat = dealStatusStats[s] || { count: 0, sum: 0 }
                             const recent = (dealsListByStatus[s] || []).slice(0, 2)
@@ -375,7 +365,7 @@ export default async function CrmHome() {
                                         {formatMoney(stat.sum)}
                                     </p>
                                     {recent.length > 0 && (
-                                        <ul className='mt-2 space-y-0.5 border-t border-brand_soft/30 pt-2 text-[11px] text-night_green/70'>
+                                        <ul className='mt-2 hidden space-y-0.5 border-t border-brand_soft/30 pt-2 text-[11px] text-night_green/70 sm:block'>
                                             {recent.map(d => (
                                                 <li key={d.id} className='truncate'>
                                                     {dealDisplayTitle(d, d.counterparty?.name)}
@@ -563,21 +553,25 @@ function KpiTile({ label, value, href, icon: Icon, tone }) {
     return (
         <Link
             href={href}
-            className={`group flex items-center justify-between rounded-xl border ${toneClass} p-4 transition hover:shadow-sm hover:shadow-brand_main/10`}
+            className={`group flex items-center justify-between rounded-xl border ${toneClass} p-3 transition hover:shadow-sm hover:shadow-brand_main/10 sm:p-4`}
         >
-            <div>
-                <p className='text-[11px] uppercase tracking-wider opacity-70'>{label}</p>
-                <p className='mt-1 text-3xl font-semibold leading-none'>{value}</p>
+            <div className='min-w-0'>
+                <p className='truncate text-[11px] uppercase tracking-wider opacity-70'>
+                    {label}
+                </p>
+                <p className='mt-1 text-2xl font-semibold leading-none sm:text-3xl'>
+                    {value}
+                </p>
             </div>
-            <Icon className='h-7 w-7 opacity-50 group-hover:opacity-80' />
+            <Icon className='hidden h-7 w-7 opacity-50 group-hover:opacity-80 sm:block' />
         </Link>
     )
 }
 
 function Widget({ title, icon: Icon, href, action, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
-            <div className='mb-3 flex items-center justify-between'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+            <div className='mb-2.5 flex items-center justify-between'>
                 <h2 className='flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
                     <Icon className='h-4 w-4 text-brand_main' />
                     {title}
@@ -631,9 +625,7 @@ function TaskGroup({ title, tone, tasks }) {
                             className='flex items-start justify-between gap-3 rounded-md bg-white/70 p-2 text-sm hover:bg-white'
                         >
                             <div className='min-w-0 flex-1'>
-                                <p className='truncate font-medium text-night_green'>
-                                    {t.title}
-                                </p>
+                                <p className='truncate font-medium text-night_green'>{t.title}</p>
                                 <p className='truncate text-[11px] text-night_green/55'>
                                     {relationLabel(t)}
                                 </p>

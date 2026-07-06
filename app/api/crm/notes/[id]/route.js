@@ -1,6 +1,7 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { deleteFile } from "@/lib/crm/storage/local"
+import { excerpt, logChange } from "@/lib/crm/change-log"
 
 const USER_SELECT = { id: true, firstName: true, lastName: true, email: true }
 const ATTACH_SELECT = {
@@ -60,6 +61,20 @@ export async function PATCH(request, { params }) {
             attachments: { select: ATTACH_SELECT },
         },
     })
+
+    // Логируем только правку текста; закрепление — шум.
+    if (data.body !== undefined && data.body !== existing.body) {
+        await logChange(prisma, {
+            entityType: "Note",
+            entityId: updated.id,
+            parentEntityType: existing.entityType,
+            parentEntityId: existing.entityId,
+            action: "UPDATE",
+            payload: { body: { from: excerpt(existing.body), to: excerpt(updated.body) } },
+            authorId: session.user.id,
+        })
+    }
+
     return Response.json({ item: updated })
 }
 
@@ -81,6 +96,16 @@ export async function DELETE(_request, { params }) {
     for (const att of existing.attachments) {
         await deleteFile(att.storageKey)
     }
+
+    await logChange(prisma, {
+        entityType: "Note",
+        entityId: existing.id,
+        parentEntityType: existing.entityType,
+        parentEntityId: existing.entityId,
+        action: "DELETE",
+        payload: { body: excerpt(existing.body) },
+        authorId: session.user.id,
+    })
 
     return Response.json({ ok: true })
 }

@@ -58,7 +58,7 @@ export default function Documentation() {
                 </div>
             </div>
 
-            <div className="sm:mt-36">
+            <div className="mt-10 sm:mt-16">
                 <ConnectUs title="Мы готовы обсудить возникшие вопросы" txtbutton="Связаться со специалистом" />
             </div>
 

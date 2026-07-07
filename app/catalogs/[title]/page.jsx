@@ -63,7 +63,7 @@ export default function Neoset({ params }) {
 
     return (
         <>
-            <div className='container mx-auto mb-5 mt-10 max-w-[1200px] px-4'>
+            <div className='container mx-auto mb-10 mt-10 max-w-[1200px] px-4'>
                 <div className='flex flex-col items-center space-y-5 lg:flex-row-reverse lg:items-start lg:space-y-0'>
                     <div className='mx-auto flex pt-2'>
                         <ImageCarousel slides={neoset.photo_lib} w='550' h='350' />

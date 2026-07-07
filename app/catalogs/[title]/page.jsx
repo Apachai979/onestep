@@ -70,7 +70,7 @@ export default function Neoset({ params }) {
                     </div>
                     <div className='flex flex-1 flex-col'>
                         <Link href='/'>
-                            <h1 className='text-5xl font-semibold text-txtGreen'>
+                            <h1 className='text-3xl font-semibold text-txtGreen sm:text-4xl lg:text-5xl'>
                                 {neoset.runame}
                             </h1>
                         </Link>

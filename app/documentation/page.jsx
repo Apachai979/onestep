@@ -11,7 +11,7 @@ export default function Documentation() {
     return (
         <>
             <div className="container mx-auto max-w-[1200px] px-2 sm:px-4">
-                <h1 className="m-4 sm:m-10 text-4xl sm:text-5xl font-semibold text-txtGreen">Документы</h1>
+                <h1 className="m-4 sm:m-10 text-3xl sm:text-4xl font-semibold text-txtGreen">Документы</h1>
 
                 <div className="mt-5 sm:mt-10 rounded-2xl bg-white px-6 sm:px-10 pb-6 pt-3 md:px-5 lg:mx-10">
                     <h2 className="text-2xl sm:text-3xl font-semibold sm:leading-loose text-txtGreen -translate-x-3 sm:translate-x-0">Разрешительные документы</h2>
@@ -20,15 +20,11 @@ export default function Documentation() {
                         { title: "Сертификат соответствия ISO 9001:2015", link: "/files/iso_9001_2015.pdf" },
                         { title: "Сертификат соответствия №ЕАС.04ИБН1.СМ.9574", link: "/" }
                     ].map((doc, index) => (
-                        <div key={index} className="flex flex-wrap md:flex-nowrap items-center justify-between gap-2 sm:gap-x-4 md:pl-5 mt-3">
-                            <div className="w-9/12 sm:max-w-[95%]">
-                                <p className="text-lg leading-tight sm:leading-loose text-txtGreen">{doc.title}</p>
-                            </div>
-                            <div className="flex w-2/12 justify-center">
-                                <p className="text-lg leading-tight sm:leading-loose text-txtGreen">PDF</p>
-                            </div>
-                            <div className="flex w-2/12 justify-end">
-                                <Link href={doc.link} className="text-lg leading-tight sm:leading-loose text-mainGreen hover:text-txtGreen">
+                        <div key={index} className="mt-3 flex flex-col gap-1.5 border-t border-brand_soft/40 pt-3 md:flex-row md:items-center md:gap-4 md:pl-5">
+                            <p className="text-lg leading-snug text-txtGreen md:flex-1">{doc.title}</p>
+                            <div className="flex items-center gap-6 md:gap-8">
+                                <span className="text-lg text-txtGreen/70 md:w-12 md:text-center">PDF</span>
+                                <Link href={doc.link} className="text-lg font-medium text-mainGreen hover:text-txtGreen">
                                     Скачать
                                 </Link>
                             </div>
@@ -49,15 +45,11 @@ export default function Documentation() {
                             link: "/files/Order_of_the_Ministry_of_Health_of_Russia_N_919n.pdf"
                         }
                     ].map((doc, index) => (
-                        <div key={index} className="flex flex-wrap md:flex-nowrap items-center justify-between gap-2 sm:gap-x-4 md:pl-5 mt-3">
-                            <div className="w-9/12 sm:max-w-[95%]">
-                                <p className="text-lg leading-tight sm:leading-loose text-txtGreen">{doc.title}</p>
-                            </div>
-                            <div className="flex w-2/12 justify-center">
-                                <p className="text-lg leading-tight sm:leading-loose text-txtGreen">PDF</p>
-                            </div>
-                            <div className="flex w-2/12 justify-end">
-                                <Link href={doc.link} className="text-lg leading-tight sm:leading-loose text-mainGreen hover:text-txtGreen">
+                        <div key={index} className="mt-3 flex flex-col gap-1.5 border-t border-brand_soft/40 pt-3 md:flex-row md:items-center md:gap-4 md:pl-5">
+                            <p className="text-lg leading-snug text-txtGreen md:flex-1">{doc.title}</p>
+                            <div className="flex items-center gap-6 md:gap-8">
+                                <span className="text-lg text-txtGreen/70 md:w-12 md:text-center">PDF</span>
+                                <Link href={doc.link} className="text-lg font-medium text-mainGreen hover:text-txtGreen">
                                     Скачать
                                 </Link>
                             </div>

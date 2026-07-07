@@ -12,13 +12,13 @@ export default function Catalogs() {
     return (
         <>
             <div className='container mx-auto min-h-screen max-w-[1200px] px-4'>
-                <div className='flex items-end justify-between space-x-10'>
-                    <h1 className='pt-10 text-left text-4xl font-semibold text-txtGreen'>
+                <div className='flex flex-col items-start gap-2 pt-10 sm:flex-row sm:items-end sm:justify-between sm:gap-10'>
+                    <h1 className='text-left text-3xl font-semibold text-txtGreen sm:text-4xl'>
                         Каталог нашей продукции
                     </h1>
                     <Link
                         href='/files/Catalog_ONESTEP.pdf'
-                        className='text-primary_green hover:text-dark_green sm:text-nowrap'
+                        className='shrink-0 text-primary_green hover:text-dark_green sm:text-nowrap'
                     >
                         Скачать каталог в PDF
                     </Link>
@@ -30,7 +30,7 @@ export default function Catalogs() {
                     <Neosets />
                 </div>
 
-                <hr className='mt-10' />
+                <hr className='mt-10 h-px border-0 bg-brand_soft/60' />
                 <h2 className='my-10 text-left text-2xl font-semibold text-txtGreen'>
                     Одноразовые стерильные перевязочные материалы
                 </h2>

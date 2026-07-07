@@ -64,7 +64,7 @@ export default function Manufacture() {
             <div className='container mx-auto max-w-[1200px] px-4 pb-4 pt-8'>
                 <div className='flex flex-col space-y-3 xl:flex-row xl:space-x-20 xl:space-y-0'>
                     <div className='flex-1 justify-self-end'>
-                        <h1 className='text-left text-5xl font-semibold text-mainGreen xl:text-right'>
+                        <h1 className='text-left text-3xl font-semibold text-mainGreen sm:text-4xl xl:text-right'>
                             OneStep <span className='text-txtGreen'>— это:</span>
                         </h1>
                     </div>
@@ -91,7 +91,7 @@ export default function Manufacture() {
             {/* nexblock */}
 
             <div className='container mx-auto max-w-[1200px] px-4 pb-4 pt-4'>
-                <div className='font-xl mb-3 flex items-center justify-center text-4xl'>
+                <div className='mb-3 flex items-center justify-center text-3xl sm:text-4xl'>
                     <h1 className='text-center'>
                         Мы придерживаемся принципов{" "}
                         <p className='text-center text-primary_green'>
@@ -146,7 +146,7 @@ export default function Manufacture() {
 
             {/* nexblock */}
             <div className='container mx-auto max-w-[1200px] px-4 pb-4 pt-6'>
-                <h1 className='text-left text-5xl font-semibold'>
+                <h1 className='text-left text-3xl font-semibold sm:text-4xl'>
                     <span className='text-primary_green'>Ключевые</span> моменты
                 </h1>
             </div>
@@ -170,7 +170,7 @@ export default function Manufacture() {
                         </div>
                         <div className='items-left flex flex-col justify-center text-xl lg:w-1/2'>
                             <h2 className='mt-4 pb-3 text-4xl lg:mt-0'>Чистая зона</h2>
-                            <hr className='h-1 w-24 bg-txtGreen' />
+                            <hr className='h-1 w-24 rounded bg-primary_green' />
                             <p className='pt-4 text-justify sm:text-left'>
                                 Наличие чистой зоны на нашем производстве регламентировано:
                             </p>
@@ -194,7 +194,7 @@ export default function Manufacture() {
                 <div className='flex flex-col justify-center space-y-10 lg:flex-row lg:space-x-10 lg:space-y-0'>
                     <div className='flex flex-1 flex-col'>
                         <h1 className='pb-4 text-4xl text-txtGreen'>Сырье и материалы</h1>
-                        <hr className='h-1 w-24 bg-txtGreen' />
+                        <hr className='h-1 w-24 rounded bg-primary_green' />
                         <br />
                         <p className='text-xl text-txtGreen'>
                             Качество готовой продукции, в первую очередь, зависит от качества сырья,
@@ -253,7 +253,7 @@ export default function Manufacture() {
                         </div>
                         <div className='flex flex-col lg:w-6/12'>
                             <h1 className='pb-4 text-4xl text-txtGreen'>Склад и логистика</h1>
-                            <hr className='h-1 w-24 bg-txtGreen' />
+                            <hr className='h-1 w-24 rounded bg-primary_green' />
                             <br />
                             <p className='text-xl text-txtGreen'>
                                 Складские мощности позволяют обеспечить производство сырьем на
@@ -287,7 +287,7 @@ export default function Manufacture() {
                         <h1 className='pb-4 text-4xl text-txtGreen'>
                             Упаковка: стерильность и безопасность.
                         </h1>
-                        <hr className='h-1 w-24 bg-txtGreen' />
+                        <hr className='h-1 w-24 rounded bg-primary_green' />
                         <br />
                         <p className='text-xl text-txtGreen'>
                             Упаковка наборов NeoSet выполнена из твердого материала, обеспечивающего
@@ -330,14 +330,14 @@ export default function Manufacture() {
                         <p className='text-xl text-txtGreen'>
                             <b>Форм-факторы и размеры упаковок</b>
                         </p>
-                        <ul>
-                            <li>Лоток-блистер с одним отделением:</li>
-                            <li>100х94х30 мм</li>
-                            <li>144х93х30 мм</li>
-                            <li>226х184х35 мм</li>
-                            <li>Лоток-блистер с двумя отделениями:</li>
-                            <li>164х87х30 мм, с отделением для дезсредств 120 мл</li>
-                            <li>184х96х30 мм, с отделением для дезсредств 55 мл</li>
+                        <ul className='mt-1 space-y-1 text-xl text-txtGreen'>
+                            <li className='font-semibold'>Лоток-блистер с одним отделением:</li>
+                            <li className='pl-4'>100х94х30 мм</li>
+                            <li className='pl-4'>144х93х30 мм</li>
+                            <li className='pl-4'>226х184х35 мм</li>
+                            <li className='mt-2 font-semibold'>Лоток-блистер с двумя отделениями:</li>
+                            <li className='pl-4'>164х87х30 мм, с отделением для дезсредств 120 мл</li>
+                            <li className='pl-4'>184х96х30 мм, с отделением для дезсредств 55 мл</li>
                         </ul>
                     </div>
                     <div className='flex lg:w-6/12'>
@@ -358,7 +358,7 @@ export default function Manufacture() {
                 <div className='container mx-auto max-w-[1200px] px-4'>
                     <div className='flex flex-col justify-center lg:flex-row'>
                         <div className='flex flex-1 flex-col lg:items-center'>
-                            <h1 className='pt-1 text-center text-4xl font-semibold text-txtGreen sm:text-5xl md:w-[420px] md:whitespace-nowrap md:text-left'>
+                            <h1 className='pt-1 text-center text-3xl font-semibold text-txtGreen sm:text-4xl md:w-[420px] md:whitespace-nowrap md:text-left'>
                                 О стерилизации
                             </h1>
                             <p className='mt-5 text-sm font-semibold text-gray-600 lg:w-[420px] lg:text-center'>
@@ -402,23 +402,23 @@ export default function Manufacture() {
             </div>
 
             <div className='container mx-auto max-w-[1200px] px-4 py-10'>
-                <h1 className='text-center text-5xl font-semibold text-txtGreen'>
+                <h1 className='text-center text-3xl font-semibold text-txtGreen sm:text-4xl'>
                     Сертификаты OneStep
                 </h1>
-                <div className='flex items-center justify-center space-x-10 pt-8'>
+                <div className='flex items-center justify-center space-x-4 pt-8 sm:space-x-10'>
                     <Image
                         src='/sertification/Iso_9001.jpg'
                         alt='Сертификат соответствия ISO 9001:2015'
                         width={1920}
                         height={1080}
-                        className='w-[204px] rounded-md object-cover shadow-lg md:w-[320px] lg:w-[500px]'
+                        className='w-[150px] rounded-md object-cover shadow-lg sm:w-[204px] md:w-[320px] lg:w-[500px]'
                     ></Image>
                     <Image
                         src='/sertification/Iso_13485.jpeg'
                         alt='Сертификат соответствия ISO 13485-2017'
                         width={1920}
                         height={1080}
-                        className='w-[200px] rounded-md object-cover pt-1 shadow-lg md:w-[312px] lg:w-[485px]'
+                        className='w-[148px] rounded-md object-cover pt-1 shadow-lg sm:w-[200px] md:w-[312px] lg:w-[485px]'
                     ></Image>
                 </div>
             </div>

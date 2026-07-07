@@ -46,7 +46,7 @@ export default function Partners() {
         <>
             <Block>
                 <div className='my-10 flex items-center justify-start'>
-                    <h1 className='text-4xl font-semibold text-mainGreen'>
+                    <h1 className='text-3xl font-semibold text-mainGreen sm:text-4xl'>
                         Выгоды сотрудничества{" "}
                         <span className='text-txtGreen'>с компанией OneStep</span>
                     </h1>
@@ -60,10 +60,10 @@ export default function Partners() {
                                 className='group flex flex-1 cursor-pointer flex-col space-y-5 rounded-3xl bg-white p-5 pl-10 shadow-md lg:px-10 lg:py-6'
                             >
                                 <div className='h-9 w-9 rotate-45 rounded-lg bg-primary_green group-hover:animate-spinner'></div>
-                                <h1 key={elem.title} className='text-2xl text-gray-950'>
+                                <h1 key={elem.title} className='text-2xl font-semibold text-gray-950'>
                                     {elem.title}:
                                 </h1>
-                                <ul className='list-inside list-disc text-lg leading-normal text-txtMiddle'>
+                                <ul className='list-inside list-disc text-lg leading-normal text-night_green/80'>
                                     {elem.description.map(el => (
                                         <li key={el}>{el}</li>
                                     ))}
@@ -77,7 +77,7 @@ export default function Partners() {
             {/* nextblock */}
             <div className='container mx-auto mt-14 max-w-[1200px] px-4'>
                 <div className='justify-starts my-10 flex items-center'>
-                    <h1 className='text-4xl font-semibold text-txtGreen'>
+                    <h1 className='text-3xl font-semibold text-txtGreen sm:text-4xl'>
                         Продукция <span className='text-mainGreen'>OneStep </span>
                         <span>поможет</span>{" "}
                     </h1>
@@ -87,7 +87,7 @@ export default function Partners() {
                     <div className='flex flex-auto flex-col space-y-5 rounded-3xl bg-white p-5 pl-10 shadow-md lg:w-2/3 lg:px-10'>
                         <h1 className='text-2xl font-semibold text-gray-950'>Клиникам:</h1>
                         <div className='grid gap-x-12 md:grid-cols-2'>
-                            <ul className='list-inside list-disc text-lg leading-normal text-txtMiddle'>
+                            <ul className='list-inside list-disc text-lg leading-normal text-night_green/80'>
                                 <li>Снизить риски послеоперационных осложнений</li>
                                 <li>
                                     Предоставить пациентам комфорт и удобство оказания медицинских
@@ -98,7 +98,7 @@ export default function Partners() {
                                     материалах
                                 </li>
                             </ul>
-                            <ul className='list-inside list-disc text-lg leading-normal text-txtMiddle'>
+                            <ul className='list-inside list-disc text-lg leading-normal text-night_green/80'>
                                 <li>Сократить трудозатраты на рутинные манипуляции</li>
                                 <li>Повысить экономию ресурсов</li>
                                 <li>Эффективно организовать учёт материалов</li>
@@ -108,7 +108,7 @@ export default function Partners() {
                     </div>
                     <div className='flex flex-auto flex-col space-y-5 rounded-3xl bg-white p-5 pl-10 shadow-md lg:w-1/3 lg:px-10 lg:py-6'>
                         <h1 className='text-2xl font-semibold text-gray-950'>Поставщикам:</h1>
-                        <ul className='list-inside list-disc text-lg leading-normal text-txtMiddle'>
+                        <ul className='list-inside list-disc text-lg leading-normal text-night_green/80'>
                             <li>Интенсивно продвинуться на рынке с товаром высокого спроса</li>
                             <li>Получить прибыль с минимальными вложениями</li>
                             <li>

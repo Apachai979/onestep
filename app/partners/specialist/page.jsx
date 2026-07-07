@@ -16,11 +16,11 @@ export default function Specialist() {
 
                 <div className="flex flex-col lg:flex-row lg:items-center">
                     <div className="lg:w-5/12 pr-8">
-                        <h1 className="text-4xl font-semibold pb-6 text-center sm:text-left">Специалисту</h1>
+                        <h1 className="text-3xl font-semibold pb-6 text-center sm:text-4xl sm:text-left">Специалисту</h1>
                         <p className="text-xl">Медицинская сестра - олицетворение медицины. В самом ее звании заложена естественная близость с человеком, нуждающимся в помощи.</p>
                         <p className="text-xl text-gray-500 pt-6">Медицинская сестра - первая, кого встречает пациент в клинике. С ней он плотнее всего взаимодействует на пути к выздоровлению. Как максимально облегчить работу той, на ком лежит вся тяжесть заботы о пациенте?</p>
                         <div className="lg:flex flex-col w-full hidden ">
-                            <hr className="h-1 w-full bg-primary_green rounded-sm justify-end mt-4" />
+                            <hr className="mt-4 h-0.5 w-full rounded bg-primary_green" />
                             <p className="text-2xl w-full">OneStep: помогаем медсестре решать рутинные задачи в один шаг</p>
                         </div>
                     </div>
@@ -32,7 +32,7 @@ export default function Specialist() {
                         height={720}
                         priority></Image>
                     <div className="flex flex-col w-full lg:hidden">
-                        <hr className="h-1 w-full bg-primary_green rounded-sm justify-end mt-4" />
+                        <hr className="mt-4 h-0.5 w-full rounded bg-primary_green" />
                         <p className="text-2xl w-full">OneStep: помогаем медсестре решать рутинные задачи в один шаг</p>
                     </div>
                 </div>

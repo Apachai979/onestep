@@ -69,12 +69,14 @@
                 "topics": [
                     {
                         "title": "Стандарт оснащения процедурного кабинета",
+                        "hidden": true,
                         "image": "/academy/image_topics/procedure_room.webp",
                         "alt": "onestep",
                         "href": "/academy/treatment_room"
                     },
                     {
                         "title": "Видео-обзор оснащения процедурного кабинета в московской клинике: разбор и рекомендации.",
+                        "hidden": true,
                         "image": "/academy/image_topics/video_view.jpg",
                         "alt": "onestep",
                         "href": "/academy/video-obzor_protsedurnogo_kabineta"
@@ -111,12 +113,14 @@
                 "topics": [
                     {
                         "title": "Видео \"Переливание крови\"",
+                        "hidden": true,
                         "image": "/academy/image_topics/pereliv_krovi.jpg",
                         "alt": "Onestep",
                         "href": "/academy/video_perelivanie_krovi"
                     },
                     {
                         "title": "Как проходит процедура переливания крови?",
+                        "hidden": true,
                         "image": "/academy/image_topics/perelivanie_krovi.webp",
                         "alt": "Onestep",
                         "href": "/academy/protsedura_perelivaniya_krovi"
@@ -164,6 +168,7 @@
     {
         "title": "Новое в науке и технике",
         "href": "novoye_v_nauke_i_tekhnike",
+        "hidden": true,
         "categories": [
             {
                 "name": "Совеременные технологии, материалы",
@@ -212,6 +217,7 @@
     {
         "title": "Экономическая эффективность вашей организации",
         "href": "ekonomicheskaya_effektivnost_organizatsii",
+        "hidden": true,
         "categories": [
             {
                 "name": "Сэкономить время и снизить затраты на расходные материалы с OneStep",

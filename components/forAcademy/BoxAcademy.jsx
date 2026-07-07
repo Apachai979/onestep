@@ -5,15 +5,26 @@ import Image from "next/image"
 const BoxAcademy = ({ title, categories }) => {
     const [activeCategory, setActiveCategory] = useState(null)
 
+    // Прячем статьи с "hidden": true и категории, где после этого не осталось
+    // ни одной статьи. Вернуть — убрать флаг в dataAcademy.json.
+    const visibleCategories = categories
+        .map(category => ({
+            ...category,
+            topics: category.topics.filter(topic => !topic.hidden),
+        }))
+        .filter(category => category.topics.length > 0)
+
     const handleCategoryClick = categoryName => {
         setActiveCategory(categoryName === activeCategory ? null : categoryName)
     }
 
     const getVisibleTopics = () => {
         if (!activeCategory) {
-            return categories.flatMap(category => category.topics)
+            return visibleCategories.flatMap(category => category.topics)
         }
-        const activeCategoryData = categories.find(category => category.name === activeCategory)
+        const activeCategoryData = visibleCategories.find(
+            category => category.name === activeCategory,
+        )
         return activeCategoryData ? activeCategoryData.topics : []
     }
 
@@ -26,7 +37,7 @@ const BoxAcademy = ({ title, categories }) => {
                     <div className='my-2 rounded-3xl border bg-zinc-200 p-4'>
                         <h2 className='py-2 text-xl font-semibold'>{title}</h2>
                         <div className='mb-3 flex flex-wrap sm:gap-3'>
-                            {categories.map(category => (
+                            {visibleCategories.map(category => (
                                 <button
                                     key={category.name}
                                     href='#'

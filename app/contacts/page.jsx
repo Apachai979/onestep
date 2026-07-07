@@ -9,7 +9,7 @@ export const metadata = {
 export default function Contacts() {
     return (
         <div className='container mx-auto px-4'>
-            <h1 className='py-6 text-3xl font-semibold text-center'>Контакты</h1>
+            <h1 className='py-6 text-center text-3xl font-semibold sm:text-4xl'>Контакты</h1>
             <div className="flex justify-center">
                 <div className='flex flex-col sm:grid sm:grid-cols-2 sm:max-w-[1200px] sm:gap-10 justify-center items-center '>
                     <div className='flex flex-col space-y-6 rounded-3xl border border-stone-300 bg-white p-8 text-xl shadow-sm sm:place-self-start sm:justify-self-stretch sm:mt-4'>

@@ -1,7 +1,11 @@
 "use client"
-import parsedData from "@/components/Data/dataAcademy.json"
+import rawData from "@/components/Data/dataAcademy.json"
 import { useState, useEffect } from "react"
 import BoxAcademy from "@/components/forAcademy/BoxAcademy"
+
+// Скрытые разделы не показываем. Чтобы вернуть раздел — убрать "hidden": true
+// у него в dataAcademy.json.
+const parsedData = rawData.filter(section => !section.hidden)
 
 export default function Academy() {
     const [activeTab, setActiveTab] = useState()

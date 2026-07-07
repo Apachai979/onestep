@@ -16,7 +16,7 @@ const Tabs = ({ children }) => {
                     <button
                         key={child.props.label}
                         className={`${activeTab === child.props.label ? 'border border-b-0 border-t-4 border-t-primary_green border-r-gray-300 border-l-gray-300 rounded-t-md bg-white text-dark_green' : 'border border-b-gray-300 border-t-0 border-l-0 border-r-0'
-                            } flex-1 whitespace-nowrap text-night_green text-md font-semibold py-2 px-3 `}
+                            } shrink-0 whitespace-nowrap text-night_green text-md font-semibold py-2 px-3 sm:flex-1 `}
                         onClick={e => handleClick(e, child.props.label)}
                     >
                         {child.props.label}

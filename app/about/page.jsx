@@ -54,7 +54,7 @@ export default function About() {
                         height={1080}
                         alt="EA">
                     </Image> */}
-                    <h1 className='absolute z-10 text-center text-5xl font-bold text-white'>
+                    <h1 className='absolute z-10 text-center text-4xl font-semibold text-white drop-shadow-lg sm:text-5xl'>
                         OneStep сегодня
                     </h1>
                 </div>

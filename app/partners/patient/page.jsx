@@ -23,8 +23,8 @@ export default function Patient() {
             <Block>
 
                 <div className="flex relative w-full h-auto justify-center items-center overflow-hidden rounded-3xl my-1">
-                    <h1 className="absolute text-6xl font-semibold z-10 ">Пациенту</h1>
-                    <div className="absolute w-full h-full backdrop-brightness-75 bg-white/10"></div>
+                    <h1 className="absolute z-10 text-4xl font-semibold text-white drop-shadow-lg sm:text-5xl">Пациенту</h1>
+                    <div className="absolute w-full h-full backdrop-brightness-75 bg-black/25"></div>
                     <Image
                         src="/doctors/patient/mainpatient.png"
                         alt="Neoset"
@@ -34,7 +34,7 @@ export default function Patient() {
                         priority>
                     </Image>
                 </div>
-                <hr className="bg-primary_green w-full h-0.5 mt-2 mx-auto " />
+                <hr className="mx-auto mt-2 h-0.5 w-full rounded bg-primary_green" />
 
                 <div className="flex flex-col lg:flex-row my-6">
                     <div className="flex flex-col justify-center items-center lg:w-5/12 mx-24">
@@ -70,7 +70,7 @@ export default function Patient() {
                         <div className="flex flex-col md:flex-row-reverse text-xl mx-auto space-x-12 space-x-reverse">
 
                             <div className="md:w-4/12">
-                                <hr className="bg-primary_green h-0.5 lg:w-64 w-full " />
+                                <hr className="h-1 w-24 rounded bg-primary_green" />
                                 <h1 className="text-3xl text-black pt-4">Для чего нужны одноразовые стерильные наборы?</h1>
                             </div>
                             <div className="flex flex-col md:w-8/12 pt-3 ">

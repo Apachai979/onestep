@@ -46,7 +46,7 @@ export default function Doctors() {
     return (
         <>
             <div className='container mx-auto px-4 max-w-[1200px] py-10'>
-                <h1 className="text-4xl font-semibold py-6 text-center sm:text-left">Главному врачу клиники</h1>
+                <h1 className="text-3xl font-semibold py-6 text-center sm:text-4xl sm:text-left">Главному врачу клиники</h1>
                 <div className="flex items-center space-x-10 ">
                     <Image
                         src="/doctors/headdoctor.jpg"
@@ -56,7 +56,7 @@ export default function Doctors() {
                         height={720}
                         priority></Image>
                     <div className="w-2/3">
-                        <p className="text-lg">Задача руководителя медицинского учреждения – контролировать эффективность процессов, происходящих в клинике.
+                        <p className="text-xl">Задача руководителя медицинского учреждения – контролировать эффективность процессов, происходящих в клинике.
                             Качество и уровень работы лечебного учреждения зависят от многих составляющих: экономии бюджетных средств, оптимизации трудовых затрат, квалификации персонала, применения передовых технологий, использования современных материалов при медицинских манипуляциях и многих других.
                             Одним из элементов, позволяющим улучшить показатели эффективности, может стать использование готовых стерильных процедурных наборов.</p>
                     </div>

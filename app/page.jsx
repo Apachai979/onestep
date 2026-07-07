@@ -72,7 +72,7 @@ export default function Home() {
 
             {/* nextblock */}
 
-            <h1 className='container mx-auto my-14 px-4 text-center text-3xl font-semibold text-night_green'>
+            <h1 className='container mx-auto my-14 max-w-[1200px] px-4 text-center text-3xl font-semibold text-night_green'>
                 OneStep —{" "}
                 <span className='text-primary_green'>
                     российский производитель медицинских <br /> одноразовых перевязочных материалов
@@ -82,7 +82,7 @@ export default function Home() {
             </h1>
 
             {/* nextblock */}
-            <div className='container mx-auto px-4'>
+            <div className='container mx-auto max-w-[1200px] px-4'>
                 <div className='flex justify-center'>
                     <div className='grid gap-6 sm:gap-10 lg:grid-cols-2 lg:gap-12'>
                         {features.map((feature, index) => (
@@ -107,7 +107,7 @@ export default function Home() {
                                         </h2>
                                     </div>
                                 </div>
-                                <ul className='absolute inset-0 z-10 mx-10 list-inside list-disc py-5 text-lg font-semibold leading-relaxed text-txtMiddle'>
+                                <ul className='absolute inset-0 z-10 mx-10 list-inside list-disc py-5 text-lg font-semibold leading-relaxed text-night_green/80'>
                                     {feature.points.map((point, i) => (
                                         <li
                                             key={point}
@@ -133,7 +133,7 @@ export default function Home() {
 
             {/* nextblock */}
 
-            <div className='container mx-auto px-4'>
+            <div className='container mx-auto max-w-[1200px] px-4'>
                 <div className='flex justify-center'>
                     <div className='flex max-w-[1000px] flex-col items-center justify-center space-y-5 rounded-3xl bg-white p-6 drop-shadow-lg sm:p-14 lg:shrink lg:flex-row lg:space-y-0 xl:w-[1200px]'>
                         <div className='flex flex-1 justify-center'>
@@ -161,7 +161,7 @@ export default function Home() {
                                 href='/about'
                                 className='w-full max-w-80 rounded-full border-[3px] border-mainGreen bg-white py-3 text-center text-xl text-mainGreen transition duration-300 hover:bg-mainGreen hover:text-white sm:text-2xl'
                             >
-                                Подробнее компании
+                                Подробнее о компании
                             </Link>
                         </div>
                     </div>

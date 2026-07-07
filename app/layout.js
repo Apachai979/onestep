@@ -19,6 +19,19 @@ export const metadata = {
         description:
             "Российский производитель медицинских одноразовых перевязочных материалов и процедурных стерильных наборов",
     },
+    appleWebApp: {
+        capable: true,
+        title: "CRM",
+        statusBarStyle: "default",
+    },
+    icons: {
+        icon: "/icons/icon-192.png",
+        apple: "/icons/apple-icon-180.png",
+    },
+}
+
+export const viewport = {
+    themeColor: "#133531",
 }
 
 export default function Layout({ children, modal }) {

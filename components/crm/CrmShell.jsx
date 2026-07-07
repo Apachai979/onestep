@@ -25,6 +25,7 @@ import { onTasksChanged } from "@/lib/crm/tasks-events"
 import { ConfirmProvider, ToastProvider } from "@/components/crm/ui"
 import { CrmNavTracker } from "@/components/crm/CrmBackLink"
 import GlobalSearch from "@/components/crm/GlobalSearch"
+import InstallAppButton from "@/components/crm/InstallAppButton"
 
 function safeJson(text) {
     try {
@@ -248,6 +249,7 @@ export default function CrmShell({ user, role, children }) {
                 </nav>
 
                 <div className='relative shrink-0 border-t border-brand_soft/30 p-2'>
+                    <InstallAppButton showLabels={showLabels} onDone={onClose} />
                     <div className='flex items-center gap-3 rounded-lg bg-brand_soft/20 px-2 py-2'>
                         <div
                             className='flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand_main text-white text-sm font-semibold'

@@ -102,22 +102,13 @@ export default async function ProjectPage({ params }) {
                         projectId={item.id}
                         currentStatus={item.status}
                     />
-                    <div className='flex flex-wrap justify-end gap-2'>
-                        <Link
-                            href={`/crm/projects/${item.id}/edit`}
-                            className='inline-flex items-center gap-1.5 rounded-lg border border-brand_soft/60 bg-white px-3 py-1.5 text-xs font-medium text-night_green/75 hover:bg-brand_soft/30'
-                        >
-                            <LuPencil className='h-3 w-3' />
-                            Редактировать
-                        </Link>
-                        <Link
-                            href={`/crm/deals/new?fromProjectId=${item.id}`}
-                            className='inline-flex items-center gap-1.5 rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand_main/90'
-                        >
-                            <LuPlus className='h-3 w-3' />
-                            Создать сделку
-                        </Link>
-                    </div>
+                    <Link
+                        href={`/crm/deals/new?fromProjectId=${item.id}`}
+                        className='inline-flex items-center gap-1.5 rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand_main/90'
+                    >
+                        <LuPlus className='h-3 w-3' />
+                        Создать сделку
+                    </Link>
                 </div>
             </div>
 
@@ -148,12 +139,22 @@ export default async function ProjectPage({ params }) {
                 <div className='min-w-0 space-y-4'>
                     <Section
                         title='Связка'
+                        action={
+                            <Link
+                                href={`/crm/projects/${item.id}/edit`}
+                                className='inline-flex items-center gap-1 rounded-md border border-brand_soft/60 bg-white px-2 py-1 text-[11px] font-medium text-night_green/75 hover:bg-brand_soft/30'
+                            >
+                                <LuPencil className='h-3 w-3' />
+                                Редактировать
+                            </Link>
+                        }
                         footer={`Создан ${fmtDate(item.createdAt)}${
                             item.updatedBy
                                 ? ` · изменил ${fullName(item.updatedBy)} · ${new Date(item.updatedAt).toLocaleString("ru-RU")}`
                                 : ""
                         }`}
                     >
+                        {/* Организация и её регион — в одном ряду 3-колоночной сетки */}
                         <Row label='Конечный потребитель'>
                             <Link
                                 href={`/crm/counterparties/${item.endCustomer.id}`}
@@ -163,6 +164,7 @@ export default async function ProjectPage({ params }) {
                             </Link>
                         </Row>
                         <Row label='Регион ЛПУ' value={item.endCustomer.region} />
+                        <Row label='Менеджер' value={fullName(item.manager)} />
                         <Row label='Дистрибьютор'>
                             <Link
                                 href={`/crm/counterparties/${item.distributor.id}`}
@@ -172,7 +174,6 @@ export default async function ProjectPage({ params }) {
                             </Link>
                         </Row>
                         <Row label='Регион дистрибьютора' value={item.distributor.region} />
-                        <Row label='Менеджер' value={fullName(item.manager)} />
                         <Row label='Дата аукциона' value={fmtDate(item.auctionDate)} />
                         <Row label='Сумма проекта' value={formatMoney(item.totalAmount)} />
                     </Section>
@@ -295,12 +296,15 @@ export default async function ProjectPage({ params }) {
     )
 }
 
-function Section({ title, footer, children }) {
+function Section({ title, footer, action, children }) {
     return (
         <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-            <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-night_green/70'>
-                {title}
-            </h2>
+            <div className='mb-2.5 flex items-center justify-between gap-3'>
+                <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                    {title}
+                </h2>
+                {action && <div className='shrink-0'>{action}</div>}
+            </div>
             <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>{children}</dl>
             {footer && (
                 <p className='mt-3 border-t border-brand_soft/30 pt-2 text-[11px] text-night_green/50'>

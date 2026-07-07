@@ -260,8 +260,8 @@ export default async function CrmHome() {
     return (
         <div className='space-y-4 sm:space-y-5'>
             {/* Header */}
-            <div className='flex flex-wrap items-end justify-between gap-3'>
-                <div>
+            <div className='flex flex-wrap items-center justify-between gap-3'>
+                <div className='shrink-0'>
                     <p className='text-xs uppercase tracking-wider text-night_green/55'>
                         {new Date().toLocaleDateString("ru-RU", {
                             weekday: "long",
@@ -272,6 +272,9 @@ export default async function CrmHome() {
                     <h1 className='mt-1 text-xl font-semibold text-night_green sm:text-2xl'>
                         Привет, {firstName} 👋
                     </h1>
+                </div>
+                <div className='order-last w-full min-w-[240px] lg:order-none lg:mx-2 lg:w-auto lg:max-w-xl lg:flex-1'>
+                    <DashboardSearch />
                 </div>
                 <div className='flex flex-wrap gap-2'>
                     <Link
@@ -290,9 +293,6 @@ export default async function CrmHome() {
                     </Link>
                 </div>
             </div>
-
-            {/* Глобальный поиск */}
-            <DashboardSearch />
 
             {/* KPIs */}
             <div className='grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4'>

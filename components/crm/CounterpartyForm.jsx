@@ -3,6 +3,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import DadataSearch from "./DadataSearch"
+import SearchableSelect from "./SearchableSelect"
 import {
     ACTIVITY_AREAS,
     ACTIVITY_AREA_LABELS,
@@ -48,6 +49,7 @@ const EMPTY = {
     companyKind: "",
     activityArea: "",
     note: "",
+    managerId: "",
 }
 
 function toFormValue(v) {
@@ -69,6 +71,14 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
     const [error, setError] = useState("")
     const [duplicate, setDuplicate] = useState(null)
     const [loading, setLoading] = useState(false)
+    const [managers, setManagers] = useState([])
+
+    useEffect(() => {
+        fetch("/api/crm/users")
+            .then(r => (r.ok ? r.json() : { items: [] }))
+            .then(d => setManagers(d.items || []))
+            .catch(() => setManagers([]))
+    }, [])
 
     function update(field) {
         return e => setForm(prev => ({ ...prev, [field]: e.target.value }))
@@ -182,11 +192,17 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className='space-y-6'>
+        <form onSubmit={handleSubmit} className='space-y-4'>
             <DadataSearch target='party' onPick={applyDadataParty} />
 
             <Section title='Основное'>
-                <Field label='Название *' value={form.name} onChange={update("name")} required />
+                <Field
+                    label='Название *'
+                    value={form.name}
+                    onChange={update("name")}
+                    required
+                    className='lg:col-span-2'
+                />
                 <Field label='Регион *' value={form.region} onChange={update("region")} required />
                 <Field label='Телефон' value={form.phone} onChange={update("phone")} />
                 <Field
@@ -195,13 +211,30 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                     value={form.email}
                     onChange={update("email")}
                 />
+                <div>
+                    <label className='mb-1 block text-sm text-gray-700'>
+                        Ответственный менеджер
+                    </label>
+                    <SearchableSelect
+                        value={form.managerId}
+                        onChange={id => setForm(prev => ({ ...prev, managerId: id }))}
+                        placeholder='— Не назначен —'
+                        emptyLabel='Сотрудник не найден'
+                        options={managers.map(m => ({
+                            id: m.id,
+                            label:
+                                `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() || m.email,
+                            search: `${m.firstName ?? ""} ${m.lastName ?? ""} ${m.email ?? ""}`,
+                        }))}
+                    />
+                </div>
                 <Field
                     label='Адрес'
                     value={form.address}
                     onChange={update("address")}
                     className='sm:col-span-2'
                 />
-                <div className='sm:col-span-2'>
+                <div>
                     <label className='mb-1 block text-sm text-gray-700'>Источник</label>
                     <select
                         value={form.source}
@@ -256,25 +289,16 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                 )}
             </Section>
 
-            <Section title='Реквизиты'>
+            <Section title='Реквизиты и финансы'>
                 <Field label='ИНН' value={form.inn} onChange={update("inn")} />
                 <Field label='КПП' value={form.kpp} onChange={update("kpp")} />
                 <Field label='ОГРН' value={form.ogrn} onChange={update("ogrn")} />
                 <Field label='ОКПО' value={form.okpo} onChange={update("okpo")} />
-                <Field
-                    label='ОКВЭД'
-                    value={form.okved}
-                    onChange={update("okved")}
-                    className='sm:col-span-2'
-                />
-            </Section>
-
-            <Section title='Банковские реквизиты'>
+                <Field label='ОКВЭД' value={form.okved} onChange={update("okved")} />
                 <Field
                     label='Название банка'
                     value={form.bankName}
                     onChange={update("bankName")}
-                    className='sm:col-span-2'
                 />
                 <div>
                     <label className='mb-1 block text-sm text-gray-700'>БИК</label>
@@ -308,11 +332,7 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                     label='Корреспондентский счёт'
                     value={form.bankCorrAccount}
                     onChange={update("bankCorrAccount")}
-                    className='sm:col-span-2'
                 />
-            </Section>
-
-            <Section title='Финансы'>
                 <Field
                     label='Бюджет (сумма сделок), ₽'
                     type='number'
@@ -396,11 +416,11 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
 
 function Section({ title, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
-            <h2 className='mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+            <h2 className='mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500'>
                 {title}
             </h2>
-            <div className='grid gap-4 sm:grid-cols-2'>{children}</div>
+            <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3'>{children}</div>
         </section>
     )
 }

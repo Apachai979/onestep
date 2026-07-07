@@ -25,6 +25,7 @@ model User {
 
   counterparties         Counterparty[] @relation("CounterpartyCreatedBy")
   counterpartiesUpdated  Counterparty[] @relation("CounterpartyUpdatedBy")
+  counterpartiesManaged  Counterparty[] @relation("CounterpartyManager")
   projects               Project[]      @relation("ProjectManager")
   projectsUpdated        Project[]      @relation("ProjectUpdatedBy")
   dealsAsManager         Deal[]         @relation("DealManager")
@@ -100,6 +101,8 @@ model Counterparty {
   activityArea    String?
   note            String?
   contacts        Contact[]
+  managerId       String?
+  manager         User?    @relation("CounterpartyManager", fields: [managerId], references: [id], onDelete: SetNull)
   createdById     String?
   createdBy       User?    @relation("CounterpartyCreatedBy", fields: [createdById], references: [id])
   updatedById     String?

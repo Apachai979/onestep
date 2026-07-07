@@ -163,7 +163,7 @@ export default function DealForm({
     }
 
     return (
-        <form onSubmit={handleSubmit} className='space-y-5'>
+        <form onSubmit={handleSubmit} className='space-y-4'>
             <Section title='Основное'>
                 <Field
                     label='Название сделки (опц.)'
@@ -239,7 +239,7 @@ export default function DealForm({
             </Section>
 
             <Section title='Статус, доставка, примечание'>
-                <div className='sm:col-span-2'>
+                <div>
                     <label className='mb-1 block text-sm text-gray-700'>Статус</label>
                     <select
                         value={form.status}
@@ -253,7 +253,7 @@ export default function DealForm({
                         ))}
                     </select>
                 </div>
-                <div className='sm:col-span-2'>
+                <div>
                     <label className='mb-1 block text-sm text-gray-700'>
                         Скидка, %
                     </label>
@@ -323,11 +323,11 @@ export default function DealForm({
 
 function Section({ title, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
-            <h2 className='mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500'>
+        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+            <h2 className='mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500'>
                 {title}
             </h2>
-            <div className='grid gap-4 sm:grid-cols-2'>{children}</div>
+            <div className='grid gap-3 sm:grid-cols-2'>{children}</div>
         </section>
     )
 }

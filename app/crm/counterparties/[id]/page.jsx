@@ -25,6 +25,7 @@ export default async function CounterpartyPage({ params }) {
         include: {
             createdBy: { select: { firstName: true, lastName: true, email: true } },
             updatedBy: { select: { firstName: true, lastName: true, email: true } },
+            manager: { select: { firstName: true, lastName: true, email: true } },
             contacts: { orderBy: [{ isPrimary: "desc" }, { lastName: "asc" }, { firstName: "asc" }] },
         },
     })
@@ -90,19 +91,21 @@ export default async function CounterpartyPage({ params }) {
                             .join(" · ")}
                     </p>
                 </div>
-                <Link
-                    href={`/crm/counterparties/${item.id}/edit`}
-                    className='inline-flex items-center gap-1.5 rounded-lg border border-brand_soft/60 bg-white px-3 py-1.5 text-xs font-medium text-night_green/75 hover:bg-brand_soft/30'
-                >
-                    <LuPencil className='h-3 w-3' />
-                    Редактировать
-                </Link>
             </div>
 
             <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='min-w-0 space-y-4'>
                     <Section
                         title='Основное'
+                        action={
+                            <Link
+                                href={`/crm/counterparties/${item.id}/edit`}
+                                className='inline-flex items-center gap-1 rounded-md border border-brand_soft/60 bg-white px-2 py-1 text-[11px] font-medium text-night_green/75 hover:bg-brand_soft/30'
+                            >
+                                <LuPencil className='h-3 w-3' />
+                                Редактировать
+                            </Link>
+                        }
                         footer={`Создал ${createdByName} · ${new Date(item.createdAt).toLocaleString("ru-RU")}${
                             updatedByName
                                 ? ` · изменил ${updatedByName} · ${new Date(item.updatedAt).toLocaleString("ru-RU")}`
@@ -112,6 +115,15 @@ export default async function CounterpartyPage({ params }) {
                         <Row label='Регион' value={item.region} />
                         <Row label='Телефон' value={item.phone} />
                         <Row label='Email' value={item.email} />
+                        <Row
+                            label='Ответственный менеджер'
+                            value={
+                                item.manager
+                                    ? `${item.manager.firstName ?? ""} ${item.manager.lastName ?? ""}`.trim() ||
+                                      item.manager.email
+                                    : null
+                            }
+                        />
                         <Row
                             label='Адрес'
                             value={item.address}
@@ -260,12 +272,15 @@ export default async function CounterpartyPage({ params }) {
     )
 }
 
-function Section({ title, footer, children }) {
+function Section({ title, footer, action, children }) {
     return (
         <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-            <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-night_green/70'>
-                {title}
-            </h2>
+            <div className='mb-2.5 flex items-center justify-between gap-3'>
+                <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                    {title}
+                </h2>
+                {action && <div className='shrink-0'>{action}</div>}
+            </div>
             <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>{children}</dl>
             {footer && (
                 <p className='mt-3 border-t border-brand_soft/30 pt-2 text-[11px] text-night_green/50'>

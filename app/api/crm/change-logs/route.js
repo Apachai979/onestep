@@ -3,6 +3,9 @@ import { requireCrmSession } from "@/lib/crm/session"
 import { ENTITY_LABELS, enumValueLabel } from "@/lib/crm/change-log"
 
 const RELATION_FIELDS = {
+    Counterparty: {
+        managerId: { model: "user" },
+    },
     Deal: {
         counterpartyId: { model: "counterparty" },
         contactId: { model: "contact" },

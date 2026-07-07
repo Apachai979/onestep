@@ -25,6 +25,7 @@ const COUNTERPARTY_TRACKED_FIELDS = [
     "companyKind",
     "activityArea",
     "note",
+    "managerId",
 ]
 
 export async function GET(request) {
@@ -101,6 +102,16 @@ export async function POST(request) {
 
     const { data, error } = parseCounterpartyPayload(body)
     if (error) return Response.json({ error }, { status: 400 })
+
+    if (data.managerId) {
+        const m = await prisma.user.findUnique({
+            where: { id: data.managerId },
+            select: { status: true },
+        })
+        if (!m || m.status !== "ACTIVE") {
+            return Response.json({ error: "Менеджер не найден" }, { status: 400 })
+        }
+    }
 
     if (data.inn) {
         const existing = await prisma.counterparty.findFirst({

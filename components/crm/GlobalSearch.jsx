@@ -132,7 +132,7 @@ export default function GlobalSearch({ open, onClose }) {
                     {q.trim().length < 2 && (
                         <p className='px-3 py-6 text-center text-sm text-night_green/45'>
                             Введите минимум два символа — ищем по названиям, ИНН,
-                            телефонам, email и номерам аукционов.
+                            телефонам и email.
                         </p>
                     )}
                     {q.trim().length >= 2 && !loading && results && total === 0 && (

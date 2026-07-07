@@ -2,7 +2,7 @@ import ExcelJS from "exceljs"
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { DEAL_LOSS_REASON_LABELS, DEAL_STATUS_LABELS } from "@/lib/crm/deal"
-import { PROJECT_LOSS_REASON_LABELS, PROJECT_STATUS_LABELS } from "@/lib/crm/project"
+import { PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import { xlsxResponse } from "@/lib/crm/excel"
 
 const CP_TYPE_LABELS = {
@@ -37,7 +37,10 @@ function setupSheet(ws, columns) {
 async function exportCounterparties(wb) {
     const items = await prisma.counterparty.findMany({
         orderBy: { name: "asc" },
-        include: { contacts: { orderBy: [{ lastName: "asc" }] } },
+        include: {
+            contacts: { orderBy: [{ lastName: "asc" }] },
+            manager: { select: { email: true } },
+        },
     })
     const ws = wb.addWorksheet("Контрагенты")
     setupSheet(ws, [
@@ -50,6 +53,7 @@ async function exportCounterparties(wb) {
         { header: "ОГРН", key: "ogrn", width: 16 },
         { header: "Телефон", key: "phone", width: 18 },
         { header: "Email", key: "email", width: 26 },
+        { header: "Менеджер (email)", key: "manager", width: 26 },
         { header: "Адрес", key: "address", width: 40 },
         { header: "Источник", key: "source", width: 20 },
         { header: "Скидка %", key: "discount", width: 10 },
@@ -77,6 +81,7 @@ async function exportCounterparties(wb) {
             ogrn: c.ogrn || "",
             phone: c.phone || "",
             email: c.email || "",
+            manager: c.manager?.email || "",
             address: c.address || "",
             source: c.source || "",
             discount: num(c.discount),
@@ -169,61 +174,40 @@ async function exportProjects(wb) {
             distributor: { select: { name: true, inn: true } },
             endCustomer: { select: { name: true, inn: true } },
             manager: { select: { email: true } },
-            items: { orderBy: { createdAt: "asc" } },
         },
     })
+    // Сумма проекта — производная от привязанных сделок.
+    const sums = await prisma.deal.groupBy({
+        by: ["sourceProjectId"],
+        where: { sourceProjectId: { not: null } },
+        _sum: { totalAmount: true },
+    })
+    const sumMap = new Map(sums.map(s => [s.sourceProjectId, Number(s._sum.totalAmount || 0)]))
+
     const ws = wb.addWorksheet("Проекты")
     setupSheet(ws, [
         { header: "№", key: "n", width: 6 },
-        { header: "Аукцион", key: "auction", width: 40 },
         { header: "Внутреннее название", key: "title", width: 40 },
-        { header: "Статус", key: "status", width: 14 },
-        { header: "Сумма", key: "amount", width: 14 },
-        { header: "Дата аукциона", key: "auctionDate", width: 14 },
+        { header: "Статус", key: "status", width: 16 },
+        { header: "Сумма сделок", key: "amount", width: 14 },
         { header: "Дистрибьютор", key: "dist", width: 36 },
         { header: "ИНН дистрибьютора", key: "distInn", width: 16 },
         { header: "Потребитель", key: "cust", width: 36 },
         { header: "ИНН потребителя", key: "custInn", width: 16 },
         { header: "Менеджер (email)", key: "manager", width: 26 },
-        { header: "Причина проигрыша", key: "lossReason", width: 26 },
-        { header: "Комментарий к проигрышу", key: "lossComment", width: 30 },
-    ])
-    const wi = wb.addWorksheet("Позиции")
-    setupSheet(wi, [
-        { header: "№ проекта", key: "n", width: 10 },
-        { header: "Артикул", key: "sku", width: 14 },
-        { header: "Наименование", key: "name", width: 44 },
-        { header: "Кол-во", key: "qty", width: 10 },
-        { header: "Сумма", key: "amount", width: 14 },
     ])
     items.forEach((p, i) => {
-        const n = i + 1
         ws.addRow({
-            n,
-            auction: p.externalAuctionId,
+            n: i + 1,
             title: p.internalName,
             status: PROJECT_STATUS_LABELS[p.status] || p.status,
-            amount: num(p.totalAmount),
-            auctionDate: fmtDate(p.auctionDate),
+            amount: sumMap.get(p.id) || 0,
             dist: p.distributor?.name || "",
             distInn: p.distributor?.inn || "",
             cust: p.endCustomer?.name || "",
             custInn: p.endCustomer?.inn || "",
             manager: managerEmail(p.manager),
-            lossReason: p.lossReason
-                ? PROJECT_LOSS_REASON_LABELS[p.lossReason] || p.lossReason
-                : "",
-            lossComment: p.lossComment || "",
         })
-        for (const it of p.items) {
-            wi.addRow({
-                n,
-                sku: it.sku || "",
-                name: it.name,
-                qty: num(it.quantity),
-                amount: num(it.amount),
-            })
-        }
     })
     return "Проекты"
 }

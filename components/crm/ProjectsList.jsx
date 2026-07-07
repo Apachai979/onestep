@@ -6,7 +6,6 @@ import {
     PROJECT_STATUS_COLORS,
     PROJECT_STATUS_LABELS,
     PROJECT_STATUSES,
-    looksLikeUrl,
 } from "@/lib/crm/project"
 import { LuTarget, LuPlus } from "react-icons/lu"
 import { formatMoney } from "@/lib/crm/format"
@@ -33,8 +32,6 @@ export default function ProjectsList() {
         q: "",
         status: "",
         region: "",
-        dateFrom: "",
-        dateTo: "",
         distributorId: "",
         customerId: "",
         managerId: "",
@@ -129,7 +126,7 @@ export default function ProjectsList() {
                     <input
                         value={filters.q}
                         onChange={set("q")}
-                        placeholder='Аукцион, название'
+                        placeholder='Название, клиент'
                         className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     />
                 </FilterField>
@@ -178,22 +175,6 @@ export default function ProjectsList() {
                         placeholder='Все'
                     />
                 </FilterField>
-                <FilterField label='Дата с'>
-                    <input
-                        type='date'
-                        value={filters.dateFrom}
-                        onChange={set("dateFrom")}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                    />
-                </FilterField>
-                <FilterField label='Дата по'>
-                    <input
-                        type='date'
-                        value={filters.dateTo}
-                        onChange={set("dateTo")}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                    />
-                </FilterField>
             </div>
 
             <div className='flex justify-end'>
@@ -239,23 +220,8 @@ export default function ProjectsList() {
                                 {p.endCustomer?.region || p.distributor?.region || "—"}
                             </CardRow>
                             <CardRow label='Менеджер'>{fullName(p.manager)}</CardRow>
-                            <CardRow label='Аукцион'>
-                                {looksLikeUrl(p.externalAuctionId) ? (
-                                    <a
-                                        href={p.externalAuctionId}
-                                        target='_blank'
-                                        rel='noopener noreferrer'
-                                        onClick={e => e.stopPropagation()}
-                                        className='text-brand_main underline hover:text-brand_main/80'
-                                    >
-                                        ссылка
-                                    </a>
-                                ) : (
-                                    p.externalAuctionId || "—"
-                                )}
-                            </CardRow>
-                            <CardRow label='Дата аукциона'>{formatDate(p.auctionDate)}</CardRow>
-                            <CardRow label='Сумма'>
+                            <CardRow label='Создан'>{formatDate(p.createdAt)}</CardRow>
+                            <CardRow label='Сумма сделок'>
                                 <span className='font-medium text-gray-800'>
                                     {formatMoney(p.totalAmount)}
                                 </span>
@@ -270,22 +236,20 @@ export default function ProjectsList() {
                     <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
                         <tr>
                             <th className='px-4 py-3'>Конечный потребитель</th>
-                            <th className='px-4 py-3'>Аукцион</th>
                             <th className='px-4 py-3'>Внутреннее название</th>
                             <th className='px-4 py-3'>Дистрибьютор</th>
                             <th className='px-4 py-3'>Регион</th>
                             <th className='px-4 py-3'>Менеджер</th>
                             <th className='px-4 py-3'>Статус</th>
-                            <th className='px-4 py-3 text-right'>Сумма</th>
+                            <th className='px-4 py-3 text-right'>Сумма сделок</th>
                             <th className='px-4 py-3'>Создан</th>
-                            <th className='px-4 py-3'>Аукцион</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {items === null && <TableSkeleton rows={5} cols={10} />}
+                        {items === null && <TableSkeleton rows={5} cols={8} />}
                         {items?.length === 0 && (
                             <EmptyState
-                                colSpan={10}
+                                colSpan={8}
                                 icon={LuTarget}
                                 title='Проектов не найдено'
                                 hint='Попробуйте сбросить фильтры или создайте новый проект.'
@@ -299,21 +263,6 @@ export default function ProjectsList() {
                             >
                                 <td className='px-4 py-3 text-gray-700'>
                                     {p.endCustomer?.name || "—"}
-                                </td>
-                                <td className='max-w-[220px] truncate px-4 py-3 text-gray-700'>
-                                    {looksLikeUrl(p.externalAuctionId) ? (
-                                        <a
-                                            href={p.externalAuctionId}
-                                            target='_blank'
-                                            rel='noopener noreferrer'
-                                            onClick={e => e.stopPropagation()}
-                                            className='text-brand_main underline hover:text-brand_main/80'
-                                        >
-                                            {p.externalAuctionId}
-                                        </a>
-                                    ) : (
-                                        p.externalAuctionId
-                                    )}
                                 </td>
                                 <td className='px-4 py-3'>
                                     <Link
@@ -342,9 +291,6 @@ export default function ProjectsList() {
                                 </td>
                                 <td className='px-4 py-3 text-gray-700'>
                                     {formatDate(p.createdAt)}
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>
-                                    {formatDate(p.auctionDate)}
                                 </td>
                             </tr>
                         ))}

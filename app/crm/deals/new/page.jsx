@@ -21,7 +21,6 @@ export default async function NewDealPage({ searchParams }) {
             select: {
                 id: true,
                 internalName: true,
-                externalAuctionId: true,
                 totalAmount: true,
                 distributorId: true,
                 endCustomerId: true,

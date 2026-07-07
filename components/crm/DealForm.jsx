@@ -229,10 +229,8 @@ export default function DealForm({
                         options={projects.map(p => ({
                             id: p.id,
                             label: p.internalName,
-                            sublabel: `Аукцион ${p.externalAuctionId}${
-                                p.endCustomer?.name ? ` · ${p.endCustomer.name}` : ""
-                            }`,
-                            search: `${p.internalName} ${p.externalAuctionId} ${p.distributor?.name ?? ""} ${p.endCustomer?.name ?? ""}`,
+                            sublabel: [p.distributor?.name, p.endCustomer?.name].filter(Boolean).join(" – "),
+                            search: `${p.internalName} ${p.distributor?.name ?? ""} ${p.endCustomer?.name ?? ""}`,
                         }))}
                     />
                 </div>

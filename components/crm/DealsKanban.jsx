@@ -1,6 +1,7 @@
 "use client"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
+import { LuPlus } from "react-icons/lu"
 import {
     DEAL_STATUSES,
     DEAL_STATUS_COLORS,
@@ -12,6 +13,16 @@ import {
 // Kanban показывает пять активных колонок; ARCHIVED — свалка старых
 // CLOSED/CANCELLED (заполняется автоархиватором), из доски скрыт.
 const KANBAN_STATUSES = DEAL_STATUSES.filter(s => s !== "ARCHIVED")
+
+// Сдержанное оформление в стиле канбана проектов: нейтральные колонки,
+// тонкая приглушённая акцентная полоска сверху для быстрой ориентации.
+const COLUMN_ACCENT = {
+    NEGOTIATION: "bg-blue-300/70",
+    CONTRACT: "bg-violet-300/70",
+    EXECUTION: "bg-amber-300/70",
+    CLOSED: "bg-green-300/70",
+    CANCELLED: "bg-red-300/70",
+}
 import { calculateDealShipmentProgress, isShipmentOverdue } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
 import { useToast } from "@/components/crm/ui"
@@ -151,8 +162,9 @@ export default function DealsKanban() {
                 </div>
                 <Link
                     href='/crm/deals/new'
-                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
+                    className='inline-flex items-center gap-2 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                 >
+                    <LuPlus className='h-4 w-4' />
                     Новая сделка
                 </Link>
             </div>
@@ -169,55 +181,58 @@ export default function DealsKanban() {
                             onDragOver={onDragOver(status)}
                             onDragLeave={() => setDragOver(null)}
                             onDrop={onDrop(status)}
-                            className={`flex w-[280px] shrink-0 flex-col rounded-xl border bg-gray-50 p-3 ${
+                            className={`flex w-[290px] shrink-0 flex-col overflow-hidden rounded-xl border bg-gray-50 ${
                                 dragOver === status
                                     ? "border-primary_green ring-2 ring-primary_green/30"
                                     : "border-gray-200"
                             }`}
                         >
-                            <div className='mb-1 flex items-center justify-between'>
-                                <div className='flex items-center gap-2'>
-                                    <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${DEAL_STATUS_COLORS[status]}`}
-                                    >
-                                        {DEAL_STATUS_LABELS[status]}
-                                    </span>
-                                    <span className='text-xs text-gray-500'>{list.length}</span>
+                            <div className={`h-0.5 w-full ${COLUMN_ACCENT[status]}`} />
+                            <div className='flex flex-1 flex-col p-3'>
+                                <div className='mb-1 flex items-center justify-between'>
+                                    <div className='flex items-center gap-2'>
+                                        <span
+                                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${DEAL_STATUS_COLORS[status]}`}
+                                        >
+                                            {DEAL_STATUS_LABELS[status]}
+                                        </span>
+                                        <span className='text-xs text-gray-500'>{list.length}</span>
+                                    </div>
+                                    {(status === "NEGOTIATION" || status === "CONTRACT") && (
+                                        <Link
+                                            href={`/crm/deals/new?status=${status}`}
+                                            className='rounded-md border border-brand_soft/60 px-2 py-0.5 text-xs text-gray-600 hover:bg-white hover:text-brand_main'
+                                            title='Добавить сделку с этим статусом'
+                                        >
+                                            +
+                                        </Link>
+                                    )}
                                 </div>
-                                {(status === "NEGOTIATION" || status === "CONTRACT") && (
-                                    <Link
-                                        href={`/crm/deals/new?status=${status}`}
-                                        className='rounded-md border border-brand_soft/60 px-2 py-0.5 text-xs text-gray-600 hover:bg-white hover:text-brand_main'
-                                        title='Добавить сделку с этим статусом'
-                                    >
-                                        +
-                                    </Link>
+                                {DEAL_STATUS_HINTS[status] && (
+                                    <p className='mb-1 text-[10px] leading-tight text-gray-500'>
+                                        {DEAL_STATUS_HINTS[status]}
+                                    </p>
                                 )}
-                            </div>
-                            {DEAL_STATUS_HINTS[status] && (
-                                <p className='mb-1 text-[10px] leading-tight text-gray-500'>
-                                    {DEAL_STATUS_HINTS[status]}
+                                <p className='mb-3 text-xs text-gray-500'>
+                                    Итого: {formatMoney(sum)}
                                 </p>
-                            )}
-                            <p className='mb-3 text-xs text-gray-500'>
-                                Итого: {formatMoney(sum)}
-                            </p>
-                            <div className='flex flex-col gap-2'>
-                                {deals === null && (
-                                    <p className='text-xs text-gray-400'>Загрузка...</p>
-                                )}
-                                {list.map(d => (
-                                    <DealCard
-                                        key={d.id}
-                                        deal={d}
-                                        dragging={draggingId === d.id}
-                                        onDragStart={onDragStart(d.id)}
-                                        onDragEnd={onDragEnd}
-                                    />
-                                ))}
-                                {deals !== null && list.length === 0 && (
-                                    <p className='text-xs text-gray-400 italic'>Пусто</p>
-                                )}
+                                <div className='flex flex-col gap-2'>
+                                    {deals === null && (
+                                        <p className='text-xs text-gray-400'>Загрузка...</p>
+                                    )}
+                                    {list.map(d => (
+                                        <DealCard
+                                            key={d.id}
+                                            deal={d}
+                                            dragging={draggingId === d.id}
+                                            onDragStart={onDragStart(d.id)}
+                                            onDragEnd={onDragEnd}
+                                        />
+                                    ))}
+                                    {deals !== null && list.length === 0 && (
+                                        <p className='text-xs italic text-gray-400'>Пусто</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )
@@ -255,13 +270,13 @@ function DealCard({ deal, dragging, onDragStart, onDragEnd }) {
                 dragging ? "opacity-50" : "border-gray-200"
             }`}
         >
-            <p className='font-medium text-night_green'>{title}</p>
-            <p className='mt-1 text-xs text-gray-600'>
+            <p className='font-medium leading-snug text-night_green'>{title}</p>
+            <p className='mt-1 truncate text-xs text-gray-600'>
                 {deal.counterparty?.name || "Без клиента"}
             </p>
-            <div className='mt-2 flex items-center justify-between text-xs'>
-                <span className='text-gray-500'>{managerName(deal.manager)}</span>
-                <span className='font-semibold text-gray-700'>
+            <div className='mt-2 flex items-center justify-between gap-2 text-xs'>
+                <span className='truncate text-gray-500'>{managerName(deal.manager)}</span>
+                <span className='shrink-0 font-semibold text-gray-700'>
                     {formatMoney(deal.totalAmount)}
                 </span>
             </div>

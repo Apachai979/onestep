@@ -124,7 +124,7 @@ model Counterparty {
 
 model Project {
   id                String        @id @default(cuid())
-  externalAuctionId String
+  externalAuctionId String?
   internalName      String
   status            String        @default("IN_PROGRESS")
   totalAmount       Decimal       @default(0)

@@ -37,7 +37,7 @@ export default async function DealPage({ params }) {
             updatedBy: true,
             items: { orderBy: { createdAt: "asc" } },
             sourceProject: {
-                select: { id: true, internalName: true, externalAuctionId: true },
+                select: { id: true, internalName: true },
             },
         },
     })
@@ -96,10 +96,7 @@ export default async function DealPage({ params }) {
                                 className='underline hover:text-blue-900'
                             >
                                 {item.sourceProject.internalName}
-                            </Link>{" "}
-                            <span className='break-all text-night_green/50'>
-                                (аукцион {item.sourceProject.externalAuctionId})
-                            </span>
+                            </Link>
                         </p>
                     )}
                 </div>

@@ -22,8 +22,6 @@ export async function GET(request) {
     const distributorId = searchParams.get("distributorId")
     const managerId = searchParams.get("managerId")
     const region = searchParams.get("region")?.trim()
-    const dateFrom = searchParams.get("dateFrom")
-    const dateTo = searchParams.get("dateTo")
 
     const where = {}
     if (status) {
@@ -35,11 +33,6 @@ export async function GET(request) {
     if (customerId) where.endCustomerId = customerId
     if (distributorId) where.distributorId = distributorId
     if (managerId) where.managerId = managerId
-    if (dateFrom || dateTo) {
-        where.auctionDate = {}
-        if (dateFrom) where.auctionDate.gte = new Date(`${dateFrom}T00:00:00.000Z`)
-        if (dateTo) where.auctionDate.lte = new Date(`${dateTo}T23:59:59.999Z`)
-    }
 
     const items = await prisma.project.findMany({
         where,
@@ -55,8 +48,9 @@ export async function GET(request) {
         if (q) {
             const ql = q.toLowerCase()
             const matchQ =
-                (p.externalAuctionId || "").toLowerCase().includes(ql) ||
-                (p.internalName || "").toLowerCase().includes(ql)
+                (p.internalName || "").toLowerCase().includes(ql) ||
+                (p.distributor?.name || "").toLowerCase().includes(ql) ||
+                (p.endCustomer?.name || "").toLowerCase().includes(ql)
             if (!matchQ) return false
         }
         if (region) {
@@ -69,7 +63,24 @@ export async function GET(request) {
         return true
     })
 
-    return Response.json({ items: filtered })
+    // Сумма проекта — производная: сумма всех сделок, привязанных к проекту.
+    const ids = filtered.map(p => p.id)
+    const sums = ids.length
+        ? await prisma.deal.groupBy({
+              by: ["sourceProjectId"],
+              where: { sourceProjectId: { in: ids } },
+              _sum: { totalAmount: true },
+          })
+        : []
+    const sumMap = new Map(sums.map(s => [s.sourceProjectId, Number(s._sum.totalAmount || 0)]))
+
+    return Response.json({
+        items: filtered.map(p => ({
+            ...p,
+            totalAmount: sumMap.get(p.id) || 0,
+            dealsCount: undefined,
+        })),
+    })
 }
 
 export async function POST(request) {
@@ -117,10 +128,10 @@ export async function POST(request) {
     const status = data.status || "IN_PROGRESS"
 
     if (status === "IN_PROGRESS") {
+        // Дубль: этот конечный потребитель уже в работе у другого дистрибьютора.
         const duplicate = await prisma.project.findFirst({
             where: {
                 status: "IN_PROGRESS",
-                externalAuctionId: data.externalAuctionId,
                 endCustomerId: data.endCustomerId,
             },
             include: {
@@ -172,11 +183,8 @@ export async function POST(request) {
     const created = await prisma.$transaction(async tx => {
         const project = await tx.project.create({
             data: {
-                externalAuctionId: data.externalAuctionId,
                 internalName,
                 status,
-                totalAmount: data.totalAmount ?? "0",
-                auctionDate: data.auctionDate ?? null,
                 duplicateComment: data.duplicateComment ?? null,
                 distributorId: data.distributorId,
                 endCustomerId: data.endCustomerId,

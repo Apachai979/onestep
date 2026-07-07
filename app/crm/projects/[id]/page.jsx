@@ -1,13 +1,11 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getServerSession } from "next-auth"
-import { LuPencil, LuPlus } from "react-icons/lu"
+import { LuPencil } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_STATUS_LABELS } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
-import { PROJECT_LOSS_REASON_LABELS, looksLikeUrl } from "@/lib/crm/project"
-import ProjectItemsSection from "@/components/crm/ProjectItemsSection"
 import { CardRow, MobileCard } from "@/components/crm/ui/MobileCards"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
 import ActivityPanel from "@/components/crm/ActivityPanel"
@@ -34,7 +32,6 @@ export default async function ProjectPage({ params }) {
             endCustomer: true,
             manager: true,
             updatedBy: true,
-            items: { orderBy: { createdAt: "asc" } },
             contacts: { orderBy: [{ lastName: "asc" }, { firstName: "asc" }] },
             deals: {
                 orderBy: { createdAt: "desc" },
@@ -47,6 +44,10 @@ export default async function ProjectPage({ params }) {
     })
     if (!item) notFound()
 
+    // Сумма проекта — производная: сумма всех сделок, привязанных к проекту.
+    const dealsSum = item.deals.reduce((s, d) => s + Number(d.totalAmount || 0), 0)
+    const dealsCount = item.deals.length
+
     const contactsByCounterparty = {
         [item.distributorId]: [],
         [item.endCustomerId]: [],
@@ -56,14 +57,6 @@ export default async function ProjectPage({ params }) {
             contactsByCounterparty[c.counterpartyId].push(c)
         }
     }
-
-    const itemsForClient = item.items.map(i => ({
-        ...i,
-        quantity: i.quantity.toString(),
-        amount: i.amount.toString(),
-        createdAt: i.createdAt.toISOString(),
-        updatedAt: i.updatedAt.toISOString(),
-    }))
 
     return (
         <div className='space-y-4'>
@@ -81,35 +74,11 @@ export default async function ProjectPage({ params }) {
                     <h1 className='mt-0.5 text-xl font-semibold text-night_green sm:text-2xl'>
                         {item.internalName}
                     </h1>
-                    <p className='mt-1 text-sm text-night_green/70'>
-                        Аукцион:{" "}
-                        {looksLikeUrl(item.externalAuctionId) ? (
-                            <a
-                                href={item.externalAuctionId}
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='break-all text-brand_main underline hover:text-brand_main/80'
-                            >
-                                {item.externalAuctionId}
-                            </a>
-                        ) : (
-                            item.externalAuctionId
-                        )}
-                    </p>
                 </div>
-                <div className='flex flex-col items-end gap-2'>
-                    <ProjectStatusControl
-                        projectId={item.id}
-                        currentStatus={item.status}
-                    />
-                    <Link
-                        href={`/crm/deals/new?fromProjectId=${item.id}`}
-                        className='inline-flex items-center gap-1.5 rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand_main/90'
-                    >
-                        <LuPlus className='h-3 w-3' />
-                        Создать сделку
-                    </Link>
-                </div>
+                <ProjectStatusControl
+                    projectId={item.id}
+                    currentStatus={item.status}
+                />
             </div>
 
             {item.duplicateComment && (
@@ -118,20 +87,6 @@ export default async function ProjectPage({ params }) {
                         Создан как дубль действующего проекта
                     </p>
                     <p className='mt-1 text-yellow-800'>{item.duplicateComment}</p>
-                </div>
-            )}
-
-            {item.status === "LOST" && item.lossReason && (
-                <div className='rounded-xl border border-red-200 bg-red-50/60 px-4 py-3'>
-                    <p className='text-xs font-semibold uppercase tracking-wide text-red-700'>
-                        Причина проигрыша
-                    </p>
-                    <p className='mt-1 text-sm text-red-900'>
-                        {PROJECT_LOSS_REASON_LABELS[item.lossReason] || item.lossReason}
-                        {item.lossComment && (
-                            <span className='text-red-900/75'> — {item.lossComment}</span>
-                        )}
-                    </p>
                 </div>
             )}
 
@@ -174,8 +129,10 @@ export default async function ProjectPage({ params }) {
                             </Link>
                         </Row>
                         <Row label='Регион дистрибьютора' value={item.distributor.region} />
-                        <Row label='Дата аукциона' value={fmtDate(item.auctionDate)} />
-                        <Row label='Сумма проекта' value={formatMoney(item.totalAmount)} />
+                        <Row
+                            label={`Сумма сделок по проекту${dealsCount ? ` (${dealsCount})` : ""}`}
+                            value={formatMoney(dealsSum)}
+                        />
                     </Section>
 
                     <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
@@ -194,15 +151,14 @@ export default async function ProjectPage({ params }) {
                         </div>
                     </section>
 
-                    <ProjectItemsSection projectId={item.id} initialItems={itemsForClient} />
-
-                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
-                        <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
-                            Сделки по проекту
+                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+                        <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                            Сделки по проекту ({dealsCount})
                         </h2>
                         {item.deals.length === 0 ? (
                             <p className='text-sm text-night_green/55'>
-                                Связанных сделок ещё нет. Используйте «+ Создать сделку» в шапке.
+                                Связанных сделок пока нет. Привяжите сделку к проекту в её
+                                форме — поле «Проект-источник».
                             </p>
                         ) : (
                             <>

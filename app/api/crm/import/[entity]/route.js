@@ -2,12 +2,8 @@ import ExcelJS from "exceljs"
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { DEAL_LOSS_REASON_LABELS, DEAL_STATUS_LABELS } from "@/lib/crm/deal"
-import {
-    PROJECT_LOSS_REASON_LABELS,
-    PROJECT_STATUS_LABELS,
-    buildInternalName,
-} from "@/lib/crm/project"
-import { cellDate, cellNum, cellStr, labelToKey, sheetToObjects } from "@/lib/crm/excel"
+import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, buildInternalName } from "@/lib/crm/project"
+import { cellNum, cellStr, labelToKey, sheetToObjects } from "@/lib/crm/excel"
 
 const CP_TYPE_LABELS = {
     DISTRIBUTOR: "Дистрибьютор",
@@ -60,6 +56,7 @@ async function importCounterparties(tx, wb, report, session) {
     const main = sheetToObjects(wb.getWorksheet("Контрагенты") || wb.worksheets[0])
     const contactRows = sheetToObjects(wb.getWorksheet("Контакты"))
     const index = await counterpartyIndex(tx)
+    const userByEmail = await userByEmailIndex(tx)
     const byN = new Map()
 
     for (const row of main) {
@@ -87,6 +84,7 @@ async function importCounterparties(tx, wb, report, session) {
                 ogrn: cellStr(row["огрн"]) || null,
                 phone: cellStr(row["телефон"]) || null,
                 email: cellStr(row["email"]) || null,
+                managerId: userByEmail(row["менеджер (email)"]) || null,
                 address: cellStr(row["адрес"]) || null,
                 source: cellStr(row["источник"]) || "Импорт из Excel",
                 discount: decStr(row["скидка %"]),
@@ -216,17 +214,10 @@ async function importDeals(tx, wb, report, session) {
 
 async function importProjects(tx, wb, report, session) {
     const main = sheetToObjects(wb.getWorksheet("Проекты") || wb.worksheets[0])
-    const itemRows = sheetToObjects(wb.getWorksheet("Позиции"))
     const index = await counterpartyIndex(tx)
     const userByEmail = await userByEmailIndex(tx)
-    const byN = new Map()
 
     for (const row of main) {
-        const auction = cellStr(row["аукцион"])
-        if (!auction) {
-            report.errors.push({ row: row.__row, sheet: "Проекты", message: "Пустой идентификатор аукциона" })
-            continue
-        }
         const distId = index.find(cellStr(row["инн дистрибьютора"]), cellStr(row["дистрибьютор"]))
         const custId = index.find(cellStr(row["инн потребителя"]), cellStr(row["потребитель"]))
         if (!distId || !custId) {
@@ -237,12 +228,8 @@ async function importProjects(tx, wb, report, session) {
             })
             continue
         }
-        const status =
-            labelToKey(PROJECT_STATUS_LABELS, cellStr(row["статус"])) || "IN_PROGRESS"
-        const lossReason = labelToKey(
-            PROJECT_LOSS_REASON_LABELS,
-            cellStr(row["причина проигрыша"]),
-        )
+        const rawStatus = labelToKey(PROJECT_STATUS_LABELS, cellStr(row["статус"]))
+        const status = PROJECT_STATUSES.includes(rawStatus) ? rawStatus : "IN_PROGRESS"
         let internalName = cellStr(row["внутреннее название"])
         if (!internalName) {
             const [d, c] = await Promise.all([
@@ -251,51 +238,16 @@ async function importProjects(tx, wb, report, session) {
             ])
             internalName = buildInternalName(d?.name, c?.name)
         }
-        const created = await tx.project.create({
+        await tx.project.create({
             data: {
-                externalAuctionId: auction,
                 internalName,
                 status,
-                totalAmount: decStr(row["сумма"]) ?? "0",
-                auctionDate: cellDate(row["дата аукциона"]),
-                lossReason: status === "LOST" ? lossReason || "OTHER" : null,
-                lossComment:
-                    status === "LOST"
-                        ? cellStr(row["комментарий к проигрышу"]) || null
-                        : null,
                 distributorId: distId,
                 endCustomerId: custId,
                 managerId: userByEmail(row["менеджер (email)"]) || session.user.id,
             },
         })
         report.created += 1
-        const n = cellStr(row["№"])
-        if (n) byN.set(n, created.id)
-    }
-
-    for (const row of itemRows) {
-        const n = cellStr(row["№ проекта"])
-        const projectId = byN.get(n)
-        if (!projectId) {
-            report.errors.push({
-                row: row.__row,
-                sheet: "Позиции",
-                message: `Проект № ${n || "?"} не найден в листе «Проекты»`,
-            })
-            continue
-        }
-        const name = cellStr(row["наименование"])
-        if (!name) continue
-        await tx.projectItem.create({
-            data: {
-                projectId,
-                sku: cellStr(row["артикул"]) || null,
-                name,
-                quantity: decStr(row["кол-во"]) ?? "1",
-                amount: decStr(row["сумма"]) ?? "0",
-            },
-        })
-        report.items += 1
     }
 }
 

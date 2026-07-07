@@ -6,14 +6,11 @@ import ProjectContactsPicker from "./ProjectContactsPicker"
 import SearchableSelect from "./SearchableSelect"
 
 const EMPTY = {
-    externalAuctionId: "",
     internalName: "",
     distributorId: "",
     endCustomerId: "",
     managerId: "",
     status: "IN_PROGRESS",
-    totalAmount: "",
-    auctionDate: "",
     duplicateComment: "",
 }
 
@@ -38,14 +35,11 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
         if (!initial) return { ...EMPTY, managerId: currentUserId || "" }
         return {
             ...EMPTY,
-            externalAuctionId: initial.externalAuctionId ?? "",
             internalName: initial.internalName ?? "",
             distributorId: initial.distributorId ?? "",
             endCustomerId: initial.endCustomerId ?? "",
             managerId: initial.managerId ?? "",
             status: initial.status ?? "IN_PROGRESS",
-            totalAmount: toFormValue(initial.totalAmount),
-            auctionDate: isoDate(initial.auctionDate),
             duplicateComment: initial.duplicateComment ?? "",
         }
     })
@@ -152,7 +146,6 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
         const payload = {
             ...form,
             internalName: form.internalName.trim() || null,
-            totalAmount: form.totalAmount === "" ? "0" : form.totalAmount,
             contactIds,
         }
 
@@ -178,7 +171,6 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
         const res = await send({
             ...form,
             internalName: form.internalName.trim() || null,
-            totalAmount: form.totalAmount === "" ? "0" : form.totalAmount,
             contactIds,
             forceCreate: true,
         })
@@ -195,32 +187,6 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
 
     return (
         <form onSubmit={handleSubmit} className='space-y-4'>
-            <Section title='Аукцион'>
-                <Field
-                    label='Внешний идентификатор аукциона *'
-                    value={form.externalAuctionId}
-                    onChange={update("externalAuctionId")}
-                    required
-                    placeholder='Номер, ссылка или название закупки'
-                    className='sm:col-span-2'
-                />
-                <Field
-                    label='Дата проведения аукциона'
-                    type='date'
-                    value={form.auctionDate}
-                    onChange={update("auctionDate")}
-                />
-                <Field
-                    label='Сумма проекта, ₽'
-                    type='number'
-                    step='0.01'
-                    min='0'
-                    inputMode='decimal'
-                    value={form.totalAmount}
-                    onChange={update("totalAmount")}
-                />
-            </Section>
-
             <Section title='Участники'>
                 <div>
                     <label className='mb-1 block text-sm text-gray-700'>
@@ -313,7 +279,7 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
                 <div className='rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm'>
                     <p className='font-semibold text-yellow-900'>Обнаружен дубль</p>
                     <p className='mt-1 text-yellow-800'>
-                        Данный аукцион конечного потребителя уже закреплён за дистрибьютором{" "}
+                        Этот конечный потребитель уже в работе у дистрибьютора{" "}
                         <strong>{duplicate.distributor?.name}</strong>, менеджер:{" "}
                         <strong>
                             {duplicate.manager

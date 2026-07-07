@@ -56,7 +56,6 @@ export async function GET(request) {
             select: {
                 id: true,
                 internalName: true,
-                externalAuctionId: true,
                 status: true,
                 endCustomer: { select: { name: true } },
                 distributor: { select: { name: true } },
@@ -113,18 +112,13 @@ export async function GET(request) {
             })),
         projects: projects
             .filter(p =>
-                has(
-                    p.internalName,
-                    p.externalAuctionId,
-                    p.endCustomer?.name,
-                    p.distributor?.name,
-                ),
+                has(p.internalName, p.endCustomer?.name, p.distributor?.name),
             )
             .slice(0, LIMIT)
             .map(p => ({
                 id: p.id,
                 title: p.internalName,
-                subtitle: [p.endCustomer?.name, p.externalAuctionId]
+                subtitle: [p.endCustomer?.name, p.distributor?.name]
                     .filter(Boolean)
                     .join(" · "),
                 href: `/crm/projects/${p.id}`,

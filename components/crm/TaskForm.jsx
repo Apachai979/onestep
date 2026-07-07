@@ -157,9 +157,8 @@ export default function TaskForm({
         if (relation.kind === "project") {
             return refs.projects.map(p => ({
                 id: p.id,
-                label: p.internalName || p.externalAuctionId,
-                sublabel: p.externalAuctionId,
-                search: `${p.internalName ?? ""} ${p.externalAuctionId ?? ""}`,
+                label: p.internalName,
+                search: p.internalName ?? "",
             }))
         }
         if (relation.kind === "distributor") {

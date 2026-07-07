@@ -1,17 +1,14 @@
 "use client"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { LuCalendarClock, LuPlus } from "react-icons/lu"
+import { LuPlus } from "react-icons/lu"
 import {
-    PROJECT_LOSS_REASONS,
-    PROJECT_LOSS_REASON_LABELS,
     PROJECT_STATUSES,
     PROJECT_STATUS_COLORS,
     PROJECT_STATUS_LABELS,
 } from "@/lib/crm/project"
 import { formatMoney } from "@/lib/crm/format"
 import { useToast } from "@/components/crm/ui"
-import DealLossDialog from "./DealLossDialog"
 
 function safeJson(text) {
     try {
@@ -29,26 +26,10 @@ function fullName(u) {
 // Сдержанное оформление: нейтральные колонки, тонкая приглушённая
 // акцентная полоска сверху для быстрой ориентации.
 const COLUMN_ACCENT = {
+    DRAFT: "bg-gray-300/70",
+    APPROBATION: "bg-violet-300/70",
     IN_PROGRESS: "bg-blue-300/70",
-    WON: "bg-green-300/70",
-    LOST: "bg-red-300/70",
-    CANCELLED: "bg-gray-300/70",
-}
-
-function auctionBadge(auctionDate) {
-    if (!auctionDate) return null
-    const d = new Date(auctionDate)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const diffDays = Math.round((d.getTime() - today.getTime()) / 86_400_000)
-    const label = d.toLocaleDateString("ru-RU")
-    if (diffDays < 0) return { label, cls: "bg-gray-100 text-gray-400" }
-    if (diffDays <= 7)
-        return {
-            label: diffDays === 0 ? `сегодня, ${label}` : label,
-            cls: "bg-amber-50 text-amber-700 font-medium",
-        }
-    return { label, cls: "bg-gray-100 text-gray-500" }
+    NO_NEED: "bg-amber-300/70",
 }
 
 export default function ProjectsKanban() {
@@ -58,7 +39,6 @@ export default function ProjectsKanban() {
     const [q, setQ] = useState("")
     const [draggingId, setDraggingId] = useState(null)
     const [dragOver, setDragOver] = useState(null)
-    const [losingProject, setLosingProject] = useState(null)
 
     async function load() {
         setError("")
@@ -86,8 +66,7 @@ export default function ProjectsKanban() {
             return (
                 (p.internalName || "").toLowerCase().includes(ql) ||
                 (p.endCustomer?.name || "").toLowerCase().includes(ql) ||
-                (p.distributor?.name || "").toLowerCase().includes(ql) ||
-                (p.externalAuctionId || "").toLowerCase().includes(ql)
+                (p.distributor?.name || "").toLowerCase().includes(ql)
             )
         })
     }, [projects, q])
@@ -152,11 +131,6 @@ export default function ProjectsKanban() {
             if (!id) return
             const project = projects?.find(p => p.id === id)
             if (!project || project.status === status) return
-            // Проигрыш аукциона — только с причиной.
-            if (status === "LOST") {
-                setLosingProject(project)
-                return
-            }
             moveProject(id, status)
         }
     }
@@ -169,7 +143,7 @@ export default function ProjectsKanban() {
                     <input
                         value={q}
                         onChange={e => setQ(e.target.value)}
-                        placeholder='Название, клиент, аукцион'
+                        placeholder='Название, клиент'
                         className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     />
                 </div>
@@ -235,27 +209,11 @@ export default function ProjectsKanban() {
                     )
                 })}
             </div>
-
-            {losingProject && (
-                <DealLossDialog
-                    dealTitle={losingProject.internalName}
-                    title='Почему проект проигран?'
-                    confirmLabel='Проект проигран'
-                    reasons={PROJECT_LOSS_REASONS}
-                    labels={PROJECT_LOSS_REASON_LABELS}
-                    onCancel={() => setLosingProject(null)}
-                    onConfirm={({ lossReason, lossComment }) => {
-                        moveProject(losingProject.id, "LOST", { lossReason, lossComment })
-                        setLosingProject(null)
-                    }}
-                />
-            )}
         </div>
     )
 }
 
 function ProjectCard({ project, dragging, onDragStart, onDragEnd }) {
-    const badge = auctionBadge(project.auctionDate)
     return (
         <Link
             href={`/crm/projects/${project.id}`}
@@ -278,16 +236,6 @@ function ProjectCard({ project, dragging, onDragStart, onDragEnd }) {
                     {formatMoney(project.totalAmount)}
                 </span>
             </div>
-            {badge && (
-                <div className='mt-2'>
-                    <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${badge.cls}`}
-                    >
-                        <LuCalendarClock className='h-3 w-3' />
-                        Аукцион: {badge.label}
-                    </span>
-                </div>
-            )}
         </Link>
     )
 }

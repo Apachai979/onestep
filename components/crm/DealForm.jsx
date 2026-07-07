@@ -1,6 +1,6 @@
 "use client"
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { DEAL_STATUSES, DEAL_STATUS_LABELS } from "@/lib/crm/deal"
 import SearchableSelect from "./SearchableSelect"
 
@@ -79,6 +79,18 @@ export default function DealForm({
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
 
+    // Трогал ли менеджер поле скидки вручную. Если да — авто-подстановка из
+    // карточки клиента больше не перезаписывает значение. У существующей сделки
+    // с уже заданной скидкой считаем её ручной, чтобы не затирать при смене клиента.
+    const discountTouchedRef = useRef(
+        Boolean(
+            initial &&
+                initial.discount !== null &&
+                initial.discount !== undefined &&
+                String(initial.discount) !== "",
+        ),
+    )
+
     useEffect(() => {
         Promise.all([
             fetch("/api/crm/counterparties").then(r => r.json()),
@@ -102,14 +114,17 @@ export default function DealForm({
             .then(r => r.json())
             .then(d => {
                 setContacts(d.item?.contacts || [])
-                // Если у сделки скидка ещё не задана — подтягиваем из контрагента.
+                // Скидку берём из карточки клиента, только если менеджер не задал её
+                // вручную. Иначе (ручное значение) — не трогаем.
+                if (discountTouchedRef.current) return
                 const cpDiscount = d.item?.discount
-                if (cpDiscount !== null && cpDiscount !== undefined) {
-                    setForm(prev => {
-                        if (prev.discount !== "") return prev
-                        return { ...prev, discount: String(cpDiscount) }
-                    })
-                }
+                setForm(prev => ({
+                    ...prev,
+                    discount:
+                        cpDiscount === null || cpDiscount === undefined
+                            ? ""
+                            : String(cpDiscount),
+                }))
             })
             .catch(() => setContacts([]))
     }, [form.counterpartyId])
@@ -262,7 +277,10 @@ export default function DealForm({
                         step='0.01'
                         inputMode='decimal'
                         value={form.discount}
-                        onChange={update("discount")}
+                        onChange={e => {
+                            discountTouchedRef.current = true
+                            setForm(prev => ({ ...prev, discount: e.target.value }))
+                        }}
                         placeholder='Подтянется из карточки клиента'
                         className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
                     />

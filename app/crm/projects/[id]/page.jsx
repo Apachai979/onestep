@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getServerSession } from "next-auth"
-import { LuPencil } from "react-icons/lu"
+import { LuBriefcase, LuPencil } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_STATUS_LABELS } from "@/lib/crm/deal"
@@ -75,10 +75,19 @@ export default async function ProjectPage({ params }) {
                         {item.internalName}
                     </h1>
                 </div>
-                <ProjectStatusControl
-                    projectId={item.id}
-                    currentStatus={item.status}
-                />
+                <div className='flex flex-wrap items-center gap-2'>
+                    <Link
+                        href={`/crm/deals/new?fromProjectId=${item.id}`}
+                        className='inline-flex items-center gap-2 rounded-lg bg-brand_main px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
+                    >
+                        <LuBriefcase className='h-4 w-4' />
+                        Создать сделку
+                    </Link>
+                    <ProjectStatusControl
+                        projectId={item.id}
+                        currentStatus={item.status}
+                    />
+                </div>
             </div>
 
             {item.duplicateComment && (
@@ -157,8 +166,9 @@ export default async function ProjectPage({ params }) {
                         </h2>
                         {item.deals.length === 0 ? (
                             <p className='text-sm text-night_green/55'>
-                                Связанных сделок пока нет. Привяжите сделку к проекту в её
-                                форме — поле «Проект-источник».
+                                Связанных сделок пока нет. Нажмите «Создать сделку» вверху
+                                карточки — или привяжите существующую через поле
+                                «Проект-источник» в её форме.
                             </p>
                         ) : (
                             <>

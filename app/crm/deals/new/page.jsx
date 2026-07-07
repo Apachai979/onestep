@@ -54,8 +54,8 @@ export default async function NewDealPage({ searchParams }) {
                     >
                         {fromProject.internalName}
                     </Link>
-                    . Поля и товарные позиции будут предзаполнены — отредактируйте при
-                    необходимости перед сохранением.
+                    . Клиент, менеджер и привязка к проекту предзаполнены — отредактируйте
+                    при необходимости перед сохранением.
                 </div>
             )}
             <Suspense fallback={null}>

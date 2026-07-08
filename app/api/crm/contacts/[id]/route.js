@@ -19,11 +19,32 @@ export async function PATCH(request, { params }) {
     const { data, error } = parseContactPayload(body, { partial: true })
     if (error) return Response.json({ error }, { status: 400 })
 
+    // Смена/отвязка контрагента (необязательная привязка).
+    let counterpartyId = existing.counterpartyId
+    if (body.counterpartyId !== undefined) {
+        if (body.counterpartyId === null || body.counterpartyId === "") {
+            counterpartyId = null
+        } else {
+            const cp = await prisma.counterparty.findUnique({
+                where: { id: body.counterpartyId },
+                select: { id: true },
+            })
+            if (!cp) return Response.json({ error: "Контрагент не найден" }, { status: 400 })
+            counterpartyId = cp.id
+        }
+        data.counterpartyId = counterpartyId
+    }
+
+    // «Основной» — только при привязке к контрагенту.
+    const wantsPrimary =
+        data.isPrimary !== undefined ? data.isPrimary : existing.isPrimary
+    data.isPrimary = counterpartyId ? wantsPrimary : false
+
     const updated = await prisma.$transaction(async tx => {
-        if (data.isPrimary === true) {
+        if (data.isPrimary === true && counterpartyId) {
             await tx.contact.updateMany({
                 where: {
-                    counterpartyId: existing.counterpartyId,
+                    counterpartyId,
                     isPrimary: true,
                     NOT: { id: existing.id },
                 },

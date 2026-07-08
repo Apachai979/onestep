@@ -49,9 +49,11 @@ export async function GET(request) {
         where,
         orderBy: { name: "asc" },
         include: {
+            // Все контакты, основной — первым: список показывает contacts[0]
+            // как основной, а поиск фильтрует по всем контактам (не только по
+            // основному).
             contacts: {
-                where: { isPrimary: true },
-                take: 1,
+                orderBy: [{ isPrimary: "desc" }, { lastName: "asc" }, { firstName: "asc" }],
                 select: {
                     id: true,
                     firstName: true,
@@ -59,6 +61,7 @@ export async function GET(request) {
                     phone: true,
                     email: true,
                     position: true,
+                    isPrimary: true,
                 },
             },
         },

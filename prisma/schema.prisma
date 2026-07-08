@@ -213,9 +213,9 @@ model Stock {
 }
 
 model Contact {
-  id             String       @id @default(cuid())
-  counterpartyId String
-  counterparty   Counterparty @relation(fields: [counterpartyId], references: [id], onDelete: Cascade)
+  id             String        @id @default(cuid())
+  counterpartyId String?
+  counterparty   Counterparty? @relation(fields: [counterpartyId], references: [id], onDelete: Cascade)
   firstName      String?
   lastName       String?
   phone          String?

@@ -13,6 +13,7 @@ import {
     LuTarget,
     LuStore,
     LuStethoscope,
+    LuContact,
     LuPackage,
     LuSearch,
     LuSettings,
@@ -115,6 +116,7 @@ export default function CrmShell({ user, role, children }) {
             { href: "/crm/projects", label: "Проекты", icon: LuTarget },
             { href: "/crm/distributors", label: "Дистрибьюторы", icon: LuStore },
             { href: "/crm/customers", label: "Конечные потребители", icon: LuStethoscope },
+            { href: "/crm/contacts", label: "Контакты", icon: LuContact },
             { href: "/crm/products", label: "Товары", icon: LuPackage },
         ]
         if (role === "ADMIN") {

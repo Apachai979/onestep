@@ -201,6 +201,12 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
                     <span className='ml-2 text-sm font-medium text-night_green'>
                         {headerLabel}
                     </span>
+                    <span
+                        className='text-[11px] text-night_green/40'
+                        title='В календаре показаны только задачи, где вы ответственный или автор'
+                    >
+                        · только мои задачи
+                    </span>
                 </div>
                 <div className='flex gap-1'>
                     {[

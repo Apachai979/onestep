@@ -156,6 +156,7 @@ export default async function CrmHome() {
     const dealIds = new Set()
     const projectIds = new Set()
     const counterpartyIds = new Set()
+    const auctionIds = new Set()
     for (const c of recentChanges) {
         // Дочерние записи (задачи, заметки, файлы, позиции) хранят родителя
         // прямо в parentEntityType/parentEntityId — берём его имя для ленты.
@@ -166,8 +167,9 @@ export default async function CrmHome() {
         if (targetEntity === "Deal") dealIds.add(targetId)
         else if (targetEntity === "Project") projectIds.add(targetId)
         else if (targetEntity === "Counterparty") counterpartyIds.add(targetId)
+        else if (targetEntity === "Auction") auctionIds.add(targetId)
     }
-    const [dealMap, projectMap, counterpartyMap] = await Promise.all([
+    const [dealMap, projectMap, counterpartyMap, auctionMap] = await Promise.all([
         dealIds.size
             ? prisma.deal
                   .findMany({
@@ -195,6 +197,14 @@ export default async function CrmHome() {
                       select: { id: true, name: true },
                   })
                   .then(arr => new Map(arr.map(c => [c.id, c])))
+            : new Map(),
+        auctionIds.size
+            ? prisma.auction
+                  .findMany({
+                      where: { id: { in: Array.from(auctionIds) } },
+                      select: { id: true, purchaseNumber: true },
+                  })
+                  .then(arr => new Map(arr.map(a => [a.id, a])))
             : new Map(),
     ])
 
@@ -440,6 +450,7 @@ export default async function CrmHome() {
                                     dealMap,
                                     projectMap,
                                     counterpartyMap,
+                                    auctionMap,
                                 })
                                 return (
                                     <li
@@ -492,7 +503,7 @@ export default async function CrmHome() {
 // «задача по проекту», но «позиция в сделке».
 const PARENT_PREPOSITION = { Task: "по", Email: "по" }
 
-function describeChange(c, { dealMap, projectMap, counterpartyMap }) {
+function describeChange(c, { dealMap, projectMap, counterpartyMap, auctionMap }) {
     const isChild = !!(c.parentEntityType && c.parentEntityId)
     const parent = isChild ? c.parentEntityType : c.entityType
     const parentId = isChild ? c.parentEntityId : c.entityId
@@ -519,6 +530,12 @@ function describeChange(c, { dealMap, projectMap, counterpartyMap }) {
         if (cp) {
             targetText = cp.name
             targetHref = `/crm/counterparties/${parentId}`
+        }
+    } else if (parent === "Auction" && parentId) {
+        const a = auctionMap.get(parentId)
+        if (a) {
+            targetText = a.purchaseNumber ? `Закупка № ${a.purchaseNumber}` : "Аукцион"
+            targetHref = `/crm/auctions/${parentId}`
         }
     }
 
@@ -647,6 +664,7 @@ function TaskGroup({ title, tone, tasks }) {
 function relationLabel(t) {
     if (t.deal) return `Сделка: ${t.deal.title || t.deal.counterparty?.name || "—"}`
     if (t.project) return `Проект: ${t.project.internalName}`
+    if (t.auction) return `Аукцион: ${t.auction.purchaseNumber ? `закупка № ${t.auction.purchaseNumber}` : "—"}`
     if (t.distributor) return `Дистрибьютор: ${t.distributor.name}`
     if (t.endCustomer) return `Клиент: ${t.endCustomer.name}`
     return "Без связи"

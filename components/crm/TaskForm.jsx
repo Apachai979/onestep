@@ -217,6 +217,7 @@ export default function TaskForm({
             projectId: null,
             distributorId: null,
             endCustomerId: null,
+            auctionId: null,
         }
         if (relation.kind && relation.id) {
             payload[`${relation.kind}Id`] = relation.id

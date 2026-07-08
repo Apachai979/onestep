@@ -51,6 +51,7 @@ export default function RelatedTasksSection({
         const params = new URLSearchParams()
         if (relationKind === "deal") params.set("dealId", relationId)
         else if (relationKind === "project") params.set("projectId", relationId)
+        else if (relationKind === "auction") params.set("auctionId", relationId)
         else if (relationKind === "distributor" || relationKind === "endCustomer")
             params.set("counterpartyId", relationId)
         const r = await fetch(`/api/crm/tasks?${params.toString()}`)

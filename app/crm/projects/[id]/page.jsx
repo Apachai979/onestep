@@ -1,10 +1,11 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getServerSession } from "next-auth"
-import { LuBriefcase, LuPencil } from "react-icons/lu"
+import { LuPencil, LuPlus } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_STATUS_LABELS } from "@/lib/crm/deal"
+import { AUCTION_STATUS_COLORS, AUCTION_STATUS_LABELS } from "@/lib/crm/auction"
 import { formatMoney } from "@/lib/crm/format"
 import { CardRow, MobileCard } from "@/components/crm/ui/MobileCards"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
@@ -34,6 +35,12 @@ export default async function ProjectPage({ params }) {
                 orderBy: { createdAt: "desc" },
                 include: {
                     counterparty: { select: { id: true, name: true } },
+                    manager: { select: { firstName: true, lastName: true, email: true } },
+                },
+            },
+            auctions: {
+                orderBy: { createdAt: "desc" },
+                include: {
                     manager: { select: { firstName: true, lastName: true, email: true } },
                 },
             },
@@ -72,19 +79,10 @@ export default async function ProjectPage({ params }) {
                         {item.internalName}
                     </h1>
                 </div>
-                <div className='flex flex-wrap items-center gap-2'>
-                    <Link
-                        href={`/crm/deals/new?fromProjectId=${item.id}`}
-                        className='inline-flex items-center gap-2 rounded-lg bg-brand_main px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
-                    >
-                        <LuBriefcase className='h-4 w-4' />
-                        Создать сделку
-                    </Link>
-                    <ProjectStatusControl
-                        projectId={item.id}
-                        currentStatus={item.status}
-                    />
-                </div>
+                <ProjectStatusControl
+                    projectId={item.id}
+                    currentStatus={item.status}
+                />
             </div>
 
             {item.duplicateComment && (
@@ -173,14 +171,20 @@ export default async function ProjectPage({ params }) {
                     </section>
 
                     <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-                        <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-night_green/70'>
-                            Сделки по проекту ({dealsCount})
-                        </h2>
+                        <div className='mb-2.5 flex items-center justify-between gap-3'>
+                            <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                                Сделки по проекту ({dealsCount})
+                            </h2>
+                            <SectionCreateButton
+                                href={`/crm/deals/new?fromProjectId=${item.id}`}
+                                label='Создать сделку'
+                            />
+                        </div>
                         {item.deals.length === 0 ? (
                             <p className='text-sm text-night_green/55'>
-                                Связанных сделок пока нет. Нажмите «Создать сделку» вверху
-                                карточки — или привяжите существующую через поле
-                                «Проект-источник» в её форме.
+                                Связанных сделок пока нет. Нажмите «Создать сделку» — или
+                                привяжите существующую через поле «Проект-источник» в её
+                                форме.
                             </p>
                         ) : (
                             <>
@@ -259,6 +263,109 @@ export default async function ProjectPage({ params }) {
                             </>
                         )}
                     </section>
+
+                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+                        <div className='mb-2.5 flex items-center justify-between gap-3'>
+                            <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                                Аукционы по проекту ({item.auctions.length})
+                            </h2>
+                            <SectionCreateButton
+                                href={`/crm/auctions/new?fromProjectId=${item.id}`}
+                                label='Создать аукцион'
+                            />
+                        </div>
+                        {item.auctions.length === 0 ? (
+                            <p className='text-sm text-night_green/55'>
+                                Аукционов пока нет. Нажмите «Создать аукцион» — заказчик и
+                                поставщик подставятся из проекта.
+                            </p>
+                        ) : (
+                            <>
+                            {/* Мобильные карточки */}
+                            <div className='space-y-3 md:hidden'>
+                                {item.auctions.map(a => (
+                                    <MobileCard key={a.id}>
+                                        <div className='flex items-start justify-between gap-2'>
+                                            <Link
+                                                href={`/crm/auctions/${a.id}`}
+                                                className='min-w-0 font-medium text-night_green hover:text-brand_main'
+                                            >
+                                                {a.purchaseNumber
+                                                    ? `Закупка № ${a.purchaseNumber}`
+                                                    : "Аукцион"}
+                                            </Link>
+                                            <span
+                                                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${AUCTION_STATUS_COLORS[a.status] || ""}`}
+                                            >
+                                                {AUCTION_STATUS_LABELS[a.status] || a.status}
+                                            </span>
+                                        </div>
+                                        <div className='mt-2 space-y-1'>
+                                            <CardRow label='НМЦК'>
+                                                <span className='font-medium text-gray-800'>
+                                                    {formatMoney(a.nmck)}
+                                                </span>
+                                            </CardRow>
+                                            <CardRow label='Аукцион'>
+                                                <LocalDateTime value={a.auctionAt} />
+                                            </CardRow>
+                                            <CardRow label='Менеджер'>{fullName(a.manager)}</CardRow>
+                                        </div>
+                                    </MobileCard>
+                                ))}
+                            </div>
+
+                            <div className='hidden overflow-x-auto rounded-lg border border-brand_soft/40 md:block'>
+                                <table className='w-full text-sm'>
+                                    <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
+                                        <tr>
+                                            <th className='px-3 py-2'>Закупка</th>
+                                            <th className='px-3 py-2'>Статус</th>
+                                            <th className='px-3 py-2'>Аукцион</th>
+                                            <th className='px-3 py-2'>Менеджер</th>
+                                            <th className='px-3 py-2 text-right'>НМЦК</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {item.auctions.map(a => (
+                                            <tr
+                                                key={a.id}
+                                                className='border-t border-brand_soft/30 hover:bg-brand_soft/15'
+                                            >
+                                                <td className='px-3 py-2'>
+                                                    <Link
+                                                        href={`/crm/auctions/${a.id}`}
+                                                        className='font-medium text-night_green hover:text-brand_main'
+                                                    >
+                                                        {a.purchaseNumber
+                                                            ? `№ ${a.purchaseNumber}`
+                                                            : "Аукцион"}
+                                                    </Link>
+                                                </td>
+                                                <td className='px-3 py-2'>
+                                                    <span
+                                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${AUCTION_STATUS_COLORS[a.status] || ""}`}
+                                                    >
+                                                        {AUCTION_STATUS_LABELS[a.status] || a.status}
+                                                    </span>
+                                                </td>
+                                                <td className='px-3 py-2 text-night_green/75'>
+                                                    <LocalDateTime value={a.auctionAt} />
+                                                </td>
+                                                <td className='px-3 py-2 text-night_green/75'>
+                                                    {fullName(a.manager)}
+                                                </td>
+                                                <td className='px-3 py-2 text-right text-night_green/75'>
+                                                    {formatMoney(a.nmck)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            </>
+                        )}
+                    </section>
                 </div>
 
                 <ActivityPanel
@@ -271,6 +378,20 @@ export default async function ProjectPage({ params }) {
                 />
             </div>
         </div>
+    )
+}
+
+// Единый стиль кнопок создания на рамках секций («Создать сделку»,
+// «Создать аукцион»).
+function SectionCreateButton({ href, label }) {
+    return (
+        <Link
+            href={href}
+            className='inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
+        >
+            <LuPlus className='h-3.5 w-3.5' />
+            {label}
+        </Link>
     )
 }
 

@@ -19,6 +19,7 @@ const INCLUDE = {
     project: { select: { id: true, internalName: true } },
     distributor: { select: CP_SELECT },
     endCustomer: { select: CP_SELECT },
+    auction: { select: { id: true, purchaseNumber: true } },
 }
 
 export async function GET(request) {
@@ -35,6 +36,7 @@ export async function GET(request) {
     const dealId = searchParams.get("dealId")
     const projectId = searchParams.get("projectId")
     const counterpartyId = searchParams.get("counterpartyId")
+    const auctionId = searchParams.get("auctionId")
 
     const where = {}
     if (status) {
@@ -54,6 +56,7 @@ export async function GET(request) {
 
     if (dealId) where.dealId = dealId
     if (projectId) where.projectId = projectId
+    if (auctionId) where.auctionId = auctionId
     if (counterpartyId) {
         where.OR = [{ distributorId: counterpartyId }, { endCustomerId: counterpartyId }]
     }
@@ -126,6 +129,9 @@ export async function POST(request) {
                     { status: 400 },
                 )
             }
+        } else if (k === "auction") {
+            const e = await prisma.auction.findUnique({ where: { id }, select: { id: true } })
+            if (!e) return Response.json({ error: "Аукцион не найден" }, { status: 400 })
         }
     }
 
@@ -143,6 +149,7 @@ export async function POST(request) {
             projectId: data.projectId ?? null,
             distributorId: data.distributorId ?? null,
             endCustomerId: data.endCustomerId ?? null,
+            auctionId: data.auctionId ?? null,
         },
         include: INCLUDE,
     })

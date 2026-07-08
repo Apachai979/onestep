@@ -39,6 +39,9 @@ model User {
   notes                  Note[]         @relation("NoteAuthor")
   attachments            Attachment[]   @relation("AttachmentUploadedBy")
   changeLogs             ChangeLog[]    @relation("ChangeLogAuthor")
+  auctionsAsManager      Auction[]      @relation("AuctionManager")
+  auctionsAsAuthor       Auction[]      @relation("AuctionCreatedBy")
+  auctionsUpdated        Auction[]      @relation("AuctionUpdatedBy")
 
   @@map("users")
 }
@@ -115,6 +118,8 @@ model Counterparty {
   deals                 Deal[]    @relation("DealCounterparty")
   tasksAsDistributor    Task[]    @relation("TaskDistributor")
   tasksAsEndCustomer    Task[]    @relation("TaskEndCustomer")
+  auctionsAsCustomer    Auction[] @relation("AuctionCustomer")
+  auctionsAsSupplier    Auction[] @relation("AuctionSupplier")
 
   @@unique([inn, kpp])
   @@index([type])
@@ -146,6 +151,7 @@ model Project {
   contacts          Contact[]
   tasks             Task[]
   deals             Deal[]        @relation("ProjectDeals")
+  auctions          Auction[]     @relation("ProjectAuctions")
 
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -193,6 +199,7 @@ model Product {
 
   projectItems        ProjectItem[]
   dealItems           DealItem[]    @relation("DealItemProduct")
+  auctionItems        AuctionItem[] @relation("AuctionItemProduct")
   stocks              Stock[]
 
   @@index([category])
@@ -229,6 +236,7 @@ model Contact {
   projects       Project[]
   deals          Deal[]    @relation("DealContact")
   shipments      Shipment[] @relation("ShipmentRecipient")
+  auctions       Auction[] @relation("AuctionSupplierContact")
 
   @@index([counterpartyId])
   @@map("contacts")
@@ -342,6 +350,68 @@ model ShipmentItem {
   @@map("shipment_items")
 }
 
+// Аукцион (госзакупка) — рождается из проекта: заказчик = конечный
+// потребитель проекта, поставщик = дистрибьютор.
+model Auction {
+  id                   String        @id @default(cuid())
+  purchaseNumber       String?
+  auctionUrl           String?
+  status               String        @default("IN_PROGRESS")
+  nmck                 Decimal       @default(0)
+  bidsDeadlineAt       DateTime?
+  auctionAt            DateTime?
+  resultsAt            DateTime?
+  participantsCount    Int?
+  bidsCount            Int?
+  winner               String?
+  lossComment          String?
+  protocolAttachmentId String?
+
+  projectId         String
+  project           Project      @relation("ProjectAuctions", fields: [projectId], references: [id], onDelete: Cascade)
+  customerId        String
+  customer          Counterparty @relation("AuctionCustomer", fields: [customerId], references: [id])
+  supplierId        String
+  supplier          Counterparty @relation("AuctionSupplier", fields: [supplierId], references: [id])
+  supplierContactId String?
+  supplierContact   Contact?     @relation("AuctionSupplierContact", fields: [supplierContactId], references: [id], onDelete: SetNull)
+  managerId         String
+  manager           User         @relation("AuctionManager", fields: [managerId], references: [id])
+  createdById       String?
+  createdBy         User?        @relation("AuctionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById       String?
+  updatedBy         User?        @relation("AuctionUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  items AuctionItem[]
+  tasks Task[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([managerId])
+  @@map("auctions")
+}
+
+model AuctionItem {
+  id        String   @id @default(cuid())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation("AuctionItemProduct", fields: [productId], references: [id], onDelete: SetNull)
+  sku       String?
+  name      String
+  quantity  Decimal  @default(1)
+  amount    Decimal  @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([auctionId])
+  @@index([productId])
+  @@map("auction_items")
+}
+
 model Task {
   id            String    @id @default(cuid())
   title         String
@@ -366,6 +436,8 @@ model Task {
   distributor    Counterparty? @relation("TaskDistributor", fields: [distributorId], references: [id], onDelete: SetNull)
   endCustomerId  String?
   endCustomer    Counterparty? @relation("TaskEndCustomer", fields: [endCustomerId], references: [id], onDelete: SetNull)
+  auctionId      String?
+  auction        Auction?      @relation(fields: [auctionId], references: [id], onDelete: SetNull)
 
   closedAt      DateTime?
 
@@ -379,6 +451,7 @@ model Task {
   @@index([projectId])
   @@index([distributorId])
   @@index([endCustomerId])
+  @@index([auctionId])
   @@map("tasks")
 }
 

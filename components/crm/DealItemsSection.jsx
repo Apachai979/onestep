@@ -23,7 +23,10 @@ function fmt(n) {
     return (Math.round(n * 100) / 100).toString()
 }
 
-export default function DealItemsSection({ dealId, initialItems }) {
+// apiBase позволяет переиспользовать секцию для других сущностей с таким же
+// API позиций (например, аукционы: /api/crm/auctions/{id}).
+export default function DealItemsSection({ dealId, initialItems, apiBase: apiBaseProp }) {
+    const apiBase = apiBaseProp || `/api/crm/deals/${dealId}`
     const router = useRouter()
     const toast = useToast()
     const confirm = useConfirm()
@@ -135,7 +138,7 @@ export default function DealItemsSection({ dealId, initialItems }) {
     }
 
     async function refresh() {
-        const r = await fetch(`/api/crm/deals/${dealId}`)
+        const r = await fetch(apiBase)
         if (r.ok) {
             const d = await r.json()
             setItems(d.item.items || [])
@@ -148,9 +151,7 @@ export default function DealItemsSection({ dealId, initialItems }) {
         setLoading(true)
 
         const payload = { ...form, productId: form.productId || null }
-        const url = editingId
-            ? `/api/crm/deals/${dealId}/items/${editingId}`
-            : `/api/crm/deals/${dealId}/items`
+        const url = editingId ? `${apiBase}/items/${editingId}` : `${apiBase}/items`
         const method = editingId ? "PATCH" : "POST"
 
         const res = await fetch(url, {
@@ -180,7 +181,7 @@ export default function DealItemsSection({ dealId, initialItems }) {
             variant: "danger",
         })
         if (!ok) return
-        const res = await fetch(`/api/crm/deals/${dealId}/items/${id}`, { method: "DELETE" })
+        const res = await fetch(`${apiBase}/items/${id}`, { method: "DELETE" })
         if (!res.ok) {
             const data = await res.json().catch(() => ({}))
             toast.error(data.error || "Не удалось удалить")

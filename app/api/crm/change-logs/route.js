@@ -30,6 +30,13 @@ const RELATION_FIELDS = {
         distributorId: { model: "counterparty" },
         endCustomerId: { model: "counterparty" },
     },
+    Auction: {
+        managerId: { model: "user" },
+        supplierContactId: { model: "contact" },
+    },
+    AuctionItem: {
+        productId: { model: "product" },
+    },
 }
 
 function fullName(u) {

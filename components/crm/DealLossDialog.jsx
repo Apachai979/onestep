@@ -14,18 +14,30 @@ export default function DealLossDialog({
     confirmLabel = "Сделка не реализована",
     reasons = DEAL_LOSS_REASONS,
     labels = DEAL_LOSS_REASON_LABELS,
+    // Режим «только комментарий»: без списка причин, комментарий обязателен.
+    commentRequired = false,
+    commentLabel,
+    commentPlaceholder = "Например: у конкурента цена ниже на 15%",
+    confirmClass = "bg-red-600 hover:bg-red-700",
 }) {
     const [reason, setReason] = useState("")
     const [comment, setComment] = useState("")
     const [error, setError] = useState("")
 
+    const showReasons = reasons.length > 0
+
     function handleSubmit(e) {
         e.preventDefault()
-        if (!reason) {
+        if (showReasons && !reason) {
             setError("Выберите причину")
             return
         }
-        onConfirm({ lossReason: reason, lossComment: comment.trim() || null })
+        const trimmed = comment.trim()
+        if (commentRequired && !trimmed) {
+            setError("Укажите причину")
+            return
+        }
+        onConfirm({ lossReason: reason || null, lossComment: trimmed || null })
     }
 
     return (
@@ -45,6 +57,7 @@ export default function DealLossDialog({
                 )}
 
                 <form onSubmit={handleSubmit} className='space-y-3'>
+                    {showReasons && (
                     <div className='space-y-1.5'>
                         {reasons.map(r => (
                             <label
@@ -70,16 +83,21 @@ export default function DealLossDialog({
                             </label>
                         ))}
                     </div>
+                    )}
 
                     <div>
                         <label className='mb-1 block text-xs text-gray-600'>
-                            Комментарий (необязательно)
+                            {commentLabel ||
+                                (commentRequired ? "Причина" : "Комментарий (необязательно)")}
                         </label>
                         <textarea
-                            rows={2}
+                            rows={commentRequired ? 3 : 2}
                             value={comment}
-                            onChange={e => setComment(e.target.value)}
-                            placeholder='Например: у конкурента цена ниже на 15%'
+                            onChange={e => {
+                                setComment(e.target.value)
+                                setError("")
+                            }}
+                            placeholder={commentPlaceholder}
                             className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                         />
                     </div>
@@ -97,7 +115,7 @@ export default function DealLossDialog({
                         <button
                             type='submit'
                             disabled={saving}
-                            className='rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:opacity-60'
+                            className={`rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition disabled:opacity-60 ${confirmClass}`}
                         >
                             {saving ? "Сохраняем..." : confirmLabel}
                         </button>

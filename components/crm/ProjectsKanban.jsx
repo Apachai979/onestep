@@ -9,6 +9,7 @@ import {
 } from "@/lib/crm/project"
 import { formatMoney } from "@/lib/crm/format"
 import { useToast } from "@/components/crm/ui"
+import DealLossDialog from "./DealLossDialog"
 
 function safeJson(text) {
     try {
@@ -39,6 +40,7 @@ export default function ProjectsKanban() {
     const [q, setQ] = useState("")
     const [draggingId, setDraggingId] = useState(null)
     const [dragOver, setDragOver] = useState(null)
+    const [noNeedProject, setNoNeedProject] = useState(null)
 
     async function load() {
         setError("")
@@ -131,6 +133,11 @@ export default function ProjectsKanban() {
             if (!id) return
             const project = projects?.find(p => p.id === id)
             if (!project || project.status === status) return
+            // «Проработано, нет потребности» — только с указанием причины.
+            if (status === "NO_NEED") {
+                setNoNeedProject(project)
+                return
+            }
             moveProject(id, status)
         }
     }
@@ -209,6 +216,24 @@ export default function ProjectsKanban() {
                     )
                 })}
             </div>
+
+            {noNeedProject && (
+                <DealLossDialog
+                    dealTitle={noNeedProject.internalName}
+                    title='Почему у клиента нет потребности?'
+                    confirmLabel='Проработано, нет потребности'
+                    confirmClass='bg-amber-500 hover:bg-amber-600'
+                    reasons={[]}
+                    commentRequired
+                    commentLabel='Причина'
+                    commentPlaceholder='Например: закупились у другого поставщика на год вперёд'
+                    onCancel={() => setNoNeedProject(null)}
+                    onConfirm={({ lossComment }) => {
+                        moveProject(noNeedProject.id, "NO_NEED", { lossComment })
+                        setNoNeedProject(null)
+                    }}
+                />
+            )}
         </div>
     )
 }

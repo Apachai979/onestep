@@ -96,6 +96,15 @@ export default async function ProjectPage({ params }) {
                 </div>
             )}
 
+            {item.status === "NO_NEED" && item.lossComment && (
+                <div className='rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm'>
+                    <p className='text-xs font-semibold uppercase tracking-wide text-amber-800'>
+                        Нет потребности — причина
+                    </p>
+                    <p className='mt-1 whitespace-pre-wrap text-amber-900'>{item.lossComment}</p>
+                </div>
+            )}
+
             <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='min-w-0 space-y-4'>
                     <Section

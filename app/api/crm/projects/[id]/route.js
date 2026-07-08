@@ -56,6 +56,19 @@ export async function PATCH(request, { params }) {
     const { data, error } = parseProjectPayload(body, { partial: true })
     if (error) return Response.json({ error }, { status: 400 })
 
+    // Причина обязательна при переводе в «Проработано, нет потребности»
+    // (свободный текст в lossComment); при возврате в работу — очищается.
+    if (data.status === "NO_NEED" && !data.lossComment && !existing.lossComment) {
+        return Response.json(
+            { error: "Укажите причину, по которой у клиента нет потребности" },
+            { status: 400 },
+        )
+    }
+    if (data.status && data.status !== "NO_NEED") {
+        if (existing.lossComment && data.lossComment === undefined) data.lossComment = null
+        if (existing.lossReason && data.lossReason === undefined) data.lossReason = null
+    }
+
     if (data.distributorId) {
         const d = await prisma.counterparty.findUnique({
             where: { id: data.distributorId },

@@ -22,7 +22,7 @@ import {
 } from "@/lib/crm/deal"
 import { SHIPMENT_STATUS_LABELS } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
-import { CHANGE_ACTION_LABELS, ENTITY_LABELS, CHILD_OF } from "@/lib/crm/change-log"
+import { CHANGE_ACTION_LABELS, ENTITY_LABELS } from "@/lib/crm/change-log"
 import DashboardSearch from "@/components/crm/DashboardSearch"
 import LocalDateTime from "@/components/crm/LocalDateTime"
 
@@ -157,9 +157,11 @@ export default async function CrmHome() {
     const projectIds = new Set()
     const counterpartyIds = new Set()
     for (const c of recentChanges) {
-        const isChild = !!CHILD_OF[c.entityType]
-        const targetEntity = isChild ? c.parentEntityType : c.entityType
-        const targetId = isChild ? c.parentEntityId : c.entityId
+        // Дочерние записи (задачи, заметки, файлы, позиции) хранят родителя
+        // прямо в parentEntityType/parentEntityId — берём его имя для ленты.
+        const hasParent = !!(c.parentEntityType && c.parentEntityId)
+        const targetEntity = hasParent ? c.parentEntityType : c.entityType
+        const targetId = hasParent ? c.parentEntityId : c.entityId
         if (!targetEntity || !targetId) continue
         if (targetEntity === "Deal") dealIds.add(targetId)
         else if (targetEntity === "Project") projectIds.add(targetId)
@@ -486,8 +488,12 @@ export default async function CrmHome() {
 
 // === helpers ===
 
+// Предлог для связки «дочерняя сущность → карточка-родитель»:
+// «задача по проекту», но «позиция в сделке».
+const PARENT_PREPOSITION = { Task: "по", Email: "по" }
+
 function describeChange(c, { dealMap, projectMap, counterpartyMap }) {
-    const isChild = !!CHILD_OF[c.entityType]
+    const isChild = !!(c.parentEntityType && c.parentEntityId)
     const parent = isChild ? c.parentEntityType : c.entityType
     const parentId = isChild ? c.parentEntityId : c.entityId
     const entityLabel = ENTITY_LABELS[c.entityType] || c.entityType
@@ -516,9 +522,14 @@ function describeChange(c, { dealMap, projectMap, counterpartyMap }) {
         }
     }
 
-    const actionText = isChild
-        ? `${action.toLowerCase()} ${entityLabel.toLowerCase()} в`
-        : `${action.toLowerCase()}`
+    // Если имя родителя не нашли (карточка удалена) — прежний вид «создано Задача».
+    const parentResolved = targetHref !== null
+    const actionText =
+        isChild && parentResolved
+            ? `${action.toLowerCase()} ${entityLabel.toLowerCase()} ${
+                  PARENT_PREPOSITION[c.entityType] || "в"
+              }`
+            : `${action.toLowerCase()}`
 
     const dotClass =
         c.action === "CREATE"

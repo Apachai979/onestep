@@ -145,10 +145,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
     async function handleDelete(id) {
         const c = contacts.find(x => x.id === id)
         const fullName = c
-            ? `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim() ||
-              c.email ||
-              c.phone ||
-              ""
+            ? `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim() || c.email || c.phone || ""
             : ""
         const ok = await confirm({
             title: "Удалить контакт?",
@@ -208,7 +205,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
             {showAttach && (
                 <div className='mb-4 space-y-3 rounded-lg border border-dashed border-primary_green/40 p-4'>
                     <p className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
-                        Прикрепить контакт без привязки
+                        Прикрепить контакт
                     </p>
                     {freeContacts === null ? (
                         <p className='text-sm text-gray-400'>Загрузка...</p>
@@ -277,9 +274,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                                     </span>
                                 )}
                             </div>
-                            {c.position && (
-                                <p className='text-sm text-gray-600'>{c.position}</p>
-                            )}
+                            {c.position && <p className='text-sm text-gray-600'>{c.position}</p>}
                             <div className='mt-1 grid gap-1 text-sm text-gray-700 sm:grid-cols-2'>
                                 {c.phone && <span>Тел.: {c.phone}</span>}
                                 {c.email && <span>{c.email}</span>}
@@ -363,11 +358,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                             disabled={loading}
                             className='rounded-lg bg-brand_main px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
                         >
-                            {loading
-                                ? "Сохраняем..."
-                                : editingId
-                                  ? "Сохранить"
-                                  : "Добавить"}
+                            {loading ? "Сохраняем..." : editingId ? "Сохранить" : "Добавить"}
                         </button>
                     </div>
                 </form>

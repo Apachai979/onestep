@@ -24,6 +24,7 @@ import { SHIPMENT_STATUS_LABELS } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
 import { CHANGE_ACTION_LABELS, ENTITY_LABELS, CHILD_OF } from "@/lib/crm/change-log"
 import DashboardSearch from "@/components/crm/DashboardSearch"
+import LocalDateTime from "@/components/crm/LocalDateTime"
 
 export const metadata = { title: "Главная | CRM" }
 
@@ -35,14 +36,6 @@ function fullName(u) {
 function fmtDate(d) {
     if (!d) return "—"
     return new Date(d).toLocaleDateString("ru-RU")
-}
-
-function fmtDateTime(d) {
-    if (!d) return "—"
-    return new Date(d).toLocaleString("ru-RU", {
-        dateStyle: "short",
-        timeStyle: "short",
-    })
 }
 
 function fmtRelative(d) {
@@ -263,11 +256,7 @@ export default async function CrmHome() {
             <div className='flex flex-wrap items-center justify-between gap-3'>
                 <div className='shrink-0'>
                     <p className='text-xs uppercase tracking-wider text-night_green/55'>
-                        {new Date().toLocaleDateString("ru-RU", {
-                            weekday: "long",
-                            day: "numeric",
-                            month: "long",
-                        })}
+                        <LocalDateTime format='weekday' />
                     </p>
                     <h1 className='mt-1 text-xl font-semibold text-night_green sm:text-2xl'>
                         Привет, {firstName} 👋
@@ -421,7 +410,7 @@ export default async function CrmHome() {
                                             </div>
                                             <div className='shrink-0 text-right'>
                                                 <p className='text-xs font-semibold text-red-700'>
-                                                    {fmtDate(sh.plannedDate)}
+                                                    <LocalDateTime value={sh.plannedDate} format='date' />
                                                 </p>
                                                 <p className='text-[10px] text-night_green/55'>
                                                     {SHIPMENT_STATUS_LABELS[sh.status]}
@@ -481,7 +470,7 @@ export default async function CrmHome() {
                                             </p>
                                             <p className='text-[10px] text-night_green/45'>
                                                 {fmtRelative(c.createdAt)} ·{" "}
-                                                {fmtDateTime(c.createdAt)}
+                                                <LocalDateTime value={c.createdAt} />
                                             </p>
                                         </div>
                                     </li>
@@ -633,7 +622,7 @@ function TaskGroup({ title, tone, tasks }) {
                             <div className='shrink-0 text-right text-[11px] text-night_green/65'>
                                 <span className='inline-flex items-center gap-1'>
                                     <LuClock className='h-3 w-3' />
-                                    {fmtDateTime(t.endAt)}
+                                    <LocalDateTime value={t.endAt} />
                                 </span>
                             </div>
                         </Link>

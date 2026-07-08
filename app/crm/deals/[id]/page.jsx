@@ -11,6 +11,7 @@ import DealItemsSection from "@/components/crm/DealItemsSection"
 import DealStatusControl from "@/components/crm/DealStatusControl"
 import DealShipmentsSection from "@/components/crm/DealShipmentsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
+import LocalDateTime from "@/components/crm/LocalDateTime"
 
 export const metadata = { title: "Сделка | CRM" }
 
@@ -141,11 +142,18 @@ export default async function DealPage({ params }) {
                                 Редактировать
                             </Link>
                         }
-                        footer={`Создал ${fullName(item.createdBy)} · ${new Date(item.createdAt).toLocaleString("ru-RU")}${
-                            item.updatedBy
-                                ? ` · изменил ${fullName(item.updatedBy)} · ${new Date(item.updatedAt).toLocaleString("ru-RU")}`
-                                : ""
-                        }`}
+                        footer={
+                            <>
+                                Создал {fullName(item.createdBy)} ·{" "}
+                                <LocalDateTime value={item.createdAt} />
+                                {item.updatedBy && (
+                                    <>
+                                        {" · "}изменил {fullName(item.updatedBy)} ·{" "}
+                                        <LocalDateTime value={item.updatedAt} />
+                                    </>
+                                )}
+                            </>
+                        }
                     >
                         <Row label='Сумма сделки' value={formatMoney(item.totalAmount)} />
                         <Row

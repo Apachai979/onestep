@@ -10,6 +10,7 @@ import { CardRow, MobileCard } from "@/components/crm/ui/MobileCards"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import CrmBackLink from "@/components/crm/CrmBackLink"
+import LocalDateTime from "@/components/crm/LocalDateTime"
 
 export const metadata = { title: "Проект | CRM" }
 
@@ -18,10 +19,6 @@ function fullName(u) {
     return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
 }
 
-function fmtDate(d) {
-    if (!d) return "—"
-    return new Date(d).toLocaleDateString("ru-RU")
-}
 
 export default async function ProjectPage({ params }) {
     const session = await getServerSession(authOptions)
@@ -112,11 +109,17 @@ export default async function ProjectPage({ params }) {
                                 Редактировать
                             </Link>
                         }
-                        footer={`Создан ${fmtDate(item.createdAt)}${
-                            item.updatedBy
-                                ? ` · изменил ${fullName(item.updatedBy)} · ${new Date(item.updatedAt).toLocaleString("ru-RU")}`
-                                : ""
-                        }`}
+                        footer={
+                            <>
+                                Создан <LocalDateTime value={item.createdAt} format='date' />
+                                {item.updatedBy && (
+                                    <>
+                                        {" · "}изменил {fullName(item.updatedBy)} ·{" "}
+                                        <LocalDateTime value={item.updatedAt} />
+                                    </>
+                                )}
+                            </>
+                        }
                     >
                         {/* Организация и её регион — в одном ряду 3-колоночной сетки */}
                         <Row label='Конечный потребитель'>

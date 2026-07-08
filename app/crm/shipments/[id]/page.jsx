@@ -10,18 +10,9 @@ import {
 } from "@/lib/crm/shipment"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import CrmBackLink from "@/components/crm/CrmBackLink"
+import LocalDateTime from "@/components/crm/LocalDateTime"
 
 export const metadata = { title: "Отгрузка | CRM" }
-
-function fmtDate(d) {
-    if (!d) return "—"
-    return new Date(d).toLocaleDateString("ru-RU")
-}
-
-function fmtDateTime(d) {
-    if (!d) return "—"
-    return new Date(d).toLocaleString("ru-RU")
-}
 
 function fullName(u) {
     if (!u) return "—"
@@ -137,10 +128,13 @@ export default async function ShipmentPage({ params }) {
             <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='min-w-0 space-y-5'>
                     <Section title='Параметры'>
-                        <Row label='Плановая дата' value={fmtDate(item.plannedDate)} />
+                        <Row
+                            label='Плановая дата'
+                            value={<LocalDateTime value={item.plannedDate} format='date' />}
+                        />
                         <Row
                             label='Фактическая отгрузка'
-                            value={fmtDateTime(item.shippedAt)}
+                            value={<LocalDateTime value={item.shippedAt} />}
                         />
                         <Row label='Перевозчик' value={item.carrier} />
                         <Row label='Трек-номер' value={item.trackingNumber} />
@@ -153,9 +147,9 @@ export default async function ShipmentPage({ params }) {
                         />
                         <Row label='Менеджер сделки' value={fullName(item.deal.manager)} />
                         <Row label='Создал' value={fullName(item.createdBy)} />
-                        <Row label='Создана' value={fmtDateTime(item.createdAt)} />
+                        <Row label='Создана' value={<LocalDateTime value={item.createdAt} />} />
                         <Row label='Изменил' value={fullName(item.updatedBy)} />
-                        <Row label='Изменена' value={fmtDateTime(item.updatedAt)} />
+                        <Row label='Изменена' value={<LocalDateTime value={item.updatedAt} />} />
                     </Section>
 
                     {item.note && (

@@ -15,6 +15,7 @@ import { PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import ContactsSection from "@/components/crm/ContactsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import CrmBackLink from "@/components/crm/CrmBackLink"
+import LocalDateTime from "@/components/crm/LocalDateTime"
 
 export const metadata = { title: "Контрагент | CRM" }
 
@@ -106,11 +107,17 @@ export default async function CounterpartyPage({ params }) {
                                 Редактировать
                             </Link>
                         }
-                        footer={`Создал ${createdByName} · ${new Date(item.createdAt).toLocaleString("ru-RU")}${
-                            updatedByName
-                                ? ` · изменил ${updatedByName} · ${new Date(item.updatedAt).toLocaleString("ru-RU")}`
-                                : ""
-                        }`}
+                        footer={
+                            <>
+                                Создал {createdByName} · <LocalDateTime value={item.createdAt} />
+                                {updatedByName && (
+                                    <>
+                                        {" · "}изменил {updatedByName} ·{" "}
+                                        <LocalDateTime value={item.updatedAt} />
+                                    </>
+                                )}
+                            </>
+                        }
                     >
                         <Row label='Регион' value={item.region} />
                         <Row label='Телефон' value={item.phone} />

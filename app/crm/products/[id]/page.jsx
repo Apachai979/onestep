@@ -6,6 +6,7 @@ import { formatMoney } from "@/lib/crm/format"
 import { contentLines } from "@/lib/crm/product"
 import { totalStockPieces } from "@/lib/crm/stock"
 import CrmBackLink from "@/components/crm/CrmBackLink"
+import LocalDateTime from "@/components/crm/LocalDateTime"
 
 export const metadata = { title: "Товар | CRM" }
 
@@ -89,7 +90,7 @@ export default async function ProductPage({ params }) {
                         </h2>
                         {lastSync && (
                             <span className='text-[10px] text-night_green/55'>
-                                Обновлено {lastSync.toLocaleString("ru-RU")}
+                                Обновлено <LocalDateTime value={lastSync} />
                             </span>
                         )}
                     </div>

@@ -75,31 +75,24 @@ export default function Neoset({ params }) {
                             </h1>
                         </Link>
                         <p className='mt-5 text-2xl text-txtGreen'>{neoset.description}</p>
-                        <p className='mt-5 text-xl font-semibold text-txtGreen'>Скачать:</p>
-                        <p>
-                            <Link
-                                href='/'
-                                className='inline text-lg font-semibold text-mainGreen hover:text-night_green'
-                            >
-                                Регистрационное удостоверение
-                            </Link>
-                        </p>
-                        <p>
-                            <Link
-                                href='/'
-                                className='inline-flex text-lg font-semibold text-mainGreen hover:text-night_green'
-                            >
-                                Инструкция по применению{" "}
-                            </Link>
-                        </p>
-                        <p>
-                            <Link
-                                href='/'
-                                className='text-lg font-semibold text-mainGreen hover:text-night_green'
-                            >
-                                Видео-инструкция
-                            </Link>
-                        </p>
+                        <ul className='mt-5 list-disc pl-5 text-txtGreen'>
+                            <li>
+                                <Link
+                                    href='/files/registration_certificate.pdf'
+                                    className='inline text-lg font-semibold text-mainGreen hover:text-night_green'
+                                >
+                                    Регистрационное удостоверение №РЗН 2024/23821 от 16.10.2024
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href='/files/instruction.pdf'
+                                    className='inline text-lg font-semibold text-mainGreen hover:text-night_green'
+                                >
+                                    Инструкция по применению
+                                </Link>
+                            </li>
+                        </ul>
                         <div className='mt-10'>
                             <ButtonOpenForm url='/'>
                                 <ButtonExtra textButton={"Получить консультацию"}></ButtonExtra>
@@ -127,24 +120,24 @@ export default function Neoset({ params }) {
                         <tbody>
                             {neoset.name ===
                                 "Nabor NeoSet dlya gemodializa (nachalo/zaversheniye)" && (
-                                    <tr className='border-y-2 border-slate-700 border-b-slate-400'>
-                                        <td className='px-4 py-2 font-semibold'>Начало процедуры</td>
-                                    </tr>
-                                )}
+                                <tr className='border-y-2 border-slate-700 border-b-slate-400'>
+                                    <td className='px-4 py-2 font-semibold'>Начало процедуры</td>
+                                </tr>
+                            )}
 
                             {renderComponentRows(componentsList)}
 
                             {neoset.name ===
                                 "Nabor NeoSet dlya gemodializa (nachalo/zaversheniye)" && (
-                                    <>
-                                        <tr className='border-y-2 border-slate-700 border-b-slate-400'>
-                                            <td className='px-4 py-2 font-semibold'>
-                                                Завершение процедуры
-                                            </td>
-                                        </tr>
-                                        {renderComponentRows(componentsDializList)}
-                                    </>
-                                )}
+                                <>
+                                    <tr className='border-y-2 border-slate-700 border-b-slate-400'>
+                                        <td className='px-4 py-2 font-semibold'>
+                                            Завершение процедуры
+                                        </td>
+                                    </tr>
+                                    {renderComponentRows(componentsDializList)}
+                                </>
+                            )}
                             <tr className='border-t-2 border-slate-700'>
                                 <td className='px-4 py-2 font-semibold'>
                                     Состав набора может быть скорректирован по вашему запросу

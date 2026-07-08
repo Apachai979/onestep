@@ -57,6 +57,12 @@ export async function POST(request) {
     const { data, error } = parseContactPayload(body)
     if (error) return Response.json({ error }, { status: 400 })
 
+    // В справочнике контактов телефон обязателен (импорт и формы контрагента
+    // используют другие маршруты и не затрагиваются).
+    if (!data.phone) {
+        return Response.json({ error: "Укажите телефон" }, { status: 400 })
+    }
+
     // Привязка к контрагенту необязательна.
     let counterpartyId = null
     if (body.counterpartyId) {

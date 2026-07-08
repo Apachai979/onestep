@@ -109,7 +109,12 @@ export default function ContactEditForm({ initial }) {
                 <div className='grid gap-3 sm:grid-cols-2'>
                     <Field label='Имя' value={form.firstName} onChange={update("firstName")} />
                     <Field label='Фамилия' value={form.lastName} onChange={update("lastName")} />
-                    <Field label='Телефон' value={form.phone} onChange={update("phone")} />
+                    <Field
+                        label='Телефон *'
+                        required
+                        value={form.phone}
+                        onChange={update("phone")}
+                    />
                     <Field
                         label='Email'
                         type='email'

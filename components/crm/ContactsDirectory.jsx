@@ -1,5 +1,6 @@
 "use client"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { LuPlus, LuSearch, LuContact } from "react-icons/lu"
 import {
@@ -40,6 +41,7 @@ function fullName(c) {
 }
 
 export default function ContactsDirectory() {
+    const router = useRouter()
     const toast = useToast()
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
@@ -203,7 +205,12 @@ export default function ContactsDirectory() {
                             value={form.lastName}
                             onChange={update("lastName")}
                         />
-                        <Field label='Телефон' value={form.phone} onChange={update("phone")} />
+                        <Field
+                            label='Телефон *'
+                            required
+                            value={form.phone}
+                            onChange={update("phone")}
+                        />
                         <Field
                             label='Email'
                             type='email'
@@ -272,7 +279,7 @@ export default function ContactsDirectory() {
                     />
                 )}
                 {items?.map(c => (
-                    <MobileCard key={c.id}>
+                    <MobileCard key={c.id} onClick={() => router.push(`/crm/contacts/${c.id}`)}>
                         <div className='flex items-start justify-between gap-2'>
                             <Link
                                 href={`/crm/contacts/${c.id}`}
@@ -294,6 +301,7 @@ export default function ContactsDirectory() {
                                 {c.counterparty ? (
                                     <Link
                                         href={`/crm/counterparties/${c.counterparty.id}`}
+                                        onClick={e => e.stopPropagation()}
                                         className='text-brand_main hover:underline'
                                     >
                                         {c.counterparty.name}
@@ -332,7 +340,8 @@ export default function ContactsDirectory() {
                         {items?.map(c => (
                             <tr
                                 key={c.id}
-                                className='border-t border-brand_soft/30 transition hover:bg-brand_soft/15'
+                                onClick={() => router.push(`/crm/contacts/${c.id}`)}
+                                className='cursor-pointer border-t border-brand_soft/30 transition hover:bg-brand_soft/15'
                             >
                                 <td className='px-4 py-3'>
                                     <span className='inline-flex flex-wrap items-center gap-2'>
@@ -356,6 +365,7 @@ export default function ContactsDirectory() {
                                     {c.counterparty ? (
                                         <Link
                                             href={`/crm/counterparties/${c.counterparty.id}`}
+                                            onClick={e => e.stopPropagation()}
                                             className='text-brand_main hover:underline'
                                         >
                                             {c.counterparty.name}

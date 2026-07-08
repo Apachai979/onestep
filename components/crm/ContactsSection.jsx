@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useConfirm, useToast } from "@/components/crm/ui"
+import SearchableSelect from "./SearchableSelect"
 
 const EMPTY = {
     firstName: "",
@@ -34,12 +35,54 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
     const [form, setForm] = useState(EMPTY)
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
+    // Прикрепление существующего контакта без привязки к контрагенту.
+    const [showAttach, setShowAttach] = useState(false)
+    const [freeContacts, setFreeContacts] = useState(null)
+    const [attachId, setAttachId] = useState("")
+    const [attaching, setAttaching] = useState(false)
 
     function startAdd() {
         setForm(EMPTY)
         setEditingId(null)
         setError("")
         setShowAdd(true)
+        setShowAttach(false)
+    }
+
+    async function startAttach() {
+        setShowAttach(true)
+        setShowAdd(false)
+        setEditingId(null)
+        setAttachId("")
+        // свободные контакты — без привязки к контрагенту
+        const r = await fetch("/api/crm/contacts")
+        if (r.ok) {
+            const d = await r.json()
+            setFreeContacts((d.items || []).filter(c => !c.counterparty))
+        } else {
+            setFreeContacts([])
+        }
+    }
+
+    async function handleAttach() {
+        if (!attachId) return
+        setAttaching(true)
+        const res = await fetch(`/api/crm/contacts/${attachId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ counterpartyId }),
+        })
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}))
+            toast.error(data.error || "Не удалось прикрепить контакт")
+            setAttaching(false)
+            return
+        }
+        toast.success("Контакт прикреплён")
+        setShowAttach(false)
+        setAttaching(false)
+        await refresh()
+        router.refresh()
     }
 
     function startEdit(contact) {
@@ -142,16 +185,76 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                 <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
                     Контакты
                 </h2>
-                {!formOpen && (
-                    <button
-                        type='button'
-                        onClick={startAdd}
-                        className='rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
-                    >
-                        Добавить контакт
-                    </button>
+                {!formOpen && !showAttach && (
+                    <div className='flex flex-wrap gap-2'>
+                        <button
+                            type='button'
+                            onClick={startAttach}
+                            className='rounded-lg border border-brand_soft/60 bg-white px-3 py-1.5 text-xs font-medium text-night_green/80 hover:bg-brand_soft/30'
+                        >
+                            Прикрепить существующий
+                        </button>
+                        <button
+                            type='button'
+                            onClick={startAdd}
+                            className='rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
+                        >
+                            Добавить контакт
+                        </button>
+                    </div>
                 )}
             </div>
+
+            {showAttach && (
+                <div className='mb-4 space-y-3 rounded-lg border border-dashed border-primary_green/40 p-4'>
+                    <p className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                        Прикрепить контакт без привязки
+                    </p>
+                    {freeContacts === null ? (
+                        <p className='text-sm text-gray-400'>Загрузка...</p>
+                    ) : freeContacts.length === 0 ? (
+                        <p className='text-sm text-gray-400'>
+                            Свободных контактов нет — все контакты уже привязаны к контрагентам.
+                        </p>
+                    ) : (
+                        <SearchableSelect
+                            value={attachId}
+                            onChange={setAttachId}
+                            placeholder='Выберите контакт'
+                            emptyLabel='Контакт не найден'
+                            options={freeContacts.map(c => ({
+                                id: c.id,
+                                label:
+                                    `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim() ||
+                                    c.email ||
+                                    c.phone ||
+                                    "Без имени",
+                                sublabel: [c.position, c.phone, c.email]
+                                    .filter(Boolean)
+                                    .join(" · "),
+                                search: `${c.firstName ?? ""} ${c.lastName ?? ""} ${c.phone ?? ""} ${c.email ?? ""}`,
+                            }))}
+                        />
+                    )}
+                    <div className='flex justify-end gap-2'>
+                        <button
+                            type='button'
+                            onClick={() => setShowAttach(false)}
+                            className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
+                        >
+                            Отмена
+                        </button>
+                        <button
+                            type='button'
+                            onClick={handleAttach}
+                            disabled={!attachId || attaching}
+                            className='rounded-lg bg-brand_main px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
+                        >
+                            {attaching ? "Прикрепляем..." : "Прикрепить"}
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {contacts.length === 0 && !formOpen && (
                 <p className='text-sm text-gray-400'>Контактов пока нет.</p>

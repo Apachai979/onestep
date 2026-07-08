@@ -62,8 +62,7 @@ export default function ProjectContactsPicker({
         return e => setForm(prev => ({ ...prev, [field]: e.target.value }))
     }
 
-    async function handleAdd(e) {
-        e.preventDefault()
+    async function handleAdd() {
         setError("")
         setSaving(true)
         const res = await fetch(`/api/crm/counterparties/${counterpartyId}/contacts`, {
@@ -145,10 +144,10 @@ export default function ProjectContactsPicker({
             )}
 
             {showAdd && (
-                <form
-                    onSubmit={handleAdd}
-                    className='space-y-2 rounded-lg border border-dashed border-primary_green/40 p-3'
-                >
+                /* НЕ <form>: пикер живёт внутри формы проекта, а вложенные формы
+                   в HTML запрещены — браузер выбрасывает внутренний тег при SSR,
+                   и submit уходил во внешнюю форму. */
+                <div className='space-y-2 rounded-lg border border-dashed border-primary_green/40 p-3'>
                     <div className='grid gap-2 sm:grid-cols-2'>
                         <Field label='Имя' value={form.firstName} onChange={update("firstName")} />
                         <Field
@@ -183,14 +182,15 @@ export default function ProjectContactsPicker({
                             Отмена
                         </button>
                         <button
-                            type='submit'
+                            type='button'
+                            onClick={handleAdd}
                             disabled={saving}
                             className='rounded-md bg-brand_main px-3 py-1 text-xs font-semibold text-white hover:bg-brand_main/90 disabled:opacity-60'
                         >
                             {saving ? "Сохраняем..." : "Добавить"}
                         </button>
                     </div>
-                </form>
+                </div>
             )}
         </div>
     )

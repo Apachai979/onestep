@@ -45,6 +45,40 @@ export default function Neoset({ params }) {
         })
     }
 
+    const isGemodializ = neoset.name === "Nabor NeoSet dlya gemodializa (nachalo/zaversheniye)"
+
+    // Документы к товару. У гемодиализа — свой комплект из /files/hemodialysis/
+    // (РУ, инструкция и два СОПа), у остальных — общие РУ и инструкция.
+    const documents = isGemodializ
+        ? [
+              {
+                  href: "/files/hemodialysis/RC_hemodialysis.pdf",
+                  label: "Регистрационное удостоверение №РЗН 2024/23580 от 10.09.2024",
+              },
+              {
+                  href: "/files/hemodialysis/Instruction_hemodialysis.pdf",
+                  label: "Инструкция по применению",
+              },
+              {
+                  href: "/files/hemodialysis/1SOP_hemodialysis_start.docx",
+                  label: 'СОП: "Подключение пациента к АИП с использованием АВФ"',
+              },
+              {
+                  href: "/files/hemodialysis/1SOP_hemodialysis_end.docx",
+                  label: 'СОП: "Отключение пациента с АВФ от аппарата искусственной почки"',
+              },
+          ]
+        : [
+              {
+                  href: "/files/registration_certificate.pdf",
+                  label: "Регистрационное удостоверение №РЗН 2024/23821 от 16.10.2024",
+              },
+              {
+                  href: "/files/instruction.pdf",
+                  label: "Инструкция по применению",
+              },
+          ]
+
     const renderComponentRows = components => {
         return Object.keys(components).map((componentName, index) => (
             <tr
@@ -76,22 +110,16 @@ export default function Neoset({ params }) {
                         </Link>
                         <p className='mt-5 text-2xl text-txtGreen'>{neoset.description}</p>
                         <ul className='mt-5 list-disc pl-5 text-txtGreen'>
-                            <li>
-                                <Link
-                                    href='/files/registration_certificate.pdf'
-                                    className='inline text-lg font-semibold text-mainGreen hover:text-night_green'
-                                >
-                                    Регистрационное удостоверение №РЗН 2024/23821 от 16.10.2024
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href='/files/instruction.pdf'
-                                    className='inline text-lg font-semibold text-mainGreen hover:text-night_green'
-                                >
-                                    Инструкция по применению
-                                </Link>
-                            </li>
+                            {documents.map(doc => (
+                                <li key={doc.href}>
+                                    <Link
+                                        href={doc.href}
+                                        className='inline text-lg font-semibold text-mainGreen hover:text-night_green'
+                                    >
+                                        {doc.label}
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                         <div className='mt-10'>
                             <ButtonOpenForm url='/'>

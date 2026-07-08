@@ -7,62 +7,88 @@ export const metadata = {
         "Российский производитель медицинских одноразовых перевязочных материалов и процедурных стерильных наборов",
 }
 
+const permitDocs = [
+    {
+        href: "/files/Certificate_ISO_9001.jpg",
+        label: "Сертификат соответствия ISO 9001:2015",
+    },
+    {
+        href: "/files/Certificate_ISO_13485.jpeg",
+        label: "Сертификат соответствия ISO 13485-2017",
+    },
+    {
+        href: "/files/hemodialysis/RC_hemodialysis.pdf",
+        label: "Регистрационное удостоверение гемодиализ",
+    },
+    {
+        href: "/files/registration_certificate.pdf",
+        label: "Регистрационное удостоверение наборы общехирургические",
+    },
+]
+
+const otherDocs = [
+    {
+        href: "/files/Law_of_the_Russian_Federation_N_323-ФЗ.docx",
+        label: "ФЗ от 21.11.2011 N 323-ФЗ (ред. от 28.12.2022) «Об основах охраны здоровья граждан в Российской Федерации»",
+    },
+    {
+        href: "/files/Order_of_the_Ministry_of_Health_of_Russia_N_919n.pdf",
+        label: "Приказ Минздрава России от 15.11.2012 N 919н (ред. от 14.09.2018) «Об утверждении Порядка оказания медицинской помощи взрослому населению по профилю „анестезиология и реаниматология“»",
+    },
+]
+
+function fileType(href) {
+    const ext = href.split(".").pop().toLowerCase()
+    return ext === "jpeg" ? "JPG" : ext.toUpperCase()
+}
+
+function DocList({ documents }) {
+    return (
+        <ul className='mt-4 space-y-3'>
+            {documents.map(doc => (
+                <li key={doc.href} className='flex items-start gap-3'>
+                    <span className='mt-1 shrink-0 rounded bg-brand_soft/40 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-txtGreen/70'>
+                        {fileType(doc.href)}
+                    </span>
+                    <Link
+                        href={doc.href}
+                        className='text-lg font-medium leading-snug text-mainGreen hover:text-txtGreen'
+                    >
+                        {doc.label}
+                    </Link>
+                </li>
+            ))}
+        </ul>
+    )
+}
+
 export default function Documentation() {
     return (
         <>
-            <div className="container mx-auto max-w-[1200px] px-2 sm:px-4">
-                <h1 className="m-4 sm:m-10 text-3xl sm:text-4xl font-semibold text-txtGreen">Документы</h1>
+            <div className='container mx-auto max-w-[1200px] px-4'>
+                <h1 className='my-4 text-3xl font-semibold text-txtGreen sm:my-10 sm:text-4xl lg:mx-10'>
+                    Документы
+                </h1>
 
-                <div className="mt-5 sm:mt-10 rounded-2xl bg-white px-6 sm:px-10 pb-6 pt-3 md:px-5 lg:mx-10">
-                    <h2 className="text-2xl sm:text-3xl font-semibold sm:leading-loose text-txtGreen -translate-x-3 sm:translate-x-0">Разрешительные документы</h2>
-
-                    {[
-                        { title: "Сертификат соответствия ISO 9001:2015", link: "/files/iso_9001_2015.pdf" },
-                        { title: "Сертификат соответствия №ЕАС.04ИБН1.СМ.9574", link: "/" }
-                    ].map((doc, index) => (
-                        <div key={index} className="mt-3 flex flex-col gap-1.5 border-t border-brand_soft/40 pt-3 md:flex-row md:items-center md:gap-4 md:pl-5">
-                            <p className="text-lg leading-snug text-txtGreen md:flex-1">{doc.title}</p>
-                            <div className="flex items-center gap-6 md:gap-8">
-                                <span className="text-lg text-txtGreen/70 md:w-12 md:text-center">PDF</span>
-                                <Link href={doc.link} className="text-lg font-medium text-mainGreen hover:text-txtGreen">
-                                    Скачать
-                                </Link>
-                            </div>
-                        </div>
-                    ))}
+                <div className='mt-5 rounded-2xl bg-white px-6 pb-6 pt-4 sm:mt-10 sm:px-10 lg:mx-10'>
+                    <h2 className='text-2xl font-semibold text-txtGreen sm:text-3xl'>
+                        Разрешительные документы
+                    </h2>
+                    <DocList documents={permitDocs} />
                 </div>
 
-                <div className="my-10 rounded-2xl bg-white px-6 sm:px-10 pb-6 pt-3 md:px-5 lg:mx-10">
-                    <h2 className="text-2xl sm:text-3xl font-semibold leading-tight sm:leading-loose text-txtGreen -translate-x-3 sm:translate-x-0">Разное</h2>
-
-                    {[
-                        {
-                            title: "ФЗ от 21.11.2011 N 323-ФЗ (ред. от 28.12.2022) \"Об основах охраны здоровья граждан в Российской Федерации\"",
-                            link: "/"
-                        },
-                        {
-                            title: "Приказ Минздрава России от 15.11.2012 N 919н (ред. от 14.09.2018) \"Об утверждении Порядка оказания медицинской помощи взрослому населению по профилю \"анестезиология и реаниматология\"",
-                            link: "/files/Order_of_the_Ministry_of_Health_of_Russia_N_919n.pdf"
-                        }
-                    ].map((doc, index) => (
-                        <div key={index} className="mt-3 flex flex-col gap-1.5 border-t border-brand_soft/40 pt-3 md:flex-row md:items-center md:gap-4 md:pl-5">
-                            <p className="text-lg leading-snug text-txtGreen md:flex-1">{doc.title}</p>
-                            <div className="flex items-center gap-6 md:gap-8">
-                                <span className="text-lg text-txtGreen/70 md:w-12 md:text-center">PDF</span>
-                                <Link href={doc.link} className="text-lg font-medium text-mainGreen hover:text-txtGreen">
-                                    Скачать
-                                </Link>
-                            </div>
-                        </div>
-                    ))}
+                <div className='mt-5 rounded-2xl bg-white px-6 pb-6 pt-4 sm:mt-10 sm:px-10 lg:mx-10'>
+                    <h2 className='text-2xl font-semibold text-txtGreen sm:text-3xl'>Разное</h2>
+                    <DocList documents={otherDocs} />
                 </div>
             </div>
 
-            <div className="mt-10 sm:mt-16">
-                <ConnectUs title="Мы готовы обсудить возникшие вопросы" txtbutton="Связаться со специалистом" />
+            <div className='mt-10 sm:mt-16'>
+                <ConnectUs
+                    title='Мы готовы обсудить возникшие вопросы'
+                    txtbutton='Связаться со специалистом'
+                />
             </div>
-
-
         </>
     )
 }

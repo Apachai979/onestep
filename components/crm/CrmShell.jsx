@@ -84,7 +84,10 @@ export default function CrmShell({ user, role, children }) {
     // (например, строка поиска на дашборде).
     useEffect(() => {
         function onKey(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+            // e.code === "KeyK" — по физической клавише, чтобы работало и на
+            // русской раскладке (где e.key === "л"). e.key — запасной вариант.
+            const isK = e.code === "KeyK" || e.key?.toLowerCase() === "k"
+            if ((e.ctrlKey || e.metaKey) && isK) {
                 e.preventDefault()
                 setSearchOpen(o => !o)
             }

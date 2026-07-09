@@ -116,7 +116,11 @@ export async function POST(request) {
         return Response.json({ error: "Менеджер не найден" }, { status: 400 })
     }
 
-    let sourceProjectItems = []
+    // Позиции переносятся из источника: аукцион в приоритете (если задан),
+    // иначе — проект. Так «сделка из аукциона» получает позиции аукциона,
+    // а не проекта, даже когда привязаны оба.
+    let sourceItems = []
+
     if (data.sourceProjectId) {
         const sourceProject = await prisma.project.findUnique({
             where: { id: data.sourceProjectId },
@@ -125,7 +129,18 @@ export async function POST(request) {
         if (!sourceProject) {
             return Response.json({ error: "Проект-источник не найден" }, { status: 400 })
         }
-        sourceProjectItems = sourceProject.items
+        if (!data.sourceAuctionId) sourceItems = sourceProject.items
+    }
+
+    if (data.sourceAuctionId) {
+        const sourceAuction = await prisma.auction.findUnique({
+            where: { id: data.sourceAuctionId },
+            include: { items: true },
+        })
+        if (!sourceAuction) {
+            return Response.json({ error: "Аукцион-источник не найден" }, { status: 400 })
+        }
+        sourceItems = sourceAuction.items
     }
 
     const created = await prisma.$transaction(async tx => {
@@ -140,6 +155,7 @@ export async function POST(request) {
                 managerId: data.managerId,
                 createdById: session.user.id,
                 sourceProjectId: data.sourceProjectId ?? null,
+                sourceAuctionId: data.sourceAuctionId ?? null,
             },
             include: {
                 counterparty: { select: COUNTERPARTY_SELECT },
@@ -157,8 +173,8 @@ export async function POST(request) {
             authorId: session.user.id,
         })
 
-        if (sourceProjectItems.length) {
-            for (const src of sourceProjectItems) {
+        if (sourceItems.length) {
+            for (const src of sourceItems) {
                 const created = await tx.dealItem.create({
                     data: {
                         dealId: deal.id,
@@ -186,13 +202,10 @@ export async function POST(request) {
                 })
             }
 
-            // Пересчёт суммы сделки по перенесённым из проекта позициям —
+            // Пересчёт суммы сделки по перенесённым из источника позициям —
             // иначе deal.totalAmount остался бы либо тем, что пришло в форме,
             // либо нулём, и не соответствовал бы фактической сумме items.
-            const total = sourceProjectItems.reduce(
-                (s, it) => s + Number(it.amount),
-                0,
-            )
+            const total = sourceItems.reduce((s, it) => s + Number(it.amount), 0)
             const totalStr = total.toString()
             await tx.deal.update({
                 where: { id: deal.id },

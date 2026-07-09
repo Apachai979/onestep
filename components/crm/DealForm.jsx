@@ -11,6 +11,7 @@ const EMPTY = {
     managerId: "",
     status: "NEGOTIATION",
     sourceProjectId: "",
+    sourceAuctionId: "",
     note: "",
     deliveryAddress: "",
     discount: "",
@@ -39,6 +40,7 @@ export default function DealForm({
     currentUserId,
     defaultStatus,
     fromProject,
+    fromAuction,
 }) {
     const router = useRouter()
 
@@ -49,7 +51,19 @@ export default function DealForm({
                 managerId: currentUserId || "",
                 status: defaultStatus || "NEGOTIATION",
             }
-            if (fromProject) {
+            if (fromAuction) {
+                // Сделка из аукциона: клиент — поставщик аукциона (дистрибьютор),
+                // менеджер и контакт — из аукциона, привязка к аукциону и его
+                // проекту. Позиции переносятся на сервере при создании.
+                base.title = fromAuction.purchaseNumber
+                    ? `По закупке № ${fromAuction.purchaseNumber}`
+                    : "По аукциону"
+                base.counterpartyId = fromAuction.supplierId || ""
+                base.contactId = fromAuction.supplierContactId || ""
+                base.managerId = fromAuction.managerId || currentUserId || ""
+                base.sourceProjectId = fromAuction.projectId || ""
+                base.sourceAuctionId = fromAuction.id
+            } else if (fromProject) {
                 base.title = `По проекту: ${fromProject.internalName}`
                 base.counterpartyId = fromProject.distributorId
                 base.managerId = fromProject.managerId || currentUserId || ""
@@ -64,6 +78,7 @@ export default function DealForm({
             managerId: initial.managerId ?? "",
             status: initial.status ?? "NEGOTIATION",
             sourceProjectId: initial.sourceProjectId ?? "",
+            sourceAuctionId: initial.sourceAuctionId ?? "",
             note: initial.note ?? "",
             deliveryAddress: initial.deliveryAddress ?? "",
             discount:
@@ -155,6 +170,7 @@ export default function DealForm({
             ...form,
             contactId: form.contactId || null,
             sourceProjectId: form.sourceProjectId || null,
+            sourceAuctionId: form.sourceAuctionId || null,
         }
         const url = mode === "create" ? "/api/crm/deals" : `/api/crm/deals/${initial.id}`
         const method = mode === "create" ? "POST" : "PATCH"

@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getServerSession } from "next-auth"
-import { LuPencil, LuExternalLink } from "react-icons/lu"
+import { LuPencil, LuExternalLink, LuBriefcase } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { formatMoney } from "@/lib/crm/format"
@@ -81,7 +81,16 @@ export default async function AuctionPage({ params }) {
                         {item.purchaseNumber ? `Закупка № ${item.purchaseNumber}` : "Аукцион"}
                     </h1>
                 </div>
-                <AuctionStatusControl auctionId={item.id} currentStatus={item.status} />
+                <div className='flex flex-col items-end gap-2'>
+                    <AuctionStatusControl auctionId={item.id} currentStatus={item.status} />
+                    <Link
+                        href={`/crm/deals/new?fromAuctionId=${item.id}`}
+                        className='inline-flex items-center gap-1.5 rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand_main/90'
+                    >
+                        <LuBriefcase className='h-3 w-3' />
+                        Создать сделку
+                    </Link>
+                </div>
             </div>
 
             {item.status === "LOST" && item.lossComment && (

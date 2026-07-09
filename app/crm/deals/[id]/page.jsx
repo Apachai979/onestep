@@ -40,6 +40,9 @@ export default async function DealPage({ params }) {
             sourceProject: {
                 select: { id: true, internalName: true },
             },
+            sourceAuction: {
+                select: { id: true, purchaseNumber: true },
+            },
         },
     })
     if (!item) notFound()
@@ -97,6 +100,19 @@ export default async function DealPage({ params }) {
                                 className='underline hover:text-blue-900'
                             >
                                 {item.sourceProject.internalName}
+                            </Link>
+                        </p>
+                    )}
+                    {item.sourceAuction && (
+                        <p className='mt-1 text-sm text-blue-700'>
+                            По аукциону:{" "}
+                            <Link
+                                href={`/crm/auctions/${item.sourceAuction.id}`}
+                                className='underline hover:text-blue-900'
+                            >
+                                {item.sourceAuction.purchaseNumber
+                                    ? `Закупка № ${item.sourceAuction.purchaseNumber}`
+                                    : "Аукцион"}
                             </Link>
                         </p>
                     )}

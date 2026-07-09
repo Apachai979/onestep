@@ -28,10 +28,14 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url)
     const projectId = searchParams.get("projectId")
+    const status = searchParams.get("status")
+    const managerId = searchParams.get("managerId")
     const q = searchParams.get("q")?.trim()
 
     const where = {}
     if (projectId) where.projectId = projectId
+    if (status) where.status = status
+    if (managerId) where.managerId = managerId
 
     const items = await prisma.auction.findMany({
         where,

@@ -191,14 +191,16 @@ export default async function ProjectPage({ params }) {
                             {/* Мобильные карточки */}
                             <div className='space-y-3 md:hidden'>
                                 {item.deals.map(d => (
-                                    <MobileCard key={d.id}>
+                                    <Link
+                                        key={d.id}
+                                        href={`/crm/deals/${d.id}`}
+                                        className='block transition hover:bg-brand_soft/15'
+                                    >
+                                        <MobileCard>
                                         <div className='flex items-start justify-between gap-2'>
-                                            <Link
-                                                href={`/crm/deals/${d.id}`}
-                                                className='min-w-0 font-medium text-night_green hover:text-brand_main'
-                                            >
+                                            <span className='min-w-0 font-medium text-night_green'>
                                                 {d.title || `Сделка с ${d.counterparty?.name || "клиентом"}`}
-                                            </Link>
+                                            </span>
                                             <span className='shrink-0 rounded-full bg-brand_soft/40 px-2 py-0.5 text-xs font-medium text-night_green/80'>
                                                 {DEAL_STATUS_LABELS[d.status] || d.status}
                                             </span>
@@ -214,7 +216,8 @@ export default async function ProjectPage({ params }) {
                                                 </span>
                                             </CardRow>
                                         </div>
-                                    </MobileCard>
+                                        </MobileCard>
+                                    </Link>
                                 ))}
                             </div>
 
@@ -235,25 +238,33 @@ export default async function ProjectPage({ params }) {
                                                 key={d.id}
                                                 className='border-t border-brand_soft/30 hover:bg-brand_soft/15'
                                             >
-                                                <td className='px-3 py-2'>
+                                                <td className='p-0'>
                                                     <Link
                                                         href={`/crm/deals/${d.id}`}
-                                                        className='font-medium text-night_green hover:text-brand_main'
+                                                        className='block px-3 py-2 font-medium text-night_green'
                                                     >
                                                         {d.title || `Сделка с ${d.counterparty?.name || "клиентом"}`}
                                                     </Link>
                                                 </td>
-                                                <td className='px-3 py-2 text-night_green/75'>
-                                                    {d.counterparty?.name || "—"}
+                                                <td className='p-0 text-night_green/75'>
+                                                    <Link href={`/crm/deals/${d.id}`} className='block px-3 py-2'>
+                                                        {d.counterparty?.name || "—"}
+                                                    </Link>
                                                 </td>
-                                                <td className='px-3 py-2 text-night_green/75'>
-                                                    {fullName(d.manager)}
+                                                <td className='p-0 text-night_green/75'>
+                                                    <Link href={`/crm/deals/${d.id}`} className='block px-3 py-2'>
+                                                        {fullName(d.manager)}
+                                                    </Link>
                                                 </td>
-                                                <td className='px-3 py-2 text-night_green/75'>
-                                                    {DEAL_STATUS_LABELS[d.status] || d.status}
+                                                <td className='p-0 text-night_green/75'>
+                                                    <Link href={`/crm/deals/${d.id}`} className='block px-3 py-2'>
+                                                        {DEAL_STATUS_LABELS[d.status] || d.status}
+                                                    </Link>
                                                 </td>
-                                                <td className='px-3 py-2 text-right text-night_green/75'>
-                                                    {formatMoney(d.totalAmount)}
+                                                <td className='p-0 text-night_green/75'>
+                                                    <Link href={`/crm/deals/${d.id}`} className='block px-3 py-2 text-right'>
+                                                        {formatMoney(d.totalAmount)}
+                                                    </Link>
                                                 </td>
                                             </tr>
                                         ))}
@@ -284,16 +295,18 @@ export default async function ProjectPage({ params }) {
                             {/* Мобильные карточки */}
                             <div className='space-y-3 md:hidden'>
                                 {item.auctions.map(a => (
-                                    <MobileCard key={a.id}>
+                                    <Link
+                                        key={a.id}
+                                        href={`/crm/auctions/${a.id}`}
+                                        className='block transition hover:bg-brand_soft/15'
+                                    >
+                                        <MobileCard>
                                         <div className='flex items-start justify-between gap-2'>
-                                            <Link
-                                                href={`/crm/auctions/${a.id}`}
-                                                className='min-w-0 font-medium text-night_green hover:text-brand_main'
-                                            >
+                                            <span className='min-w-0 font-medium text-night_green'>
                                                 {a.purchaseNumber
                                                     ? `Закупка № ${a.purchaseNumber}`
                                                     : "Аукцион"}
-                                            </Link>
+                                            </span>
                                             <span
                                                 className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${AUCTION_STATUS_COLORS[a.status] || ""}`}
                                             >
@@ -311,7 +324,8 @@ export default async function ProjectPage({ params }) {
                                             </CardRow>
                                             <CardRow label='Менеджер'>{fullName(a.manager)}</CardRow>
                                         </div>
-                                    </MobileCard>
+                                        </MobileCard>
+                                    </Link>
                                 ))}
                             </div>
 
@@ -332,31 +346,39 @@ export default async function ProjectPage({ params }) {
                                                 key={a.id}
                                                 className='border-t border-brand_soft/30 hover:bg-brand_soft/15'
                                             >
-                                                <td className='px-3 py-2'>
+                                                <td className='p-0'>
                                                     <Link
                                                         href={`/crm/auctions/${a.id}`}
-                                                        className='font-medium text-night_green hover:text-brand_main'
+                                                        className='block px-3 py-2 font-medium text-night_green'
                                                     >
                                                         {a.purchaseNumber
                                                             ? `№ ${a.purchaseNumber}`
                                                             : "Аукцион"}
                                                     </Link>
                                                 </td>
-                                                <td className='px-3 py-2'>
-                                                    <span
-                                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${AUCTION_STATUS_COLORS[a.status] || ""}`}
-                                                    >
-                                                        {AUCTION_STATUS_LABELS[a.status] || a.status}
-                                                    </span>
+                                                <td className='p-0'>
+                                                    <Link href={`/crm/auctions/${a.id}`} className='block px-3 py-2'>
+                                                        <span
+                                                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${AUCTION_STATUS_COLORS[a.status] || ""}`}
+                                                        >
+                                                            {AUCTION_STATUS_LABELS[a.status] || a.status}
+                                                        </span>
+                                                    </Link>
                                                 </td>
-                                                <td className='px-3 py-2 text-night_green/75'>
-                                                    <LocalDateTime value={a.auctionAt} />
+                                                <td className='p-0 text-night_green/75'>
+                                                    <Link href={`/crm/auctions/${a.id}`} className='block px-3 py-2'>
+                                                        <LocalDateTime value={a.auctionAt} />
+                                                    </Link>
                                                 </td>
-                                                <td className='px-3 py-2 text-night_green/75'>
-                                                    {fullName(a.manager)}
+                                                <td className='p-0 text-night_green/75'>
+                                                    <Link href={`/crm/auctions/${a.id}`} className='block px-3 py-2'>
+                                                        {fullName(a.manager)}
+                                                    </Link>
                                                 </td>
-                                                <td className='px-3 py-2 text-right text-night_green/75'>
-                                                    {formatMoney(a.nmck)}
+                                                <td className='p-0 text-night_green/75'>
+                                                    <Link href={`/crm/auctions/${a.id}`} className='block px-3 py-2 text-right'>
+                                                        {formatMoney(a.nmck)}
+                                                    </Link>
                                                 </td>
                                             </tr>
                                         ))}

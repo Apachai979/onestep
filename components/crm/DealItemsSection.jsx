@@ -80,7 +80,8 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
     }
 
     function onQuantityChange(e) {
-        const value = e.target.value
+        // Количество — только целые числа
+        const value = e.target.value.replace(/[^\d]/g, "")
         setForm(prev => {
             const qty = parseNum(value)
             const unit = parseNum(prev.unitPrice)
@@ -364,9 +365,9 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
                         <Field
                             label='Кол-во'
                             type='number'
-                            step='0.01'
-                            min='0'
-                            inputMode='decimal'
+                            step='1'
+                            min='1'
+                            inputMode='numeric'
                             value={form.quantity}
                             onChange={onQuantityChange}
                         />

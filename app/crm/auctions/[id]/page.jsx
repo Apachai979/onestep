@@ -1,10 +1,11 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getServerSession } from "next-auth"
-import { LuPencil, LuExternalLink, LuBriefcase } from "react-icons/lu"
+import { LuPencil, LuExternalLink, LuPlus } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { formatMoney } from "@/lib/crm/format"
+import { DEAL_STATUS_COLORS, DEAL_STATUS_LABELS, dealDisplayTitle } from "@/lib/crm/deal"
 import AuctionStatusControl from "@/components/crm/AuctionStatusControl"
 import AuctionProtocolSection from "@/components/crm/AuctionProtocolSection"
 import DealItemsSection from "@/components/crm/DealItemsSection"
@@ -37,6 +38,13 @@ export default async function AuctionPage({ params }) {
             manager: true,
             updatedBy: true,
             items: { orderBy: { createdAt: "asc" } },
+            deals: {
+                orderBy: { createdAt: "desc" },
+                include: {
+                    counterparty: { select: { id: true, name: true } },
+                    manager: { select: { firstName: true, lastName: true, email: true } },
+                },
+            },
         },
     })
     if (!item) notFound()
@@ -81,16 +89,7 @@ export default async function AuctionPage({ params }) {
                         {item.purchaseNumber ? `Закупка № ${item.purchaseNumber}` : "Аукцион"}
                     </h1>
                 </div>
-                <div className='flex flex-col items-end gap-2'>
-                    <AuctionStatusControl auctionId={item.id} currentStatus={item.status} />
-                    <Link
-                        href={`/crm/deals/new?fromAuctionId=${item.id}`}
-                        className='inline-flex items-center gap-1.5 rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand_main/90'
-                    >
-                        <LuBriefcase className='h-3 w-3' />
-                        Создать сделку
-                    </Link>
-                </div>
+                <AuctionStatusControl auctionId={item.id} currentStatus={item.status} />
             </div>
 
             {item.status === "LOST" && item.lossComment && (
@@ -196,6 +195,53 @@ export default async function AuctionPage({ params }) {
                         apiBase={`/api/crm/auctions/${item.id}`}
                     />
 
+                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+                        <div className='mb-2.5 flex items-center justify-between gap-3'>
+                            <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                                Сделки по аукциону ({item.deals.length})
+                            </h2>
+                            <SectionCreateButton
+                                href={`/crm/deals/new?fromAuctionId=${item.id}`}
+                                label='Создать сделку'
+                            />
+                        </div>
+                        {item.deals.length === 0 ? (
+                            <p className='text-sm text-night_green/55'>
+                                Сделок по аукциону пока нет. Нажмите «Создать сделку» —
+                                поставщик и товарные позиции подставятся из аукциона.
+                            </p>
+                        ) : (
+                            <div className='space-y-2'>
+                                {item.deals.map(d => (
+                                    <Link
+                                        key={d.id}
+                                        href={`/crm/deals/${d.id}`}
+                                        className='flex items-center justify-between gap-3 rounded-lg border border-brand_soft/40 px-3 py-2 transition hover:bg-brand_soft/15'
+                                    >
+                                        <div className='min-w-0'>
+                                            <p className='truncate text-sm font-medium text-night_green'>
+                                                {dealDisplayTitle(d, d.counterparty?.name)}
+                                            </p>
+                                            <p className='mt-0.5 truncate text-xs text-night_green/60'>
+                                                {d.counterparty?.name || "—"} · {fullName(d.manager)}
+                                            </p>
+                                        </div>
+                                        <div className='flex shrink-0 items-center gap-2'>
+                                            <span className='text-sm font-medium text-gray-800'>
+                                                {formatMoney(d.totalAmount)}
+                                            </span>
+                                            <span
+                                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${DEAL_STATUS_COLORS[d.status] || ""}`}
+                                            >
+                                                {DEAL_STATUS_LABELS[d.status] || d.status}
+                                            </span>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+
                     <AuctionProtocolSection auctionId={item.id} protocol={protocol} />
                 </div>
 
@@ -209,6 +255,18 @@ export default async function AuctionPage({ params }) {
                 />
             </div>
         </div>
+    )
+}
+
+function SectionCreateButton({ href, label }) {
+    return (
+        <Link
+            href={href}
+            className='inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
+        >
+            <LuPlus className='h-3.5 w-3.5' />
+            {label}
+        </Link>
     )
 }
 

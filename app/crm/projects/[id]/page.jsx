@@ -175,10 +175,12 @@ export default async function ProjectPage({ params }) {
                             <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
                                 Сделки по проекту ({dealsCount})
                             </h2>
-                            <SectionCreateButton
-                                href={`/crm/deals/new?fromProjectId=${item.id}`}
-                                label='Создать сделку'
-                            />
+                            {item.status !== "NO_NEED" && (
+                                <SectionCreateButton
+                                    href={`/crm/deals/new?fromProjectId=${item.id}`}
+                                    label='Создать сделку'
+                                />
+                            )}
                         </div>
                         {item.deals.length === 0 ? (
                             <p className='text-sm text-night_green/55'>
@@ -280,10 +282,12 @@ export default async function ProjectPage({ params }) {
                             <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
                                 Аукционы по проекту ({item.auctions.length})
                             </h2>
-                            <SectionCreateButton
-                                href={`/crm/auctions/new?fromProjectId=${item.id}`}
-                                label='Создать аукцион'
-                            />
+                            {item.status !== "NO_NEED" && (
+                                <SectionCreateButton
+                                    href={`/crm/auctions/new?fromProjectId=${item.id}`}
+                                    label='Создать аукцион'
+                                />
+                            )}
                         </div>
                         {item.auctions.length === 0 ? (
                             <p className='text-sm text-night_green/55'>

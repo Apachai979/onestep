@@ -52,6 +52,13 @@ export function CrmNavTracker() {
     return null
 }
 
+// Страница редактирования/создания — сегмент пути /edit или /new.
+// «Назад» никогда не должна вести туда, поэтому такие URL пропускаем.
+function isEditPath(url) {
+    const path = url.split("?")[0]
+    return /\/(edit|new)$/.test(path)
+}
+
 // Возвращает URL предыдущей CRM-страницы или fallback, если истории нет.
 export function usePrevPath(fallback) {
     const [href, setHref] = useState(fallback)
@@ -59,8 +66,15 @@ export function usePrevPath(fallback) {
     useEffect(() => {
         if (typeof window === "undefined") return
         const stack = readStack()
-        // Предпоследний элемент — то, откуда пришли на текущую страницу.
-        const prev = stack.length >= 2 ? stack[stack.length - 2] : null
+        // Идём от предпоследнего элемента вглубь, пропуская страницы
+        // редактирования/создания — на них «Назад» вести не должна.
+        let prev = null
+        for (let i = stack.length - 2; i >= 0; i--) {
+            if (!isEditPath(stack[i])) {
+                prev = stack[i]
+                break
+            }
+        }
         if (prev && prev !== fallback) {
             setHref(prev)
             setFromHistory(true)

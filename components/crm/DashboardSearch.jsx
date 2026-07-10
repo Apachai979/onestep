@@ -105,7 +105,7 @@ export default function DashboardSearch() {
 
     return (
         <div ref={boxRef} className='relative'>
-            <div className='flex items-center gap-2.5 rounded-xl border border-brand_soft/50 bg-white/80 px-4 shadow-sm transition focus-within:border-brand_main/50 focus-within:bg-white'>
+            <div className='flex items-center gap-2.5 rounded-xl border border-line bg-white/80 px-4 shadow-sm transition focus-within:border-brand_main/50 focus-within:bg-white'>
                 <LuSearch className='h-4 w-4 shrink-0 text-brand_main/70' />
                 <input
                     value={q}
@@ -118,14 +118,14 @@ export default function DashboardSearch() {
             </div>
 
             {open && (
-                <div className='absolute inset-x-0 top-full z-30 mt-1.5 max-h-[60vh] overflow-y-auto rounded-xl border border-brand_soft/40 bg-white p-2 shadow-xl'>
+                <div className='absolute inset-x-0 top-full z-30 mt-1.5 max-h-[60vh] overflow-y-auto rounded-xl border border-line bg-white p-2 shadow-xl'>
                     {loading && (
-                        <p className='px-3 py-4 text-center text-sm text-night_green/45'>
+                        <p className='px-3 py-4 text-center text-sm text-neutral-400'>
                             Ищем...
                         </p>
                     )}
                     {!loading && results && total === 0 && (
-                        <p className='px-3 py-4 text-center text-sm text-night_green/45'>
+                        <p className='px-3 py-4 text-center text-sm text-neutral-400'>
                             Ничего не найдено по «{q.trim()}»
                         </p>
                     )}
@@ -137,7 +137,7 @@ export default function DashboardSearch() {
                             const Icon = g.icon
                             return (
                                 <div key={g.key} className='mb-1'>
-                                    <p className='px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-night_green/45'>
+                                    <p className='px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-400'>
                                         {g.label}
                                     </p>
                                     {items.map(item => {
@@ -152,16 +152,16 @@ export default function DashboardSearch() {
                                                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left ${
                                                     idx === active
                                                         ? "bg-brand_main/10"
-                                                        : "hover:bg-brand_soft/20"
+                                                        : "hover:bg-surface_muted"
                                                 }`}
                                             >
                                                 <Icon className='h-4 w-4 shrink-0 text-brand_main/70' />
                                                 <span className='min-w-0'>
-                                                    <span className='block truncate text-sm font-medium text-night_green'>
+                                                    <span className='block truncate text-sm font-medium text-neutral-900'>
                                                         {item.title}
                                                     </span>
                                                     {item.subtitle && (
-                                                        <span className='block truncate text-xs text-night_green/55'>
+                                                        <span className='block truncate text-xs text-neutral-400'>
                                                             {item.subtitle}
                                                         </span>
                                                     )}

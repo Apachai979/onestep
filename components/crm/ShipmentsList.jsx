@@ -9,7 +9,17 @@ import {
     SHIPMENT_STATUS_LABELS,
     isShipmentOverdue,
 } from "@/lib/crm/shipment"
-import { CardListSkeleton, CardRow, EmptyState, MobileCard, TableSkeleton } from "@/components/crm/ui"
+import {
+    Badge,
+    CardListSkeleton,
+    CardRow,
+    DataTable,
+    EmptyState,
+    Field,
+    Input,
+    MobileCard,
+    Select,
+} from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -80,44 +90,126 @@ export default function ShipmentsList() {
         })
     }, [items, onlyOverdue])
 
+    const columns = useMemo(
+        () => [
+            {
+                key: "number",
+                header: "№",
+                sortable: true,
+                sortValue: sh => sh.number,
+                render: sh => (
+                    <span className='inline-flex items-center gap-1.5'>
+                        <Link
+                            href={`/crm/shipments/${sh.id}`}
+                            onClick={e => e.stopPropagation()}
+                            className='font-mono font-medium text-neutral-900 hover:text-brand_main'
+                        >
+                            {sh.number}
+                        </Link>
+                    </span>
+                ),
+            },
+            {
+                key: "status",
+                header: "Статус",
+                sortable: true,
+                sortValue: sh => SHIPMENT_STATUS_LABELS[sh.status] || sh.status,
+                render: sh => (
+                    <span className='inline-flex flex-wrap items-center gap-1.5'>
+                        <Badge className={SHIPMENT_STATUS_COLORS[sh.status]}>
+                            {SHIPMENT_STATUS_LABELS[sh.status]}
+                        </Badge>
+                        {isShipmentOverdue(sh) && (
+                            <Badge tone='danger'>Просрочена</Badge>
+                        )}
+                    </span>
+                ),
+            },
+            {
+                key: "deal",
+                header: "Сделка",
+                render: sh => (
+                    <Link
+                        href={`/crm/deals/${sh.deal.id}`}
+                        onClick={e => e.stopPropagation()}
+                        className='text-neutral-900 hover:text-brand_main'
+                    >
+                        {sh.deal.title || `Сделка #${sh.deal.id.slice(-6)}`}
+                    </Link>
+                ),
+            },
+            {
+                key: "customer",
+                header: "Клиент",
+                sortValue: sh => sh.deal.counterparty?.name || "",
+                render: sh => sh.deal.counterparty?.name || "—",
+                hideable: true,
+            },
+            {
+                key: "manager",
+                header: "Менеджер",
+                render: sh => managerName(sh.deal.manager),
+                hideable: true,
+            },
+            {
+                key: "plannedDate",
+                header: "Плановая",
+                sortable: true,
+                sortValue: sh => (sh.plannedDate ? new Date(sh.plannedDate).getTime() : 0),
+                render: sh => fmtDate(sh.plannedDate),
+            },
+            {
+                key: "shippedAt",
+                header: "Отгружена",
+                sortable: true,
+                sortValue: sh => (sh.shippedAt ? new Date(sh.shippedAt).getTime() : 0),
+                render: sh => fmtDate(sh.shippedAt),
+                hideable: true,
+            },
+            {
+                key: "qty",
+                header: "Позиций / шт.",
+                align: "right",
+                render: sh => {
+                    const totalQty = (sh.items || []).reduce((s, it) => s + num(it.quantity), 0)
+                    return `${sh.items?.length || 0} (${fmtQty(totalQty)})`
+                },
+            },
+        ],
+        [],
+    )
+
     return (
         <div className='space-y-4'>
-            <div className='grid gap-3 rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:grid-cols-4'>
+            <div className='grid gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm sm:grid-cols-4'>
                 <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Поиск</label>
-                    <div className='relative'>
-                        <LuSearch className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-night_green/40' />
-                        <input
+                    <Field label='Поиск'>
+                        <Input
+                            icon={LuSearch}
                             value={q}
                             onChange={e => setQ(e.target.value)}
                             onKeyDown={e => e.key === "Enter" && load()}
                             placeholder='Номер, сделка, клиент, трек'
-                            className='w-full rounded-lg border border-brand_soft/60 bg-white pl-9 pr-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                         />
-                    </div>
+                    </Field>
                 </div>
-                <div>
-                    <label className='mb-1 block text-xs text-night_green/65'>Статус</label>
-                    <select
-                        value={status}
-                        onChange={e => setStatus(e.target.value)}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                    >
+                <Field label='Статус'>
+                    <Select value={status} onChange={e => setStatus(e.target.value)}>
                         <option value=''>Все</option>
                         {SHIPMENT_STATUSES.map(s => (
                             <option key={s} value={s}>
                                 {SHIPMENT_STATUS_LABELS[s]}
                             </option>
                         ))}
-                    </select>
-                </div>
-                <div className='flex flex-col gap-1 pt-5 text-xs'>
-                    <label className='inline-flex items-center gap-2 text-gray-700'>
+                    </Select>
+                </Field>
+                <div className='flex items-end pb-2.5 text-xs'>
+                    <label className='inline-flex items-center gap-2 text-neutral-600'>
                         <input
                             type='checkbox'
                             checked={onlyOverdue}
                             onChange={e => setOnlyOverdue(e.target.checked)}
-                            className='rounded'
+                            className='h-4 w-4 rounded border-line text-brand_main focus:ring-brand_main/30'
                         />
                         Только просроченные
                     </label>
@@ -125,7 +217,7 @@ export default function ShipmentsList() {
             </div>
 
             {error && (
-                <p className='rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
                     {error}
                 </p>
             )}
@@ -150,20 +242,14 @@ export default function ShipmentsList() {
                             className={overdue ? "bg-red-50/40" : ""}
                         >
                             <div className='flex items-start justify-between gap-2'>
-                                <span className='font-mono font-medium text-night_green'>
+                                <span className='font-mono font-medium text-neutral-900'>
                                     {sh.number}
                                 </span>
                                 <span className='flex shrink-0 flex-wrap justify-end gap-1'>
-                                    <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${SHIPMENT_STATUS_COLORS[sh.status]}`}
-                                    >
+                                    <Badge className={SHIPMENT_STATUS_COLORS[sh.status]}>
                                         {SHIPMENT_STATUS_LABELS[sh.status]}
-                                    </span>
-                                    {overdue && (
-                                        <span className='rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700'>
-                                            Просрочена
-                                        </span>
-                                    )}
+                                    </Badge>
+                                    {overdue && <Badge tone='danger'>Просрочена</Badge>}
                                 </span>
                             </div>
                             <div className='mt-2 space-y-1'>
@@ -171,7 +257,7 @@ export default function ShipmentsList() {
                                     <Link
                                         href={`/crm/deals/${sh.deal.id}`}
                                         onClick={e => e.stopPropagation()}
-                                        className='text-night_green underline hover:text-brand_main'
+                                        className='text-neutral-900 underline hover:text-brand_main'
                                     >
                                         {sh.deal.title || `Сделка #${sh.deal.id.slice(-6)}`}
                                     </Link>
@@ -189,93 +275,23 @@ export default function ShipmentsList() {
                 })}
             </div>
 
-            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
-                <table className='w-full text-sm'>
-                    <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
-                        <tr>
-                            <th className='px-3 py-2'>№</th>
-                            <th className='px-3 py-2'>Статус</th>
-                            <th className='px-3 py-2'>Сделка</th>
-                            <th className='px-3 py-2'>Клиент</th>
-                            <th className='px-3 py-2'>Менеджер</th>
-                            <th className='px-3 py-2'>Плановая</th>
-                            <th className='px-3 py-2'>Отгружена</th>
-                            <th className='px-3 py-2 text-right'>Позиций / шт.</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items === null && <TableSkeleton rows={5} cols={8} />}
-                        {filtered && filtered.length === 0 && (
-                            <EmptyState
-                                colSpan={8}
-                                icon={LuTruck}
-                                title='Отгрузок не найдено'
-                                hint='Попробуйте изменить фильтры — или зайдите в нужную сделку и добавьте отгрузку.'
-                            />
-                        )}
-                        {filtered?.map(sh => {
-                            const totalQty = (sh.items || []).reduce(
-                                (s, it) => s + num(it.quantity),
-                                0,
-                            )
-                            const overdue = isShipmentOverdue(sh)
-                            return (
-                                <tr
-                                    key={sh.id}
-                                    onClick={() => router.push(`/crm/shipments/${sh.id}`)}
-                                    className={`cursor-pointer border-t border-brand_soft/30 transition hover:bg-brand_soft/15 ${
-                                        overdue ? "bg-red-50/30" : ""
-                                    }`}
-                                >
-                                    <td className='px-3 py-2'>
-                                        <Link
-                                            href={`/crm/shipments/${sh.id}`}
-                                            className='font-mono font-medium text-night_green hover:text-brand_main'
-                                        >
-                                            {sh.number}
-                                        </Link>
-                                    </td>
-                                    <td className='px-3 py-2'>
-                                        <span
-                                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${SHIPMENT_STATUS_COLORS[sh.status]}`}
-                                        >
-                                            {SHIPMENT_STATUS_LABELS[sh.status]}
-                                        </span>
-                                        {overdue && (
-                                            <span className='ml-1.5 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700'>
-                                                Просрочена
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className='px-3 py-2'>
-                                        <Link
-                                            href={`/crm/deals/${sh.deal.id}`}
-                                            onClick={e => e.stopPropagation()}
-                                            className='text-night_green hover:text-brand_main'
-                                        >
-                                            {sh.deal.title || `Сделка #${sh.deal.id.slice(-6)}`}
-                                        </Link>
-                                    </td>
-                                    <td className='px-3 py-2 text-gray-700'>
-                                        {sh.deal.counterparty?.name || "—"}
-                                    </td>
-                                    <td className='px-3 py-2 text-gray-700'>
-                                        {managerName(sh.deal.manager)}
-                                    </td>
-                                    <td className='px-3 py-2 text-gray-700'>
-                                        {fmtDate(sh.plannedDate)}
-                                    </td>
-                                    <td className='px-3 py-2 text-gray-700'>
-                                        {fmtDate(sh.shippedAt)}
-                                    </td>
-                                    <td className='px-3 py-2 text-right text-gray-700'>
-                                        {sh.items?.length || 0} ({fmtQty(totalQty)})
-                                    </td>
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </table>
+            <div className='hidden md:block'>
+                <DataTable
+                    columns={columns}
+                    rows={filtered || []}
+                    loading={items === null}
+                    getRowId={sh => sh.id}
+                    onRowClick={sh => router.push(`/crm/shipments/${sh.id}`)}
+                    rowClassName={sh => (isShipmentOverdue(sh) ? "bg-red-50/40" : "")}
+                    initialSort={{ key: "plannedDate", dir: "asc" }}
+                    empty={
+                        <EmptyState
+                            icon={LuTruck}
+                            title='Отгрузок не найдено'
+                            hint='Попробуйте изменить фильтры — или зайдите в нужную сделку и добавьте отгрузку.'
+                        />
+                    }
+                />
             </div>
         </div>
     )

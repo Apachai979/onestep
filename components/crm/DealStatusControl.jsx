@@ -48,7 +48,7 @@ export default function DealStatusControl({ dealId, currentStatus }) {
                 onChange={e => change(e.target.value)}
                 disabled={loading}
                 title='Сменить статус сделки'
-                className={`cursor-pointer appearance-none rounded-full border-0 bg-no-repeat px-3 py-1 pr-8 text-xs font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-primary_green/50 disabled:opacity-60 ${DEAL_STATUS_COLORS[status]}`}
+                className={`cursor-pointer appearance-none rounded-full border-0 bg-no-repeat px-3 py-1 pr-8 text-xs font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-brand_main/50 disabled:opacity-60 ${DEAL_STATUS_COLORS[status]}`}
                 style={{
                     backgroundImage:
                         "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E\")",

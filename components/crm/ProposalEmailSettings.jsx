@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { useToast } from "@/components/crm/ui"
+import { Button, useToast } from "@/components/crm/ui"
 
 // Редактор шаблона письма, которым КП уходит клиенту.
 // props: placeholders — [[«{{number}}», «описание»], ...]
@@ -48,15 +48,15 @@ export default function ProposalEmailSettings({ placeholders }) {
     }
 
     if (loading) {
-        return <p className='text-sm text-night_green/55'>Загрузка...</p>
+        return <p className='text-sm text-neutral-400'>Загрузка...</p>
     }
 
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
-            <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
+        <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
+            <h2 className='text-sm font-semibold text-neutral-900'>
                 Шаблон письма с КП
             </h2>
-            <p className='mt-1 text-sm text-night_green/60'>
+            <p className='mt-1 text-sm text-neutral-500'>
                 Используется при отправке коммерческого предложения клиенту со
                 страницы «Сформировать КП». Менеджер видит текст перед отправкой и
                 может подправить его под конкретного клиента.
@@ -64,24 +64,24 @@ export default function ProposalEmailSettings({ placeholders }) {
 
             <div className='mt-4 space-y-3'>
                 <div>
-                    <label className='mb-1 block text-xs text-gray-600'>Тема письма</label>
+                    <label className='mb-1.5 block text-xs font-medium text-neutral-500'>Тема письма</label>
                     <input
                         value={subject}
                         onChange={e => setSubject(e.target.value)}
-                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                        className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                     />
                 </div>
                 <div>
-                    <label className='mb-1 block text-xs text-gray-600'>Текст письма</label>
+                    <label className='mb-1.5 block text-xs font-medium text-neutral-500'>Текст письма</label>
                     <textarea
                         rows={12}
                         value={body}
                         onChange={e => setBody(e.target.value)}
-                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 font-mono text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                        className='w-full rounded-xl border border-line bg-white px-3 py-2 font-mono text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                     />
                 </div>
 
-                <div className='rounded-lg bg-brand_soft/15 p-3 text-xs leading-relaxed text-night_green/70'>
+                <div className='rounded-xl bg-surface_muted p-3 text-xs leading-relaxed text-neutral-500'>
                     <p className='mb-1 font-semibold'>Подстановки:</p>
                     <ul className='grid gap-x-6 gap-y-0.5 sm:grid-cols-2'>
                         {placeholders.map(([ph, hint]) => (
@@ -94,25 +94,20 @@ export default function ProposalEmailSettings({ placeholders }) {
                 </div>
 
                 <div className='flex flex-wrap justify-end gap-2'>
-                    <button
+                    <Button
                         type='button'
+                        variant='secondary'
                         disabled={saving}
                         onClick={() => {
                             if (defaults) save({ subject: "", body: "" })
                         }}
-                        className='rounded-lg border border-brand_soft/60 px-4 py-2 text-sm text-gray-700 hover:bg-brand_soft/30 disabled:opacity-60'
                         title='Вернуть стандартный текст'
                     >
                         Сбросить к стандартному
-                    </button>
-                    <button
-                        type='button'
-                        disabled={saving}
-                        onClick={() => save()}
-                        className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:opacity-60'
-                    >
-                        {saving ? "Сохраняем..." : "Сохранить"}
-                    </button>
+                    </Button>
+                    <Button type='button' onClick={() => save()} loading={saving}>
+                        Сохранить
+                    </Button>
                 </div>
             </div>
         </section>

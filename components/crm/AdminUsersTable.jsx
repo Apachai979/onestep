@@ -17,13 +17,13 @@ function safeJson(text) {
 }
 
 const STATUS_CLASS = {
-    ACTIVE: "bg-green-100 text-green-800",
-    BLOCKED: "bg-red-100 text-red-700",
+    ACTIVE: "bg-emerald-50 text-emerald-700",
+    BLOCKED: "bg-red-50 text-red-700",
 }
 
 const ROLE_CLASS = {
-    ADMIN: "bg-amber-100 text-amber-800",
-    MANAGER: "bg-blue-100 text-blue-800",
+    ADMIN: "bg-amber-50 text-amber-700",
+    MANAGER: "bg-blue-50 text-blue-700",
 }
 
 export default function AdminUsersTable({ currentUserId }) {
@@ -48,8 +48,8 @@ export default function AdminUsersTable({ currentUserId }) {
     }, [])
 
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70'>
-            <h2 className='border-b border-brand_soft/30 px-5 py-3 text-sm font-semibold uppercase tracking-wide text-gray-500'>
+        <section className='overflow-hidden rounded-2xl border border-line bg-white shadow-sm'>
+            <h2 className='border-b border-line px-6 py-3.5 text-sm font-semibold text-neutral-900'>
                 Сотрудники
             </h2>
             {error && <p className='px-5 py-2 text-sm text-red-600'>{error}</p>}
@@ -58,17 +58,17 @@ export default function AdminUsersTable({ currentUserId }) {
             <div className='space-y-3 p-4 md:hidden'>
                 {items === null && <CardListSkeleton rows={3} />}
                 {items?.length === 0 && (
-                    <p className='py-4 text-center text-sm text-gray-400'>
+                    <p className='py-4 text-center text-sm text-neutral-400'>
                         Сотрудников ещё нет
                     </p>
                 )}
                 {items?.map(u => (
                     <MobileCard key={u.id}>
                         <div className='flex items-start justify-between gap-2'>
-                            <span className='font-medium text-gray-800'>
+                            <span className='font-medium text-neutral-800'>
                                 {fullName(u)}
                                 {u.id === currentUserId && (
-                                    <span className='ml-2 text-xs text-gray-400'>(вы)</span>
+                                    <span className='ml-2 text-xs text-neutral-400'>(вы)</span>
                                 )}
                             </span>
                             <span className='flex shrink-0 gap-1'>
@@ -92,7 +92,7 @@ export default function AdminUsersTable({ currentUserId }) {
                         <div className='mt-3 text-right'>
                             <Link
                                 href={`/crm/users/${u.id}/edit`}
-                                className='rounded-md border border-brand_soft/60 px-3 py-1.5 text-xs text-gray-700 hover:bg-brand_soft/30'
+                                className='rounded-md border border-line px-3 py-1.5 text-xs text-neutral-700 hover:bg-surface_muted'
                             >
                                 Редактировать
                             </Link>
@@ -103,7 +103,7 @@ export default function AdminUsersTable({ currentUserId }) {
 
             <div className='hidden overflow-x-auto md:block'>
                 <table className='w-full text-sm'>
-                    <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
+                    <thead className='bg-surface_muted text-left text-xs font-medium uppercase tracking-wide text-neutral-500'>
                         <tr>
                             <th className='px-4 py-3'>ФИО</th>
                             <th className='px-4 py-3'>Email</th>
@@ -117,29 +117,29 @@ export default function AdminUsersTable({ currentUserId }) {
                     <tbody>
                         {items === null && (
                             <tr>
-                                <td colSpan={7} className='px-4 py-6 text-center text-gray-400'>
+                                <td colSpan={7} className='px-4 py-6 text-center text-neutral-400'>
                                     Загрузка...
                                 </td>
                             </tr>
                         )}
                         {items?.length === 0 && (
                             <tr>
-                                <td colSpan={7} className='px-4 py-6 text-center text-gray-400'>
+                                <td colSpan={7} className='px-4 py-6 text-center text-neutral-400'>
                                     Сотрудников ещё нет
                                 </td>
                             </tr>
                         )}
                         {items?.map(u => (
-                            <tr key={u.id} className='border-t border-brand_soft/30 hover:bg-brand_soft/15'>
-                                <td className='px-4 py-3 text-gray-800'>
+                            <tr key={u.id} className='border-t border-line hover:bg-surface_muted'>
+                                <td className='px-4 py-3 text-neutral-800'>
                                     {fullName(u)}
                                     {u.id === currentUserId && (
-                                        <span className='ml-2 text-xs text-gray-400'>(вы)</span>
+                                        <span className='ml-2 text-xs text-neutral-400'>(вы)</span>
                                     )}
                                 </td>
-                                <td className='px-4 py-3 text-gray-700'>{u.email}</td>
-                                <td className='px-4 py-3 text-gray-700'>{u.phone || "—"}</td>
-                                <td className='px-4 py-3 text-gray-700'>{u.position || "—"}</td>
+                                <td className='px-4 py-3 text-neutral-700'>{u.email}</td>
+                                <td className='px-4 py-3 text-neutral-700'>{u.phone || "—"}</td>
+                                <td className='px-4 py-3 text-neutral-700'>{u.position || "—"}</td>
                                 <td className='px-4 py-3'>
                                     <span
                                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${ROLE_CLASS[u.role] || ""}`}
@@ -157,7 +157,7 @@ export default function AdminUsersTable({ currentUserId }) {
                                 <td className='px-4 py-3 text-right'>
                                     <Link
                                         href={`/crm/users/${u.id}/edit`}
-                                        className='rounded-md border border-brand_soft/60 px-2 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
+                                        className='rounded-lg border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
                                     >
                                         Редактировать
                                     </Link>

@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { LuBriefcase, LuCheck, LuTrash2, LuUndo2 } from "react-icons/lu"
-import { CardListSkeleton, CardRow, EmptyState, MobileCard, useConfirm, useToast } from "@/components/crm/ui"
+import { Button, CardListSkeleton, CardRow, EmptyState, MobileCard, useConfirm, useToast } from "@/components/crm/ui"
 import SearchableSelect from "./SearchableSelect"
 
 const DATE_FMT = new Intl.DateTimeFormat("ru-RU", {
@@ -89,7 +89,7 @@ export default function LeadsList() {
 
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-center gap-2 rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+            <div className='flex flex-wrap items-center gap-2 rounded-xl border border-line bg-white p-4'>
                 {FILTERS.map(f => (
                     <button
                         key={f.value}
@@ -98,7 +98,7 @@ export default function LeadsList() {
                         className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
                             status === f.value
                                 ? "bg-brand_main text-white shadow-sm"
-                                : "bg-white text-night_green/70 border border-brand_soft/60 hover:bg-brand_soft/20"
+                                : "bg-white text-neutral-500 border border-line hover:bg-surface_muted"
                         }`}
                     >
                         {f.label}
@@ -114,8 +114,9 @@ export default function LeadsList() {
                 </div>
             ) : items.length === 0 ? (
                 <EmptyState
+                    icon={LuBriefcase}
                     title='Заявок нет'
-                    description={
+                    hint={
                         status === "NEW"
                             ? "Новые заявки с формы обратной связи на сайте появятся здесь."
                             : "По выбранному фильтру заявок не найдено."
@@ -128,7 +129,7 @@ export default function LeadsList() {
                     {items.map(lead => (
                         <MobileCard key={lead.id}>
                             <div className='flex items-start justify-between gap-2'>
-                                <span className='font-medium text-night_green'>
+                                <span className='font-medium text-neutral-900'>
                                     {lead.firstName}
                                     {lead.lastName ? ` ${lead.lastName}` : ""}
                                 </span>
@@ -136,13 +137,13 @@ export default function LeadsList() {
                                     className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                                         lead.status === "NEW"
                                             ? "bg-brand_main/10 text-brand_main"
-                                            : "bg-night_green/10 text-night_green/60"
+                                            : "bg-neutral-100 text-neutral-500"
                                     }`}
                                 >
                                     {lead.status === "NEW" ? "Новая" : "Обработана"}
                                 </span>
                             </div>
-                            <p className='mt-0.5 text-xs text-night_green/60'>
+                            <p className='mt-0.5 text-xs text-neutral-500'>
                                 {DATE_FMT.format(new Date(lead.createdAt))}
                                 {lead.company ? ` · ${lead.company}` : ""}
                             </p>
@@ -169,7 +170,7 @@ export default function LeadsList() {
                                 )}
                             </div>
                             {lead.message && (
-                                <p className='mt-2 whitespace-pre-wrap rounded-lg bg-brand_soft/15 p-2 text-sm text-night_green/80'>
+                                <p className='mt-2 whitespace-pre-wrap rounded-lg bg-surface_muted p-2 text-sm text-neutral-700'>
                                     {lead.message}
                                 </p>
                             )}
@@ -197,7 +198,7 @@ export default function LeadsList() {
                                     <button
                                         type='button'
                                         onClick={() => setLeadStatus(lead, "NEW")}
-                                        className='inline-flex items-center gap-1.5 rounded-md border border-brand_soft/60 px-3 py-1.5 text-xs font-medium text-night_green/70 hover:bg-brand_soft/30'
+                                        className='inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-xs font-medium text-neutral-500 hover:bg-surface_muted'
                                     >
                                         <LuUndo2 className='h-4 w-4' />
                                         Вернуть
@@ -216,10 +217,10 @@ export default function LeadsList() {
                     ))}
                 </div>
 
-                <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
+                <div className='hidden overflow-x-auto rounded-xl border border-line bg-white md:block'>
                     <table className='w-full min-w-max table-auto text-sm'>
                         <thead>
-                            <tr className='border-b border-brand_soft/40 text-left text-xs text-night_green/60'>
+                            <tr className='border-b border-line text-left text-xs text-neutral-500'>
                                 <th className='px-4 py-3 font-medium'>Дата</th>
                                 <th className='px-4 py-3 font-medium'>Имя</th>
                                 <th className='px-4 py-3 font-medium'>Контакты</th>
@@ -233,12 +234,12 @@ export default function LeadsList() {
                             {items.map(lead => (
                                 <tr
                                     key={lead.id}
-                                    className='border-b border-brand_soft/20 align-top last:border-b-0 hover:bg-brand_soft/10'
+                                    className='border-b border-line align-top last:border-b-0 hover:bg-surface_muted'
                                 >
-                                    <td className='whitespace-nowrap px-4 py-3 text-night_green/70'>
+                                    <td className='whitespace-nowrap px-4 py-3 text-neutral-500'>
                                         {DATE_FMT.format(new Date(lead.createdAt))}
                                     </td>
-                                    <td className='px-4 py-3 font-medium text-night_green'>
+                                    <td className='px-4 py-3 font-medium text-neutral-900'>
                                         {lead.firstName}
                                         {lead.lastName ? ` ${lead.lastName}` : ""}
                                     </td>
@@ -260,10 +261,10 @@ export default function LeadsList() {
                                             </a>
                                         )}
                                     </td>
-                                    <td className='px-4 py-3 text-night_green/80'>
+                                    <td className='px-4 py-3 text-neutral-700'>
                                         {lead.company || "—"}
                                     </td>
-                                    <td className='max-w-md whitespace-pre-wrap px-4 py-3 text-night_green/80'>
+                                    <td className='max-w-md whitespace-pre-wrap px-4 py-3 text-neutral-700'>
                                         {lead.message || "—"}
                                     </td>
                                     <td className='whitespace-nowrap px-4 py-3'>
@@ -271,7 +272,7 @@ export default function LeadsList() {
                                             className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                                                 lead.status === "NEW"
                                                     ? "bg-brand_main/10 text-brand_main"
-                                                    : "bg-night_green/10 text-night_green/60"
+                                                    : "bg-neutral-100 text-neutral-500"
                                             }`}
                                         >
                                             {lead.status === "NEW" ? "Новая" : "Обработана"}
@@ -302,7 +303,7 @@ export default function LeadsList() {
                                                 type='button'
                                                 onClick={() => setLeadStatus(lead, "NEW")}
                                                 title='Вернуть в новые'
-                                                className='inline-flex h-8 w-8 items-center justify-center rounded-md text-night_green/60 hover:bg-brand_soft/30'
+                                                className='inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 hover:bg-surface_muted'
                                             >
                                                 <LuUndo2 className='h-4 w-4' />
                                             </button>
@@ -410,24 +411,24 @@ function ConvertDialog({ lead, onClose, onDone }) {
 
     return (
         <div
-            className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'
+            className='fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/40 p-4 backdrop-blur-sm animate-apparition'
             onClick={onClose}
         >
             <div
                 onClick={e => e.stopPropagation()}
-                className='max-h-[90vh] w-full max-w-lg overflow-auto rounded-xl bg-white p-5 shadow-2xl'
+                className='max-h-[90vh] w-full max-w-lg overflow-auto rounded-2xl border border-line bg-white p-6 shadow-2xl shadow-neutral-900/20 animate-emersion'
             >
-                <h2 className='mb-1 text-lg font-semibold text-night_green'>
+                <h2 className='mb-1 text-lg font-semibold text-neutral-900'>
                     Сделка из заявки
                 </h2>
-                <p className='mb-4 text-sm text-night_green/60'>
+                <p className='mb-4 text-sm text-neutral-500'>
                     {lead.firstName}
                     {lead.lastName ? ` ${lead.lastName}` : ""}
                     {lead.company ? ` · ${lead.company}` : ""}
                     {lead.phone ? ` · ${lead.phone}` : ""}
                 </p>
 
-                <div className='mb-4 flex gap-1 rounded-lg border border-brand_soft/40 bg-gray-50 p-1'>
+                <div className='mb-4 flex gap-1 rounded-xl border border-line bg-surface_muted p-1'>
                     {[
                         ["new", "Новый контрагент"],
                         ["existing", "Существующий"],
@@ -436,10 +437,10 @@ function ConvertDialog({ lead, onClose, onDone }) {
                             key={m}
                             type='button'
                             onClick={() => setMode(m)}
-                            className={`flex-1 rounded-md px-3 py-1.5 text-sm transition ${
+                            className={`flex-1 rounded-lg px-3 py-1.5 text-sm transition-colors ${
                                 mode === m
-                                    ? "bg-brand_main font-medium text-white"
-                                    : "text-gray-700 hover:bg-brand_soft/30"
+                                    ? "bg-brand_main font-medium text-white shadow-sm"
+                                    : "text-neutral-600 hover:bg-white"
                             }`}
                         >
                             {label}
@@ -450,7 +451,7 @@ function ConvertDialog({ lead, onClose, onDone }) {
                 <form onSubmit={handleSubmit} className='space-y-3'>
                     {mode === "existing" ? (
                         <div>
-                            <label className='mb-1 block text-xs text-gray-600'>
+                            <label className='mb-1 block text-xs text-neutral-500'>
                                 Контрагент
                             </label>
                             <SearchableSelect
@@ -464,7 +465,7 @@ function ConvertDialog({ lead, onClose, onDone }) {
                     ) : (
                         <>
                             <div>
-                                <label className='mb-1 block text-xs text-gray-600'>
+                                <label className='mb-1 block text-xs text-neutral-500'>
                                     Название *
                                 </label>
                                 <input
@@ -473,12 +474,12 @@ function ConvertDialog({ lead, onClose, onDone }) {
                                         setForm(p => ({ ...p, name: e.target.value }))
                                     }
                                     required
-                                    className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                    className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                                 />
                             </div>
                             <div className='grid gap-3 sm:grid-cols-2'>
                                 <div>
-                                    <label className='mb-1 block text-xs text-gray-600'>
+                                    <label className='mb-1 block text-xs text-neutral-500'>
                                         Тип
                                     </label>
                                     <select
@@ -486,7 +487,7 @@ function ConvertDialog({ lead, onClose, onDone }) {
                                         onChange={e =>
                                             setForm(p => ({ ...p, type: e.target.value }))
                                         }
-                                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                        className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                                     >
                                         {CP_TYPES.map(t => (
                                             <option key={t.value} value={t.value}>
@@ -496,7 +497,7 @@ function ConvertDialog({ lead, onClose, onDone }) {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className='mb-1 block text-xs text-gray-600'>
+                                    <label className='mb-1 block text-xs text-neutral-500'>
                                         Регион *
                                     </label>
                                     <input
@@ -506,14 +507,14 @@ function ConvertDialog({ lead, onClose, onDone }) {
                                         }
                                         required
                                         placeholder='Например: Томская обл'
-                                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                        className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                                     />
                                 </div>
                             </div>
                         </>
                     )}
 
-                    <p className='rounded-lg bg-brand_soft/15 p-3 text-xs leading-relaxed text-night_green/70'>
+                    <p className='rounded-lg bg-surface_muted p-3 text-xs leading-relaxed text-neutral-500'>
                         Будут созданы: контакт ({lead.firstName}
                         {lead.lastName ? ` ${lead.lastName}` : ""}) и сделка «Переговоры /
                         КП» с вами как менеджером. Текст заявки попадёт в примечание
@@ -523,20 +524,12 @@ function ConvertDialog({ lead, onClose, onDone }) {
                     {error && <p className='text-sm text-red-600'>{error}</p>}
 
                     <div className='flex justify-end gap-2'>
-                        <button
-                            type='button'
-                            onClick={onClose}
-                            className='rounded-lg border border-brand_soft/60 px-4 py-2 text-sm text-gray-700 hover:bg-brand_soft/30'
-                        >
+                        <Button type='button' variant='secondary' onClick={onClose}>
                             Отмена
-                        </button>
-                        <button
-                            type='submit'
-                            disabled={saving}
-                            className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:opacity-60'
-                        >
-                            {saving ? "Создаём..." : "Создать сделку"}
-                        </button>
+                        </Button>
+                        <Button type='submit' loading={saving}>
+                            Создать сделку
+                        </Button>
                     </div>
                 </form>
             </div>

@@ -43,7 +43,7 @@ export default function TasksNavLink() {
     return (
         <Link
             href='/crm/tasks'
-            className='relative inline-flex items-center gap-2 text-gray-600 hover:text-brand_main'
+            className='relative inline-flex items-center gap-2 text-neutral-500 hover:text-brand_main'
         >
             Задачи
             {showBadge && (

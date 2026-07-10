@@ -141,14 +141,8 @@ export default function CrmShell({ user, role, children }) {
             ? "opacity-100"
             : "opacity-0 group-hover/aside:opacity-100"
         return (
-            <div className='relative flex h-full flex-col overflow-hidden border-r border-brand_soft/40 bg-white/75 backdrop-blur-md'>
-                {/* decorative brand wash — very subtle mint gradient at top */}
-                <div
-                    aria-hidden
-                    className='pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-brand_soft/35 via-brand_soft/10 to-transparent'
-                />
-
-                <div className='relative flex h-16 shrink-0 items-center gap-3 border-b border-brand_soft/30 px-4'>
+            <div className='relative flex h-full flex-col overflow-hidden border-r border-line bg-white'>
+                <div className='relative flex h-16 shrink-0 items-center gap-3 border-b border-line px-4'>
                     <Link
                         href='/crm'
                         className='flex min-w-0 items-center gap-3'
@@ -164,7 +158,7 @@ export default function CrmShell({ user, role, children }) {
                             />
                         </span>
                         <span
-                            className={`whitespace-nowrap text-sm font-bold tracking-wide text-night_green transition-opacity duration-150 ${showLabels}`}
+                            className={`whitespace-nowrap text-sm font-bold tracking-tight text-neutral-900 transition-opacity duration-150 ${showLabels}`}
                         >
                             ONESTEP CRM
                         </span>
@@ -173,7 +167,7 @@ export default function CrmShell({ user, role, children }) {
                         <button
                             type='button'
                             onClick={onClose}
-                            className='ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-night_green/60 hover:bg-brand_soft/40 hover:text-night_green'
+                            className='ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700'
                             aria-label='Закрыть меню'
                         >
                             <LuX className='h-5 w-5' />
@@ -189,16 +183,16 @@ export default function CrmShell({ user, role, children }) {
                             onClose?.()
                         }}
                         title={alwaysExpanded ? undefined : "Поиск (Ctrl+K)"}
-                        className='group/item mb-2 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-night_green/75 transition hover:bg-brand_soft/40 hover:text-night_green'
+                        className='group/item mb-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900'
                     >
-                        <LuSearch className='h-5 w-5 shrink-0 text-brand_main/80 group-hover/item:text-brand_main' />
+                        <LuSearch className='h-5 w-5 shrink-0 text-neutral-400 group-hover/item:text-neutral-600' />
                         <span
-                            className={`flex-1 truncate whitespace-nowrap text-left font-medium transition-opacity duration-150 ${showLabels}`}
+                            className={`flex-1 truncate whitespace-nowrap text-left transition-opacity duration-150 ${showLabels}`}
                         >
                             Поиск
                         </span>
                         <kbd
-                            className={`shrink-0 rounded border border-brand_soft/60 px-1.5 py-0.5 text-[10px] text-night_green/45 transition-opacity duration-150 ${showLabels}`}
+                            className={`shrink-0 rounded border border-line bg-surface_muted px-1.5 py-0.5 text-[10px] text-neutral-400 transition-opacity duration-150 ${showLabels}`}
                         >
                             Ctrl K
                         </kbd>
@@ -212,17 +206,18 @@ export default function CrmShell({ user, role, children }) {
                                     <Link
                                         href={item.href}
                                         title={alwaysExpanded ? undefined : item.label}
-                                        className={`group/item flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${
+                                        aria-current={active ? "page" : undefined}
+                                        className={`group/item flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200 ${
                                             active
-                                                ? "bg-brand_main text-white shadow-sm shadow-brand_main/20"
-                                                : "text-night_green/75 hover:bg-brand_soft/40 hover:text-night_green"
+                                                ? "bg-neutral-100 font-medium text-neutral-900"
+                                                : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
                                         }`}
                                     >
                                         <Icon
                                             className={`h-5 w-5 shrink-0 ${
                                                 active
-                                                    ? "text-white"
-                                                    : "text-brand_main/80 group-hover/item:text-brand_main"
+                                                    ? "text-brand_main"
+                                                    : "text-neutral-400 group-hover/item:text-neutral-600"
                                             }`}
                                         />
                                         <span
@@ -240,9 +235,7 @@ export default function CrmShell({ user, role, children }) {
                                                 className={`inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold transition-opacity duration-150 ${showLabels} ${
                                                     item.badge.urgent
                                                         ? "bg-red-500 text-white"
-                                                        : active
-                                                          ? "bg-white text-brand_main"
-                                                          : "bg-brand_main text-white"
+                                                        : "bg-brand_main text-white"
                                                 }`}
                                             >
                                                 {item.badge.count}
@@ -255,9 +248,9 @@ export default function CrmShell({ user, role, children }) {
                     </ul>
                 </nav>
 
-                <div className='relative shrink-0 border-t border-brand_soft/30 p-2'>
+                <div className='relative shrink-0 border-t border-line p-2'>
                     <InstallAppButton showLabels={showLabels} onDone={onClose} />
-                    <div className='flex items-center gap-3 rounded-lg bg-brand_soft/20 px-2 py-2'>
+                    <div className='flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-neutral-50'>
                         <div
                             className='flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand_main text-white text-sm font-semibold'
                             title={user?.name || user?.email || ""}
@@ -267,10 +260,10 @@ export default function CrmShell({ user, role, children }) {
                         <div
                             className={`min-w-0 flex-1 transition-opacity duration-150 ${showLabels}`}
                         >
-                            <p className='truncate text-sm font-medium text-night_green'>
+                            <p className='truncate text-sm font-medium text-neutral-900'>
                                 {user?.name || user?.email || "—"}
                             </p>
-                            <p className='truncate text-[11px] text-night_green/55'>
+                            <p className='truncate text-[11px] text-neutral-500'>
                                 {role === "ADMIN" ? "Администратор" : "Менеджер"}
                             </p>
                         </div>
@@ -278,7 +271,7 @@ export default function CrmShell({ user, role, children }) {
                             type='button'
                             onClick={() => signOut({ callbackUrl: "/" })}
                             title='Выйти'
-                            className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-night_green/55 hover:bg-white/70 hover:text-brand_main transition-opacity duration-150 ${showLabels}`}
+                            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-red-600 transition-opacity duration-150 ${showLabels}`}
                         >
                             <LuLogOut className='h-4 w-4' />
                         </button>
@@ -293,13 +286,7 @@ export default function CrmShell({ user, role, children }) {
             <ConfirmProvider>
                 <CrmNavTracker />
                 <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
-                <div className='relative min-h-screen bg-body_bg'>
-            {/* page-wide soft brand wash so the translucent sidebar has something to filter */}
-            <div
-                aria-hidden
-                className='pointer-events-none fixed inset-0 -z-10 bg-gradient-to-br from-brand_soft/25 via-transparent to-brand_blue/10'
-            />
-
+                <div className='relative min-h-screen bg-neutral-50'>
             {/* Desktop: fixed collapsible sidebar, expands on hover */}
             <aside className='group/aside fixed inset-y-0 left-0 z-30 hidden w-16 overflow-hidden transition-[width] duration-200 ease-in-out hover:w-64 sm920:block'>
                 <SidebarContent />
@@ -309,7 +296,7 @@ export default function CrmShell({ user, role, children }) {
             {mobileOpen && (
                 <>
                     <div
-                        className='fixed inset-0 z-40 bg-night_green/30 backdrop-blur-sm sm920:hidden'
+                        className='fixed inset-0 z-40 bg-neutral-900/30 backdrop-blur-sm sm920:hidden'
                         onClick={() => setMobileOpen(false)}
                     />
                     <aside className='fixed inset-y-0 left-0 z-50 w-72 shadow-xl sm920:hidden'>
@@ -323,20 +310,20 @@ export default function CrmShell({ user, role, children }) {
 
             {/* Main column */}
             <div className='flex min-h-screen min-w-0 flex-col sm920:pl-16'>
-                <header className='flex items-center gap-3 border-b border-brand_soft/40 bg-white/75 px-4 py-2 backdrop-blur-md sm920:hidden'>
+                <header className='sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-white/90 px-4 py-2 backdrop-blur-md sm920:hidden'>
                     <button
                         type='button'
                         onClick={() => setMobileOpen(true)}
-                        className='inline-flex h-9 w-9 items-center justify-center rounded-md border border-brand_soft/50 text-night_green/75 hover:bg-brand_soft/40 hover:text-night_green'
+                        className='inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
                         aria-label='Открыть меню'
                     >
                         <LuMenu className='h-5 w-5' />
                     </button>
-                    <span className='font-semibold text-night_green'>ONESTEP CRM</span>
+                    <span className='font-semibold tracking-tight text-neutral-900'>ONESTEP CRM</span>
                     <button
                         type='button'
                         onClick={() => setSearchOpen(true)}
-                        className='ml-auto inline-flex h-9 w-9 items-center justify-center rounded-md border border-brand_soft/50 text-night_green/75 hover:bg-brand_soft/40 hover:text-night_green'
+                        className='ml-auto inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
                         aria-label='Поиск'
                     >
                         <LuSearch className='h-5 w-5' />

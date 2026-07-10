@@ -1,10 +1,30 @@
 "use client"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { LuPlus, LuSearch, LuUsers } from "react-icons/lu"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
-import { CardListSkeleton, CardRow, EmptyState, MobileCard, TableSkeleton } from "@/components/crm/ui"
+import {
+    Button,
+    CardListSkeleton,
+    CardRow,
+    DataTable,
+    EmptyState,
+    Field,
+    Input,
+    MobileCard,
+} from "@/components/crm/ui"
+
+function primaryContactName(item) {
+    const primary = item.contacts?.[0]
+    if (!primary) return "—"
+    return (
+        `${primary.firstName ?? ""} ${primary.lastName ?? ""}`.trim() ||
+        primary.email ||
+        primary.phone ||
+        "—"
+    )
+}
 
 function safeJson(text) {
     try {
@@ -45,40 +65,88 @@ export default function CounterpartyList({ type, newHref }) {
         return () => controller.abort()
     }, [type, q, region])
 
+    const columns = useMemo(
+        () => [
+            {
+                key: "name",
+                header: "Название",
+                sortable: true,
+                sortValue: item => item.name,
+                render: item => (
+                    <Link
+                        href={`/crm/counterparties/${item.id}`}
+                        onClick={e => e.stopPropagation()}
+                        className='font-medium text-neutral-900 hover:text-brand_main'
+                    >
+                        {item.name}
+                    </Link>
+                ),
+            },
+            {
+                key: "region",
+                header: "Регион",
+                sortable: true,
+                sortValue: item => item.region || "",
+                render: item => item.region || "—",
+            },
+            {
+                key: "inn",
+                header: "ИНН",
+                render: item => item.inn || "—",
+                hideable: true,
+            },
+            {
+                key: "contact",
+                header: "Контактное лицо",
+                render: item => primaryContactName(item),
+                hideable: true,
+            },
+            {
+                key: "phone",
+                header: "Телефон",
+                render: item => item.phone || item.contacts?.[0]?.phone || "—",
+                hideable: true,
+            },
+            {
+                key: "budget",
+                header: "Бюджет",
+                align: "right",
+                sortable: true,
+                sortValue: item => Number(item.totalRevenue || 0),
+                render: item => formatMoney(item.totalRevenue),
+            },
+            {
+                key: "discount",
+                header: "Скидка",
+                align: "right",
+                render: item => formatPercent(item.discount),
+            },
+        ],
+        [],
+    )
+
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3 rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-                <div className='flex-1 min-w-[220px]'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Поиск</label>
-                    <div className='relative'>
-                        <LuSearch className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-night_green/40' />
-                        <input
-                            value={q}
-                            onChange={e => setQ(e.target.value)}
-                            placeholder='Название, ИНН, контактное лицо'
-                            className='w-full rounded-lg border border-brand_soft/60 bg-white pl-9 pr-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                        />
-                    </div>
-                </div>
-                <div className='min-w-[200px]'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Регион</label>
-                    <input
-                        value={region}
-                        onChange={e => setRegion(e.target.value)}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+            <div className='flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm'>
+                <Field label='Поиск' className='flex-1 min-w-[220px]'>
+                    <Input
+                        icon={LuSearch}
+                        value={q}
+                        onChange={e => setQ(e.target.value)}
+                        placeholder='Название, ИНН, контактное лицо'
                     />
-                </div>
-                <Link
-                    href={newHref}
-                    className='inline-flex items-center gap-2 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
-                >
+                </Field>
+                <Field label='Регион' className='min-w-[200px]'>
+                    <Input value={region} onChange={e => setRegion(e.target.value)} />
+                </Field>
+                <Button href={newHref}>
                     <LuPlus className='h-4 w-4' />
                     Добавить
-                </Link>
+                </Button>
             </div>
 
             {error && (
-                <p className='rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
                     {error}
                 </p>
             )}
@@ -93,105 +161,46 @@ export default function CounterpartyList({ type, newHref }) {
                         hint='Попробуйте изменить запрос или сбросить фильтры.'
                     />
                 )}
-                {items?.map(item => {
-                    const primary = item.contacts?.[0]
-                    const primaryName = primary
-                        ? `${primary.firstName ?? ""} ${primary.lastName ?? ""}`.trim() ||
-                          primary.email ||
-                          primary.phone ||
-                          "—"
-                        : "—"
-                    return (
-                        <MobileCard
-                            key={item.id}
-                            onClick={() => router.push(`/crm/counterparties/${item.id}`)}
-                        >
-                            <div className='flex items-start justify-between gap-2'>
-                                <span className='font-medium text-night_green'>{item.name}</span>
-                                <span className='min-w-0 max-w-[45%] truncate text-right text-xs text-gray-500'>
-                                    {item.region}
-                                </span>
-                            </div>
-                            <div className='mt-2 space-y-1'>
-                                <CardRow label='ИНН'>{item.inn || "—"}</CardRow>
-                                <CardRow label='Контакт'>{primaryName}</CardRow>
-                                <CardRow label='Телефон'>
-                                    {item.phone || primary?.phone || "—"}
-                                </CardRow>
-                                <CardRow label='Бюджет'>{formatMoney(item.totalRevenue)}</CardRow>
-                                <CardRow label='Скидка'>{formatPercent(item.discount)}</CardRow>
-                            </div>
-                        </MobileCard>
-                    )
-                })}
+                {items?.map(item => (
+                    <MobileCard
+                        key={item.id}
+                        onClick={() => router.push(`/crm/counterparties/${item.id}`)}
+                    >
+                        <div className='flex items-start justify-between gap-2'>
+                            <span className='font-medium text-neutral-900'>{item.name}</span>
+                            <span className='min-w-0 max-w-[45%] truncate text-right text-xs text-neutral-500'>
+                                {item.region}
+                            </span>
+                        </div>
+                        <div className='mt-2 space-y-1'>
+                            <CardRow label='ИНН'>{item.inn || "—"}</CardRow>
+                            <CardRow label='Контакт'>{primaryContactName(item)}</CardRow>
+                            <CardRow label='Телефон'>
+                                {item.phone || item.contacts?.[0]?.phone || "—"}
+                            </CardRow>
+                            <CardRow label='Бюджет'>{formatMoney(item.totalRevenue)}</CardRow>
+                            <CardRow label='Скидка'>{formatPercent(item.discount)}</CardRow>
+                        </div>
+                    </MobileCard>
+                ))}
             </div>
 
-            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
-                <table className='w-full text-sm'>
-                    <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
-                        <tr>
-                            <th className='px-4 py-3'>Название</th>
-                            <th className='px-4 py-3'>Регион</th>
-                            <th className='px-4 py-3'>ИНН</th>
-                            <th className='px-4 py-3'>Контактное лицо</th>
-                            <th className='px-4 py-3'>Телефон</th>
-                            <th className='px-4 py-3 text-right'>Бюджет</th>
-                            <th className='px-4 py-3 text-right'>Скидка</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items === null && <TableSkeleton rows={5} cols={7} />}
-                        {items?.length === 0 && (
-                            <EmptyState
-                                colSpan={7}
-                                icon={LuUsers}
-                                title='Записей не найдено'
-                                hint='Попробуйте изменить запрос или сбросить фильтры.'
-                            />
-                        )}
-                        {items?.map(item => {
-                            const primary = item.contacts?.[0]
-                            const primaryName = primary
-                                ? `${primary.firstName ?? ""} ${primary.lastName ?? ""}`.trim() ||
-                                  primary.email ||
-                                  primary.phone ||
-                                  "—"
-                                : "—"
-                            return (
-                                <tr
-                                    key={item.id}
-                                    onClick={() =>
-                                        router.push(`/crm/counterparties/${item.id}`)
-                                    }
-                                    className='cursor-pointer border-t border-brand_soft/30 transition hover:bg-brand_soft/15'
-                                >
-                                    <td className='px-4 py-3'>
-                                        <Link
-                                            href={`/crm/counterparties/${item.id}`}
-                                            className='font-medium text-night_green hover:text-brand_main'
-                                        >
-                                            {item.name}
-                                        </Link>
-                                    </td>
-                                    <td className='px-4 py-3 text-gray-700'>{item.region}</td>
-                                    <td className='px-4 py-3 text-gray-700'>
-                                        {item.inn || "—"}
-                                    </td>
-                                    <td className='px-4 py-3 text-gray-700'>{primaryName}</td>
-                                    <td className='px-4 py-3 text-gray-700'>
-                                        {item.phone || primary?.phone || "—"}
-                                    </td>
-                                    <td className='px-4 py-3 text-right text-gray-700'>
-                                        {formatMoney(item.totalRevenue)}
-                                    </td>
-                                    <td className='px-4 py-3 text-right text-gray-700'>
-                                        {formatPercent(item.discount)}
-                                    </td>
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </table>
+            <div className='hidden md:block'>
+                <DataTable
+                    columns={columns}
+                    rows={items || []}
+                    loading={items === null}
+                    getRowId={item => item.id}
+                    onRowClick={item => router.push(`/crm/counterparties/${item.id}`)}
+                    initialSort={{ key: "name", dir: "asc" }}
+                    empty={
+                        <EmptyState
+                            icon={LuUsers}
+                            title='Записей не найдено'
+                            hint='Попробуйте изменить запрос или сбросить фильтры.'
+                        />
+                    }
+                />
             </div>
         </div>
     )

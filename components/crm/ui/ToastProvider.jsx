@@ -125,7 +125,7 @@ function ToastItem({ toast, onDismiss }) {
     const { Icon } = v
     return (
         <div
-            className={`pointer-events-auto flex items-start gap-3 rounded-lg p-3 shadow-lg shadow-night_green/10 animate-emersion ${v.bg}`}
+            className={`pointer-events-auto flex items-start gap-3 rounded-xl p-3 shadow-lg shadow-neutral-900/10 animate-emersion ${v.bg}`}
             role='status'
         >
             <span
@@ -135,10 +135,10 @@ function ToastItem({ toast, onDismiss }) {
             </span>
             <div className='min-w-0 flex-1'>
                 {toast.title && (
-                    <p className='text-sm font-semibold text-night_green'>{toast.title}</p>
+                    <p className='text-sm font-semibold text-neutral-900'>{toast.title}</p>
                 )}
                 {toast.description && (
-                    <p className='mt-0.5 whitespace-pre-wrap text-xs text-night_green/70'>
+                    <p className='mt-0.5 whitespace-pre-wrap text-xs text-neutral-500'>
                         {toast.description}
                     </p>
                 )}
@@ -146,7 +146,7 @@ function ToastItem({ toast, onDismiss }) {
             <button
                 type='button'
                 onClick={() => onDismiss(toast.id)}
-                className='inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-night_green/40 hover:bg-night_green/5 hover:text-night_green'
+                className='inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700'
                 aria-label='Закрыть'
             >
                 <LuX className='h-3.5 w-3.5' />

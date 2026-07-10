@@ -75,18 +75,18 @@ export default async function CounterpartyPage({ params }) {
             <CrmBackLink
                 fallback={backHref}
                 fallbackLabel={backLabel}
-                className='inline-flex items-center gap-1 text-xs text-night_green/55 hover:text-brand_main'
+                className='inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-brand_main'
             />
 
             <div className='flex flex-wrap items-start justify-between gap-3'>
                 <div className='min-w-0'>
-                    <p className='text-xs uppercase tracking-wider text-night_green/55'>
+                    <p className='text-xs uppercase tracking-wider text-neutral-400'>
                         {COUNTERPARTY_TYPE_LABELS[item.type]}
                     </p>
-                    <h1 className='mt-0.5 text-xl font-semibold text-night_green sm:text-2xl'>
+                    <h1 className='mt-0.5 text-xl font-semibold text-neutral-900 sm:text-2xl'>
                         {item.name}
                     </h1>
-                    <p className='mt-1 text-sm text-night_green/65'>
+                    <p className='mt-1 text-sm text-neutral-500'>
                         {[item.region, item.inn && `ИНН ${item.inn}`]
                             .filter(Boolean)
                             .join(" · ")}
@@ -101,7 +101,7 @@ export default async function CounterpartyPage({ params }) {
                         action={
                             <Link
                                 href={`/crm/counterparties/${item.id}/edit`}
-                                className='inline-flex items-center gap-1 rounded-md border border-brand_soft/60 bg-white px-2 py-1 text-[11px] font-medium text-night_green/75 hover:bg-brand_soft/30'
+                                className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
                             >
                                 <LuPencil className='h-3 w-3' />
                                 Редактировать
@@ -179,16 +179,16 @@ export default async function CounterpartyPage({ params }) {
                         initialContacts={contactsForClient}
                     />
 
-                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-                        <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                    <section className='rounded-xl border border-line bg-white p-4'>
+                        <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                             История связок ({projects.length})
                         </h2>
                         {projects.length === 0 ? (
-                            <p className='text-sm text-night_green/55'>Проектов пока нет.</p>
+                            <p className='text-sm text-neutral-400'>Проектов пока нет.</p>
                         ) : (
-                            <div className='overflow-x-auto rounded-lg border border-brand_soft/40'>
+                            <div className='overflow-x-auto rounded-lg border border-line'>
                                 <table className='w-full text-sm'>
-                                    <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
+                                    <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
                                         <tr>
                                             <th className='px-3 py-2'>Аукцион</th>
                                             <th className='px-3 py-2'>Проект</th>
@@ -211,20 +211,20 @@ export default async function CounterpartyPage({ params }) {
                                             return (
                                                 <tr
                                                     key={p.id}
-                                                    className='border-t border-brand_soft/30 hover:bg-brand_soft/15'
+                                                    className='border-t border-line hover:bg-surface_muted'
                                                 >
-                                                    <td className='px-3 py-2 text-night_green/75'>
+                                                    <td className='px-3 py-2 text-neutral-900/75'>
                                                         {p.externalAuctionId}
                                                     </td>
                                                     <td className='px-3 py-2'>
                                                         <Link
                                                             href={`/crm/projects/${p.id}`}
-                                                            className='font-medium text-night_green hover:text-brand_main'
+                                                            className='font-medium text-neutral-900 hover:text-brand_main'
                                                         >
                                                             {p.internalName}
                                                         </Link>
                                                     </td>
-                                                    <td className='px-3 py-2 text-night_green/75'>
+                                                    <td className='px-3 py-2 text-neutral-900/75'>
                                                         {counter ? (
                                                             <Link
                                                                 href={`/crm/counterparties/${counter.id}`}
@@ -236,16 +236,16 @@ export default async function CounterpartyPage({ params }) {
                                                             "—"
                                                         )}
                                                     </td>
-                                                    <td className='px-3 py-2 text-night_green/75'>
+                                                    <td className='px-3 py-2 text-neutral-900/75'>
                                                         {p.manager
                                                             ? `${p.manager.firstName ?? ""} ${p.manager.lastName ?? ""}`.trim() ||
                                                               p.manager.email
                                                             : "—"}
                                                     </td>
-                                                    <td className='px-3 py-2 text-night_green/75'>
+                                                    <td className='px-3 py-2 text-neutral-900/75'>
                                                         {PROJECT_STATUS_LABELS[p.status]}
                                                     </td>
-                                                    <td className='px-3 py-2 text-right text-night_green/75'>
+                                                    <td className='px-3 py-2 text-right text-neutral-900/75'>
                                                         {formatMoney(p.totalAmount)}
                                                     </td>
                                                 </tr>
@@ -259,7 +259,7 @@ export default async function CounterpartyPage({ params }) {
 
                     {item.note && (
                         <Section title='Примечание'>
-                            <p className='whitespace-pre-wrap text-sm text-night_green/85 sm:col-span-2 lg:col-span-3'>
+                            <p className='whitespace-pre-wrap text-sm text-neutral-700 sm:col-span-2 lg:col-span-3'>
                                 {item.note}
                             </p>
                         </Section>
@@ -281,16 +281,16 @@ export default async function CounterpartyPage({ params }) {
 
 function Section({ title, footer, action, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+        <section className='rounded-xl border border-line bg-white p-4'>
             <div className='mb-2.5 flex items-center justify-between gap-3'>
-                <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                     {title}
                 </h2>
                 {action && <div className='shrink-0'>{action}</div>}
             </div>
             <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>{children}</dl>
             {footer && (
-                <p className='mt-3 border-t border-brand_soft/30 pt-2 text-[11px] text-night_green/50'>
+                <p className='mt-3 border-t border-line pt-2 text-[11px] text-neutral-400'>
                     {footer}
                 </p>
             )}
@@ -301,10 +301,10 @@ function Section({ title, footer, action, children }) {
 function Row({ label, value, className = "" }) {
     return (
         <div className={className}>
-            <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
+            <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>
                 {label}
             </dt>
-            <dd className='mt-0.5 text-sm text-night_green'>{value || "—"}</dd>
+            <dd className='mt-0.5 text-sm text-neutral-900'>{value || "—"}</dd>
         </div>
     )
 }

@@ -11,7 +11,18 @@ import {
 } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
 import SearchableSelect from "./SearchableSelect"
-import { CardListSkeleton, CardRow, EmptyState, MobileCard, TableSkeleton } from "@/components/crm/ui"
+import {
+    Badge,
+    Button,
+    CardListSkeleton,
+    CardRow,
+    DataTable,
+    EmptyState,
+    Field,
+    Input,
+    MobileCard,
+    Select,
+} from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -107,41 +118,106 @@ export default function DealsList({ currentUserId }) {
 
     const total = items?.reduce((s, d) => s + Number(d.totalAmount || 0), 0) ?? 0
 
+    const columns = useMemo(
+        () => [
+            {
+                key: "title",
+                header: "Название",
+                sortable: true,
+                sortValue: d => dealDisplayTitle(d, d.counterparty?.name),
+                render: d => (
+                    <Link
+                        href={`/crm/deals/${d.id}`}
+                        onClick={e => e.stopPropagation()}
+                        className='font-medium text-neutral-900 transition-colors hover:text-brand_main'
+                    >
+                        {dealDisplayTitle(d, d.counterparty?.name)}
+                    </Link>
+                ),
+            },
+            {
+                key: "counterparty",
+                header: "Клиент",
+                sortable: true,
+                sortValue: d => d.counterparty?.name || "",
+                render: d => d.counterparty?.name || "—",
+            },
+            {
+                key: "manager",
+                header: "Менеджер",
+                sortable: true,
+                sortValue: d => managerName(d.manager),
+                render: d => managerName(d.manager),
+                hideable: true,
+            },
+            {
+                key: "status",
+                header: "Статус",
+                sortable: true,
+                sortValue: d => DEAL_STATUS_LABELS[d.status] || d.status,
+                render: d => (
+                    <Badge className={DEAL_STATUS_COLORS[d.status]}>
+                        {DEAL_STATUS_LABELS[d.status] || d.status}
+                    </Badge>
+                ),
+            },
+            {
+                key: "createdAt",
+                header: "Создана",
+                sortable: true,
+                sortValue: d => new Date(d.createdAt).getTime(),
+                render: d => fmtDate(d.createdAt),
+                hideable: true,
+            },
+            {
+                key: "totalAmount",
+                header: "Сумма",
+                align: "right",
+                sortable: true,
+                sortValue: d => Number(d.totalAmount || 0),
+                render: d => (
+                    <span className='font-medium text-neutral-900'>
+                        {formatMoney(d.totalAmount)}
+                    </span>
+                ),
+            },
+        ],
+        [],
+    )
+
     return (
         <div className='space-y-4'>
-            <div className='grid gap-3 rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:grid-cols-4'>
+            {/* Фильтры */}
+            <div className='grid gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm sm:grid-cols-4'>
                 <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Поиск</label>
-                    <div className='relative'>
-                        <LuSearch className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-night_green/40' />
-                        <input
+                    <Field label='Поиск'>
+                        <Input
+                            icon={LuSearch}
                             value={filters.q}
                             onChange={e => setFilters(p => ({ ...p, q: e.target.value }))}
                             onKeyDown={e => e.key === "Enter" && load()}
                             placeholder='Название сделки или клиента'
-                            className='w-full rounded-lg border border-brand_soft/60 bg-white pl-9 pr-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                         />
-                    </div>
+                    </Field>
                 </div>
-                <div>
-                    <label className='mb-1 block text-xs text-night_green/65'>Статус</label>
-                    <select
-                        value={filters.status}
-                        onChange={e => setFilters(p => ({ ...p, status: e.target.value }))}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                    >
-                        <option value=''>Все</option>
-                        {DEAL_STATUSES.map(s => (
-                            <option key={s} value={s}>
-                                {DEAL_STATUS_LABELS[s]}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                <Select
+                    label='Статус'
+                    value={filters.status}
+                    onChange={e => setFilters(p => ({ ...p, status: e.target.value }))}
+                >
+                    <option value=''>Все</option>
+                    {DEAL_STATUSES.map(s => (
+                        <option key={s} value={s}>
+                            {DEAL_STATUS_LABELS[s]}
+                        </option>
+                    ))}
+                </Select>
                 <div className='flex items-end'>
                     {currentUserId && (
-                        <button
+                        <Button
                             type='button'
+                            variant={filters.managerId === currentUserId ? "primary" : "secondary"}
+                            className='w-full'
                             onClick={() =>
                                 setFilters(p => ({
                                     ...p,
@@ -149,40 +225,37 @@ export default function DealsList({ currentUserId }) {
                                         p.managerId === currentUserId ? "" : currentUserId,
                                 }))
                             }
-                            className={`w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition ${
-                                filters.managerId === currentUserId
-                                    ? "border-primary_green bg-brand_main text-white"
-                                    : "border-brand_soft/60 text-gray-700 hover:bg-brand_soft/30"
-                            }`}
                         >
                             Только мои
-                        </button>
+                        </Button>
                     )}
                 </div>
                 <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Клиент</label>
-                    <SearchableSelect
-                        value={filters.counterpartyId}
-                        onChange={id => setFilters(p => ({ ...p, counterpartyId: id }))}
-                        placeholder='Все'
-                        emptyLabel='Клиент не найден'
-                        options={counterpartyOptions}
-                    />
+                    <Field label='Клиент'>
+                        <SearchableSelect
+                            value={filters.counterpartyId}
+                            onChange={id => setFilters(p => ({ ...p, counterpartyId: id }))}
+                            placeholder='Все'
+                            emptyLabel='Клиент не найден'
+                            options={counterpartyOptions}
+                        />
+                    </Field>
                 </div>
                 <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Менеджер</label>
-                    <SearchableSelect
-                        value={filters.managerId}
-                        onChange={id => setFilters(p => ({ ...p, managerId: id }))}
-                        placeholder='Все'
-                        emptyLabel='Сотрудник не найден'
-                        options={managerOptions}
-                    />
+                    <Field label='Менеджер'>
+                        <SearchableSelect
+                            value={filters.managerId}
+                            onChange={id => setFilters(p => ({ ...p, managerId: id }))}
+                            placeholder='Все'
+                            emptyLabel='Сотрудник не найден'
+                            options={managerOptions}
+                        />
+                    </Field>
                 </div>
             </div>
 
             {error && (
-                <p className='rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
                     {error}
                 </p>
             )}
@@ -200,21 +273,19 @@ export default function DealsList({ currentUserId }) {
                 {items?.map(d => (
                     <MobileCard key={d.id} onClick={() => router.push(`/crm/deals/${d.id}`)}>
                         <div className='flex items-start justify-between gap-2'>
-                            <span className='font-medium text-night_green'>
+                            <span className='font-medium text-neutral-900'>
                                 {dealDisplayTitle(d, d.counterparty?.name)}
                             </span>
-                            <span
-                                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${DEAL_STATUS_COLORS[d.status]}`}
-                            >
+                            <Badge className={DEAL_STATUS_COLORS[d.status]}>
                                 {DEAL_STATUS_LABELS[d.status] || d.status}
-                            </span>
+                            </Badge>
                         </div>
                         <div className='mt-2 space-y-1'>
                             <CardRow label='Клиент'>{d.counterparty?.name || "—"}</CardRow>
                             <CardRow label='Менеджер'>{managerName(d.manager)}</CardRow>
                             <CardRow label='Создана'>{fmtDate(d.createdAt)}</CardRow>
                             <CardRow label='Сумма'>
-                                <span className='font-medium text-gray-800'>
+                                <span className='font-medium text-neutral-900'>
                                     {formatMoney(d.totalAmount)}
                                 </span>
                             </CardRow>
@@ -222,97 +293,50 @@ export default function DealsList({ currentUserId }) {
                     </MobileCard>
                 ))}
                 {items && items.length > 0 && (
-                    <div className='flex items-center justify-between rounded-xl bg-gray-50 px-4 py-2 text-sm'>
-                        <span className='text-xs font-semibold uppercase text-gray-500'>
+                    <div className='flex items-center justify-between rounded-xl bg-surface_muted px-4 py-2 text-sm'>
+                        <span className='text-xs font-semibold uppercase text-neutral-500'>
                             Итого ({items.length})
                         </span>
-                        <span className='font-semibold text-night_green'>
+                        <span className='font-semibold text-neutral-900'>
                             {formatMoney(total)}
                         </span>
                     </div>
                 )}
             </div>
 
-            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
-                <table className='w-full text-sm'>
-                    <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
-                        <tr>
-                            <th className='px-4 py-3'>Название</th>
-                            <th className='px-4 py-3'>Клиент</th>
-                            <th className='px-4 py-3'>Менеджер</th>
-                            <th className='px-4 py-3'>Статус</th>
-                            <th className='px-4 py-3'>Создана</th>
-                            <th className='px-4 py-3 text-right'>Сумма</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items === null && <TableSkeleton rows={5} cols={6} />}
-                        {items?.length === 0 && (
-                            <EmptyState
-                                colSpan={6}
-                                icon={LuBriefcase}
-                                title='Сделок не найдено'
-                                hint='Попробуйте сбросить фильтры или создайте новую сделку.'
-                            />
-                        )}
-                        {items?.map(d => (
-                            <tr
-                                key={d.id}
-                                onClick={() => router.push(`/crm/deals/${d.id}`)}
-                                className='cursor-pointer border-t border-brand_soft/30 transition hover:bg-brand_soft/15'
-                            >
-                                <td className='px-4 py-3'>
-                                    <Link
-                                        href={`/crm/deals/${d.id}`}
-                                        className='font-medium text-night_green hover:text-brand_main'
-                                    >
-                                        {dealDisplayTitle(d, d.counterparty?.name)}
-                                    </Link>
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>
-                                    {d.counterparty?.name || "—"}
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>
-                                    {managerName(d.manager)}
-                                </td>
-                                <td className='px-4 py-3'>
-                                    <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${DEAL_STATUS_COLORS[d.status]}`}
-                                    >
-                                        {DEAL_STATUS_LABELS[d.status] || d.status}
-                                    </span>
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>
-                                    {fmtDate(d.createdAt)}
-                                </td>
-                                <td className='px-4 py-3 text-right font-medium text-gray-800'>
-                                    {formatMoney(d.totalAmount)}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                    {items && items.length > 0 && (
-                        <tfoot className='bg-gray-50'>
-                            <tr>
-                                <td
-                                    colSpan={5}
-                                    className='px-4 py-2 text-right text-xs font-semibold uppercase text-gray-500'
-                                >
-                                    Итого по {items.length}{" "}
-                                    {items.length === 1
-                                        ? "сделке"
-                                        : items.length < 5
-                                          ? "сделкам"
-                                          : "сделок"}
-                                    :
-                                </td>
-                                <td className='px-4 py-2 text-right text-sm font-semibold text-night_green'>
-                                    {formatMoney(total)}
-                                </td>
-                            </tr>
-                        </tfoot>
-                    )}
-                </table>
+            {/* Таблица (desktop) */}
+            <div className='hidden md:block'>
+                <DataTable
+                    columns={columns}
+                    rows={items || []}
+                    loading={items === null}
+                    getRowId={d => d.id}
+                    onRowClick={d => router.push(`/crm/deals/${d.id}`)}
+                    initialSort={{ key: "createdAt", dir: "desc" }}
+                    pageSize={25}
+                    empty={
+                        <EmptyState
+                            icon={LuBriefcase}
+                            title='Сделок не найдено'
+                            hint='Попробуйте сбросить фильтры или создайте новую сделку.'
+                        />
+                    }
+                />
+                {items && items.length > 0 && (
+                    <div className='mt-3 flex items-center justify-end gap-3 px-1 text-sm'>
+                        <span className='text-xs font-semibold uppercase text-neutral-500'>
+                            Итого по {items.length}{" "}
+                            {items.length === 1
+                                ? "сделке"
+                                : items.length < 5
+                                  ? "сделкам"
+                                  : "сделок"}
+                        </span>
+                        <span className='font-semibold text-neutral-900'>
+                            {formatMoney(total)}
+                        </span>
+                    </div>
+                )}
             </div>
         </div>
     )

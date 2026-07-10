@@ -34,24 +34,24 @@ export default async function ProductPage({ params }) {
             <CrmBackLink
                 fallback='/crm/products'
                 fallbackLabel='Товары'
-                className='inline-flex items-center gap-1 text-xs text-night_green/55 hover:text-brand_main'
+                className='inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-brand_main'
             />
 
             <div className='flex flex-wrap items-start justify-between gap-3'>
                 <div className='min-w-0'>
-                    <p className='text-xs uppercase tracking-wider text-night_green/55'>
+                    <p className='text-xs uppercase tracking-wider text-neutral-400'>
                         Артикул {item.sku}
                     </p>
-                    <h1 className='mt-0.5 text-2xl font-semibold text-night_green sm:text-3xl'>
+                    <h1 className='mt-0.5 text-2xl font-semibold text-neutral-900 sm:text-3xl'>
                         {item.category}
                     </h1>
                     {item.name && item.name !== item.category && (
-                        <p className='mt-1 text-sm text-night_green/65'>{item.name}</p>
+                        <p className='mt-1 text-sm text-neutral-500'>{item.name}</p>
                     )}
                 </div>
                 <Link
                     href={`/crm/products/${item.id}/edit`}
-                    className='inline-flex items-center gap-1.5 rounded-lg border border-brand_soft/60 bg-white px-3 py-1.5 text-sm font-medium text-night_green/75 hover:bg-brand_soft/30'
+                    className='inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-medium text-neutral-900/75 hover:bg-surface_muted'
                 >
                     <LuPencil className='h-3.5 w-3.5' />
                     Редактировать
@@ -59,8 +59,8 @@ export default async function ProductPage({ params }) {
             </div>
 
             <div className='grid items-start gap-5 lg:grid-cols-2'>
-                <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
-                    <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+                <section className='rounded-xl border border-line bg-white p-4 sm:p-5'>
+                    <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500'>
                         Цены и упаковка
                     </h2>
                     <dl className='grid gap-3 sm:grid-cols-2'>
@@ -82,29 +82,29 @@ export default async function ProductPage({ params }) {
                     </dl>
                 </section>
 
-                <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
+                <section className='rounded-xl border border-line bg-white p-4 sm:p-5'>
                     <div className='mb-3 flex items-center justify-between gap-2'>
-                        <h2 className='flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+                        <h2 className='flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-neutral-500'>
                             <LuWarehouse className='h-4 w-4 text-brand_main' />
                             Остатки на складах
                         </h2>
                         {lastSync && (
-                            <span className='text-[10px] text-night_green/55'>
+                            <span className='text-[10px] text-neutral-400'>
                                 Обновлено <LocalDateTime value={lastSync} />
                             </span>
                         )}
                     </div>
 
                     {item.stocks.length === 0 ? (
-                        <p className='text-sm text-night_green/55'>
+                        <p className='text-sm text-neutral-400'>
                             Остатков нет. Нажмите «Обновить остатки» в списке товаров,
                             чтобы подтянуть данные из 1С.
                         </p>
                     ) : (
                         <>
-                            <div className='overflow-x-auto rounded-lg border border-brand_soft/40'>
+                            <div className='overflow-x-auto rounded-lg border border-line'>
                                 <table className='w-full text-sm'>
-                                    <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
+                                    <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
                                         <tr>
                                             <th className='px-3 py-2'>Склад</th>
                                             <th className='px-3 py-2 text-right'>Шт.</th>
@@ -114,23 +114,23 @@ export default async function ProductPage({ params }) {
                                         {item.stocks.map(s => (
                                             <tr
                                                 key={s.id}
-                                                className='border-t border-brand_soft/30'
+                                                className='border-t border-line'
                                             >
-                                                <td className='px-3 py-2 text-night_green/80'>
+                                                <td className='px-3 py-2 text-neutral-700'>
                                                     {s.warehouse}
                                                 </td>
-                                                <td className='px-3 py-2 text-right font-medium text-night_green'>
+                                                <td className='px-3 py-2 text-right font-medium text-neutral-900'>
                                                     {s.quantity.toLocaleString("ru-RU")}
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                     <tfoot>
-                                        <tr className='border-t-2 border-brand_main/30 bg-brand_soft/20'>
-                                            <td className='px-3 py-2 text-sm font-semibold uppercase text-night_green/70'>
+                                        <tr className='border-t-2 border-brand_main/30 bg-surface_muted'>
+                                            <td className='px-3 py-2 text-sm font-semibold uppercase text-neutral-500'>
                                                 Итого
                                             </td>
-                                            <td className='px-3 py-2 text-right text-base font-semibold text-night_green'>
+                                            <td className='px-3 py-2 text-right text-base font-semibold text-neutral-900'>
                                                 {totalPieces.toLocaleString("ru-RU")} шт.
                                             </td>
                                         </tr>
@@ -142,14 +142,14 @@ export default async function ProductPage({ params }) {
                 </section>
             </div>
 
-            <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
-                <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+            <section className='rounded-xl border border-line bg-white p-4 sm:p-5'>
+                <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500'>
                     Состав набора
                 </h2>
                 {lines.length === 0 ? (
-                    <p className='text-sm text-night_green/55'>Состав не указан.</p>
+                    <p className='text-sm text-neutral-400'>Состав не указан.</p>
                 ) : (
-                    <ul className='list-disc space-y-1 pl-5 text-sm text-night_green/85'>
+                    <ul className='list-disc space-y-1 pl-5 text-sm text-neutral-700'>
                         {lines.map((line, i) => (
                             <li key={i}>{line}</li>
                         ))}
@@ -163,10 +163,10 @@ export default async function ProductPage({ params }) {
 function Row({ label, value }) {
     return (
         <div>
-            <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
+            <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>
                 {label}
             </dt>
-            <dd className='mt-0.5 text-sm text-night_green'>{value || "—"}</dd>
+            <dd className='mt-0.5 text-sm text-neutral-900'>{value || "—"}</dd>
         </div>
     )
 }

@@ -106,42 +106,42 @@ export default function GlobalSearch({ open, onClose }) {
 
     return (
         <div
-            className='fixed inset-0 z-50 flex items-start justify-center bg-night_green/30 p-4 pt-[12vh] backdrop-blur-sm'
+            className='fixed inset-0 z-50 flex items-start justify-center bg-neutral-900/40 p-4 pt-[12vh] backdrop-blur-sm animate-apparition'
             onClick={onClose}
         >
             <div
                 onClick={e => e.stopPropagation()}
                 onKeyDown={onKeyDown}
-                className='w-full max-w-xl overflow-hidden rounded-xl bg-white shadow-2xl'
+                className='w-full max-w-xl overflow-hidden rounded-2xl border border-line bg-white shadow-2xl shadow-neutral-900/20 animate-emersion'
             >
-                <div className='flex items-center gap-2.5 border-b border-brand_soft/40 px-4'>
-                    <LuSearch className='h-4 w-4 shrink-0 text-night_green/40' />
+                <div className='flex items-center gap-2.5 border-b border-line px-4'>
+                    <LuSearch className='h-4 w-4 shrink-0 text-neutral-400' />
                     <input
                         ref={inputRef}
                         value={q}
                         onChange={e => setQ(e.target.value)}
                         placeholder='Клиент, контакт, сделка, проект...'
-                        className='w-full bg-transparent py-3.5 text-sm focus:outline-none'
+                        className='w-full bg-transparent py-3.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none'
                     />
-                    <kbd className='hidden shrink-0 rounded border border-brand_soft/60 px-1.5 py-0.5 text-[10px] text-night_green/45 sm:block'>
+                    <kbd className='hidden shrink-0 rounded border border-line bg-surface_muted px-1.5 py-0.5 text-[10px] text-neutral-400 sm:block'>
                         Esc
                     </kbd>
                 </div>
 
                 <div className='max-h-[55vh] overflow-y-auto p-2'>
                     {q.trim().length < 2 && (
-                        <p className='px-3 py-6 text-center text-sm text-night_green/45'>
+                        <p className='px-3 py-6 text-center text-sm text-neutral-400'>
                             Введите минимум два символа — ищем по названиям, ИНН,
                             телефонам и email.
                         </p>
                     )}
                     {q.trim().length >= 2 && !loading && results && total === 0 && (
-                        <p className='px-3 py-6 text-center text-sm text-night_green/45'>
+                        <p className='px-3 py-6 text-center text-sm text-neutral-400'>
                             Ничего не найдено по «{q.trim()}»
                         </p>
                     )}
                     {loading && (
-                        <p className='px-3 py-6 text-center text-sm text-night_green/45'>
+                        <p className='px-3 py-6 text-center text-sm text-neutral-400'>
                             Ищем...
                         </p>
                     )}
@@ -154,7 +154,7 @@ export default function GlobalSearch({ open, onClose }) {
                             const Icon = g.icon
                             return (
                                 <div key={g.key} className='mb-1'>
-                                    <p className='px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-night_green/45'>
+                                    <p className='px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-400'>
                                         {g.label}
                                     </p>
                                     {items.map(item => {
@@ -166,19 +166,19 @@ export default function GlobalSearch({ open, onClose }) {
                                                 type='button'
                                                 onClick={() => go(item)}
                                                 onMouseEnter={() => setActive(idx)}
-                                                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left ${
+                                                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
                                                     idx === active
-                                                        ? "bg-brand_main/10"
-                                                        : "hover:bg-brand_soft/20"
+                                                        ? "bg-neutral-100"
+                                                        : "hover:bg-neutral-50"
                                                 }`}
                                             >
-                                                <Icon className='h-4 w-4 shrink-0 text-brand_main/70' />
+                                                <Icon className='h-4 w-4 shrink-0 text-neutral-400' />
                                                 <span className='min-w-0'>
-                                                    <span className='block truncate text-sm font-medium text-night_green'>
+                                                    <span className='block truncate text-sm font-medium text-neutral-900'>
                                                         {item.title}
                                                     </span>
                                                     {item.subtitle && (
-                                                        <span className='block truncate text-xs text-night_green/55'>
+                                                        <span className='block truncate text-xs text-neutral-500'>
                                                             {item.subtitle}
                                                         </span>
                                                     )}

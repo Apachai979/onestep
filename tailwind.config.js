@@ -33,6 +33,14 @@ module.exports = {
                 brand_soft: "#BBD8D1",
                 brand_blue: "#8BC4DF",
                 brand_mint: "#74C0B6",
+
+                // CRM design-system neutral surface tokens (Attio/Linear/Vercel-стиль).
+                // Аддитивно — публичный сайт использует прежние токены выше.
+                surface: "#ffffff",
+                surface_muted: "#f7f7f6",
+                surface_hover: "#f3f3f2",
+                line: "#e7e7e5",
+                line_strong: "#d6d6d3",
             },
             screens: {
                 sm920: "920px",

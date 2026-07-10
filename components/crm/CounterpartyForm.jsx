@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import DadataSearch from "./DadataSearch"
 import SearchableSelect from "./SearchableSelect"
+import { Button } from "@/components/crm/ui"
 import {
     ACTIVITY_AREAS,
     ACTIVITY_AREA_LABELS,
@@ -212,7 +213,7 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                     onChange={update("email")}
                 />
                 <div>
-                    <label className='mb-1 block text-sm text-gray-700'>
+                    <label className='mb-1.5 block text-sm text-neutral-600'>
                         Ответственный менеджер
                     </label>
                     <SearchableSelect
@@ -235,11 +236,11 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                     className='sm:col-span-2'
                 />
                 <div>
-                    <label className='mb-1 block text-sm text-gray-700'>Источник</label>
+                    <label className='mb-1.5 block text-sm text-neutral-600'>Источник</label>
                     <select
                         value={form.source}
                         onChange={update("source")}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
+                        className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                     >
                         <option value=''>— не указан —</option>
                         {COUNTERPARTY_SOURCES.map(v => (
@@ -252,13 +253,13 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                 {isEndCustomer && (
                     <>
                         <div>
-                            <label className='mb-1 block text-sm text-gray-700'>
+                            <label className='mb-1.5 block text-sm text-neutral-600'>
                                 Тип компании
                             </label>
                             <select
                                 value={form.companyKind}
                                 onChange={update("companyKind")}
-                                className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
+                                className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                             >
                                 <option value=''>— не указан —</option>
                                 {COMPANY_KINDS.map(v => (
@@ -269,13 +270,13 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                             </select>
                         </div>
                         <div>
-                            <label className='mb-1 block text-sm text-gray-700'>
+                            <label className='mb-1.5 block text-sm text-neutral-600'>
                                 Сфера деятельности
                             </label>
                             <select
                                 value={form.activityArea}
                                 onChange={update("activityArea")}
-                                className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
+                                className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                             >
                                 <option value=''>— не указана —</option>
                                 {ACTIVITY_AREAS.map(v => (
@@ -301,21 +302,21 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                     onChange={update("bankName")}
                 />
                 <div>
-                    <label className='mb-1 block text-sm text-gray-700'>БИК</label>
+                    <label className='mb-1.5 block text-sm text-neutral-600'>БИК</label>
                     <input
                         value={form.bik}
                         onChange={update("bik")}
                         inputMode='numeric'
                         placeholder='9 цифр — поиск автоматически'
-                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
+                        className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                     />
                     {bankLookup.status !== "idle" && (
                         <p
                             className={`mt-1 text-xs ${
                                 bankLookup.status === "found"
-                                    ? "text-primary_green"
+                                    ? "text-brand_main"
                                     : bankLookup.status === "loading"
-                                      ? "text-gray-500"
+                                      ? "text-neutral-500"
                                       : "text-red-600"
                             }`}
                         >
@@ -355,12 +356,12 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
             </Section>
 
             <div>
-                <label className='mb-1 block text-sm text-gray-700'>Примечание</label>
+                <label className='mb-1.5 block text-sm text-neutral-600'>Примечание</label>
                 <textarea
                     rows={3}
                     value={form.note}
                     onChange={update("note")}
-                    className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
+                    className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                 />
             </div>
 
@@ -392,23 +393,19 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                 </div>
             )}
 
-            {error && <p className='text-sm text-red-600'>{error}</p>}
+            {error && (
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                    {error}
+                </p>
+            )}
 
             <div className='flex justify-end gap-3'>
-                <button
-                    type='button'
-                    onClick={() => router.back()}
-                    className='rounded-lg border border-brand_soft/60 px-4 py-2 text-sm text-gray-700 hover:bg-brand_soft/30'
-                >
+                <Button type='button' variant='secondary' onClick={() => router.back()}>
                     Отмена
-                </button>
-                <button
-                    type='submit'
-                    disabled={loading}
-                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
-                >
-                    {loading ? "Сохраняем..." : mode === "create" ? "Создать" : "Сохранить"}
-                </button>
+                </Button>
+                <Button type='submit' loading={loading}>
+                    {mode === "create" ? "Создать" : "Сохранить"}
+                </Button>
             </div>
         </form>
     )
@@ -416,11 +413,9 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
 
 function Section({ title, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-            <h2 className='mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500'>
-                {title}
-            </h2>
-            <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3'>{children}</div>
+        <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
+            <h2 className='mb-4 text-sm font-semibold text-neutral-900'>{title}</h2>
+            <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>{children}</div>
         </section>
     )
 }
@@ -428,10 +423,10 @@ function Section({ title, children }) {
 function Field({ label, className = "", ...props }) {
     return (
         <div className={className}>
-            <label className='mb-1 block text-sm text-gray-700'>{label}</label>
+            <label className='mb-1.5 block text-sm text-neutral-600'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
+                className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
             />
         </div>
     )

@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { USER_ROLES, USER_ROLE_LABELS, USER_STATUSES, USER_STATUS_LABELS } from "@/lib/crm/invite"
+import { Button } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -65,12 +66,12 @@ export default function AdminUserForm({ initial, isSelf }) {
 
             <Section title='Доступ'>
                 <div>
-                    <label className='mb-1 block text-sm text-gray-700'>Роль</label>
+                    <label className='mb-1.5 block text-sm text-neutral-600'>Роль</label>
                     <select
                         value={form.role}
                         onChange={update("role")}
                         disabled={isSelf}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none disabled:bg-gray-50 disabled:text-gray-400'
+                        className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20 disabled:bg-surface_muted disabled:text-neutral-400'
                     >
                         {USER_ROLES.map(r => (
                             <option key={r} value={r}>
@@ -79,18 +80,18 @@ export default function AdminUserForm({ initial, isSelf }) {
                         ))}
                     </select>
                     {isSelf && (
-                        <p className='mt-1 text-xs text-gray-500'>
+                        <p className='mt-1 text-xs text-neutral-400'>
                             Свою роль изменить нельзя.
                         </p>
                     )}
                 </div>
                 <div>
-                    <label className='mb-1 block text-sm text-gray-700'>Статус</label>
+                    <label className='mb-1.5 block text-sm text-neutral-600'>Статус</label>
                     <select
                         value={form.status}
                         onChange={update("status")}
                         disabled={isSelf}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none disabled:bg-gray-50 disabled:text-gray-400'
+                        className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20 disabled:bg-surface_muted disabled:text-neutral-400'
                     >
                         {USER_STATUSES.map(s => (
                             <option key={s} value={s}>
@@ -99,30 +100,26 @@ export default function AdminUserForm({ initial, isSelf }) {
                         ))}
                     </select>
                     {isSelf && (
-                        <p className='mt-1 text-xs text-gray-500'>
+                        <p className='mt-1 text-xs text-neutral-400'>
                             Свой статус изменить нельзя.
                         </p>
                     )}
                 </div>
             </Section>
 
-            {error && <p className='text-sm text-red-600'>{error}</p>}
+            {error && (
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                    {error}
+                </p>
+            )}
 
             <div className='flex justify-end gap-3'>
-                <button
-                    type='button'
-                    onClick={() => router.back()}
-                    className='rounded-lg border border-brand_soft/60 px-4 py-2 text-sm text-gray-700 hover:bg-brand_soft/30'
-                >
+                <Button type='button' variant='secondary' onClick={() => router.back()}>
                     Отмена
-                </button>
-                <button
-                    type='submit'
-                    disabled={loading}
-                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
-                >
-                    {loading ? "Сохраняем..." : "Сохранить"}
-                </button>
+                </Button>
+                <Button type='submit' loading={loading}>
+                    Сохранить
+                </Button>
             </div>
         </form>
     )
@@ -130,10 +127,8 @@ export default function AdminUserForm({ initial, isSelf }) {
 
 function Section({ title, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
-            <h2 className='mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500'>
-                {title}
-            </h2>
+        <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
+            <h2 className='mb-4 text-sm font-semibold text-neutral-900'>{title}</h2>
             <div className='grid gap-4 sm:grid-cols-2'>{children}</div>
         </section>
     )
@@ -142,10 +137,10 @@ function Section({ title, children }) {
 function Field({ label, className = "", ...props }) {
     return (
         <div className={className}>
-            <label className='mb-1 block text-sm text-gray-700'>{label}</label>
+            <label className='mb-1.5 block text-sm text-neutral-600'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none disabled:bg-gray-50 disabled:text-gray-500'
+                className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20 disabled:bg-surface_muted disabled:text-neutral-400'
             />
         </div>
     )

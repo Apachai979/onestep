@@ -9,9 +9,9 @@ export default function NewProductPage() {
             <CrmBackLink
                 fallback='/crm/products'
                 fallbackLabel='Товары'
-                className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary_green'
+                className='inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand_main'
             />
-            <h1 className='text-2xl font-semibold text-night_green'>Новый товар</h1>
+            <h1 className='text-2xl font-semibold text-neutral-900'>Новый товар</h1>
             <ProductForm mode='create' />
         </div>
     )

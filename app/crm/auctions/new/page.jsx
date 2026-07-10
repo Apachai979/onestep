@@ -32,9 +32,9 @@ export default async function NewAuctionPage({ searchParams }) {
             <CrmBackLink
                 fallback={`/crm/projects/${project.id}`}
                 fallbackLabel='К проекту'
-                className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary_green'
+                className='inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand_main'
             />
-            <h1 className='text-2xl font-semibold text-night_green'>Новый аукцион</h1>
+            <h1 className='text-2xl font-semibold text-neutral-900'>Новый аукцион</h1>
             <div className='rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900'>
                 По проекту{" "}
                 <Link href={`/crm/projects/${project.id}`} className='font-medium underline'>

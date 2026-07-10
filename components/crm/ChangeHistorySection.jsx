@@ -98,9 +98,9 @@ export default function ChangeHistorySection({
     return (
         <div>
             {error && <p className='text-sm text-red-600'>{error}</p>}
-            {items === null && <p className='text-sm text-gray-400'>Загрузка...</p>}
+            {items === null && <p className='text-sm text-neutral-400'>Загрузка...</p>}
             {items?.length === 0 && (
-                <p className='text-sm text-gray-400'>Записей нет.</p>
+                <p className='text-sm text-neutral-400'>Записей нет.</p>
             )}
 
             {items?.length > 0 && presentCategories.size > 1 && (
@@ -115,7 +115,7 @@ export default function ChangeHistorySection({
                             className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium transition ${
                                 filter === key
                                     ? "bg-brand_main text-white"
-                                    : "bg-brand_soft/25 text-night_green/65 hover:bg-brand_soft/45"
+                                    : "bg-surface_muted text-neutral-500 hover:bg-surface_hover"
                             }`}
                         >
                             {label}
@@ -133,20 +133,20 @@ export default function ChangeHistorySection({
                     return (
                         <li
                             key={it.id}
-                            className='border-b border-brand_soft/25 py-2 first:pt-0 last:border-b-0'
+                            className='border-b border-line py-2 first:pt-0 last:border-b-0'
                         >
-                            <div className='flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-gray-500'>
+                            <div className='flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-neutral-500'>
                                 <span
                                     className={`rounded-full px-1.5 py-px text-[10px] font-medium ${ACTION_COLOR[it.action] || ""}`}
                                 >
                                     {CHANGE_ACTION_LABELS[it.action] || it.action}
                                 </span>
                                 {it.entityType !== entityType && (
-                                    <span className='rounded-full bg-gray-100 px-1.5 py-px text-[10px] font-medium text-gray-700'>
+                                    <span className='rounded-full bg-neutral-100 px-1.5 py-px text-[10px] font-medium text-neutral-700'>
                                         {ENTITY_LABELS[it.entityType] || it.entityType}
                                     </span>
                                 )}
-                                <span className='font-medium text-night_green'>
+                                <span className='font-medium text-neutral-900'>
                                     {fullName(it.author)}
                                 </span>
                                 <span>·</span>
@@ -158,14 +158,14 @@ export default function ChangeHistorySection({
                                         if (isDiffValue(val)) {
                                             return (
                                                 <li key={field}>
-                                                    <span className='text-gray-600'>
+                                                    <span className='text-neutral-500'>
                                                         {fieldLabel(it.entityType, field)}:
                                                     </span>{" "}
-                                                    <span className='text-gray-400 line-through'>
+                                                    <span className='text-neutral-400 line-through'>
                                                         {formatValue(val.from)}
                                                     </span>{" "}
-                                                    <span className='text-gray-400'>→</span>{" "}
-                                                    <span className='font-medium text-gray-800'>
+                                                    <span className='text-neutral-400'>→</span>{" "}
+                                                    <span className='font-medium text-neutral-800'>
                                                         {formatValue(val.to)}
                                                     </span>
                                                 </li>
@@ -175,10 +175,10 @@ export default function ChangeHistorySection({
                                             return null
                                         return (
                                             <li key={field}>
-                                                <span className='text-gray-600'>
+                                                <span className='text-neutral-500'>
                                                     {fieldLabel(it.entityType, field)}:
                                                 </span>{" "}
-                                                <span className='font-medium text-gray-800'>
+                                                <span className='font-medium text-neutral-800'>
                                                     {formatValue(val)}
                                                 </span>
                                             </li>

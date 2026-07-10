@@ -82,15 +82,15 @@ export default async function ShipmentPage({ params }) {
             <CrmBackLink
                 fallback='/crm/shipments'
                 fallbackLabel='Отгрузки'
-                className='inline-flex items-center gap-1 text-xs text-night_green/55 hover:text-brand_main'
+                className='inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-brand_main'
             />
 
             <div className='flex flex-wrap items-start justify-between gap-3'>
                 <div className='min-w-0'>
-                    <p className='text-xs uppercase tracking-wider text-night_green/55'>
+                    <p className='text-xs uppercase tracking-wider text-neutral-400'>
                         Отгрузка
                     </p>
-                    <h1 className='mt-0.5 font-mono text-2xl font-semibold text-night_green sm:text-3xl'>
+                    <h1 className='mt-0.5 font-mono text-2xl font-semibold text-neutral-900 sm:text-3xl'>
                         {item.number}
                     </h1>
                     <div className='mt-2 flex flex-wrap items-center gap-2'>
@@ -105,7 +105,7 @@ export default async function ShipmentPage({ params }) {
                             </span>
                         )}
                     </div>
-                    <p className='mt-2 text-sm text-night_green/70'>
+                    <p className='mt-2 text-sm text-neutral-500'>
                         Сделка:{" "}
                         <Link
                             href={`/crm/deals/${item.deal.id}`}
@@ -113,7 +113,7 @@ export default async function ShipmentPage({ params }) {
                         >
                             {item.deal.title || `Сделка #${item.deal.id.slice(-6)}`}
                         </Link>{" "}
-                        <span className='text-night_green/50'>·</span>{" "}
+                        <span className='text-neutral-400'>·</span>{" "}
                         Клиент:{" "}
                         <Link
                             href={`/crm/counterparties/${item.deal.counterparty.id}`}
@@ -154,19 +154,19 @@ export default async function ShipmentPage({ params }) {
 
                     {item.note && (
                         <Section title='Комментарий'>
-                            <p className='whitespace-pre-wrap text-sm text-night_green/85 sm:col-span-2'>
+                            <p className='whitespace-pre-wrap text-sm text-neutral-700 sm:col-span-2'>
                                 {item.note}
                             </p>
                         </Section>
                     )}
 
-                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
-                        <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+                    <section className='rounded-xl border border-line bg-white p-4 sm:p-5'>
+                        <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500'>
                             Позиции отгрузки
                         </h2>
-                        <div className='overflow-x-auto rounded-lg border border-brand_soft/40'>
+                        <div className='overflow-x-auto rounded-lg border border-line'>
                             <table className='w-full text-sm'>
-                                <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
+                                <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
                                     <tr>
                                         <th className='px-3 py-2'>Артикул</th>
                                         <th className='px-3 py-2'>Наименование</th>
@@ -180,7 +180,7 @@ export default async function ShipmentPage({ params }) {
                                         <tr>
                                             <td
                                                 colSpan={5}
-                                                className='px-3 py-4 text-center text-night_green/55'
+                                                className='px-3 py-4 text-center text-neutral-400'
                                             >
                                                 Позиций нет
                                             </td>
@@ -189,21 +189,21 @@ export default async function ShipmentPage({ params }) {
                                     {item.items.map(it => (
                                         <tr
                                             key={it.id}
-                                            className='border-t border-brand_soft/30'
+                                            className='border-t border-line'
                                         >
-                                            <td className='px-3 py-2 text-night_green/75'>
+                                            <td className='px-3 py-2 text-neutral-900/75'>
                                                 {it.dealItem?.sku || "—"}
                                             </td>
-                                            <td className='px-3 py-2 text-night_green'>
+                                            <td className='px-3 py-2 text-neutral-900'>
                                                 {it.dealItem?.name || "—"}
                                             </td>
-                                            <td className='px-3 py-2 text-right text-night_green/75'>
+                                            <td className='px-3 py-2 text-right text-neutral-900/75'>
                                                 {fmtQty(it.dealItem?.quantity)}
                                             </td>
-                                            <td className='px-3 py-2 text-right font-semibold text-night_green'>
+                                            <td className='px-3 py-2 text-right font-semibold text-neutral-900'>
                                                 {fmtQty(it.quantity)}
                                             </td>
-                                            <td className='px-3 py-2 text-night_green/65'>
+                                            <td className='px-3 py-2 text-neutral-500'>
                                                 {it.note || "—"}
                                             </td>
                                         </tr>
@@ -228,8 +228,8 @@ export default async function ShipmentPage({ params }) {
 
 function Section({ title, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
-            <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+        <section className='rounded-xl border border-line bg-white p-4 sm:p-5'>
+            <h2 className='mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500'>
                 {title}
             </h2>
             <dl className='grid gap-3 sm:grid-cols-2'>{children}</dl>
@@ -240,10 +240,10 @@ function Section({ title, children }) {
 function Row({ label, value, className = "" }) {
     return (
         <div className={className}>
-            <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
+            <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>
                 {label}
             </dt>
-            <dd className='mt-0.5 text-sm text-night_green'>{value || "—"}</dd>
+            <dd className='mt-0.5 text-sm text-neutral-900'>{value || "—"}</dd>
         </div>
     )
 }

@@ -1,14 +1,18 @@
 "use client"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { LuPlus, LuSearch, LuContact } from "react-icons/lu"
 import {
+    Badge,
+    Button,
     CardListSkeleton,
     CardRow,
+    DataTable,
     EmptyState,
+    Field as UiField,
+    Input,
     MobileCard,
-    TableSkeleton,
     useToast,
 } from "@/components/crm/ui"
 import SearchableSelect from "./SearchableSelect"
@@ -142,43 +146,97 @@ export default function ContactsDirectory() {
         search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
     }))
 
+    const columns = useMemo(
+        () => [
+            {
+                key: "name",
+                header: "ФИО",
+                sortable: true,
+                sortValue: c => fullName(c),
+                render: c => (
+                    <span className='inline-flex flex-wrap items-center gap-2'>
+                        <Link
+                            href={`/crm/contacts/${c.id}`}
+                            onClick={e => e.stopPropagation()}
+                            className='font-medium text-neutral-900 hover:text-brand_main'
+                        >
+                            {fullName(c)}
+                        </Link>
+                        {c.isPrimary && (
+                            <Badge tone='brand' size='sm'>
+                                Основной
+                            </Badge>
+                        )}
+                    </span>
+                ),
+            },
+            {
+                key: "position",
+                header: "Должность",
+                render: c => c.position || "—",
+                hideable: true,
+            },
+            {
+                key: "phone",
+                header: "Телефон",
+                render: c => c.phone || "—",
+            },
+            {
+                key: "email",
+                header: "Email",
+                render: c => c.email || "—",
+                hideable: true,
+            },
+            {
+                key: "counterparty",
+                header: "Контрагент",
+                sortValue: c => c.counterparty?.name || "",
+                render: c =>
+                    c.counterparty ? (
+                        <Link
+                            href={`/crm/counterparties/${c.counterparty.id}`}
+                            onClick={e => e.stopPropagation()}
+                            className='text-brand_main hover:underline'
+                        >
+                            {c.counterparty.name}
+                        </Link>
+                    ) : (
+                        "—"
+                    ),
+            },
+        ],
+        [],
+    )
+
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3 rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-                <div className='min-w-[220px] flex-1'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Поиск</label>
-                    <div className='relative'>
-                        <LuSearch className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-night_green/40' />
-                        <input
-                            value={q}
-                            onChange={e => setQ(e.target.value)}
-                            placeholder='Имя, телефон, email, должность, контрагент'
-                            className='w-full rounded-lg border border-brand_soft/60 bg-white py-2 pl-9 pr-3 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                        />
-                    </div>
-                </div>
+            <div className='flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm'>
+                <UiField label='Поиск' className='min-w-[220px] flex-1'>
+                    <Input
+                        icon={LuSearch}
+                        value={q}
+                        onChange={e => setQ(e.target.value)}
+                        placeholder='Имя, телефон, email, должность, контрагент'
+                    />
+                </UiField>
                 {!showForm && (
-                    <button
-                        type='button'
-                        onClick={openForm}
-                        className='inline-flex items-center gap-2 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
-                    >
+                    <Button type='button' onClick={openForm}>
                         <LuPlus className='h-4 w-4' />
                         Добавить контакт
-                    </button>
+                    </Button>
                 )}
             </div>
 
             {showForm && (
                 <form
                     onSubmit={handleCreate}
-                    className='space-y-3 rounded-xl border border-dashed border-primary_green/50 bg-white/70 p-4'
+                    className='space-y-3 rounded-xl border border-dashed border-brand_main/40 bg-surface_muted p-4'
                 >
-                    <h2 className='text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+                    <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
                         Новый контакт
                     </h2>
                     <div>
-                        <label className='mb-1 block text-xs text-night_green/65'>Контрагент</label>
+                        <label className='mb-1 block text-xs text-neutral-500'>Контрагент</label>
                         <SearchableSelect
                             value={cpId}
                             onChange={setCpId}
@@ -186,7 +244,7 @@ export default function ContactsDirectory() {
                             emptyLabel='Контрагент не найден'
                             options={cpOptions}
                         />
-                        <p className='mt-1 text-xs text-night_green/55'>
+                        <p className='mt-1 text-xs text-neutral-400'>
                             Необязательно. Нужного контрагента нет? Создайте его в разделах{" "}
                             <Link href='/crm/distributors' className='text-brand_main hover:underline'>
                                 «Дистрибьюторы»
@@ -231,7 +289,7 @@ export default function ContactsDirectory() {
                     </div>
                     <label
                         className={`flex items-center gap-2 text-sm ${
-                            cpId ? "text-night_green/80" : "text-night_green/40"
+                            cpId ? "text-neutral-700" : "text-neutral-400"
                         }`}
                     >
                         <input
@@ -247,7 +305,7 @@ export default function ContactsDirectory() {
                         <button
                             type='button'
                             onClick={closeForm}
-                            className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-night_green/80 hover:bg-brand_soft/30'
+                            className='rounded-lg border border-line px-3 py-1.5 text-sm text-neutral-700 hover:bg-surface_muted'
                         >
                             Отмена
                         </button>
@@ -283,12 +341,12 @@ export default function ContactsDirectory() {
                         <div className='flex items-start justify-between gap-2'>
                             <Link
                                 href={`/crm/contacts/${c.id}`}
-                                className='font-medium text-night_green hover:text-brand_main'
+                                className='font-medium text-neutral-900 hover:text-brand_main'
                             >
                                 {fullName(c)}
                             </Link>
                             {c.isPrimary && (
-                                <span className='shrink-0 rounded-full bg-light_green/30 px-2 py-0.5 text-xs font-medium text-night_green'>
+                                <span className='shrink-0 rounded-full bg-brand_main/10 px-2 py-0.5 text-xs font-medium text-brand_main'>
                                     Основной
                                 </span>
                             )}
@@ -316,68 +374,22 @@ export default function ContactsDirectory() {
             </div>
 
             {/* Десктоп-таблица */}
-            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
-                <table className='w-full text-sm'>
-                    <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
-                        <tr>
-                            <th className='px-4 py-3'>ФИО</th>
-                            <th className='px-4 py-3'>Должность</th>
-                            <th className='px-4 py-3'>Телефон</th>
-                            <th className='px-4 py-3'>Email</th>
-                            <th className='px-4 py-3'>Контрагент</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items === null && <TableSkeleton rows={5} cols={5} />}
-                        {items?.length === 0 && (
-                            <EmptyState
-                                colSpan={5}
-                                icon={LuContact}
-                                title='Контактов не найдено'
-                                hint='Измените запрос или добавьте контакт.'
-                            />
-                        )}
-                        {items?.map(c => (
-                            <tr
-                                key={c.id}
-                                onClick={() => router.push(`/crm/contacts/${c.id}`)}
-                                className='cursor-pointer border-t border-brand_soft/30 transition hover:bg-brand_soft/15'
-                            >
-                                <td className='px-4 py-3'>
-                                    <span className='inline-flex flex-wrap items-center gap-2'>
-                                        <Link
-                                            href={`/crm/contacts/${c.id}`}
-                                            className='font-medium text-night_green hover:text-brand_main'
-                                        >
-                                            {fullName(c)}
-                                        </Link>
-                                        {c.isPrimary && (
-                                            <span className='rounded-full bg-light_green/30 px-2 py-0.5 text-[10px] font-medium text-night_green'>
-                                                Основной
-                                            </span>
-                                        )}
-                                    </span>
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>{c.position || "—"}</td>
-                                <td className='px-4 py-3 text-gray-700'>{c.phone || "—"}</td>
-                                <td className='px-4 py-3 text-gray-700'>{c.email || "—"}</td>
-                                <td className='px-4 py-3'>
-                                    {c.counterparty ? (
-                                        <Link
-                                            href={`/crm/counterparties/${c.counterparty.id}`}
-                                            onClick={e => e.stopPropagation()}
-                                            className='text-brand_main hover:underline'
-                                        >
-                                            {c.counterparty.name}
-                                        </Link>
-                                    ) : (
-                                        "—"
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            <div className='hidden md:block'>
+                <DataTable
+                    columns={columns}
+                    rows={items || []}
+                    loading={items === null}
+                    getRowId={c => c.id}
+                    onRowClick={c => router.push(`/crm/contacts/${c.id}`)}
+                    initialSort={{ key: "name", dir: "asc" }}
+                    empty={
+                        <EmptyState
+                            icon={LuContact}
+                            title='Контактов не найдено'
+                            hint='Измените запрос или добавьте контакт.'
+                        />
+                    }
+                />
             </div>
         </div>
     )
@@ -386,10 +398,10 @@ export default function ContactsDirectory() {
 function Field({ label, ...props }) {
     return (
         <div>
-            <label className='mb-1 block text-xs text-night_green/65'>{label}</label>
+            <label className='mb-1 block text-xs font-medium text-neutral-500'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
             />
         </div>
     )

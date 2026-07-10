@@ -4,6 +4,14 @@ import { useEffect, useMemo, useState } from "react"
 import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, buildInternalName } from "@/lib/crm/project"
 import ProjectContactsPicker from "./ProjectContactsPicker"
 import SearchableSelect from "./SearchableSelect"
+import {
+    Button,
+    Card,
+    Field,
+    FormSection,
+    Input,
+    Select,
+} from "@/components/crm/ui"
 
 const EMPTY = {
     internalName: "",
@@ -186,94 +194,94 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
     }
 
     return (
-        <form onSubmit={handleSubmit} className='space-y-4'>
-            <Section title='Участники'>
-                <div>
-                    <label className='mb-1 block text-sm text-gray-700'>
-                        Конечный потребитель *
-                    </label>
-                    <SearchableSelect
-                        value={form.endCustomerId}
-                        onChange={id => setForm(prev => ({ ...prev, endCustomerId: id }))}
-                        required
-                        placeholder='Введите название или ИНН'
-                        options={customerOptions}
-                    />
-                </div>
-                <div>
-                    <label className='mb-1 block text-sm text-gray-700'>Дистрибьютор *</label>
-                    <SearchableSelect
-                        value={form.distributorId}
-                        onChange={id => setForm(prev => ({ ...prev, distributorId: id }))}
-                        required
-                        placeholder='Введите название или ИНН'
-                        options={distributorOptions}
-                    />
-                </div>
-                <div>
-                    <label className='mb-1 block text-sm text-gray-700'>
-                        Ответственный менеджер *
-                    </label>
-                    <SearchableSelect
-                        value={form.managerId}
-                        onChange={id => setForm(prev => ({ ...prev, managerId: id }))}
-                        required
-                        options={managerOptions}
-                    />
-                </div>
-            </Section>
-
-            <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-                <h2 className='mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500'>
-                    Контактные лица
-                </h2>
-                <div className='grid gap-4 sm:grid-cols-2'>
-                    <ProjectContactsPicker
-                        counterpartyId={form.endCustomerId}
-                        counterpartyName={
-                            refs.customers.find(c => c.id === form.endCustomerId)?.name ||
-                            "Конечный потребитель"
-                        }
-                        selectedIds={contactIds}
-                        onChange={setContactIds}
-                    />
-                    <ProjectContactsPicker
-                        counterpartyId={form.distributorId}
-                        counterpartyName={
-                            refs.distributors.find(d => d.id === form.distributorId)?.name ||
-                            "Дистрибьютор"
-                        }
-                        selectedIds={contactIds}
-                        onChange={setContactIds}
-                    />
-                </div>
-            </section>
-
-            <Section title='Название и статус'>
-                <Field
-                    label='Внутреннее название'
-                    value={form.internalName}
-                    onChange={update("internalName")}
-                    placeholder={autoInternalName}
-                    className='sm:col-span-2'
-                />
-                {mode === "edit" && (
-                    <div>
-                        <label className='mb-1 block text-sm text-gray-700'>Статус</label>
-                        <select
-                            value={form.status}
-                            onChange={update("status")}
-                            className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
-                        >
-                            {PROJECT_STATUSES.map(s => (
-                                <option key={s} value={s}>
-                                    {PROJECT_STATUS_LABELS[s]}
-                                </option>
-                            ))}
-                        </select>
+        <form onSubmit={handleSubmit} className='space-y-6'>
+            <Card>
+                <FormSection
+                    title='Участники'
+                    description='Конечный потребитель, дистрибьютор и ответственный менеджер.'
+                >
+                    <div className='grid gap-4 sm:grid-cols-2'>
+                        <Field label='Конечный потребитель' required>
+                            <SearchableSelect
+                                value={form.endCustomerId}
+                                onChange={id =>
+                                    setForm(prev => ({ ...prev, endCustomerId: id }))
+                                }
+                                required
+                                placeholder='Введите название или ИНН'
+                                options={customerOptions}
+                            />
+                        </Field>
+                        <Field label='Дистрибьютор' required>
+                            <SearchableSelect
+                                value={form.distributorId}
+                                onChange={id =>
+                                    setForm(prev => ({ ...prev, distributorId: id }))
+                                }
+                                required
+                                placeholder='Введите название или ИНН'
+                                options={distributorOptions}
+                            />
+                        </Field>
+                        <Field label='Ответственный менеджер' required className='sm:col-span-2'>
+                            <SearchableSelect
+                                value={form.managerId}
+                                onChange={id => setForm(prev => ({ ...prev, managerId: id }))}
+                                required
+                                options={managerOptions}
+                            />
+                        </Field>
                     </div>
-                )}
-            </Section>
+                </FormSection>
+            </Card>
+
+            <Card>
+                <FormSection title='Контактные лица'>
+                    <div className='grid gap-4 sm:grid-cols-2'>
+                        <ProjectContactsPicker
+                            counterpartyId={form.endCustomerId}
+                            counterpartyName={
+                                refs.customers.find(c => c.id === form.endCustomerId)?.name ||
+                                "Конечный потребитель"
+                            }
+                            selectedIds={contactIds}
+                            onChange={setContactIds}
+                        />
+                        <ProjectContactsPicker
+                            counterpartyId={form.distributorId}
+                            counterpartyName={
+                                refs.distributors.find(d => d.id === form.distributorId)?.name ||
+                                "Дистрибьютор"
+                            }
+                            selectedIds={contactIds}
+                            onChange={setContactIds}
+                        />
+                    </div>
+                </FormSection>
+            </Card>
+
+            <Card>
+                <FormSection title='Название и статус'>
+                    <div className='grid gap-4 sm:grid-cols-2'>
+                        <Input
+                            label='Внутреннее название'
+                            containerClassName='sm:col-span-2'
+                            value={form.internalName}
+                            onChange={update("internalName")}
+                            placeholder={autoInternalName}
+                        />
+                        {mode === "edit" && (
+                            <Select label='Статус' value={form.status} onChange={update("status")}>
+                                {PROJECT_STATUSES.map(s => (
+                                    <option key={s} value={s}>
+                                        {PROJECT_STATUS_LABELS[s]}
+                                    </option>
+                                ))}
+                            </Select>
+                        )}
+                    </div>
+                </FormSection>
+            </Card>
 
             {duplicate && (
                 <div className='rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm'>
@@ -308,59 +316,32 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
                             className='w-full rounded-lg border border-yellow-400 px-3 py-2 text-sm shadow-sm focus:border-yellow-600 focus:outline-none'
                         />
                     </div>
-                    <button
+                    <Button
                         type='button'
                         onClick={handleForceCreate}
-                        disabled={loading}
-                        className='mt-3 rounded-lg bg-yellow-600 px-4 py-2 text-sm font-semibold text-white hover:bg-yellow-700 disabled:opacity-60'
+                        loading={loading}
+                        className='mt-3'
                     >
                         Всё равно создать
-                    </button>
+                    </Button>
                 </div>
             )}
 
-            {error && <p className='text-sm text-red-600'>{error}</p>}
+            {error && (
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                    {error}
+                </p>
+            )}
 
             <div className='flex justify-end gap-3'>
-                <button
-                    type='button'
-                    onClick={() => router.back()}
-                    className='rounded-lg border border-brand_soft/60 px-4 py-2 text-sm text-gray-700 hover:bg-brand_soft/30'
-                >
+                <Button type='button' variant='secondary' onClick={() => router.back()}>
                     Отмена
-                </button>
-                <button
-                    type='submit'
-                    disabled={loading}
-                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
-                >
-                    {loading ? "Сохраняем..." : mode === "create" ? "Создать" : "Сохранить"}
-                </button>
+                </Button>
+                <Button type='submit' loading={loading}>
+                    {mode === "create" ? "Создать" : "Сохранить"}
+                </Button>
             </div>
         </form>
-    )
-}
-
-function Section({ title, children }) {
-    return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-            <h2 className='mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500'>
-                {title}
-            </h2>
-            <div className='grid gap-3 sm:grid-cols-2'>{children}</div>
-        </section>
-    )
-}
-
-function Field({ label, className = "", ...props }) {
-    return (
-        <div className={className}>
-            <label className='mb-1 block text-sm text-gray-700'>{label}</label>
-            <input
-                {...props}
-                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
-            />
-        </div>
     )
 }
 

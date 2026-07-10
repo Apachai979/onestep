@@ -8,6 +8,7 @@ import {
 } from "@/lib/crm/task"
 import { notifyTasksChanged } from "@/lib/crm/tasks-events"
 import { TaskTypeBadge } from "./TaskTypeIcon"
+import { Badge, Button } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -126,34 +127,28 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
 
     return (
         <div
-            className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'
+            className='fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/40 p-4 backdrop-blur-sm animate-apparition'
             onClick={onClose}
         >
             <form
                 onSubmit={submit}
                 onClick={e => e.stopPropagation()}
-                className='w-full max-w-md space-y-4 rounded-xl bg-white p-5 shadow-2xl'
+                className='w-full max-w-md space-y-4 rounded-2xl border border-line bg-white p-6 shadow-2xl shadow-neutral-900/20 animate-emersion'
             >
-                <div className='space-y-2 border-b border-brand_soft/30 pb-3'>
+                <div className='space-y-2 border-b border-line pb-3'>
                     <div className='flex flex-wrap items-center gap-2'>
                         <TaskTypeBadge type={task.type} />
                         {task.status === "OPEN" ? (
-                            <span
-                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${ts.className}`}
-                            >
-                                {ts.label}
-                            </span>
+                            <Badge className={ts.className}>{ts.label}</Badge>
                         ) : (
-                            <span
-                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${TASK_STATUS_COLORS[task.status]}`}
-                            >
+                            <Badge className={TASK_STATUS_COLORS[task.status]}>
                                 {TASK_STATUS_LABELS[task.status] || task.status}
-                            </span>
+                            </Badge>
                         )}
                     </div>
-                    <h2 className='text-lg font-semibold text-night_green'>{task.title}</h2>
+                    <h2 className='text-lg font-semibold text-neutral-900'>{task.title}</h2>
                     {task.description && (
-                        <p className='text-sm text-gray-600'>{task.description}</p>
+                        <p className='text-sm text-neutral-500'>{task.description}</p>
                     )}
                     <dl className='grid gap-1.5 text-sm sm:grid-cols-2'>
                         <Row label='Срок' value={fmtRange(task)} />
@@ -163,14 +158,14 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                         )}
                         {rel && (
                             <div className='sm:col-span-2'>
-                                <dt className='text-xs uppercase text-gray-500'>
+                                <dt className='text-xs uppercase text-neutral-400'>
                                     {rel.kind}
                                 </dt>
                                 <dd className='mt-0.5'>
                                     <Link
                                         href={rel.href}
                                         onClick={onClose}
-                                        className='text-night_green underline hover:text-brand_main'
+                                        className='text-neutral-800 underline hover:text-brand_main'
                                     >
                                         {rel.label}
                                     </Link>
@@ -182,18 +177,18 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
 
                 {task.status !== "OPEN" && (
                     <div
-                        className={`rounded-lg border p-3 text-sm ${
+                        className={`rounded-xl border p-3 text-sm ${
                             task.status === "DONE"
-                                ? "border-green-200 bg-green-50/50"
+                                ? "border-emerald-200 bg-emerald-50/50"
                                 : "border-red-200 bg-red-50/50"
                         }`}
                     >
                         <div className='flex items-center justify-between gap-2'>
-                            <span className='text-xs font-semibold uppercase tracking-wide text-night_green/65'>
+                            <span className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                                 Комментарий о {task.status === "DONE" ? "выполнении" : "невыполнении"}
                             </span>
                             {task.closedAt && (
-                                <span className='text-[11px] text-night_green/55'>
+                                <span className='text-[11px] text-neutral-400'>
                                     закрыто{" "}
                                     {new Date(task.closedAt).toLocaleString("ru-RU", {
                                         dateStyle: "short",
@@ -202,9 +197,9 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                                 </span>
                             )}
                         </div>
-                        <p className='mt-1 whitespace-pre-wrap text-night_green/85'>
+                        <p className='mt-1 whitespace-pre-wrap text-neutral-700'>
                             {task.result || (
-                                <span className='italic text-night_green/55'>
+                                <span className='italic text-neutral-400'>
                                     Комментарий не оставлен
                                 </span>
                             )}
@@ -215,17 +210,17 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                 {!readOnly && (
                     <>
                         <div>
-                            <label className='mb-1 block text-sm text-gray-700'>
+                            <label className='mb-1.5 block text-sm text-neutral-600'>
                                 Результат
                             </label>
                             <div className='flex gap-2'>
                                 <button
                                     type='button'
                                     onClick={() => setStatus("DONE")}
-                                    className={`flex-1 rounded-lg border px-3 py-2 text-sm ${
+                                    className={`flex-1 rounded-xl border px-3 py-2 text-sm transition-colors ${
                                         status === "DONE"
-                                            ? "border-green-500 bg-green-50 text-green-800"
-                                            : "border-brand_soft/60 text-gray-700 hover:bg-brand_soft/15"
+                                            ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                                            : "border-line text-neutral-600 hover:bg-surface_muted"
                                     }`}
                                 >
                                     Выполнена
@@ -233,10 +228,10 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                                 <button
                                     type='button'
                                     onClick={() => setStatus("FAILED")}
-                                    className={`flex-1 rounded-lg border px-3 py-2 text-sm ${
+                                    className={`flex-1 rounded-xl border px-3 py-2 text-sm transition-colors ${
                                         status === "FAILED"
-                                            ? "border-red-500 bg-red-50 text-red-800"
-                                            : "border-brand_soft/60 text-gray-700 hover:bg-brand_soft/15"
+                                            ? "border-red-500 bg-red-50 text-red-700"
+                                            : "border-line text-neutral-600 hover:bg-surface_muted"
                                     }`}
                                 >
                                     Не выполнена
@@ -245,7 +240,7 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                         </div>
 
                         <div>
-                            <label className='mb-1 block text-sm text-gray-700'>
+                            <label className='mb-1.5 block text-sm text-neutral-600'>
                                 Комментарий{" "}
                                 {status === "FAILED" && (
                                     <span className='text-red-600'>*</span>
@@ -261,7 +256,7 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                                         ? "Почему не получилось"
                                         : "Что сделали (опц.)"
                                 }
-                                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                             />
                         </div>
                     </>
@@ -270,21 +265,13 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
                 {error && <p className='text-sm text-red-600'>{error}</p>}
 
                 <div className='flex justify-end gap-2'>
-                    <button
-                        type='button'
-                        onClick={onClose}
-                        className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
-                    >
+                    <Button type='button' variant='secondary' onClick={onClose}>
                         {readOnly ? "Закрыть" : "Отмена"}
-                    </button>
+                    </Button>
                     {!readOnly && (
-                        <button
-                            type='submit'
-                            disabled={loading}
-                            className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand_main/90 disabled:opacity-60'
-                        >
-                            {loading ? "Закрываем..." : "Закрыть задачу"}
-                        </button>
+                        <Button type='submit' loading={loading}>
+                            Закрыть задачу
+                        </Button>
                     )}
                 </div>
             </form>
@@ -295,8 +282,8 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
 function Row({ label, value }) {
     return (
         <div>
-            <dt className='text-xs uppercase text-gray-500'>{label}</dt>
-            <dd className='mt-0.5 text-gray-800'>{value}</dd>
+            <dt className='text-xs uppercase text-neutral-400'>{label}</dt>
+            <dd className='mt-0.5 text-neutral-800'>{value}</dd>
         </div>
     )
 }

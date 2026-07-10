@@ -8,6 +8,7 @@ import {
 import { TaskTypeBadge } from "./TaskTypeIcon"
 import TaskForm from "./TaskForm"
 import TaskCloseModal from "./TaskCloseModal"
+import { Badge, Button } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -81,7 +82,7 @@ export default function RelatedTasksSection({
     }
 
     const Wrapper = bare ? "div" : "section"
-    const wrapperCls = bare ? "" : "rounded-xl border border-brand_soft/40 bg-white/70 p-5"
+    const wrapperCls = bare ? "" : "rounded-2xl border border-line bg-white p-6 shadow-sm"
 
     return (
         <Wrapper className={wrapperCls}>
@@ -89,25 +90,19 @@ export default function RelatedTasksSection({
                 {bare ? (
                     <span />
                 ) : (
-                    <h2 className='text-sm font-semibold uppercase tracking-wide text-night_green/70'>
-                        Задачи
-                    </h2>
+                    <h2 className='text-sm font-semibold text-neutral-900'>Задачи</h2>
                 )}
                 {!creating && (
-                    <button
-                        type='button'
-                        onClick={() => setCreating(true)}
-                        className='rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
-                    >
+                    <Button type='button' size='sm' onClick={() => setCreating(true)}>
                         + Задача
-                    </button>
+                    </Button>
                 )}
             </div>
 
             {error && <p className='text-sm text-red-600'>{error}</p>}
 
             {creating && (
-                <div className='mb-4 rounded-lg border border-dashed border-primary_green/40 p-4'>
+                <div className='mb-4 rounded-xl border border-dashed border-brand_main/40 bg-surface_muted p-4'>
                     <TaskForm
                         compact
                         fixedRelation={{ kind: relationKind, id: relationId }}
@@ -121,9 +116,9 @@ export default function RelatedTasksSection({
                 </div>
             )}
 
-            {items === null && <p className='text-sm text-gray-400'>Загрузка...</p>}
+            {items === null && <p className='text-sm text-neutral-400'>Загрузка...</p>}
             {items !== null && items.filter(t => t.status !== "DONE").length === 0 && (
-                <p className='text-sm text-gray-400'>Активных задач нет.</p>
+                <p className='text-sm text-neutral-400'>Активных задач нет.</p>
             )}
 
             <ul className='space-y-2'>
@@ -134,31 +129,29 @@ export default function RelatedTasksSection({
                             <li
                                 key={t.id}
                                 onClick={() => setClosing(t)}
-                                className='cursor-pointer rounded-lg border border-brand_soft/30 p-3 text-sm hover:bg-brand_soft/15'
+                                className='cursor-pointer rounded-xl border border-line p-3 text-sm transition-colors hover:bg-surface_muted'
                                 title='Открыть задачу'
                             >
                                 <div className='flex flex-wrap items-center gap-2'>
                                     <TaskTypeBadge type={t.type} />
-                                    <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${TASK_STATUS_COLORS[t.status]}`}
-                                    >
+                                    <Badge className={TASK_STATUS_COLORS[t.status]}>
                                         {TASK_STATUS_LABELS[t.status]}
-                                    </span>
-                                    <span className='text-xs text-gray-500'>
+                                    </Badge>
+                                    <span className='text-xs text-neutral-500'>
                                         {fmtRange(t)}
                                     </span>
                                 </div>
-                                <p className='mt-1 font-medium text-night_green'>{t.title}</p>
+                                <p className='mt-1 font-medium text-neutral-900'>{t.title}</p>
                                 {t.description && (
-                                    <p className='mt-0.5 text-xs text-gray-600'>
+                                    <p className='mt-0.5 text-xs text-neutral-500'>
                                         {t.description}
                                     </p>
                                 )}
-                                <p className='mt-1 text-xs text-gray-500'>
+                                <p className='mt-1 text-xs text-neutral-500'>
                                     {fullName(t.assignee)}
                                 </p>
                                 {t.result && (
-                                    <p className='mt-1 text-xs italic text-gray-600'>
+                                    <p className='mt-1 text-xs italic text-neutral-500'>
                                         Результат: {t.result}
                                     </p>
                                 )}

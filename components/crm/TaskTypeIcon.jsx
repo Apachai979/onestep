@@ -40,7 +40,7 @@ export default function TaskTypeIcon({ type, className = "" }) {
 
 export function TaskTypeBadge({ type }) {
     const meta = TASK_TYPE_MAP[type]
-    if (!meta) return <span className='text-xs text-gray-500'>{type}</span>
+    if (!meta) return <span className='text-xs text-neutral-500'>{type}</span>
     return (
         <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${meta.bg}`}

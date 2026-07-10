@@ -60,9 +60,9 @@ export default async function NewDealPage({ searchParams }) {
             <CrmBackLink
                 fallback='/crm/deals'
                 fallbackLabel='Сделки'
-                className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary_green'
+                className='inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand_main'
             />
-            <h1 className='text-2xl font-semibold text-night_green'>Новая сделка</h1>
+            <h1 className='text-2xl font-semibold text-neutral-900'>Новая сделка</h1>
             {fromAuction && (
                 <div className='rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900'>
                     На основании аукциона{" "}

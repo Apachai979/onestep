@@ -67,15 +67,15 @@ export default async function ProjectPage({ params }) {
             <CrmBackLink
                 fallback='/crm/projects'
                 fallbackLabel='Проекты'
-                className='inline-flex items-center gap-1 text-xs text-night_green/55 hover:text-brand_main'
+                className='inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-brand_main'
             />
 
             <div className='flex flex-wrap items-start justify-between gap-3'>
                 <div className='min-w-0'>
-                    <p className='text-xs uppercase tracking-wider text-night_green/55'>
+                    <p className='text-xs uppercase tracking-wider text-neutral-400'>
                         Проект
                     </p>
-                    <h1 className='mt-0.5 text-xl font-semibold text-night_green sm:text-2xl'>
+                    <h1 className='mt-0.5 text-xl font-semibold text-neutral-900 sm:text-2xl'>
                         {item.internalName}
                     </h1>
                 </div>
@@ -110,7 +110,7 @@ export default async function ProjectPage({ params }) {
                         action={
                             <Link
                                 href={`/crm/projects/${item.id}/edit`}
-                                className='inline-flex items-center gap-1 rounded-md border border-brand_soft/60 bg-white px-2 py-1 text-[11px] font-medium text-night_green/75 hover:bg-brand_soft/30'
+                                className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
                             >
                                 <LuPencil className='h-3 w-3' />
                                 Редактировать
@@ -132,7 +132,7 @@ export default async function ProjectPage({ params }) {
                         <Row label='Конечный потребитель'>
                             <Link
                                 href={`/crm/counterparties/${item.endCustomer.id}`}
-                                className='text-night_green underline hover:text-brand_main'
+                                className='text-neutral-900 underline hover:text-brand_main'
                             >
                                 {item.endCustomer.name}
                             </Link>
@@ -142,7 +142,7 @@ export default async function ProjectPage({ params }) {
                         <Row label='Дистрибьютор'>
                             <Link
                                 href={`/crm/counterparties/${item.distributor.id}`}
-                                className='text-night_green underline hover:text-brand_main'
+                                className='text-neutral-900 underline hover:text-brand_main'
                             >
                                 {item.distributor.name}
                             </Link>
@@ -154,8 +154,8 @@ export default async function ProjectPage({ params }) {
                         />
                     </Section>
 
-                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-                        <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                    <section className='rounded-xl border border-line bg-white p-4'>
+                        <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                             Контактные лица
                         </h2>
                         <div className='grid gap-4 sm:grid-cols-2'>
@@ -170,9 +170,9 @@ export default async function ProjectPage({ params }) {
                         </div>
                     </section>
 
-                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+                    <section className='rounded-xl border border-line bg-white p-4'>
                         <div className='mb-2.5 flex items-center justify-between gap-3'>
-                            <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                            <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                                 Сделки по проекту ({dealsCount})
                             </h2>
                             {item.status !== "NO_NEED" && (
@@ -183,7 +183,7 @@ export default async function ProjectPage({ params }) {
                             )}
                         </div>
                         {item.deals.length === 0 ? (
-                            <p className='text-sm text-night_green/55'>
+                            <p className='text-sm text-neutral-400'>
                                 Связанных сделок пока нет. Нажмите «Создать сделку» — или
                                 привяжите существующую через поле «Проект-источник» в её
                                 форме.
@@ -196,14 +196,14 @@ export default async function ProjectPage({ params }) {
                                     <Link
                                         key={d.id}
                                         href={`/crm/deals/${d.id}`}
-                                        className='block transition hover:bg-brand_soft/15'
+                                        className='block transition hover:bg-surface_muted'
                                     >
                                         <MobileCard>
                                         <div className='flex items-start justify-between gap-2'>
-                                            <span className='min-w-0 font-medium text-night_green'>
+                                            <span className='min-w-0 font-medium text-neutral-900'>
                                                 {d.title || `Сделка с ${d.counterparty?.name || "клиентом"}`}
                                             </span>
-                                            <span className='shrink-0 rounded-full bg-brand_soft/40 px-2 py-0.5 text-xs font-medium text-night_green/80'>
+                                            <span className='shrink-0 rounded-full bg-surface_muted px-2 py-0.5 text-xs font-medium text-neutral-700'>
                                                 {DEAL_STATUS_LABELS[d.status] || d.status}
                                             </span>
                                         </div>
@@ -213,7 +213,7 @@ export default async function ProjectPage({ params }) {
                                             </CardRow>
                                             <CardRow label='Менеджер'>{fullName(d.manager)}</CardRow>
                                             <CardRow label='Сумма'>
-                                                <span className='font-medium text-gray-800'>
+                                                <span className='font-medium text-neutral-800'>
                                                     {formatMoney(d.totalAmount)}
                                                 </span>
                                             </CardRow>
@@ -223,9 +223,9 @@ export default async function ProjectPage({ params }) {
                                 ))}
                             </div>
 
-                            <div className='hidden overflow-x-auto rounded-lg border border-brand_soft/40 md:block'>
+                            <div className='hidden overflow-x-auto rounded-lg border border-line md:block'>
                                 <table className='w-full text-sm'>
-                                    <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
+                                    <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
                                         <tr>
                                             <th className='px-3 py-2'>Название</th>
                                             <th className='px-3 py-2'>Клиент</th>
@@ -238,32 +238,32 @@ export default async function ProjectPage({ params }) {
                                         {item.deals.map(d => (
                                             <tr
                                                 key={d.id}
-                                                className='border-t border-brand_soft/30 hover:bg-brand_soft/15'
+                                                className='border-t border-line hover:bg-surface_muted'
                                             >
                                                 <td className='p-0'>
                                                     <Link
                                                         href={`/crm/deals/${d.id}`}
-                                                        className='block px-3 py-2 font-medium text-night_green'
+                                                        className='block px-3 py-2 font-medium text-neutral-900'
                                                     >
                                                         {d.title || `Сделка с ${d.counterparty?.name || "клиентом"}`}
                                                     </Link>
                                                 </td>
-                                                <td className='p-0 text-night_green/75'>
+                                                <td className='p-0 text-neutral-900/75'>
                                                     <Link href={`/crm/deals/${d.id}`} className='block px-3 py-2'>
                                                         {d.counterparty?.name || "—"}
                                                     </Link>
                                                 </td>
-                                                <td className='p-0 text-night_green/75'>
+                                                <td className='p-0 text-neutral-900/75'>
                                                     <Link href={`/crm/deals/${d.id}`} className='block px-3 py-2'>
                                                         {fullName(d.manager)}
                                                     </Link>
                                                 </td>
-                                                <td className='p-0 text-night_green/75'>
+                                                <td className='p-0 text-neutral-900/75'>
                                                     <Link href={`/crm/deals/${d.id}`} className='block px-3 py-2'>
                                                         {DEAL_STATUS_LABELS[d.status] || d.status}
                                                     </Link>
                                                 </td>
-                                                <td className='p-0 text-night_green/75'>
+                                                <td className='p-0 text-neutral-900/75'>
                                                     <Link href={`/crm/deals/${d.id}`} className='block px-3 py-2 text-right'>
                                                         {formatMoney(d.totalAmount)}
                                                     </Link>
@@ -277,9 +277,9 @@ export default async function ProjectPage({ params }) {
                         )}
                     </section>
 
-                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+                    <section className='rounded-xl border border-line bg-white p-4'>
                         <div className='mb-2.5 flex items-center justify-between gap-3'>
-                            <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                            <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                                 Аукционы по проекту ({item.auctions.length})
                             </h2>
                             {item.status !== "NO_NEED" && (
@@ -290,7 +290,7 @@ export default async function ProjectPage({ params }) {
                             )}
                         </div>
                         {item.auctions.length === 0 ? (
-                            <p className='text-sm text-night_green/55'>
+                            <p className='text-sm text-neutral-400'>
                                 Аукционов пока нет. Нажмите «Создать аукцион» — заказчик и
                                 поставщик подставятся из проекта.
                             </p>
@@ -302,11 +302,11 @@ export default async function ProjectPage({ params }) {
                                     <Link
                                         key={a.id}
                                         href={`/crm/auctions/${a.id}`}
-                                        className='block transition hover:bg-brand_soft/15'
+                                        className='block transition hover:bg-surface_muted'
                                     >
                                         <MobileCard>
                                         <div className='flex items-start justify-between gap-2'>
-                                            <span className='min-w-0 font-medium text-night_green'>
+                                            <span className='min-w-0 font-medium text-neutral-900'>
                                                 {a.purchaseNumber
                                                     ? `Закупка № ${a.purchaseNumber}`
                                                     : "Аукцион"}
@@ -319,7 +319,7 @@ export default async function ProjectPage({ params }) {
                                         </div>
                                         <div className='mt-2 space-y-1'>
                                             <CardRow label='НМЦК'>
-                                                <span className='font-medium text-gray-800'>
+                                                <span className='font-medium text-neutral-800'>
                                                     {formatMoney(a.nmck)}
                                                 </span>
                                             </CardRow>
@@ -333,9 +333,9 @@ export default async function ProjectPage({ params }) {
                                 ))}
                             </div>
 
-                            <div className='hidden overflow-x-auto rounded-lg border border-brand_soft/40 md:block'>
+                            <div className='hidden overflow-x-auto rounded-lg border border-line md:block'>
                                 <table className='w-full text-sm'>
-                                    <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
+                                    <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
                                         <tr>
                                             <th className='px-3 py-2'>Закупка</th>
                                             <th className='px-3 py-2'>Статус</th>
@@ -348,12 +348,12 @@ export default async function ProjectPage({ params }) {
                                         {item.auctions.map(a => (
                                             <tr
                                                 key={a.id}
-                                                className='border-t border-brand_soft/30 hover:bg-brand_soft/15'
+                                                className='border-t border-line hover:bg-surface_muted'
                                             >
                                                 <td className='p-0'>
                                                     <Link
                                                         href={`/crm/auctions/${a.id}`}
-                                                        className='block px-3 py-2 font-medium text-night_green'
+                                                        className='block px-3 py-2 font-medium text-neutral-900'
                                                     >
                                                         {a.purchaseNumber
                                                             ? `№ ${a.purchaseNumber}`
@@ -369,17 +369,17 @@ export default async function ProjectPage({ params }) {
                                                         </span>
                                                     </Link>
                                                 </td>
-                                                <td className='p-0 text-night_green/75'>
+                                                <td className='p-0 text-neutral-900/75'>
                                                     <Link href={`/crm/auctions/${a.id}`} className='block px-3 py-2'>
                                                         <LocalDateTime value={a.auctionAt} />
                                                     </Link>
                                                 </td>
-                                                <td className='p-0 text-night_green/75'>
+                                                <td className='p-0 text-neutral-900/75'>
                                                     <Link href={`/crm/auctions/${a.id}`} className='block px-3 py-2'>
                                                         {fullName(a.manager)}
                                                     </Link>
                                                 </td>
-                                                <td className='p-0 text-night_green/75'>
+                                                <td className='p-0 text-neutral-900/75'>
                                                     <Link href={`/crm/auctions/${a.id}`} className='block px-3 py-2 text-right'>
                                                         {formatMoney(a.nmck)}
                                                     </Link>
@@ -423,16 +423,16 @@ function SectionCreateButton({ href, label }) {
 
 function Section({ title, footer, action, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+        <section className='rounded-xl border border-line bg-white p-4'>
             <div className='mb-2.5 flex items-center justify-between gap-3'>
-                <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                     {title}
                 </h2>
                 {action && <div className='shrink-0'>{action}</div>}
             </div>
             <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>{children}</dl>
             {footer && (
-                <p className='mt-3 border-t border-brand_soft/30 pt-2 text-[11px] text-night_green/50'>
+                <p className='mt-3 border-t border-line pt-2 text-[11px] text-neutral-400'>
                     {footer}
                 </p>
             )}
@@ -443,10 +443,10 @@ function Section({ title, footer, action, children }) {
 function Row({ label, value, children, className = "" }) {
     return (
         <div className={className}>
-            <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
+            <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>
                 {label}
             </dt>
-            <dd className='mt-0.5 text-sm text-night_green'>{children ?? value ?? "—"}</dd>
+            <dd className='mt-0.5 text-sm text-neutral-900'>{children ?? value ?? "—"}</dd>
         </div>
     )
 }
@@ -454,11 +454,11 @@ function Row({ label, value, children, className = "" }) {
 function ContactGroup({ title, contacts }) {
     return (
         <div>
-            <p className='mb-2 text-[10px] uppercase tracking-wider text-night_green/55'>
+            <p className='mb-2 text-[10px] uppercase tracking-wider text-neutral-400'>
                 {title}
             </p>
             {contacts.length === 0 ? (
-                <p className='text-sm text-night_green/55'>Не выбраны.</p>
+                <p className='text-sm text-neutral-400'>Не выбраны.</p>
             ) : (
                 <ul className='space-y-1.5'>
                     {contacts.map(c => {
@@ -470,10 +470,10 @@ function ContactGroup({ title, contacts }) {
                         return (
                             <li
                                 key={c.id}
-                                className='rounded-md border border-brand_soft/30 bg-white/60 px-3 py-2 text-sm'
+                                className='rounded-md border border-line bg-surface_muted px-3 py-2 text-sm'
                             >
-                                <p className='font-medium text-night_green'>{name}</p>
-                                <p className='text-xs text-night_green/65'>
+                                <p className='font-medium text-neutral-900'>{name}</p>
+                                <p className='text-xs text-neutral-500'>
                                     {[c.position, c.phone, c.email]
                                         .filter(Boolean)
                                         .join(" · ") || "—"}

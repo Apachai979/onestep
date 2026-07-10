@@ -10,7 +10,7 @@ export default function Spinner({ size = "md" }) {
         <span
             role='status'
             aria-label='Загрузка'
-            className={`inline-block ${cls} animate-spin rounded-full border-brand_soft/60 border-t-brand_main`}
+            className={`inline-block ${cls} animate-spin rounded-full border-neutral-200 border-t-brand_main`}
         />
     )
 }

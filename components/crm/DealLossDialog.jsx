@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
 import { DEAL_LOSS_REASONS, DEAL_LOSS_REASON_LABELS } from "@/lib/crm/deal"
+import { Button } from "@/components/crm/ui"
 
 // Диалог обязательной причины при проигрыше сделки/проекта.
 // onConfirm({ lossReason, lossComment }) вызывается только с выбранной причиной.
@@ -42,18 +43,18 @@ export default function DealLossDialog({
 
     return (
         <div
-            className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4'
+            className='fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/40 p-4 backdrop-blur-sm animate-apparition'
             onClick={onCancel}
         >
             <div
                 onClick={e => e.stopPropagation()}
-                className='w-full max-w-md rounded-xl bg-white p-5 shadow-2xl'
+                className='w-full max-w-md rounded-2xl border border-line bg-white p-6 shadow-2xl shadow-neutral-900/20 animate-emersion'
             >
-                <h2 className='mb-1 text-lg font-semibold text-night_green'>
+                <h2 className='mb-1 text-lg font-semibold text-neutral-900'>
                     {title}
                 </h2>
                 {dealTitle && (
-                    <p className='mb-3 truncate text-sm text-night_green/60'>{dealTitle}</p>
+                    <p className='mb-3 truncate text-sm text-neutral-500'>{dealTitle}</p>
                 )}
 
                 <form onSubmit={handleSubmit} className='space-y-3'>
@@ -62,10 +63,10 @@ export default function DealLossDialog({
                         {reasons.map(r => (
                             <label
                                 key={r}
-                                className={`flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-sm transition ${
+                                className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2 text-sm transition-colors ${
                                     reason === r
-                                        ? "border-brand_main bg-brand_main/5 text-night_green"
-                                        : "border-brand_soft/50 text-gray-700 hover:bg-brand_soft/15"
+                                        ? "border-brand_main bg-brand_main/5 text-neutral-900"
+                                        : "border-line text-neutral-600 hover:bg-surface_muted"
                                 }`}
                             >
                                 <input
@@ -77,7 +78,7 @@ export default function DealLossDialog({
                                         setReason(r)
                                         setError("")
                                     }}
-                                    className='accent-primary_green'
+                                    className='accent-brand_main'
                                 />
                                 {labels[r]}
                             </label>
@@ -86,7 +87,7 @@ export default function DealLossDialog({
                     )}
 
                     <div>
-                        <label className='mb-1 block text-xs text-gray-600'>
+                        <label className='mb-1.5 block text-xs font-medium text-neutral-500'>
                             {commentLabel ||
                                 (commentRequired ? "Причина" : "Комментарий (необязательно)")}
                         </label>
@@ -98,24 +99,20 @@ export default function DealLossDialog({
                                 setError("")
                             }}
                             placeholder={commentPlaceholder}
-                            className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                            className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                         />
                     </div>
 
                     {error && <p className='text-sm text-red-600'>{error}</p>}
 
                     <div className='flex justify-end gap-2'>
-                        <button
-                            type='button'
-                            onClick={onCancel}
-                            className='rounded-lg border border-brand_soft/60 px-4 py-2 text-sm text-gray-700 hover:bg-brand_soft/30'
-                        >
+                        <Button type='button' variant='secondary' onClick={onCancel}>
                             Отмена
-                        </button>
+                        </Button>
                         <button
                             type='submit'
                             disabled={saving}
-                            className={`rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition disabled:opacity-60 ${confirmClass}`}
+                            className={`inline-flex h-10 items-center rounded-xl px-4 text-sm font-semibold text-white shadow-sm transition-all duration-200 disabled:opacity-60 ${confirmClass}`}
                         >
                             {saving ? "Сохраняем..." : confirmLabel}
                         </button>

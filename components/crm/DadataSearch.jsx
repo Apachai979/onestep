@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react"
+import { Button } from "@/components/crm/ui"
 
 const STATE_LABELS = {
     ACTIVE: "Действующая",
@@ -17,14 +18,14 @@ const CONFIG = {
         endpoint: "/api/crm/dadata/find-party",
         renderItem: party => (
             <>
-                <p className='font-medium text-night_green'>{party.name}</p>
-                <p className='mt-0.5 text-xs text-gray-600'>
+                <p className='font-medium text-neutral-900'>{party.name}</p>
+                <p className='mt-0.5 text-xs text-neutral-500'>
                     ИНН {party.inn || "—"}
                     {party.kpp ? ` · КПП ${party.kpp}` : ""}
                     {party.ogrn ? ` · ОГРН ${party.ogrn}` : ""}
                 </p>
                 {party.address && (
-                    <p className='mt-0.5 text-xs text-gray-600'>{party.address}</p>
+                    <p className='mt-0.5 text-xs text-neutral-500'>{party.address}</p>
                 )}
             </>
         ),
@@ -36,13 +37,13 @@ const CONFIG = {
         endpoint: "/api/crm/dadata/find-bank",
         renderItem: bank => (
             <>
-                <p className='font-medium text-night_green'>{bank.name}</p>
-                <p className='mt-0.5 text-xs text-gray-600'>
+                <p className='font-medium text-neutral-900'>{bank.name}</p>
+                <p className='mt-0.5 text-xs text-neutral-500'>
                     БИК {bank.bik || "—"}
                     {bank.bankCorrAccount ? ` · корсчёт ${bank.bankCorrAccount}` : ""}
                 </p>
                 {bank.address && (
-                    <p className='mt-0.5 text-xs text-gray-600'>{bank.address}</p>
+                    <p className='mt-0.5 text-xs text-neutral-500'>{bank.address}</p>
                 )}
             </>
         ),
@@ -93,33 +94,28 @@ export default function DadataSearch({ target = "party", onPick }) {
     }
 
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
-            <h2 className='mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500'>
+        <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
+            <h2 className='mb-2 text-sm font-semibold text-neutral-900'>
                 {cfg.title}
             </h2>
-            <p className='mb-3 text-xs text-gray-500'>{cfg.hint}</p>
+            <p className='mb-3 text-xs text-neutral-500'>{cfg.hint}</p>
             <div className='flex gap-2'>
                 <input
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     onKeyDown={onKeyDown}
                     placeholder={cfg.placeholder}
-                    className='flex-1 rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                    className='h-10 flex-1 rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                 />
-                <button
-                    type='button'
-                    onClick={runSearch}
-                    disabled={loading || !query.trim()}
-                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
-                >
-                    {loading ? "Ищем..." : "Найти"}
-                </button>
+                <Button type='button' onClick={runSearch} loading={loading} disabled={!query.trim()}>
+                    Найти
+                </Button>
             </div>
 
             {error && <p className='mt-3 text-sm text-red-600'>{error}</p>}
 
             {items && items.length === 0 && !error && (
-                <p className='mt-3 text-sm text-gray-400'>Ничего не найдено.</p>
+                <p className='mt-3 text-sm text-neutral-400'>Ничего не найдено.</p>
             )}
 
             {items && items.length > 0 && (
@@ -127,7 +123,7 @@ export default function DadataSearch({ target = "party", onPick }) {
                     {items.map((it, idx) => (
                         <li
                             key={`${it.inn || it.bik || idx}`}
-                            className='rounded-lg border border-brand_soft/30 p-3 text-sm'
+                            className='rounded-xl border border-line p-3 text-sm'
                         >
                             <div className='flex flex-wrap items-start justify-between gap-2'>
                                 <div className='flex-1'>
@@ -138,13 +134,9 @@ export default function DadataSearch({ target = "party", onPick }) {
                                         </p>
                                     )}
                                 </div>
-                                <button
-                                    type='button'
-                                    onClick={() => pick(it)}
-                                    className='rounded-md bg-brand_main px-3 py-1 text-xs font-semibold text-white hover:bg-brand_main/90'
-                                >
+                                <Button type='button' size='sm' onClick={() => pick(it)}>
                                     Подставить
-                                </button>
+                                </Button>
                             </div>
                         </li>
                     ))}

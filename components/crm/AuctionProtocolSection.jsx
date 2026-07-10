@@ -59,16 +59,16 @@ export default function AuctionProtocolSection({ auctionId, protocol }) {
     }
 
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:p-5'>
-            <div className='mb-3 flex items-center justify-between gap-2'>
-                <h2 className='text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+        <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
+            <div className='mb-4 flex items-center justify-between gap-2'>
+                <h2 className='text-sm font-semibold text-neutral-900'>
                     Итоговый протокол
                 </h2>
                 <button
                     type='button'
                     onClick={() => inputRef.current?.click()}
                     disabled={uploading}
-                    className='inline-flex items-center gap-1.5 rounded-lg border border-brand_soft/60 bg-white px-3 py-1.5 text-xs font-medium text-night_green/80 hover:bg-brand_soft/30 disabled:opacity-60'
+                    className='inline-flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:bg-surface_muted disabled:opacity-60'
                 >
                     <LuUpload className='h-3.5 w-3.5' />
                     {uploading ? "Загружаем..." : protocol ? "Заменить" : "Прикрепить файл"}
@@ -85,27 +85,27 @@ export default function AuctionProtocolSection({ auctionId, protocol }) {
             </div>
 
             {protocol ? (
-                <div className='flex items-center justify-between gap-3 rounded-lg border border-brand_soft/30 bg-white/60 px-3 py-2'>
+                <div className='flex items-center justify-between gap-3 rounded-xl border border-line bg-surface_muted px-3 py-2'>
                     <a
                         href={`/api/crm/attachments/${protocol.id}/download`}
                         className='flex min-w-0 items-center gap-2 text-sm font-medium text-brand_main hover:underline'
                     >
                         <LuFileText className='h-4 w-4 shrink-0' />
                         <span className='truncate'>{protocol.fileName}</span>
-                        <span className='shrink-0 text-xs font-normal text-night_green/50'>
+                        <span className='shrink-0 text-xs font-normal text-neutral-400'>
                             {formatBytes(protocol.size)}
                         </span>
                     </a>
                     <button
                         type='button'
                         onClick={remove}
-                        className='shrink-0 rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50'
+                        className='shrink-0 rounded-lg border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50'
                     >
                         Открепить
                     </button>
                 </div>
             ) : (
-                <p className='text-sm text-night_green/55'>
+                <p className='text-sm text-neutral-500'>
                     Протокол ещё не прикреплён. После подведения итогов прикрепите итоговый
                     протокол аукциона.
                 </p>

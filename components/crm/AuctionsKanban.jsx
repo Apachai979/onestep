@@ -7,8 +7,9 @@ import {
     AUCTION_STATUS_LABELS,
     auctionDisplayTitle,
 } from "@/lib/crm/auction"
+import { LuSearch } from "react-icons/lu"
 import { formatMoney } from "@/lib/crm/format"
-import { useToast } from "@/components/crm/ui"
+import { Badge, Field, Input, useToast } from "@/components/crm/ui"
 import DealLossDialog from "./DealLossDialog"
 
 // Приглушённая акцентная полоска сверху колонки — в стиле канбана сделок.
@@ -141,15 +142,14 @@ export default function AuctionsKanban() {
     return (
         <div className='space-y-4'>
             <div className='flex flex-wrap items-end gap-3'>
-                <div className='min-w-[240px] flex-1'>
-                    <label className='mb-1 block text-xs text-gray-600'>Поиск</label>
-                    <input
+                <Field label='Поиск' className='min-w-[240px] flex-1'>
+                    <Input
+                        icon={LuSearch}
                         value={q}
                         onChange={e => setQ(e.target.value)}
                         placeholder='Номер закупки, заказчик или поставщик'
-                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     />
-                </div>
+                </Field>
             </div>
 
             {error && <p className='text-sm text-red-600'>{error}</p>}
@@ -164,28 +164,26 @@ export default function AuctionsKanban() {
                             onDragOver={onDragOver(status)}
                             onDragLeave={() => setDragOver(null)}
                             onDrop={onDrop(status)}
-                            className={`flex w-[290px] shrink-0 flex-col overflow-hidden rounded-xl border bg-gray-50 ${
+                            className={`flex w-[290px] shrink-0 flex-col overflow-hidden rounded-2xl border bg-surface_muted transition-shadow ${
                                 dragOver === status
-                                    ? "border-primary_green ring-2 ring-primary_green/30"
-                                    : "border-gray-200"
+                                    ? "border-brand_main ring-2 ring-brand_main/25"
+                                    : "border-line"
                             }`}
                         >
                             <div className={`h-0.5 w-full ${COLUMN_ACCENT[status]}`} />
                             <div className='flex flex-1 flex-col p-3'>
                                 <div className='mb-1 flex items-center gap-2'>
-                                    <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${AUCTION_STATUS_COLORS[status]}`}
-                                    >
+                                    <Badge className={AUCTION_STATUS_COLORS[status]}>
                                         {AUCTION_STATUS_LABELS[status]}
-                                    </span>
-                                    <span className='text-xs text-gray-500'>{list.length}</span>
+                                    </Badge>
+                                    <span className='text-xs text-neutral-400'>{list.length}</span>
                                 </div>
-                                <p className='mb-3 text-xs text-gray-500'>
+                                <p className='mb-3 text-xs text-neutral-500'>
                                     Итого НМЦК: {formatMoney(sum)}
                                 </p>
                                 <div className='flex flex-col gap-2'>
                                     {auctions === null && (
-                                        <p className='text-xs text-gray-400'>Загрузка...</p>
+                                        <p className='text-xs text-neutral-400'>Загрузка...</p>
                                     )}
                                     {list.map(a => (
                                         <AuctionCard
@@ -197,7 +195,7 @@ export default function AuctionsKanban() {
                                         />
                                     ))}
                                     {auctions !== null && list.length === 0 && (
-                                        <p className='text-xs italic text-gray-400'>Пусто</p>
+                                        <p className='text-xs italic text-neutral-400'>Пусто</p>
                                     )}
                                 </div>
                             </div>
@@ -233,19 +231,19 @@ function AuctionCard({ auction, dragging, onDragStart, onDragEnd }) {
             draggable
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
-            className={`block cursor-grab rounded-lg border bg-white p-3 text-sm shadow-sm transition hover:border-primary_green active:cursor-grabbing ${
-                dragging ? "opacity-50" : "border-gray-200"
+            className={`block cursor-grab rounded-xl border bg-white p-3 text-sm shadow-sm transition-all duration-200 hover:border-line_strong hover:shadow-md active:cursor-grabbing ${
+                dragging ? "opacity-50" : "border-line"
             }`}
         >
-            <p className='font-medium leading-snug text-night_green'>
+            <p className='font-medium leading-snug text-neutral-900'>
                 {auctionDisplayTitle(auction)}
             </p>
-            <p className='mt-1 truncate text-xs text-gray-600'>
+            <p className='mt-1 truncate text-xs text-neutral-500'>
                 {auction.customer?.name || "Заказчик не указан"}
             </p>
             <div className='mt-2 flex items-center justify-between gap-2 text-xs'>
-                <span className='truncate text-gray-500'>{managerName(auction.manager)}</span>
-                <span className='shrink-0 font-semibold text-gray-700'>
+                <span className='truncate text-neutral-500'>{managerName(auction.manager)}</span>
+                <span className='shrink-0 font-semibold text-neutral-700'>
                     {formatMoney(auction.nmck)}
                 </span>
             </div>

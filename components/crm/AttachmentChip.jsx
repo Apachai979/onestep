@@ -26,8 +26,8 @@ const TONES = {
     ppt: "bg-orange-50 text-orange-700",
     image: "bg-violet-50 text-violet-700",
     zip: "bg-amber-50 text-amber-800",
-    text: "bg-gray-50 text-gray-700",
-    file: "bg-gray-50 text-gray-700",
+    text: "bg-surface_muted text-neutral-700",
+    file: "bg-surface_muted text-neutral-700",
 }
 
 export default function AttachmentChip({ attachment, onRemove, compact = false }) {
@@ -39,7 +39,7 @@ export default function AttachmentChip({ attachment, onRemove, compact = false }
 
     return (
         <div
-            className={`group inline-flex max-w-full items-center gap-2 rounded-lg border border-brand_soft/40 bg-white/80 ${
+            className={`group inline-flex max-w-full items-center gap-2 rounded-lg border border-line bg-white/80 ${
                 compact ? "px-2 py-1" : "px-2.5 py-1.5"
             } text-xs shadow-sm`}
         >
@@ -54,11 +54,11 @@ export default function AttachmentChip({ attachment, onRemove, compact = false }
                 rel='noopener noreferrer'
                 title={attachment.fileName}
                 onClick={e => e.stopPropagation()}
-                className='min-w-0 flex-1 truncate text-night_green hover:text-brand_main'
+                className='min-w-0 flex-1 truncate text-neutral-900 hover:text-brand_main'
             >
                 {attachment.fileName}
             </a>
-            <span className='shrink-0 text-night_green/55'>{formatBytes(attachment.size)}</span>
+            <span className='shrink-0 text-neutral-400'>{formatBytes(attachment.size)}</span>
             {onRemove && (
                 <button
                     type='button'
@@ -66,7 +66,7 @@ export default function AttachmentChip({ attachment, onRemove, compact = false }
                         e.stopPropagation()
                         onRemove(attachment.id)
                     }}
-                    className='inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-night_green/40 hover:bg-red-50 hover:text-red-600'
+                    className='inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-neutral-400 hover:bg-red-50 hover:text-red-600'
                     title='Удалить'
                 >
                     <LuX className='h-3 w-3' />

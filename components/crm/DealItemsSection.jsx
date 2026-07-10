@@ -196,9 +196,9 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
     const formOpen = showAdd || editingId !== null
 
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
+        <section className='rounded-xl border border-line bg-white p-5'>
             <div className='mb-4 flex items-center justify-between'>
-                <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
+                <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
                     Товарные позиции
                 </h2>
                 {!formOpen && (
@@ -215,23 +215,23 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
             {/* Мобильные карточки */}
             <div className='space-y-3 md:hidden'>
                 {items.length === 0 && (
-                    <p className='rounded-lg border border-brand_soft/30 px-3 py-4 text-center text-sm text-gray-400'>
+                    <p className='rounded-lg border border-line px-3 py-4 text-center text-sm text-neutral-400'>
                         Позиций пока нет
                     </p>
                 )}
                 {items.map(it => (
                     <MobileCard key={it.id}>
                         <div className='flex items-start justify-between gap-2'>
-                            <span className='font-medium text-night_green'>
+                            <span className='font-medium text-neutral-900'>
                                 {it.sku || "—"}
                             </span>
                             {it.productId && (
-                                <span className='shrink-0 rounded-full bg-light_green/30 px-2 py-0.5 text-[10px] font-medium text-night_green'>
+                                <span className='shrink-0 rounded-full bg-brand_main/10 px-2 py-0.5 text-[10px] font-medium text-neutral-900'>
                                     из справочника
                                 </span>
                             )}
                         </div>
-                        <p className='mt-1 text-sm text-gray-800'>{it.name}</p>
+                        <p className='mt-1 text-sm text-neutral-800'>{it.name}</p>
                         <div className='mt-2 space-y-1'>
                             <CardRow label='Кол-во'>{toFormValue(it.quantity)}</CardRow>
                             <CardRow label='Сумма'>{formatMoney(it.amount)}</CardRow>
@@ -240,7 +240,7 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
                             <button
                                 type='button'
                                 onClick={() => startEdit(it)}
-                                className='rounded-md border border-brand_soft/60 px-3 py-1.5 text-xs text-gray-700 hover:bg-brand_soft/30'
+                                className='rounded-md border border-line px-3 py-1.5 text-xs text-neutral-700 hover:bg-surface_muted'
                             >
                                 Изменить
                             </button>
@@ -256,9 +256,9 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
                 ))}
             </div>
 
-            <div className='hidden overflow-x-auto rounded-lg border border-brand_soft/30 md:block'>
+            <div className='hidden overflow-x-auto rounded-lg border border-line md:block'>
                 <table className='w-full text-sm'>
-                    <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
+                    <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
                         <tr>
                             <th className='px-3 py-2'>Артикул</th>
                             <th className='px-3 py-2'>Наименование</th>
@@ -270,26 +270,26 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
                     <tbody>
                         {items.length === 0 && (
                             <tr>
-                                <td colSpan={5} className='px-3 py-4 text-center text-gray-400'>
+                                <td colSpan={5} className='px-3 py-4 text-center text-neutral-400'>
                                     Позиций пока нет
                                 </td>
                             </tr>
                         )}
                         {items.map(it => (
-                            <tr key={it.id} className='border-t border-brand_soft/30'>
-                                <td className='px-3 py-2 text-gray-700'>
+                            <tr key={it.id} className='border-t border-line'>
+                                <td className='px-3 py-2 text-neutral-700'>
                                     {it.sku || "—"}
                                     {it.productId && (
-                                        <span className='ml-2 rounded-full bg-light_green/30 px-2 py-0.5 text-[10px] font-medium text-night_green'>
+                                        <span className='ml-2 rounded-full bg-brand_main/10 px-2 py-0.5 text-[10px] font-medium text-neutral-900'>
                                             из справочника
                                         </span>
                                     )}
                                 </td>
-                                <td className='px-3 py-2 text-gray-800'>{it.name}</td>
-                                <td className='px-3 py-2 text-right text-gray-700'>
+                                <td className='px-3 py-2 text-neutral-800'>{it.name}</td>
+                                <td className='px-3 py-2 text-right text-neutral-700'>
                                     {toFormValue(it.quantity)}
                                 </td>
-                                <td className='px-3 py-2 text-right text-gray-700'>
+                                <td className='px-3 py-2 text-right text-neutral-700'>
                                     {formatMoney(it.amount)}
                                 </td>
                                 <td className='px-3 py-2 text-right'>
@@ -297,7 +297,7 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
                                         <button
                                             type='button'
                                             onClick={() => startEdit(it)}
-                                            className='rounded-md border border-brand_soft/60 px-2 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
+                                            className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
                                         >
                                             Изменить
                                         </button>
@@ -319,16 +319,16 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
             {formOpen && (
                 <form
                     onSubmit={handleSubmit}
-                    className='mt-4 space-y-3 rounded-lg border border-dashed border-primary_green/40 p-4'
+                    className='mt-4 space-y-3 rounded-lg border border-dashed border-brand_main/40 p-4'
                 >
                     <div>
-                        <label className='mb-1 block text-xs text-gray-600'>
+                        <label className='mb-1 block text-xs text-neutral-500'>
                             Выбрать из справочника
                         </label>
                         <select
                             value={form.productId}
                             onChange={e => pickProduct(e.target.value)}
-                            className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                            className='w-full rounded-lg border border-line bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                         >
                             <option value=''>— Свободный ввод —</option>
                             {products.map(p => {
@@ -396,7 +396,7 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
                         <button
                             type='button'
                             onClick={cancel}
-                            className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
+                            className='rounded-lg border border-line px-3 py-1.5 text-sm text-neutral-700 hover:bg-surface_muted'
                         >
                             Отмена
                         </button>
@@ -417,10 +417,10 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
 function Field({ label, className = "", ...props }) {
     return (
         <div className={className}>
-            <label className='mb-1 block text-xs text-gray-600'>{label}</label>
+            <label className='mb-1 block text-xs text-neutral-500'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                className='w-full rounded-lg border border-line px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
             />
         </div>
     )

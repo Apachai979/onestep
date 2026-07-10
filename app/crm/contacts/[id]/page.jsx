@@ -32,11 +32,11 @@ export default async function ContactPage({ params }) {
             <CrmBackLink
                 fallback='/crm/contacts'
                 fallbackLabel='Контакты'
-                className='inline-flex items-center gap-1 text-xs text-night_green/55 hover:text-brand_main'
+                className='inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-brand_main'
             />
             <div className='min-w-0'>
-                <p className='text-xs uppercase tracking-wider text-night_green/55'>Контакт</p>
-                <h1 className='mt-0.5 text-xl font-semibold text-night_green sm:text-2xl'>
+                <p className='text-xs uppercase tracking-wider text-neutral-400'>Контакт</p>
+                <h1 className='mt-0.5 text-xl font-semibold text-neutral-900 sm:text-2xl'>
                     {title}
                 </h1>
             </div>

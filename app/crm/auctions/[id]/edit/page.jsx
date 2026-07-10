@@ -38,9 +38,9 @@ export default async function EditAuctionPage({ params }) {
             <CrmBackLink
                 fallback={`/crm/auctions/${item.id}`}
                 fallbackLabel='К аукциону'
-                className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary_green'
+                className='inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand_main'
             />
-            <h1 className='text-2xl font-semibold text-night_green'>
+            <h1 className='text-2xl font-semibold text-neutral-900'>
                 Редактирование аукциона
             </h1>
             <AuctionForm mode='edit' initial={initial} />

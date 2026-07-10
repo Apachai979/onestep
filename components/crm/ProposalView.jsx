@@ -190,7 +190,7 @@ export default function ProposalView({
                 <CrmBackLink
                     fallback={`/crm/deals/${dealId}`}
                     fallbackLabel='К сделке'
-                    className='inline-flex items-center gap-1 self-start whitespace-nowrap text-sm text-gray-500 hover:text-brand_main'
+                    className='inline-flex items-center gap-1 self-start whitespace-nowrap text-sm text-neutral-500 hover:text-brand_main'
                 />
                 <div className='flex flex-col gap-2 sm:flex-row sm:flex-wrap'>
                     <button
@@ -224,8 +224,8 @@ export default function ProposalView({
                 </div>
             </div>
 
-            <section className='space-y-4 rounded-xl border border-brand_soft/40 bg-white/70 p-5 print:hidden'>
-                <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
+            <section className='space-y-4 rounded-xl border border-line bg-white p-5 print:hidden'>
+                <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
                     Параметры КП
                 </h2>
                 <div className='grid gap-3 sm:grid-cols-3'>
@@ -269,7 +269,7 @@ export default function ProposalView({
                         rows={2}
                         value={form.intro}
                         onChange={update("intro")}
-                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                        className='w-full rounded-lg border border-line px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     />
                 </Field>
                 <div className='grid gap-3 sm:grid-cols-4'>
@@ -607,39 +607,39 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
                 onClick={e => e.stopPropagation()}
                 className='max-h-[92vh] w-full max-w-xl overflow-auto rounded-xl bg-white p-5 shadow-2xl'
             >
-                <h2 className='mb-1 text-lg font-semibold text-night_green'>
+                <h2 className='mb-1 text-lg font-semibold text-neutral-900'>
                     Отправить КП на email
                 </h2>
-                <p className='mb-4 text-sm text-night_green/60'>
+                <p className='mb-4 text-sm text-neutral-500'>
                     Вложение: {fileName}
                 </p>
 
                 {loading ? (
-                    <p className='py-6 text-sm text-night_green/55'>Загрузка шаблона...</p>
+                    <p className='py-6 text-sm text-neutral-400'>Загрузка шаблона...</p>
                 ) : (
                     <form onSubmit={handleSend} className='space-y-3'>
                         <div>
-                            <label className='mb-1 block text-xs text-gray-600'>Кому *</label>
+                            <label className='mb-1 block text-xs text-neutral-500'>Кому *</label>
                             <input
                                 type='email'
                                 required
                                 value={to}
                                 onChange={e => setTo(e.target.value)}
                                 placeholder='client@example.ru'
-                                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                className='w-full rounded-lg border border-line px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                             />
                         </div>
                         <div>
-                            <label className='mb-1 block text-xs text-gray-600'>Тема *</label>
+                            <label className='mb-1 block text-xs text-neutral-500'>Тема *</label>
                             <input
                                 required
                                 value={subject}
                                 onChange={e => setSubject(e.target.value)}
-                                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                className='w-full rounded-lg border border-line px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                             />
                         </div>
                         <div>
-                            <label className='mb-1 block text-xs text-gray-600'>
+                            <label className='mb-1 block text-xs text-neutral-500'>
                                 Текст письма *
                             </label>
                             <textarea
@@ -647,15 +647,15 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
                                 rows={10}
                                 value={message}
                                 onChange={e => setMessage(e.target.value)}
-                                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                className='w-full rounded-lg border border-line px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                             />
                         </div>
-                        <label className='inline-flex items-center gap-2 text-sm text-gray-700'>
+                        <label className='inline-flex items-center gap-2 text-sm text-neutral-700'>
                             <input
                                 type='checkbox'
                                 checked={saveCopy}
                                 onChange={e => setSaveCopy(e.target.checked)}
-                                className='rounded accent-primary_green'
+                                className='rounded accent-brand_main'
                             />
                             Сохранить копию PDF в документы сделки
                         </label>
@@ -666,7 +666,7 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
                             <button
                                 type='button'
                                 onClick={onClose}
-                                className='rounded-lg border border-brand_soft/60 px-4 py-2 text-sm text-gray-700 hover:bg-brand_soft/30'
+                                className='rounded-lg border border-line px-4 py-2 text-sm text-neutral-700 hover:bg-surface_muted'
                             >
                                 Отмена
                             </button>
@@ -689,7 +689,7 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
 function Field({ label, children }) {
     return (
         <div>
-            <label className='mb-1 block text-xs text-gray-600'>{label}</label>
+            <label className='mb-1 block text-xs text-neutral-500'>{label}</label>
             {children}
         </div>
     )
@@ -699,7 +699,7 @@ function Input(props) {
     return (
         <input
             {...props}
-            className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+            className='w-full rounded-lg border border-line px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
         />
     )
 }

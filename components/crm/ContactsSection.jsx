@@ -177,9 +177,9 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
     const formOpen = showAdd || editing
 
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
+        <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
             <div className='mb-4 flex items-center justify-between'>
-                <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
+                <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
                     Контакты
                 </h2>
                 {!formOpen && !showAttach && (
@@ -187,7 +187,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                         <button
                             type='button'
                             onClick={startAttach}
-                            className='rounded-lg border border-brand_soft/60 bg-white px-3 py-1.5 text-xs font-medium text-night_green/80 hover:bg-brand_soft/30'
+                            className='rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-surface_muted'
                         >
                             Прикрепить существующий
                         </button>
@@ -203,14 +203,14 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
             </div>
 
             {showAttach && (
-                <div className='mb-4 space-y-3 rounded-lg border border-dashed border-primary_green/40 p-4'>
-                    <p className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                <div className='mb-4 space-y-3 rounded-lg border border-dashed border-brand_main/40 bg-surface_muted p-4'>
+                    <p className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                         Прикрепить контакт
                     </p>
                     {freeContacts === null ? (
-                        <p className='text-sm text-gray-400'>Загрузка...</p>
+                        <p className='text-sm text-neutral-400'>Загрузка...</p>
                     ) : freeContacts.length === 0 ? (
-                        <p className='text-sm text-gray-400'>
+                        <p className='text-sm text-neutral-400'>
                             Свободных контактов нет — все контакты уже привязаны к контрагентам.
                         </p>
                     ) : (
@@ -237,7 +237,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                         <button
                             type='button'
                             onClick={() => setShowAttach(false)}
-                            className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
+                            className='rounded-lg border border-line px-3 py-1.5 text-sm text-neutral-700 hover:bg-surface_muted'
                         >
                             Отмена
                         </button>
@@ -254,28 +254,28 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
             )}
 
             {contacts.length === 0 && !formOpen && (
-                <p className='text-sm text-gray-400'>Контактов пока нет.</p>
+                <p className='text-sm text-neutral-400'>Контактов пока нет.</p>
             )}
 
             <ul className='space-y-3'>
                 {contacts.map(c => (
                     <li
                         key={c.id}
-                        className='flex flex-col gap-2 rounded-lg border border-brand_soft/30 p-3 sm:flex-row sm:items-start sm:justify-between'
+                        className='flex flex-col gap-2 rounded-lg border border-line p-3 sm:flex-row sm:items-start sm:justify-between'
                     >
                         <div className='flex-1'>
                             <div className='flex flex-wrap items-center gap-2'>
-                                <span className='font-medium text-night_green'>
+                                <span className='font-medium text-neutral-900'>
                                     {fullName(c) || "Без имени"}
                                 </span>
                                 {c.isPrimary && (
-                                    <span className='rounded-full bg-light_green/30 px-2 py-0.5 text-xs font-medium text-night_green'>
+                                    <span className='rounded-full bg-brand_main/10 px-2 py-0.5 text-xs font-medium text-brand_main'>
                                         Основной
                                     </span>
                                 )}
                             </div>
-                            {c.position && <p className='text-sm text-gray-600'>{c.position}</p>}
-                            <div className='mt-1 grid gap-1 text-sm text-gray-700 sm:grid-cols-2'>
+                            {c.position && <p className='text-sm text-neutral-500'>{c.position}</p>}
+                            <div className='mt-1 grid gap-1 text-sm text-neutral-700 sm:grid-cols-2'>
                                 {c.phone && <span>Тел.: {c.phone}</span>}
                                 {c.email && <span>{c.email}</span>}
                                 {c.birthDate && (
@@ -289,7 +289,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                             <button
                                 type='button'
                                 onClick={() => startEdit(c)}
-                                className='rounded-md border border-brand_soft/60 px-3 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
+                                className='rounded-md border border-line px-3 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
                             >
                                 Изменить
                             </button>
@@ -308,7 +308,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
             {formOpen && (
                 <form
                     onSubmit={handleSubmit}
-                    className='mt-4 space-y-3 rounded-lg border border-dashed border-primary_green/40 p-4'
+                    className='mt-4 space-y-3 rounded-lg border border-dashed border-brand_main/40 bg-surface_muted p-4'
                 >
                     <div className='grid gap-3 sm:grid-cols-2'>
                         <Field label='Имя' value={form.firstName} onChange={update("firstName")} />
@@ -336,7 +336,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                             onChange={update("position")}
                         />
                     </div>
-                    <label className='flex items-center gap-2 text-sm text-gray-700'>
+                    <label className='flex items-center gap-2 text-sm text-neutral-700'>
                         <input
                             type='checkbox'
                             checked={form.isPrimary}
@@ -349,7 +349,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                         <button
                             type='button'
                             onClick={cancelForm}
-                            className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
+                            className='rounded-lg border border-line px-3 py-1.5 text-sm text-neutral-700 hover:bg-surface_muted'
                         >
                             Отмена
                         </button>
@@ -370,10 +370,10 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
 function Field({ label, ...props }) {
     return (
         <div>
-            <label className='mb-1 block text-xs text-gray-600'>{label}</label>
+            <label className='mb-1 block text-xs font-medium text-neutral-500'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
             />
         </div>
     )

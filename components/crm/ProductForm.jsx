@@ -1,7 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { useConfirm, useToast } from "@/components/crm/ui"
+import { Button, useConfirm, useToast } from "@/components/crm/ui"
 
 const EMPTY = {
     sku: "",
@@ -173,50 +173,42 @@ export default function ProductForm({ initial, mode = "create" }) {
                 />
             </Section>
 
-            <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
-                <h2 className='mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500'>
+            <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
+                <h2 className='mb-2 text-sm font-semibold text-neutral-900'>
                     Состав набора
                 </h2>
-                <p className='mb-3 text-xs text-gray-500'>
+                <p className='mb-3 text-xs text-neutral-500'>
                     Одна позиция — одна строка. Пример: «Скальпель для снятия швов — 1 шт.»
                 </p>
                 <textarea
                     rows={8}
                     value={form.contents}
                     onChange={update("contents")}
-                    className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 font-mono text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                    className='w-full rounded-xl border border-line bg-white px-3 py-2 font-mono text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                 />
             </section>
 
-            {error && <p className='text-sm text-red-600'>{error}</p>}
+            {error && (
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                    {error}
+                </p>
+            )}
 
             <div className='flex justify-between gap-3'>
                 <div>
                     {mode === "edit" && (
-                        <button
-                            type='button'
-                            onClick={handleDelete}
-                            className='rounded-lg border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50'
-                        >
+                        <Button type='button' variant='danger_soft' onClick={handleDelete}>
                             Удалить
-                        </button>
+                        </Button>
                     )}
                 </div>
                 <div className='flex gap-3'>
-                    <button
-                        type='button'
-                        onClick={() => router.back()}
-                        className='rounded-lg border border-brand_soft/60 px-4 py-2 text-sm text-gray-700 hover:bg-brand_soft/30'
-                    >
+                    <Button type='button' variant='secondary' onClick={() => router.back()}>
                         Отмена
-                    </button>
-                    <button
-                        type='submit'
-                        disabled={loading}
-                        className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
-                    >
-                        {loading ? "Сохраняем..." : mode === "create" ? "Создать" : "Сохранить"}
-                    </button>
+                    </Button>
+                    <Button type='submit' loading={loading}>
+                        {mode === "create" ? "Создать" : "Сохранить"}
+                    </Button>
                 </div>
             </div>
         </form>
@@ -225,11 +217,9 @@ export default function ProductForm({ initial, mode = "create" }) {
 
 function Section({ title, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-            <h2 className='mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500'>
-                {title}
-            </h2>
-            <div className='grid gap-3 sm:grid-cols-2'>{children}</div>
+        <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
+            <h2 className='mb-4 text-sm font-semibold text-neutral-900'>{title}</h2>
+            <div className='grid gap-4 sm:grid-cols-2'>{children}</div>
         </section>
     )
 }
@@ -237,10 +227,10 @@ function Section({ title, children }) {
 function Field({ label, className = "", ...props }) {
     return (
         <div className={className}>
-            <label className='mb-1 block text-sm text-gray-700'>{label}</label>
+            <label className='mb-1.5 block text-sm text-neutral-600'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
+                className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
             />
         </div>
     )

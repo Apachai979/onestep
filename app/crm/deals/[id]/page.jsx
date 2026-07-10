@@ -67,19 +67,19 @@ export default async function DealPage({ params }) {
             <CrmBackLink
                 fallback='/crm/deals'
                 fallbackLabel='Сделки'
-                className='inline-flex items-center gap-1 text-xs text-night_green/55 hover:text-brand_main'
+                className='inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-brand_main'
             />
 
             {/* Title row */}
             <div className='flex flex-wrap items-start justify-between gap-3'>
                 <div className='min-w-0'>
-                    <p className='text-xs uppercase tracking-wider text-night_green/55'>
+                    <p className='text-xs uppercase tracking-wider text-neutral-400'>
                         Сделка
                     </p>
-                    <h1 className='mt-0.5 truncate text-xl font-semibold text-night_green sm:text-2xl'>
+                    <h1 className='mt-0.5 truncate text-xl font-semibold text-neutral-900 sm:text-2xl'>
                         {dealDisplayTitle(item, item.counterparty?.name)}
                     </h1>
-                    <p className='mt-1 text-sm text-night_green/70'>
+                    <p className='mt-1 text-sm text-neutral-500'>
                         Клиент:{" "}
                         <Link
                             href={`/crm/counterparties/${item.counterparty.id}`}
@@ -87,7 +87,7 @@ export default async function DealPage({ params }) {
                         >
                             {item.counterparty.name}
                         </Link>{" "}
-                        <span className='text-night_green/50'>·</span>{" "}
+                        <span className='text-neutral-400'>·</span>{" "}
                         {item.counterparty.type === "DISTRIBUTOR"
                             ? "Дистрибьютор"
                             : "Конечный потребитель"}
@@ -152,7 +152,7 @@ export default async function DealPage({ params }) {
                         action={
                             <Link
                                 href={`/crm/deals/${item.id}/edit`}
-                                className='inline-flex items-center gap-1 rounded-md border border-brand_soft/60 bg-white px-2 py-1 text-[11px] font-medium text-night_green/75 hover:bg-brand_soft/30'
+                                className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
                             >
                                 <LuPencil className='h-3 w-3' />
                                 Редактировать
@@ -186,20 +186,20 @@ export default async function DealPage({ params }) {
                         <Section title='Доставка и примечание'>
                             {item.deliveryAddress && (
                                 <div className='sm:col-span-2 lg:col-span-3'>
-                                    <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
+                                    <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>
                                         Адрес доставки
                                     </dt>
-                                    <dd className='mt-0.5 whitespace-pre-wrap text-sm text-night_green'>
+                                    <dd className='mt-0.5 whitespace-pre-wrap text-sm text-neutral-900'>
                                         {item.deliveryAddress}
                                     </dd>
                                 </div>
                             )}
                             {item.note && (
                                 <div className='sm:col-span-2 lg:col-span-3'>
-                                    <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
+                                    <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>
                                         Примечание
                                     </dt>
-                                    <dd className='mt-0.5 whitespace-pre-wrap text-sm text-night_green'>
+                                    <dd className='mt-0.5 whitespace-pre-wrap text-sm text-neutral-900'>
                                         {item.note}
                                     </dd>
                                 </div>
@@ -234,16 +234,16 @@ export default async function DealPage({ params }) {
 
 function Section({ title, footer, action, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+        <section className='rounded-xl border border-line bg-white p-4'>
             <div className='mb-2.5 flex items-center justify-between gap-3'>
-                <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                     {title}
                 </h2>
                 {action && <div className='shrink-0'>{action}</div>}
             </div>
             <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>{children}</dl>
             {footer && (
-                <p className='mt-3 border-t border-brand_soft/30 pt-2 text-[11px] text-night_green/50'>
+                <p className='mt-3 border-t border-line pt-2 text-[11px] text-neutral-400'>
                     {footer}
                 </p>
             )}
@@ -254,10 +254,10 @@ function Section({ title, footer, action, children }) {
 function Row({ label, value, className = "" }) {
     return (
         <div className={className}>
-            <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
+            <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>
                 {label}
             </dt>
-            <dd className='mt-0.5 text-sm text-night_green'>{value || "—"}</dd>
+            <dd className='mt-0.5 text-sm text-neutral-900'>{value || "—"}</dd>
         </div>
     )
 }

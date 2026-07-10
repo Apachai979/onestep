@@ -11,7 +11,18 @@ import {
 } from "@/lib/crm/auction"
 import { formatMoney } from "@/lib/crm/format"
 import SearchableSelect from "./SearchableSelect"
-import { CardListSkeleton, CardRow, EmptyState, MobileCard, TableSkeleton } from "@/components/crm/ui"
+import {
+    Badge,
+    Button,
+    CardListSkeleton,
+    CardRow,
+    DataTable,
+    EmptyState,
+    Field,
+    Input,
+    MobileCard,
+    Select,
+} from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -82,28 +93,88 @@ export default function AuctionsList({ currentUserId }) {
 
     const total = items?.reduce((s, a) => s + Number(a.nmck || 0), 0) ?? 0
 
+    const columns = useMemo(
+        () => [
+            {
+                key: "title",
+                header: "Закупка",
+                sortable: true,
+                sortValue: a => auctionDisplayTitle(a),
+                render: a => (
+                    <Link
+                        href={`/crm/auctions/${a.id}`}
+                        onClick={e => e.stopPropagation()}
+                        className='font-medium text-neutral-900 hover:text-brand_main'
+                    >
+                        {auctionDisplayTitle(a)}
+                    </Link>
+                ),
+            },
+            {
+                key: "customer",
+                header: "Заказчик",
+                sortable: true,
+                sortValue: a => a.customer?.name || "",
+                render: a => a.customer?.name || "—",
+            },
+            {
+                key: "manager",
+                header: "Менеджер",
+                sortValue: a => managerName(a.manager),
+                render: a => managerName(a.manager),
+                hideable: true,
+            },
+            {
+                key: "status",
+                header: "Статус",
+                sortable: true,
+                sortValue: a => AUCTION_STATUS_LABELS[a.status] || a.status,
+                render: a => (
+                    <Badge className={AUCTION_STATUS_COLORS[a.status]}>
+                        {AUCTION_STATUS_LABELS[a.status] || a.status}
+                    </Badge>
+                ),
+            },
+            {
+                key: "auctionAt",
+                header: "Аукцион",
+                sortable: true,
+                sortValue: a => (a.auctionAt ? new Date(a.auctionAt).getTime() : 0),
+                render: a => fmtDate(a.auctionAt),
+                hideable: true,
+            },
+            {
+                key: "nmck",
+                header: "НМЦК",
+                align: "right",
+                sortable: true,
+                sortValue: a => Number(a.nmck || 0),
+                render: a => (
+                    <span className='font-medium text-neutral-900'>{formatMoney(a.nmck)}</span>
+                ),
+            },
+        ],
+        [],
+    )
+
     return (
         <div className='space-y-4'>
-            <div className='grid gap-3 rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:grid-cols-4'>
+            <div className='grid gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm sm:grid-cols-4'>
                 <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Поиск</label>
-                    <div className='relative'>
-                        <LuSearch className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-night_green/40' />
-                        <input
+                    <Field label='Поиск'>
+                        <Input
+                            icon={LuSearch}
                             value={filters.q}
                             onChange={e => setFilters(p => ({ ...p, q: e.target.value }))}
                             onKeyDown={e => e.key === "Enter" && load()}
                             placeholder='Номер закупки, заказчик или поставщик'
-                            className='w-full rounded-lg border border-brand_soft/60 bg-white pl-9 pr-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                         />
-                    </div>
+                    </Field>
                 </div>
-                <div>
-                    <label className='mb-1 block text-xs text-night_green/65'>Статус</label>
-                    <select
+                <Field label='Статус'>
+                    <Select
                         value={filters.status}
                         onChange={e => setFilters(p => ({ ...p, status: e.target.value }))}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     >
                         <option value=''>Все</option>
                         {AUCTION_STATUSES.map(s => (
@@ -111,12 +182,14 @@ export default function AuctionsList({ currentUserId }) {
                                 {AUCTION_STATUS_LABELS[s]}
                             </option>
                         ))}
-                    </select>
-                </div>
+                    </Select>
+                </Field>
                 <div className='flex items-end'>
                     {currentUserId && (
-                        <button
+                        <Button
                             type='button'
+                            variant={filters.managerId === currentUserId ? "primary" : "secondary"}
+                            className='w-full'
                             onClick={() =>
                                 setFilters(p => ({
                                     ...p,
@@ -124,30 +197,26 @@ export default function AuctionsList({ currentUserId }) {
                                         p.managerId === currentUserId ? "" : currentUserId,
                                 }))
                             }
-                            className={`w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition ${
-                                filters.managerId === currentUserId
-                                    ? "border-primary_green bg-brand_main text-white"
-                                    : "border-brand_soft/60 text-gray-700 hover:bg-brand_soft/30"
-                            }`}
                         >
                             Только мои
-                        </button>
+                        </Button>
                     )}
                 </div>
                 <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Менеджер</label>
-                    <SearchableSelect
-                        value={filters.managerId}
-                        onChange={id => setFilters(p => ({ ...p, managerId: id }))}
-                        placeholder='Все'
-                        emptyLabel='Сотрудник не найден'
-                        options={managerOptions}
-                    />
+                    <Field label='Менеджер'>
+                        <SearchableSelect
+                            value={filters.managerId}
+                            onChange={id => setFilters(p => ({ ...p, managerId: id }))}
+                            placeholder='Все'
+                            emptyLabel='Сотрудник не найден'
+                            options={managerOptions}
+                        />
+                    </Field>
                 </div>
             </div>
 
             {error && (
-                <p className='rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
                     {error}
                 </p>
             )}
@@ -165,21 +234,19 @@ export default function AuctionsList({ currentUserId }) {
                 {items?.map(a => (
                     <MobileCard key={a.id} onClick={() => router.push(`/crm/auctions/${a.id}`)}>
                         <div className='flex items-start justify-between gap-2'>
-                            <span className='font-medium text-night_green'>
+                            <span className='font-medium text-neutral-900'>
                                 {auctionDisplayTitle(a)}
                             </span>
-                            <span
-                                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${AUCTION_STATUS_COLORS[a.status]}`}
-                            >
+                            <Badge className={AUCTION_STATUS_COLORS[a.status]}>
                                 {AUCTION_STATUS_LABELS[a.status] || a.status}
-                            </span>
+                            </Badge>
                         </div>
                         <div className='mt-2 space-y-1'>
                             <CardRow label='Заказчик'>{a.customer?.name || "—"}</CardRow>
                             <CardRow label='Менеджер'>{managerName(a.manager)}</CardRow>
                             <CardRow label='Аукцион'>{fmtDate(a.auctionAt)}</CardRow>
                             <CardRow label='НМЦК'>
-                                <span className='font-medium text-gray-800'>
+                                <span className='font-medium text-neutral-900'>
                                     {formatMoney(a.nmck)}
                                 </span>
                             </CardRow>
@@ -187,97 +254,43 @@ export default function AuctionsList({ currentUserId }) {
                     </MobileCard>
                 ))}
                 {items && items.length > 0 && (
-                    <div className='flex items-center justify-between rounded-xl bg-gray-50 px-4 py-2 text-sm'>
-                        <span className='text-xs font-semibold uppercase text-gray-500'>
+                    <div className='flex items-center justify-between rounded-xl bg-surface_muted px-4 py-2 text-sm'>
+                        <span className='text-xs font-semibold uppercase text-neutral-500'>
                             Итого ({items.length})
                         </span>
-                        <span className='font-semibold text-night_green'>
+                        <span className='font-semibold text-neutral-900'>
                             {formatMoney(total)}
                         </span>
                     </div>
                 )}
             </div>
 
-            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
-                <table className='w-full text-sm'>
-                    <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
-                        <tr>
-                            <th className='px-4 py-3'>Закупка</th>
-                            <th className='px-4 py-3'>Заказчик</th>
-                            <th className='px-4 py-3'>Менеджер</th>
-                            <th className='px-4 py-3'>Статус</th>
-                            <th className='px-4 py-3'>Аукцион</th>
-                            <th className='px-4 py-3 text-right'>НМЦК</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items === null && <TableSkeleton rows={5} cols={6} />}
-                        {items?.length === 0 && (
-                            <EmptyState
-                                colSpan={6}
-                                icon={LuGavel}
-                                title='Аукционов не найдено'
-                                hint='Попробуйте сбросить фильтры. Аукционы создаются из карточки проекта.'
-                            />
-                        )}
-                        {items?.map(a => (
-                            <tr
-                                key={a.id}
-                                onClick={() => router.push(`/crm/auctions/${a.id}`)}
-                                className='cursor-pointer border-t border-brand_soft/30 transition hover:bg-brand_soft/15'
-                            >
-                                <td className='px-4 py-3'>
-                                    <Link
-                                        href={`/crm/auctions/${a.id}`}
-                                        className='font-medium text-night_green hover:text-brand_main'
-                                    >
-                                        {auctionDisplayTitle(a)}
-                                    </Link>
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>
-                                    {a.customer?.name || "—"}
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>
-                                    {managerName(a.manager)}
-                                </td>
-                                <td className='px-4 py-3'>
-                                    <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${AUCTION_STATUS_COLORS[a.status]}`}
-                                    >
-                                        {AUCTION_STATUS_LABELS[a.status] || a.status}
-                                    </span>
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>
-                                    {fmtDate(a.auctionAt)}
-                                </td>
-                                <td className='px-4 py-3 text-right font-medium text-gray-800'>
-                                    {formatMoney(a.nmck)}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                    {items && items.length > 0 && (
-                        <tfoot className='bg-gray-50'>
-                            <tr>
-                                <td
-                                    colSpan={5}
-                                    className='px-4 py-2 text-right text-xs font-semibold uppercase text-gray-500'
-                                >
-                                    Итого НМЦК по {items.length}{" "}
-                                    {items.length === 1
-                                        ? "аукциону"
-                                        : items.length < 5
-                                          ? "аукционам"
-                                          : "аукционам"}
-                                    :
-                                </td>
-                                <td className='px-4 py-2 text-right text-sm font-semibold text-night_green'>
-                                    {formatMoney(total)}
-                                </td>
-                            </tr>
-                        </tfoot>
-                    )}
-                </table>
+            <div className='hidden md:block'>
+                <DataTable
+                    columns={columns}
+                    rows={items || []}
+                    loading={items === null}
+                    getRowId={a => a.id}
+                    onRowClick={a => router.push(`/crm/auctions/${a.id}`)}
+                    initialSort={{ key: "auctionAt", dir: "desc" }}
+                    empty={
+                        <EmptyState
+                            icon={LuGavel}
+                            title='Аукционов не найдено'
+                            hint='Попробуйте сбросить фильтры. Аукционы создаются из карточки проекта.'
+                        />
+                    }
+                />
+                {items && items.length > 0 && (
+                    <div className='mt-3 flex items-center justify-end gap-3 px-1 text-sm'>
+                        <span className='text-xs font-semibold uppercase text-neutral-500'>
+                            Итого НМЦК по {items.length} аукционам
+                        </span>
+                        <span className='font-semibold text-neutral-900'>
+                            {formatMoney(total)}
+                        </span>
+                    </div>
+                )}
             </div>
         </div>
     )

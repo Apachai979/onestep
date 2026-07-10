@@ -180,29 +180,29 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
                     <button
                         type='button'
                         onClick={() => shift(-1)}
-                        className='rounded-md border border-brand_soft/60 px-2 py-1 text-sm hover:bg-brand_soft/30'
+                        className='rounded-md border border-line px-2 py-1 text-sm hover:bg-surface_muted'
                     >
                         ←
                     </button>
                     <button
                         type='button'
                         onClick={goToday}
-                        className='rounded-md border border-brand_soft/60 px-3 py-1 text-sm hover:bg-brand_soft/30'
+                        className='rounded-md border border-line px-3 py-1 text-sm hover:bg-surface_muted'
                     >
                         Сегодня
                     </button>
                     <button
                         type='button'
                         onClick={() => shift(1)}
-                        className='rounded-md border border-brand_soft/60 px-2 py-1 text-sm hover:bg-brand_soft/30'
+                        className='rounded-md border border-line px-2 py-1 text-sm hover:bg-surface_muted'
                     >
                         →
                     </button>
-                    <span className='ml-2 text-sm font-medium text-night_green'>
+                    <span className='ml-2 text-sm font-medium text-neutral-900'>
                         {headerLabel}
                     </span>
                     <span
-                        className='text-[11px] text-night_green/40'
+                        className='text-[11px] text-neutral-400'
                         title='В календаре показаны только задачи, где вы ответственный или автор'
                     >
                         · только мои задачи
@@ -221,7 +221,7 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
                             className={`rounded-md px-3 py-1 text-sm ${
                                 view === v
                                     ? "bg-brand_main text-white"
-                                    : "border border-brand_soft/60 text-gray-700 hover:bg-brand_soft/30"
+                                    : "border border-line text-neutral-600 hover:bg-surface_muted"
                             }`}
                         >
                             {label}
@@ -359,8 +359,8 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
     }
 
     return (
-        <div className='overflow-hidden rounded-xl border border-brand_soft/40 bg-white/70'>
-            <div className='grid grid-cols-7 border-b border-gray-200 bg-gray-50 text-xs uppercase text-gray-500'>
+        <div className='overflow-hidden rounded-xl border border-line bg-white'>
+            <div className='grid grid-cols-7 border-b border-line bg-surface_muted text-xs uppercase text-neutral-500'>
                 {DOW_SHORT.map(d => (
                     <div key={d} className='px-2 py-2 text-center'>
                         {d}
@@ -381,7 +381,7 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
                 return (
                     <div
                         key={wi}
-                        className='relative border-b border-brand_soft/30 last:border-b-0'
+                        className='relative border-b border-line last:border-b-0'
                     >
                         <div className='grid grid-cols-7'>
                             {days.map((d, di) => {
@@ -394,10 +394,10 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
                                         style={{
                                             height: MONTH_HEADER_H + eventsAreaHeight,
                                         }}
-                                        className={`group cursor-pointer border-r border-gray-100 text-xs last:border-r-0 ${
+                                        className={`group cursor-pointer border-r border-line text-xs last:border-r-0 ${
                                             inMonth
-                                                ? "bg-white hover:bg-brand_soft/15"
-                                                : "bg-gray-50 text-gray-400"
+                                                ? "bg-white hover:bg-surface_muted"
+                                                : "bg-surface_muted text-neutral-400"
                                         }`}
                                     >
                                         <div className='flex items-center justify-between px-1.5 pt-1'>
@@ -410,7 +410,7 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
                                             >
                                                 {d.getDate()}
                                             </div>
-                                            <span className='hidden text-[10px] text-primary_green group-hover:inline'>
+                                            <span className='hidden text-[10px] text-brand_main group-hover:inline'>
                                                 + задача
                                             </span>
                                         </div>
@@ -456,7 +456,7 @@ function SpanningTask({ seg, colCount, onClick }) {
                 width: `calc(${endCol - startCol + 1} * (100% / ${colCount}) - 4px)`,
                 height: LANE_HEIGHT,
             }}
-            className={`pointer-events-auto absolute flex items-center gap-1 overflow-hidden rounded border border-l-4 px-1.5 text-[11px] ${meta?.bg || "bg-gray-100"} ${meta?.border || "border-gray-400"} ${
+            className={`pointer-events-auto absolute flex items-center gap-1 overflow-hidden rounded border border-l-4 px-1.5 text-[11px] ${meta?.bg || "bg-neutral-100"} ${meta?.border || "border-gray-400"} ${
                 closed ? "opacity-50 line-through" : "hover:brightness-95"
             }`}
         >
@@ -493,27 +493,27 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
         Math.max(MIN_LANES_AREA, allDayLanes) * (LANE_HEIGHT + LANE_GAP) + 4
 
     return (
-        <div className='overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70'>
+        <div className='overflow-x-auto rounded-xl border border-line bg-white'>
             <div className={days.length > 1 ? "min-w-[640px]" : ""}>
                 {/* Шапка с датами */}
                 <div
-                    className='grid border-b border-gray-200'
+                    className='grid border-b border-line'
                     style={{ gridTemplateColumns: `60px repeat(${days.length}, minmax(0,1fr))` }}
                 >
-                    <div className='bg-gray-50' />
+                    <div className='bg-surface_muted' />
                     {days.map((d, i) => {
                         const isToday = isSameDay(d, today)
                         return (
                             <div
                                 key={i}
-                                className={`border-l border-gray-200 px-2 py-2 text-center ${
-                                    isToday ? "bg-brand_main/10" : "bg-gray-50"
+                                className={`border-l border-line px-2 py-2 text-center ${
+                                    isToday ? "bg-brand_main/10" : "bg-surface_muted"
                                 }`}
                             >
-                                <div className='text-xs uppercase text-gray-500'>
+                                <div className='text-xs uppercase text-neutral-500'>
                                     {DOW_SHORT[(d.getDay() + 6) % 7]}
                                 </div>
-                                <div className='text-sm font-semibold text-night_green'>
+                                <div className='text-sm font-semibold text-neutral-900'>
                                     {d.getDate()}.{String(d.getMonth() + 1).padStart(2, "0")}
                                 </div>
                             </div>
@@ -523,10 +523,10 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
 
                 {/* Полоса all-day */}
                 <div
-                    className='grid border-b border-gray-200 bg-amber-50/30'
+                    className='grid border-b border-line bg-amber-50/30'
                     style={{ gridTemplateColumns: `60px 1fr` }}
                 >
-                    <div className='px-2 py-1 text-right text-[10px] uppercase text-gray-500'>
+                    <div className='px-2 py-1 text-right text-[10px] uppercase text-neutral-500'>
                         Весь день
                     </div>
                     <div className='relative' style={{ height: allDayHeight }}>
@@ -541,7 +541,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
                                 <div
                                     key={i}
                                     onClick={() => onCreateAt?.({ date: ymd(d) })}
-                                    className='cursor-pointer border-l border-gray-200 hover:bg-amber-50'
+                                    className='cursor-pointer border-l border-line hover:bg-amber-50'
                                 />
                             ))}
                         </div>
@@ -571,7 +571,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
                             <div
                                 key={h}
                                 style={{ height: HOUR_HEIGHT }}
-                                className='border-b border-brand_soft/30 pr-2 text-right text-[10px] text-gray-500'
+                                className='border-b border-line pr-2 text-right text-[10px] text-neutral-500'
                             >
                                 {String(h).padStart(2, "0")}:00
                             </div>
@@ -583,14 +583,14 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
                         return (
                             <div
                                 key={dayIdx}
-                                className='relative border-l border-gray-200'
+                                className='relative border-l border-line'
                                 style={{ height: totalHeight }}
                             >
                                 {hours.map((h, idx) => (
                                     <div
                                         key={h}
                                         onClick={() => onCreateAt?.({ date: ymd(d), hour: h })}
-                                        className='cursor-pointer border-b border-brand_soft/30 hover:bg-brand_soft/15'
+                                        className='cursor-pointer border-b border-line hover:bg-surface_muted'
                                         style={{ height: HOUR_HEIGHT }}
                                         title={`Создать задачу в ${String(h).padStart(2, "0")}:00`}
                                     />
@@ -662,7 +662,7 @@ function TimedTask({ task, pos, onClick }) {
             type='button'
             onClick={onClick}
             style={{ top: pos.top, height: pos.height }}
-            className={`absolute left-0.5 right-0.5 overflow-hidden rounded border border-l-4 px-1.5 py-1 text-left text-[11px] shadow-sm ${meta?.bg || "bg-gray-100"} ${meta?.border || "border-gray-400"} ${
+            className={`absolute left-0.5 right-0.5 overflow-hidden rounded border border-l-4 px-1.5 py-1 text-left text-[11px] shadow-sm ${meta?.bg || "bg-neutral-100"} ${meta?.border || "border-gray-400"} ${
                 closed ? "opacity-50 line-through" : "hover:brightness-95"
             }`}
         >
@@ -681,7 +681,7 @@ function WeekAgenda({ days, tasksByDay, onPick, onCreateAt }) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     return (
-        <div className='overflow-hidden rounded-xl border border-brand_soft/40 bg-white/70'>
+        <div className='overflow-hidden rounded-xl border border-line bg-white'>
             {days.map((d, i) => {
                 const list = [...(tasksByDay.get(ymd(d)) || [])].sort(
                     (a, b) =>
@@ -690,12 +690,12 @@ function WeekAgenda({ days, tasksByDay, onPick, onCreateAt }) {
                 )
                 const isToday = isSameDay(d, today)
                 return (
-                    <div key={i} className='border-b border-brand_soft/30 last:border-b-0'>
+                    <div key={i} className='border-b border-line last:border-b-0'>
                         <div
                             className={`flex items-center justify-between px-3 py-1.5 text-xs uppercase ${
                                 isToday
                                     ? "bg-brand_main/10 font-semibold text-brand_main"
-                                    : "bg-gray-50 text-gray-500"
+                                    : "bg-surface_muted text-neutral-500"
                             }`}
                         >
                             <span>
@@ -705,14 +705,14 @@ function WeekAgenda({ days, tasksByDay, onPick, onCreateAt }) {
                             <button
                                 type='button'
                                 onClick={() => onCreateAt?.({ date: ymd(d) })}
-                                className='normal-case text-primary_green'
+                                className='normal-case text-brand_main'
                             >
                                 + задача
                             </button>
                         </div>
                         <div className='space-y-1 p-2'>
                             {list.length === 0 && (
-                                <p className='px-1 text-xs text-gray-400'>Нет задач</p>
+                                <p className='px-1 text-xs text-neutral-400'>Нет задач</p>
                             )}
                             {list.map(t => (
                                 <TaskChip
@@ -743,7 +743,7 @@ function TaskChip({ task, onClick, detailed = false }) {
         <button
             type='button'
             onClick={onClick}
-            className={`block w-full rounded border border-l-4 px-2 py-1 text-left ${meta?.bg || "bg-gray-100"} ${meta?.border || "border-gray-400"} ${
+            className={`block w-full rounded border border-l-4 px-2 py-1 text-left ${meta?.bg || "bg-neutral-100"} ${meta?.border || "border-gray-400"} ${
                 closed ? "opacity-50 line-through" : "hover:brightness-95"
             }`}
         >

@@ -13,7 +13,17 @@ import { onTasksChanged } from "@/lib/crm/tasks-events"
 import SearchableSelect from "./SearchableSelect"
 import { TaskTypeBadge } from "./TaskTypeIcon"
 import TaskCloseModal from "./TaskCloseModal"
-import { CardListSkeleton, CardRow, EmptyState, MobileCard, TableSkeleton } from "@/components/crm/ui"
+import {
+    Badge,
+    Button,
+    CardListSkeleton,
+    CardRow,
+    DataTable,
+    EmptyState,
+    Field,
+    MobileCard,
+    Select,
+} from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -139,17 +149,93 @@ export default function TaskList({ currentUserId, currentUserRole }) {
         return new Date(t.endAt) < new Date()
     }
 
+    const columns = useMemo(
+        () => [
+            {
+                key: "title",
+                header: "Заголовок",
+                sortable: true,
+                sortValue: t => t.title,
+                render: t => (
+                    <div>
+                        <div className='font-medium text-neutral-900'>{t.title}</div>
+                        {t.description && (
+                            <div className='mt-0.5 whitespace-pre-wrap text-xs text-neutral-500'>
+                                {t.description}
+                            </div>
+                        )}
+                    </div>
+                ),
+            },
+            {
+                key: "type",
+                header: "Тип",
+                render: t => <TaskTypeBadge type={t.type} />,
+                hideable: true,
+            },
+            {
+                key: "endAt",
+                header: "Срок",
+                sortable: true,
+                sortValue: t => new Date(t.endAt).getTime(),
+                render: t => (
+                    <span className={isOverdue(t) ? "text-red-600" : "text-neutral-700"}>
+                        {fmtRange(t)}
+                    </span>
+                ),
+            },
+            {
+                key: "assignee",
+                header: "Ответственный",
+                sortable: true,
+                sortValue: t => fullName(t.assignee),
+                render: t => fullName(t.assignee),
+                hideable: true,
+            },
+            {
+                key: "relation",
+                header: "Связь",
+                render: t => {
+                    const rel = relationLink(t)
+                    return rel ? (
+                        <Link
+                            href={rel.href}
+                            onClick={e => e.stopPropagation()}
+                            className='text-neutral-700 underline decoration-neutral-300 underline-offset-2 hover:text-brand_main'
+                        >
+                            {rel.label}
+                        </Link>
+                    ) : (
+                        "—"
+                    )
+                },
+                hideable: true,
+            },
+            {
+                key: "status",
+                header: "Статус",
+                sortable: true,
+                sortValue: t => TASK_STATUS_LABELS[t.status] || t.status,
+                render: t => (
+                    <Badge className={TASK_STATUS_COLORS[t.status]}>
+                        {TASK_STATUS_LABELS[t.status]}
+                    </Badge>
+                ),
+            },
+        ],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [],
+    )
+
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3 rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-                <div className='flex-1 min-w-[180px]'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Статус</label>
-                    <select
+            <div className='flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm'>
+                <Field label='Статус' className='flex-1 min-w-[180px]'>
+                    <Select
                         value={filters.status}
                         onChange={e =>
                             setFilters(prev => ({ ...prev, status: e.target.value }))
                         }
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     >
                         <option value=''>Все</option>
                         {TASK_STATUSES.map(s => (
@@ -157,16 +243,14 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                                 {TASK_STATUS_LABELS[s]}
                             </option>
                         ))}
-                    </select>
-                </div>
-                <div className='flex-1 min-w-[180px]'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Тип</label>
-                    <select
+                    </Select>
+                </Field>
+                <Field label='Тип' className='flex-1 min-w-[180px]'>
+                    <Select
                         value={filters.type}
                         onChange={e =>
                             setFilters(prev => ({ ...prev, type: e.target.value }))
                         }
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     >
                         <option value=''>Все</option>
                         {TASK_TYPES.map(t => (
@@ -174,10 +258,9 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                                 {t.label}
                             </option>
                         ))}
-                    </select>
-                </div>
-                <div className='flex-1 min-w-[220px]'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Ответственный</label>
+                    </Select>
+                </Field>
+                <Field label='Ответственный' className='flex-1 min-w-[220px]'>
                     <SearchableSelect
                         value={filters.assigneeId}
                         onChange={id =>
@@ -187,10 +270,12 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                         placeholder='Все'
                         emptyLabel='Сотрудник не найден'
                     />
-                </div>
+                </Field>
                 {currentUserId && (
-                    <button
+                    <Button
                         type='button'
+                        variant={filters.assigneeId === currentUserId ? "primary" : "secondary"}
+                        title='Показать только мои задачи'
                         onClick={() =>
                             setFilters(prev => ({
                                 ...prev,
@@ -198,34 +283,24 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                                     prev.assigneeId === currentUserId ? "" : currentUserId,
                             }))
                         }
-                        className={`rounded-lg border px-3 py-2 text-sm shadow-sm transition ${
-                            filters.assigneeId === currentUserId
-                                ? "border-primary_green bg-brand_main text-white"
-                                : "border-brand_soft/60 text-gray-700 hover:bg-brand_soft/30"
-                        }`}
-                        title='Показать только мои задачи'
                     >
                         Только мои
-                    </button>
+                    </Button>
                 )}
                 {currentUserId && (
-                    <button
+                    <Button
                         type='button'
-                        onClick={() => setTodayOnly(prev => !prev)}
-                        className={`rounded-lg border px-3 py-2 text-sm shadow-sm transition ${
-                            todayOnly
-                                ? "border-primary_green bg-brand_main text-white"
-                                : "border-brand_soft/60 text-gray-700 hover:bg-brand_soft/30"
-                        }`}
+                        variant={todayOnly ? "primary" : "secondary"}
                         title='Мои задачи на сегодня'
+                        onClick={() => setTodayOnly(prev => !prev)}
                     >
                         На сегодня
-                    </button>
+                    </Button>
                 )}
             </div>
 
             {error && (
-                <p className='rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
                     {error}
                 </p>
             )}
@@ -246,21 +321,19 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                     return (
                         <MobileCard key={t.id} onClick={() => setClosing(t)}>
                             <div className='flex items-start justify-between gap-2'>
-                                <span className='font-medium text-night_green'>{t.title}</span>
-                                <span
-                                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${TASK_STATUS_COLORS[t.status]}`}
-                                >
+                                <span className='font-medium text-neutral-900'>{t.title}</span>
+                                <Badge className={TASK_STATUS_COLORS[t.status]}>
                                     {TASK_STATUS_LABELS[t.status]}
-                                </span>
+                                </Badge>
                             </div>
                             {t.description && (
-                                <p className='mt-1 line-clamp-2 text-xs text-gray-500'>
+                                <p className='mt-1 line-clamp-2 text-xs text-neutral-500'>
                                     {t.description}
                                 </p>
                             )}
                             <div className='mt-2 flex flex-wrap items-center gap-2 text-xs'>
                                 <TaskTypeBadge type={t.type} />
-                                <span className={overdue ? "text-red-600" : "text-gray-600"}>
+                                <span className={overdue ? "text-red-600" : "text-neutral-500"}>
                                     {fmtRange(t)}
                                 </span>
                             </div>
@@ -271,7 +344,7 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                                         <Link
                                             href={rel.href}
                                             onClick={e => e.stopPropagation()}
-                                            className='text-night_green underline hover:text-brand_main'
+                                            className='text-neutral-700 underline hover:text-brand_main'
                                         >
                                             {rel.label}
                                         </Link>
@@ -283,84 +356,22 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                 })}
             </div>
 
-            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
-                <table className='w-full text-sm'>
-                    <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
-                        <tr>
-                            <th className='px-4 py-3'>Заголовок</th>
-                            <th className='px-4 py-3'>Тип</th>
-                            <th className='px-4 py-3'>Срок</th>
-                            <th className='px-4 py-3'>Ответственный</th>
-                            <th className='px-4 py-3'>Связь</th>
-                            <th className='px-4 py-3'>Статус</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items === null && <TableSkeleton rows={5} cols={6} />}
-                        {items?.length === 0 && (
-                            <EmptyState
-                                colSpan={6}
-                                icon={LuListTodo}
-                                title='Задач не найдено'
-                                hint='Попробуйте сбросить фильтры — или создайте задачу из карточки сделки/проекта.'
-                            />
-                        )}
-                        {items?.map(t => {
-                            const rel = relationLink(t)
-                            const overdue = isOverdue(t)
-                            return (
-                                <tr
-                                    key={t.id}
-                                    onClick={() => setClosing(t)}
-                                    className='cursor-pointer border-t border-brand_soft/30 hover:bg-brand_soft/15'
-                                    title='Открыть задачу'
-                                >
-                                    <td className='px-4 py-3'>
-                                        <div className='font-medium text-night_green'>
-                                            {t.title}
-                                        </div>
-                                        {t.description && (
-                                            <div className='mt-0.5 whitespace-pre-wrap text-xs text-gray-500'>
-                                                {t.description}
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className='px-4 py-3'>
-                                        <TaskTypeBadge type={t.type} />
-                                    </td>
-                                    <td className='px-4 py-3 text-gray-700'>
-                                        <span className={overdue ? "text-red-600" : ""}>
-                                            {fmtRange(t)}
-                                        </span>
-                                    </td>
-                                    <td className='px-4 py-3 text-gray-700'>
-                                        {fullName(t.assignee)}
-                                    </td>
-                                    <td className='px-4 py-3 text-gray-700'>
-                                        {rel ? (
-                                            <Link
-                                                href={rel.href}
-                                                onClick={e => e.stopPropagation()}
-                                                className='text-night_green underline hover:text-brand_main'
-                                            >
-                                                {rel.label}
-                                            </Link>
-                                        ) : (
-                                            "—"
-                                        )}
-                                    </td>
-                                    <td className='px-4 py-3'>
-                                        <span
-                                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${TASK_STATUS_COLORS[t.status]}`}
-                                        >
-                                            {TASK_STATUS_LABELS[t.status]}
-                                        </span>
-                                    </td>
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </table>
+            <div className='hidden md:block'>
+                <DataTable
+                    columns={columns}
+                    rows={items || []}
+                    loading={items === null}
+                    getRowId={t => t.id}
+                    onRowClick={t => setClosing(t)}
+                    initialSort={{ key: "endAt", dir: "asc" }}
+                    empty={
+                        <EmptyState
+                            icon={LuListTodo}
+                            title='Задач не найдено'
+                            hint='Попробуйте сбросить фильтры — или создайте задачу из карточки сделки/проекта.'
+                        />
+                    }
+                />
             </div>
 
             {closing && (

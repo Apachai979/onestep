@@ -8,7 +8,7 @@ export default function ProjectsTabs() {
 
     return (
         <div className='space-y-4'>
-            <div className='flex gap-1 self-start rounded-lg border border-brand_soft/40 bg-white p-1 w-fit'>
+            <div className='inline-flex w-fit self-start rounded-xl border border-line bg-white p-1 text-sm shadow-sm'>
                 {[
                     ["kanban", "Канбан"],
                     ["list", "Список"],
@@ -17,10 +17,10 @@ export default function ProjectsTabs() {
                         key={v}
                         type='button'
                         onClick={() => setView(v)}
-                        className={`rounded-md px-3 py-1.5 text-sm ${
+                        className={`rounded-lg px-4 py-1.5 font-medium transition-all duration-200 ${
                             view === v
-                                ? "bg-brand_main text-white"
-                                : "text-gray-700 hover:bg-brand_soft/30"
+                                ? "bg-neutral-900 text-white shadow-sm"
+                                : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
                         }`}
                     >
                         {label}

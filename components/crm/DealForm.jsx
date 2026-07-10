@@ -3,6 +3,15 @@ import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { DEAL_STATUSES, DEAL_STATUS_LABELS } from "@/lib/crm/deal"
 import SearchableSelect from "./SearchableSelect"
+import {
+    Button,
+    Card,
+    Field,
+    FormSection,
+    Input,
+    Select,
+    Textarea,
+} from "@/components/crm/ui"
 
 const EMPTY = {
     title: "",
@@ -194,184 +203,144 @@ export default function DealForm({
     }
 
     return (
-        <form onSubmit={handleSubmit} className='space-y-4'>
-            <Section title='Основное'>
-                <Field
-                    label='Название сделки (опц.)'
-                    value={form.title}
-                    onChange={update("title")}
-                    placeholder='Если пусто — будет «Сделка с {клиент}»'
-                    className='sm:col-span-2'
-                />
-                <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-sm text-gray-700'>Клиент *</label>
-                    <SearchableSelect
-                        value={form.counterpartyId}
-                        onChange={id =>
-                            setForm(prev => ({ ...prev, counterpartyId: id, contactId: "" }))
-                        }
-                        required
-                        placeholder='Введите название или ИНН'
-                        options={counterpartyOptions}
-                    />
-                </div>
-                <div>
-                    <label className='mb-1 block text-sm text-gray-700'>Контактное лицо</label>
-                    <SearchableSelect
-                        value={form.contactId}
-                        onChange={id => setForm(prev => ({ ...prev, contactId: id }))}
-                        disabled={!form.counterpartyId}
-                        placeholder={
-                            !form.counterpartyId
-                                ? "Сначала выберите клиента"
-                                : contacts.length === 0
-                                  ? "У клиента нет контактов"
-                                  : "— Не выбран —"
-                        }
-                        options={contacts.map(c => ({
-                            id: c.id,
-                            label: contactName(c),
-                            search: `${c.firstName ?? ""} ${c.lastName ?? ""} ${c.email ?? ""} ${c.phone ?? ""}`,
-                        }))}
-                    />
-                </div>
-                <div>
-                    <label className='mb-1 block text-sm text-gray-700'>
-                        Ответственный менеджер *
-                    </label>
-                    <SearchableSelect
-                        value={form.managerId}
-                        onChange={id => setForm(prev => ({ ...prev, managerId: id }))}
-                        required
-                        options={managers.map(m => ({
-                            id: m.id,
-                            label: managerName(m),
-                            search: `${m.firstName ?? ""} ${m.lastName ?? ""} ${m.email ?? ""}`,
-                        }))}
-                    />
-                </div>
-                <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-sm text-gray-700'>Проект-источник</label>
-                    <SearchableSelect
-                        value={form.sourceProjectId}
-                        onChange={id => setForm(prev => ({ ...prev, sourceProjectId: id }))}
-                        placeholder='— Без привязки —'
-                        emptyLabel='Проект не найден'
-                        options={projects.map(p => ({
-                            id: p.id,
-                            label: p.internalName,
-                            sublabel: [p.distributor?.name, p.endCustomer?.name].filter(Boolean).join(" – "),
-                            search: `${p.internalName} ${p.distributor?.name ?? ""} ${p.endCustomer?.name ?? ""}`,
-                        }))}
-                    />
-                </div>
-            </Section>
+        <form onSubmit={handleSubmit} className='space-y-6'>
+            <Card>
+                <FormSection
+                    title='Основное'
+                    description='Клиент, ответственный менеджер и привязка сделки.'
+                >
+                    <div className='grid gap-4 sm:grid-cols-2'>
+                        <Input
+                            label='Название сделки (опц.)'
+                            containerClassName='sm:col-span-2'
+                            value={form.title}
+                            onChange={update("title")}
+                        />
+                        <Field label='Клиент' required className='sm:col-span-2'>
+                            <SearchableSelect
+                                value={form.counterpartyId}
+                                onChange={id =>
+                                    setForm(prev => ({
+                                        ...prev,
+                                        counterpartyId: id,
+                                        contactId: "",
+                                    }))
+                                }
+                                required
+                                placeholder='Введите название или ИНН'
+                                options={counterpartyOptions}
+                            />
+                        </Field>
+                        <Field label='Контактное лицо'>
+                            <SearchableSelect
+                                value={form.contactId}
+                                onChange={id => setForm(prev => ({ ...prev, contactId: id }))}
+                                disabled={!form.counterpartyId}
+                                placeholder={
+                                    !form.counterpartyId
+                                        ? "Сначала выберите клиента"
+                                        : contacts.length === 0
+                                          ? "У клиента нет контактов"
+                                          : "— Не выбран —"
+                                }
+                                options={contacts.map(c => ({
+                                    id: c.id,
+                                    label: contactName(c),
+                                    search: `${c.firstName ?? ""} ${c.lastName ?? ""} ${c.email ?? ""} ${c.phone ?? ""}`,
+                                }))}
+                            />
+                        </Field>
+                        <Field label='Ответственный менеджер' required>
+                            <SearchableSelect
+                                value={form.managerId}
+                                onChange={id => setForm(prev => ({ ...prev, managerId: id }))}
+                                required
+                                options={managers.map(m => ({
+                                    id: m.id,
+                                    label: managerName(m),
+                                    search: `${m.firstName ?? ""} ${m.lastName ?? ""} ${m.email ?? ""}`,
+                                }))}
+                            />
+                        </Field>
+                        <Field label='Проект-источник' className='sm:col-span-2'>
+                            <SearchableSelect
+                                value={form.sourceProjectId}
+                                onChange={id =>
+                                    setForm(prev => ({ ...prev, sourceProjectId: id }))
+                                }
+                                placeholder='— Без привязки —'
+                                emptyLabel='Проект не найден'
+                                options={projects.map(p => ({
+                                    id: p.id,
+                                    label: p.internalName,
+                                    sublabel: [p.distributor?.name, p.endCustomer?.name]
+                                        .filter(Boolean)
+                                        .join(" – "),
+                                    search: `${p.internalName} ${p.distributor?.name ?? ""} ${p.endCustomer?.name ?? ""}`,
+                                }))}
+                            />
+                        </Field>
+                    </div>
+                </FormSection>
+            </Card>
 
-            <Section title='Статус, доставка, примечание'>
-                <div>
-                    <label className='mb-1 block text-sm text-gray-700'>Статус</label>
-                    <select
-                        value={form.status}
-                        onChange={update("status")}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
-                    >
-                        {DEAL_STATUSES.map(s => (
-                            <option key={s} value={s}>
-                                {DEAL_STATUS_LABELS[s]}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <div>
-                    <label className='mb-1 block text-sm text-gray-700'>
-                        Скидка, %
-                    </label>
-                    <input
-                        type='number'
-                        min='0'
-                        max='100'
-                        step='0.01'
-                        inputMode='decimal'
-                        value={form.discount}
-                        onChange={e => {
-                            discountTouchedRef.current = true
-                            setForm(prev => ({ ...prev, discount: e.target.value }))
-                        }}
-                        placeholder='Подтянется из карточки клиента'
-                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
-                    />
-                    <p className='mt-1 text-xs text-night_green/55'>
-                        Используется в КП. Меняйте здесь, если клиенту согласована особая
-                        скидка на эту сделку.
-                    </p>
-                </div>
-                <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-sm text-gray-700'>
-                        Адрес доставки
-                    </label>
-                    <textarea
-                        rows={2}
-                        value={form.deliveryAddress}
-                        onChange={update("deliveryAddress")}
-                        placeholder='По умолчанию для новых отгрузок этой сделки'
-                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
-                    />
-                    <p className='mt-1 text-xs text-night_green/55'>
-                        Подставится в форму новой отгрузки. Уже созданные отгрузки не меняются.
-                    </p>
-                </div>
-                <div className='sm:col-span-2'>
-                    <label className='mb-1 block text-sm text-gray-700'>Примечание</label>
-                    <textarea
-                        rows={3}
-                        value={form.note}
-                        onChange={update("note")}
-                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
-                    />
-                </div>
-            </Section>
+            <Card>
+                <FormSection title='Статус, доставка, примечание'>
+                    <div className='grid gap-4 sm:grid-cols-2'>
+                        <Select label='Статус' value={form.status} onChange={update("status")}>
+                            {DEAL_STATUSES.map(s => (
+                                <option key={s} value={s}>
+                                    {DEAL_STATUS_LABELS[s]}
+                                </option>
+                            ))}
+                        </Select>
+                        <Input
+                            label='Скидка, %'
+                            type='number'
+                            min='0'
+                            max='100'
+                            step='0.01'
+                            inputMode='decimal'
+                            value={form.discount}
+                            onChange={e => {
+                                discountTouchedRef.current = true
+                                setForm(prev => ({ ...prev, discount: e.target.value }))
+                            }}
+                            hint='Используется в КП. Меняйте, если клиенту согласована особая скидка на эту сделку.'
+                        />
+                        <Textarea
+                            label='Адрес доставки'
+                            containerClassName='sm:col-span-2'
+                            rows={2}
+                            value={form.deliveryAddress}
+                            onChange={update("deliveryAddress")}
+                            hint='Подставится в форму новой отгрузки. Уже созданные отгрузки не меняются.'
+                        />
+                        <Textarea
+                            label='Примечание'
+                            containerClassName='sm:col-span-2'
+                            rows={3}
+                            value={form.note}
+                            onChange={update("note")}
+                        />
+                    </div>
+                </FormSection>
+            </Card>
 
-            {error && <p className='text-sm text-red-600'>{error}</p>}
+            {error && (
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                    {error}
+                </p>
+            )}
 
             <div className='flex justify-end gap-3'>
-                <button
-                    type='button'
-                    onClick={() => router.back()}
-                    className='rounded-lg border border-brand_soft/60 px-4 py-2 text-sm text-gray-700 hover:bg-brand_soft/30'
-                >
+                <Button type='button' variant='secondary' onClick={() => router.back()}>
                     Отмена
-                </button>
-                <button
-                    type='submit'
-                    disabled={loading}
-                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
-                >
-                    {loading ? "Сохраняем..." : mode === "create" ? "Создать" : "Сохранить"}
-                </button>
+                </Button>
+                <Button type='submit' loading={loading}>
+                    {mode === "create" ? "Создать" : "Сохранить"}
+                </Button>
             </div>
         </form>
-    )
-}
-
-function Section({ title, children }) {
-    return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-            <h2 className='mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500'>
-                {title}
-            </h2>
-            <div className='grid gap-3 sm:grid-cols-2'>{children}</div>
-        </section>
-    )
-}
-
-function Field({ label, className = "", ...props }) {
-    return (
-        <div className={className}>
-            <label className='mb-1 block text-sm text-gray-700'>{label}</label>
-            <input
-                {...props}
-                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 shadow-sm focus:border-brand_main focus:outline-none'
-            />
-        </div>
     )
 }

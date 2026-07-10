@@ -71,12 +71,12 @@ export default async function AuctionPage({ params }) {
             <CrmBackLink
                 fallback={`/crm/projects/${item.projectId}`}
                 fallbackLabel='К проекту'
-                className='inline-flex items-center gap-1 text-xs text-night_green/55 hover:text-brand_main'
+                className='inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-brand_main'
             />
 
             <div className='flex flex-wrap items-start justify-between gap-3'>
                 <div className='min-w-0'>
-                    <p className='text-xs uppercase tracking-wider text-night_green/55'>
+                    <p className='text-xs uppercase tracking-wider text-neutral-400'>
                         Аукцион · проект{" "}
                         <Link
                             href={`/crm/projects/${item.projectId}`}
@@ -85,7 +85,7 @@ export default async function AuctionPage({ params }) {
                             {item.project.internalName}
                         </Link>
                     </p>
-                    <h1 className='mt-0.5 text-xl font-semibold text-night_green sm:text-2xl'>
+                    <h1 className='mt-0.5 text-xl font-semibold text-neutral-900 sm:text-2xl'>
                         {item.purchaseNumber ? `Закупка № ${item.purchaseNumber}` : "Аукцион"}
                     </h1>
                 </div>
@@ -108,7 +108,7 @@ export default async function AuctionPage({ params }) {
                         action={
                             <Link
                                 href={`/crm/auctions/${item.id}/edit`}
-                                className='inline-flex items-center gap-1 rounded-md border border-brand_soft/60 bg-white px-2 py-1 text-[11px] font-medium text-night_green/75 hover:bg-brand_soft/30'
+                                className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
                             >
                                 <LuPencil className='h-3 w-3' />
                                 Редактировать
@@ -126,7 +126,7 @@ export default async function AuctionPage({ params }) {
                         <Row label='Заказчик'>
                             <Link
                                 href={`/crm/counterparties/${item.customer.id}`}
-                                className='text-night_green underline hover:text-brand_main'
+                                className='text-neutral-900 underline hover:text-brand_main'
                             >
                                 {item.customer.name}
                             </Link>
@@ -134,7 +134,7 @@ export default async function AuctionPage({ params }) {
                         <Row label='Поставщик'>
                             <Link
                                 href={`/crm/counterparties/${item.supplier.id}`}
-                                className='text-night_green underline hover:text-brand_main'
+                                className='text-neutral-900 underline hover:text-brand_main'
                             >
                                 {item.supplier.name}
                             </Link>
@@ -144,7 +144,7 @@ export default async function AuctionPage({ params }) {
                                 <>
                                     {contactName(item.supplierContact)}
                                     {item.supplierContact.phone && (
-                                        <span className='block text-xs text-night_green/60'>
+                                        <span className='block text-xs text-neutral-500'>
                                             {item.supplierContact.phone}
                                         </span>
                                     )}
@@ -195,9 +195,9 @@ export default async function AuctionPage({ params }) {
                         apiBase={`/api/crm/auctions/${item.id}`}
                     />
 
-                    <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+                    <section className='rounded-xl border border-line bg-white p-4'>
                         <div className='mb-2.5 flex items-center justify-between gap-3'>
-                            <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                            <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                                 Сделки по аукциону ({item.deals.length})
                             </h2>
                             <SectionCreateButton
@@ -206,7 +206,7 @@ export default async function AuctionPage({ params }) {
                             />
                         </div>
                         {item.deals.length === 0 ? (
-                            <p className='text-sm text-night_green/55'>
+                            <p className='text-sm text-neutral-400'>
                                 Сделок по аукциону пока нет. Нажмите «Создать сделку» —
                                 поставщик и товарные позиции подставятся из аукциона.
                             </p>
@@ -216,18 +216,18 @@ export default async function AuctionPage({ params }) {
                                     <Link
                                         key={d.id}
                                         href={`/crm/deals/${d.id}`}
-                                        className='flex items-center justify-between gap-3 rounded-lg border border-brand_soft/40 px-3 py-2 transition hover:bg-brand_soft/15'
+                                        className='flex items-center justify-between gap-3 rounded-lg border border-line px-3 py-2 transition hover:bg-surface_muted'
                                     >
                                         <div className='min-w-0'>
-                                            <p className='truncate text-sm font-medium text-night_green'>
+                                            <p className='truncate text-sm font-medium text-neutral-900'>
                                                 {dealDisplayTitle(d, d.counterparty?.name)}
                                             </p>
-                                            <p className='mt-0.5 truncate text-xs text-night_green/60'>
+                                            <p className='mt-0.5 truncate text-xs text-neutral-500'>
                                                 {d.counterparty?.name || "—"} · {fullName(d.manager)}
                                             </p>
                                         </div>
                                         <div className='flex shrink-0 items-center gap-2'>
-                                            <span className='text-sm font-medium text-gray-800'>
+                                            <span className='text-sm font-medium text-neutral-800'>
                                                 {formatMoney(d.totalAmount)}
                                             </span>
                                             <span
@@ -272,16 +272,16 @@ function SectionCreateButton({ href, label }) {
 
 function Section({ title, footer, action, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
+        <section className='rounded-xl border border-line bg-white p-4'>
             <div className='mb-2.5 flex items-center justify-between gap-3'>
-                <h2 className='text-xs font-semibold uppercase tracking-wide text-night_green/70'>
+                <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                     {title}
                 </h2>
                 {action && <div className='shrink-0'>{action}</div>}
             </div>
             <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>{children}</dl>
             {footer && (
-                <p className='mt-3 border-t border-brand_soft/30 pt-2 text-[11px] text-night_green/50'>
+                <p className='mt-3 border-t border-line pt-2 text-[11px] text-neutral-400'>
                     {footer}
                 </p>
             )}
@@ -292,10 +292,10 @@ function Section({ title, footer, action, children }) {
 function Row({ label, value, children, className = "" }) {
     return (
         <div className={className}>
-            <dt className='text-[10px] uppercase tracking-wider text-night_green/55'>
+            <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>
                 {label}
             </dt>
-            <dd className='mt-0.5 text-sm text-night_green'>{children ?? value ?? "—"}</dd>
+            <dd className='mt-0.5 text-sm text-neutral-900'>{children ?? value ?? "—"}</dd>
         </div>
     )
 }

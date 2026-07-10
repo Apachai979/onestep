@@ -10,7 +10,18 @@ import {
 import { LuTarget, LuPlus } from "react-icons/lu"
 import { formatMoney } from "@/lib/crm/format"
 import SearchableSelect from "./SearchableSelect"
-import { CardListSkeleton, CardRow, EmptyState, MobileCard, TableSkeleton } from "@/components/crm/ui"
+import {
+    Badge,
+    Button,
+    CardListSkeleton,
+    CardRow,
+    DataTable,
+    EmptyState,
+    Field,
+    Input,
+    MobileCard,
+    Select,
+} from "@/components/crm/ui"
 
 const STATUS_CLASS = PROJECT_STATUS_COLORS
 
@@ -119,76 +130,135 @@ export default function ProjectsList() {
         [refs.managers],
     )
 
+    const columns = useMemo(
+        () => [
+            {
+                key: "endCustomer",
+                header: "Конечный потребитель",
+                sortable: true,
+                sortValue: p => p.endCustomer?.name || "",
+                render: p => p.endCustomer?.name || "—",
+            },
+            {
+                key: "internalName",
+                header: "Внутреннее название",
+                sortable: true,
+                sortValue: p => p.internalName,
+                render: p => (
+                    <Link
+                        href={`/crm/projects/${p.id}`}
+                        onClick={e => e.stopPropagation()}
+                        className='font-medium text-neutral-900 hover:text-brand_main'
+                    >
+                        {p.internalName}
+                    </Link>
+                ),
+            },
+            {
+                key: "distributor",
+                header: "Дистрибьютор",
+                sortValue: p => p.distributor?.name || "",
+                render: p => p.distributor?.name || "—",
+                hideable: true,
+            },
+            {
+                key: "region",
+                header: "Регион",
+                render: p => p.endCustomer?.region || p.distributor?.region || "—",
+                hideable: true,
+            },
+            {
+                key: "manager",
+                header: "Менеджер",
+                sortValue: p => fullName(p.manager),
+                render: p => fullName(p.manager),
+                hideable: true,
+            },
+            {
+                key: "status",
+                header: "Статус",
+                sortable: true,
+                sortValue: p => PROJECT_STATUS_LABELS[p.status] || p.status,
+                render: p => (
+                    <Badge className={STATUS_CLASS[p.status] || ""}>
+                        {PROJECT_STATUS_LABELS[p.status]}
+                    </Badge>
+                ),
+            },
+            {
+                key: "totalAmount",
+                header: "Сумма сделок",
+                align: "right",
+                sortable: true,
+                sortValue: p => Number(p.totalAmount || 0),
+                render: p => formatMoney(p.totalAmount),
+            },
+            {
+                key: "createdAt",
+                header: "Создан",
+                sortable: true,
+                sortValue: p => new Date(p.createdAt).getTime(),
+                render: p => formatDate(p.createdAt),
+                hideable: true,
+            },
+        ],
+        [],
+    )
+
     return (
         <div className='space-y-4'>
-            <div className='grid gap-3 rounded-xl border border-brand_soft/40 bg-white/70 p-4 sm:grid-cols-2 lg:grid-cols-4'>
-                <FilterField label='Поиск'>
-                    <input
-                        value={filters.q}
-                        onChange={set("q")}
-                        placeholder='Название, клиент'
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                    />
-                </FilterField>
-                <FilterField label='Статус'>
-                    <select
-                        value={filters.status}
-                        onChange={set("status")}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                    >
+            <div className='grid gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4'>
+                <Field label='Поиск'>
+                    <Input value={filters.q} onChange={set("q")} placeholder='Название, клиент' />
+                </Field>
+                <Field label='Статус'>
+                    <Select value={filters.status} onChange={set("status")}>
                         <option value=''>Все</option>
                         {PROJECT_STATUSES.map(s => (
                             <option key={s} value={s}>
                                 {PROJECT_STATUS_LABELS[s]}
                             </option>
                         ))}
-                    </select>
-                </FilterField>
-                <FilterField label='Регион'>
-                    <input
-                        value={filters.region}
-                        onChange={set("region")}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                    />
-                </FilterField>
-                <FilterField label='Менеджер'>
+                    </Select>
+                </Field>
+                <Field label='Регион'>
+                    <Input value={filters.region} onChange={set("region")} />
+                </Field>
+                <Field label='Менеджер'>
                     <SearchableSelect
                         value={filters.managerId}
                         onChange={setId("managerId")}
                         options={managerOptions}
                         placeholder='Все'
                     />
-                </FilterField>
-                <FilterField label='Дистрибьютор'>
+                </Field>
+                <Field label='Дистрибьютор'>
                     <SearchableSelect
                         value={filters.distributorId}
                         onChange={setId("distributorId")}
                         options={distributorOptions}
                         placeholder='Все'
                     />
-                </FilterField>
-                <FilterField label='Конечный потребитель'>
+                </Field>
+                <Field label='Конечный потребитель'>
                     <SearchableSelect
                         value={filters.customerId}
                         onChange={setId("customerId")}
                         options={customerOptions}
                         placeholder='Все'
                     />
-                </FilterField>
+                </Field>
             </div>
 
             <div className='flex justify-end'>
-                <Link
-                    href='/crm/projects/new'
-                    className='inline-flex items-center gap-2 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
-                >
+                <Button href='/crm/projects/new'>
                     <LuPlus className='h-4 w-4' />
                     Новый проект
-                </Link>
+                </Button>
             </div>
 
             {error && (
-                <p className='rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
                     {error}
                 </p>
             )}
@@ -206,12 +276,10 @@ export default function ProjectsList() {
                 {items?.map(p => (
                     <MobileCard key={p.id} onClick={() => router.push(`/crm/projects/${p.id}`)}>
                         <div className='flex items-start justify-between gap-2'>
-                            <span className='font-medium text-night_green'>{p.internalName}</span>
-                            <span
-                                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[p.status] || ""}`}
-                            >
+                            <span className='font-medium text-neutral-900'>{p.internalName}</span>
+                            <Badge className={STATUS_CLASS[p.status] || ""}>
                                 {PROJECT_STATUS_LABELS[p.status]}
-                            </span>
+                            </Badge>
                         </div>
                         <div className='mt-2 space-y-1'>
                             <CardRow label='Потребитель'>{p.endCustomer?.name || "—"}</CardRow>
@@ -222,7 +290,7 @@ export default function ProjectsList() {
                             <CardRow label='Менеджер'>{fullName(p.manager)}</CardRow>
                             <CardRow label='Создан'>{formatDate(p.createdAt)}</CardRow>
                             <CardRow label='Сумма сделок'>
-                                <span className='font-medium text-gray-800'>
+                                <span className='font-medium text-neutral-900'>
                                     {formatMoney(p.totalAmount)}
                                 </span>
                             </CardRow>
@@ -231,81 +299,23 @@ export default function ProjectsList() {
                 ))}
             </div>
 
-            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
-                <table className='w-full text-sm'>
-                    <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
-                        <tr>
-                            <th className='px-4 py-3'>Конечный потребитель</th>
-                            <th className='px-4 py-3'>Внутреннее название</th>
-                            <th className='px-4 py-3'>Дистрибьютор</th>
-                            <th className='px-4 py-3'>Регион</th>
-                            <th className='px-4 py-3'>Менеджер</th>
-                            <th className='px-4 py-3'>Статус</th>
-                            <th className='px-4 py-3 text-right'>Сумма сделок</th>
-                            <th className='px-4 py-3'>Создан</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items === null && <TableSkeleton rows={5} cols={8} />}
-                        {items?.length === 0 && (
-                            <EmptyState
-                                colSpan={8}
-                                icon={LuTarget}
-                                title='Проектов не найдено'
-                                hint='Попробуйте сбросить фильтры или создайте новый проект.'
-                            />
-                        )}
-                        {items?.map(p => (
-                            <tr
-                                key={p.id}
-                                onClick={() => router.push(`/crm/projects/${p.id}`)}
-                                className='cursor-pointer border-t border-brand_soft/30 transition hover:bg-brand_soft/15'
-                            >
-                                <td className='px-4 py-3 text-gray-700'>
-                                    {p.endCustomer?.name || "—"}
-                                </td>
-                                <td className='px-4 py-3'>
-                                    <Link
-                                        href={`/crm/projects/${p.id}`}
-                                        className='font-medium text-night_green hover:text-brand_main'
-                                    >
-                                        {p.internalName}
-                                    </Link>
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>
-                                    {p.distributor?.name || "—"}
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>
-                                    {p.endCustomer?.region || p.distributor?.region || "—"}
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>{fullName(p.manager)}</td>
-                                <td className='px-4 py-3'>
-                                    <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[p.status] || ""}`}
-                                    >
-                                        {PROJECT_STATUS_LABELS[p.status]}
-                                    </span>
-                                </td>
-                                <td className='px-4 py-3 text-right text-gray-700'>
-                                    {formatMoney(p.totalAmount)}
-                                </td>
-                                <td className='px-4 py-3 text-gray-700'>
-                                    {formatDate(p.createdAt)}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            <div className='hidden md:block'>
+                <DataTable
+                    columns={columns}
+                    rows={items || []}
+                    loading={items === null}
+                    getRowId={p => p.id}
+                    onRowClick={p => router.push(`/crm/projects/${p.id}`)}
+                    initialSort={{ key: "createdAt", dir: "desc" }}
+                    empty={
+                        <EmptyState
+                            icon={LuTarget}
+                            title='Проектов не найдено'
+                            hint='Попробуйте сбросить фильтры или создайте новый проект.'
+                        />
+                    }
+                />
             </div>
-        </div>
-    )
-}
-
-function FilterField({ label, children }) {
-    return (
-        <div>
-            <label className='mb-1 block text-xs text-gray-600'>{label}</label>
-            {children}
         </div>
     )
 }

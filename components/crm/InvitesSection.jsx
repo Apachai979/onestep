@@ -10,9 +10,9 @@ const STATUS_LABELS = {
 }
 
 const STATUS_CLASS = {
-    ACTIVE: "bg-blue-100 text-blue-800",
-    USED: "bg-gray-200 text-gray-700",
-    EXPIRED: "bg-red-100 text-red-700",
+    ACTIVE: "bg-blue-50 text-blue-700",
+    USED: "bg-neutral-100 text-neutral-500",
+    EXPIRED: "bg-red-50 text-red-700",
 }
 
 function safeJson(text) {
@@ -119,9 +119,9 @@ export default function InvitesSection() {
     }
 
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70'>
-            <div className='flex items-center justify-between border-b border-brand_soft/30 px-5 py-3'>
-                <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
+        <section className='overflow-hidden rounded-2xl border border-line bg-white shadow-sm'>
+            <div className='flex items-center justify-between border-b border-line px-6 py-3.5'>
+                <h2 className='text-sm font-semibold text-neutral-900'>
                     Приглашения
                 </h2>
                 {!showCreate && (
@@ -138,7 +138,7 @@ export default function InvitesSection() {
             {showCreate && (
                 <form
                     onSubmit={handleCreate}
-                    className='space-y-3 border-b border-brand_soft/30 bg-gray-50 p-5'
+                    className='space-y-3 border-b border-line bg-surface_muted p-6'
                 >
                     <div className='grid gap-3 sm:grid-cols-3'>
                         <Field
@@ -151,13 +151,13 @@ export default function InvitesSection() {
                             placeholder='Закрепить за конкретным email'
                         />
                         <div>
-                            <label className='mb-1 block text-xs text-gray-600'>Роль</label>
+                            <label className='mb-1.5 block text-xs font-medium text-neutral-500'>Роль</label>
                             <select
                                 value={form.role}
                                 onChange={e =>
                                     setForm(prev => ({ ...prev, role: e.target.value }))
                                 }
-                                className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                             >
                                 {USER_ROLES.map(r => (
                                     <option key={r} value={r}>
@@ -167,7 +167,7 @@ export default function InvitesSection() {
                             </select>
                         </div>
                         <div>
-                            <label className='mb-1 block text-xs text-gray-600'>
+                            <label className='mb-1 block text-xs text-neutral-500'>
                                 Срок действия, дней
                             </label>
                             <select
@@ -178,7 +178,7 @@ export default function InvitesSection() {
                                         ttlDays: Number(e.target.value),
                                     }))
                                 }
-                                className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                             >
                                 {[3, 7, 14, 30].map(n => (
                                     <option key={n} value={n}>
@@ -196,7 +196,7 @@ export default function InvitesSection() {
                                 setShowCreate(false)
                                 setError("")
                             }}
-                            className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
+                            className='rounded-lg border border-line px-3 py-1.5 text-sm text-neutral-700 hover:bg-surface_muted'
                         >
                             Отмена
                         </button>
@@ -215,7 +215,7 @@ export default function InvitesSection() {
             <div className='space-y-3 p-4 md:hidden'>
                 {items === null && <CardListSkeleton rows={2} />}
                 {items?.length === 0 && (
-                    <p className='py-4 text-center text-sm text-gray-400'>
+                    <p className='py-4 text-center text-sm text-neutral-400'>
                         Приглашений ещё нет
                     </p>
                 )}
@@ -224,7 +224,7 @@ export default function InvitesSection() {
                     return (
                         <MobileCard key={inv.id}>
                             <div className='flex items-start justify-between gap-2'>
-                                <span className='min-w-0 truncate font-medium text-gray-800'>
+                                <span className='min-w-0 truncate font-medium text-neutral-800'>
                                     {inv.email || "Без email"}
                                 </span>
                                 <span
@@ -256,7 +256,7 @@ export default function InvitesSection() {
                                     <button
                                         type='button'
                                         onClick={() => copyLink(inv.token)}
-                                        className='rounded-md border border-brand_soft/60 px-3 py-1.5 text-xs text-gray-700 hover:bg-brand_soft/30'
+                                        className='rounded-md border border-line px-3 py-1.5 text-xs text-neutral-700 hover:bg-surface_muted'
                                     >
                                         {copied === inv.token
                                             ? "Скопировано!"
@@ -278,7 +278,7 @@ export default function InvitesSection() {
 
             <div className='hidden overflow-x-auto md:block'>
                 <table className='w-full text-sm'>
-                    <thead className='bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70'>
+                    <thead className='bg-surface_muted text-left text-xs font-medium uppercase tracking-wide text-neutral-500'>
                         <tr>
                             <th className='px-4 py-3'>Email</th>
                             <th className='px-4 py-3'>Роль</th>
@@ -292,14 +292,14 @@ export default function InvitesSection() {
                     <tbody>
                         {items === null && (
                             <tr>
-                                <td colSpan={7} className='px-4 py-6 text-center text-gray-400'>
+                                <td colSpan={7} className='px-4 py-6 text-center text-neutral-400'>
                                     Загрузка...
                                 </td>
                             </tr>
                         )}
                         {items?.length === 0 && (
                             <tr>
-                                <td colSpan={7} className='px-4 py-6 text-center text-gray-400'>
+                                <td colSpan={7} className='px-4 py-6 text-center text-neutral-400'>
                                     Приглашений ещё нет
                                 </td>
                             </tr>
@@ -309,12 +309,12 @@ export default function InvitesSection() {
                             return (
                                 <tr
                                     key={inv.id}
-                                    className='border-t border-brand_soft/30 hover:bg-brand_soft/15'
+                                    className='border-t border-line hover:bg-surface_muted'
                                 >
-                                    <td className='px-4 py-3 text-gray-700'>
+                                    <td className='px-4 py-3 text-neutral-700'>
                                         {inv.email || "—"}
                                     </td>
-                                    <td className='px-4 py-3 text-gray-700'>
+                                    <td className='px-4 py-3 text-neutral-700'>
                                         {USER_ROLE_LABELS[inv.role] || inv.role}
                                     </td>
                                     <td className='px-4 py-3'>
@@ -324,10 +324,10 @@ export default function InvitesSection() {
                                             {STATUS_LABELS[status]}
                                         </span>
                                     </td>
-                                    <td className='px-4 py-3 text-gray-700'>
+                                    <td className='px-4 py-3 text-neutral-700'>
                                         {fmtDate(inv.expiresAt)}
                                     </td>
-                                    <td className='px-4 py-3 text-gray-700'>
+                                    <td className='px-4 py-3 text-neutral-700'>
                                         {inv.usedAt
                                             ? `${fmtDate(inv.usedAt)}${
                                                   inv.usedByEmail
@@ -336,7 +336,7 @@ export default function InvitesSection() {
                                               }`
                                             : "—"}
                                     </td>
-                                    <td className='px-4 py-3 text-gray-700'>
+                                    <td className='px-4 py-3 text-neutral-700'>
                                         {inv.createdBy
                                             ? `${inv.createdBy.firstName ?? ""} ${inv.createdBy.lastName ?? ""}`.trim() ||
                                               inv.createdBy.email
@@ -349,7 +349,7 @@ export default function InvitesSection() {
                                                     <button
                                                         type='button'
                                                         onClick={() => copyLink(inv.token)}
-                                                        className='rounded-md border border-brand_soft/60 px-2 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
+                                                        className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
                                                     >
                                                         {copied === inv.token
                                                             ? "Скопировано!"
@@ -379,10 +379,10 @@ export default function InvitesSection() {
 function Field({ label, ...props }) {
     return (
         <div>
-            <label className='mb-1 block text-xs text-gray-600'>{label}</label>
+            <label className='mb-1 block text-xs text-neutral-500'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
             />
         </div>
     )

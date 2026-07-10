@@ -103,9 +103,9 @@ export default function SearchableSelect({
                     type='button'
                     onClick={openDropdown}
                     disabled={disabled}
-                    className='flex w-full items-center justify-between gap-2 rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-left text-sm shadow-sm focus:border-brand_main focus:outline-none disabled:bg-gray-50 disabled:text-gray-400'
+                    className='flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-line bg-white px-3 text-left text-sm shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20 disabled:bg-surface_muted disabled:text-neutral-400'
                 >
-                    <span className={selected ? "text-gray-900" : "text-gray-400"}>
+                    <span className={`truncate ${selected ? "text-neutral-900" : "text-neutral-400"}`}>
                         {selected ? selected.label : placeholder}
                     </span>
                     {selected ? (
@@ -115,13 +115,13 @@ export default function SearchableSelect({
                                 if (!disabled) clear()
                             }}
                             role='button'
-                            className='cursor-pointer rounded p-1 text-gray-400 hover:bg-brand_soft/30 hover:text-gray-700'
+                            className='shrink-0 cursor-pointer rounded-md p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700'
                             aria-label='Очистить'
                         >
                             ×
                         </span>
                     ) : (
-                        <span className='text-gray-400'>▾</span>
+                        <span className='shrink-0 text-neutral-400'>▾</span>
                     )}
                 </button>
             ) : (
@@ -131,17 +131,17 @@ export default function SearchableSelect({
                     onChange={e => setQuery(e.target.value)}
                     onKeyDown={onKeyDown}
                     placeholder='Введите название или ИНН'
-                    className='w-full rounded-lg border border-primary_green bg-white px-3 py-2 text-sm shadow-sm focus:outline-none'
+                    className='h-10 w-full rounded-xl border border-brand_main bg-white px-3 text-sm text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                 />
             )}
 
             {open && (
                 <ul
                     ref={listRef}
-                    className='absolute z-30 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-brand_soft/40 bg-white shadow-lg'
+                    className='absolute z-30 mt-1.5 max-h-72 w-full overflow-y-auto rounded-xl border border-line bg-white p-1 shadow-lg shadow-neutral-900/10'
                 >
                     {filtered.length === 0 && (
-                        <li className='px-3 py-2 text-sm text-gray-400'>{emptyLabel}</li>
+                        <li className='px-3 py-2 text-sm text-neutral-400'>{emptyLabel}</li>
                     )}
                     {filtered.map((opt, idx) => (
                         <li
@@ -151,13 +151,13 @@ export default function SearchableSelect({
                                 choose(opt)
                             }}
                             onMouseEnter={() => setActiveIdx(idx)}
-                            className={`cursor-pointer px-3 py-2 text-sm ${
-                                idx === activeIdx ? "bg-brand_main/10" : "hover:bg-brand_soft/15"
+                            className={`cursor-pointer rounded-lg px-3 py-2 text-sm transition-colors ${
+                                idx === activeIdx ? "bg-neutral-100" : "hover:bg-neutral-50"
                             }`}
                         >
-                            <div className='font-medium text-night_green'>{opt.label}</div>
+                            <div className='font-medium text-neutral-900'>{opt.label}</div>
                             {opt.sublabel && (
-                                <div className='text-xs text-gray-500'>{opt.sublabel}</div>
+                                <div className='text-xs text-neutral-500'>{opt.sublabel}</div>
                             )}
                         </li>
                     ))}

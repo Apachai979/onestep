@@ -15,13 +15,13 @@ export default async function EditCounterpartyPage({ params }) {
             <CrmBackLink
                 fallback={`/crm/counterparties/${item.id}`}
                 fallbackLabel={item.name}
-                className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary_green'
+                className='inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand_main'
             />
             <div>
-                <p className='text-xs uppercase text-gray-500'>
+                <p className='text-xs uppercase text-neutral-500'>
                     {COUNTERPARTY_TYPE_LABELS[item.type]}
                 </p>
-                <h1 className='mt-1 text-2xl font-semibold text-night_green'>
+                <h1 className='mt-1 text-2xl font-semibold text-neutral-900'>
                     Редактирование
                 </h1>
             </div>

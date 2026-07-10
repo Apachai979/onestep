@@ -241,7 +241,7 @@ export default function NotesSection({
                     onChange={e => setBody(e.target.value)}
                     rows={2}
                     placeholder='Оставьте заметку — будет видна вашим коллегам в этой карточке'
-                    className='w-full resize-none rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                    className='w-full resize-none rounded-lg border border-line bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                 />
                 {pendingFiles.length > 0 && (
                     <div className='mt-2 flex flex-wrap gap-1.5'>
@@ -260,7 +260,7 @@ export default function NotesSection({
                         type='button'
                         onClick={onAttachClick}
                         disabled={uploading}
-                        className='inline-flex items-center gap-1.5 rounded-lg border border-brand_soft/60 px-3 py-1.5 text-xs text-night_green/75 hover:bg-brand_soft/30 disabled:opacity-50'
+                        className='inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs text-neutral-900/75 hover:bg-surface_muted disabled:opacity-50'
                     >
                         <LuPaperclip className='h-3.5 w-3.5' />
                         {uploading ? "Загружаем..." : "Прикрепить файл"}
@@ -284,10 +284,10 @@ export default function NotesSection({
             </form>
 
             {items === null && (
-                <p className='text-sm text-night_green/55'>Загрузка...</p>
+                <p className='text-sm text-neutral-400'>Загрузка...</p>
             )}
             {items?.length === 0 && (
-                <p className='text-sm text-night_green/55'>
+                <p className='text-sm text-neutral-400'>
                     Заметок пока нет. Будьте первым!
                 </p>
             )}
@@ -302,7 +302,7 @@ export default function NotesSection({
                             className={`rounded-lg border p-3 ${
                                 n.pinned
                                     ? "border-amber-200 bg-amber-50/50"
-                                    : "border-brand_soft/30 bg-white/70"
+                                    : "border-line bg-white"
                             }`}
                         >
                             <div className='flex items-start gap-3'>
@@ -311,14 +311,14 @@ export default function NotesSection({
                                 </div>
                                 <div className='min-w-0 flex-1'>
                                     <div className='flex flex-wrap items-center gap-2 text-xs'>
-                                        <span className='font-medium text-night_green'>
+                                        <span className='font-medium text-neutral-900'>
                                             {fullName(n.author)}
                                         </span>
-                                        <span className='text-night_green/55'>
+                                        <span className='text-neutral-400'>
                                             {fmtRelative(n.createdAt)}
                                         </span>
                                         {n.createdAt !== n.updatedAt && (
-                                            <span className='italic text-night_green/45'>
+                                            <span className='italic text-neutral-400'>
                                                 · изменено
                                             </span>
                                         )}
@@ -335,14 +335,14 @@ export default function NotesSection({
                                                 value={editingBody}
                                                 onChange={e => setEditingBody(e.target.value)}
                                                 rows={3}
-                                                className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                                                className='w-full rounded-lg border border-line bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                                                 autoFocus
                                             />
                                             <div className='mt-2 flex justify-end gap-2'>
                                                 <button
                                                     type='button'
                                                     onClick={cancelEdit}
-                                                    className='rounded-lg border border-brand_soft/60 px-3 py-1 text-xs text-night_green/75 hover:bg-brand_soft/30'
+                                                    className='rounded-lg border border-line px-3 py-1 text-xs text-neutral-900/75 hover:bg-surface_muted'
                                                 >
                                                     Отмена
                                                 </button>
@@ -356,7 +356,7 @@ export default function NotesSection({
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className='mt-1 whitespace-pre-wrap break-words text-sm text-night_green/85'>
+                                        <p className='mt-1 whitespace-pre-wrap break-words text-sm text-neutral-700'>
                                             {n.body}
                                         </p>
                                     )}
@@ -373,12 +373,12 @@ export default function NotesSection({
                                     )}
                                 </div>
                                 {!editing && (
-                                    <div className='flex shrink-0 gap-1 text-night_green/40'>
+                                    <div className='flex shrink-0 gap-1 text-neutral-400'>
                                         <button
                                             type='button'
                                             onClick={() => togglePin(n)}
                                             title={n.pinned ? "Открепить" : "Закрепить"}
-                                            className='inline-flex h-6 w-6 items-center justify-center rounded hover:bg-brand_soft/30 hover:text-night_green'
+                                            className='inline-flex h-6 w-6 items-center justify-center rounded hover:bg-surface_muted hover:text-neutral-900'
                                         >
                                             {n.pinned ? (
                                                 <LuPinOff className='h-3.5 w-3.5' />
@@ -392,7 +392,7 @@ export default function NotesSection({
                                                     type='button'
                                                     onClick={() => startEdit(n)}
                                                     title='Изменить'
-                                                    className='inline-flex h-6 w-6 items-center justify-center rounded hover:bg-brand_soft/30 hover:text-night_green'
+                                                    className='inline-flex h-6 w-6 items-center justify-center rounded hover:bg-surface_muted hover:text-neutral-900'
                                                 >
                                                     <LuPencil className='h-3.5 w-3.5' />
                                                 </button>

@@ -1,10 +1,29 @@
 "use client"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { LuPackage, LuPlus, LuRefreshCw, LuSearch } from "react-icons/lu"
 import { formatMoney } from "@/lib/crm/format"
-import { CardListSkeleton, CardRow, EmptyState, MobileCard, TableSkeleton, useToast } from "@/components/crm/ui"
+import {
+    Button,
+    CardListSkeleton,
+    CardRow,
+    DataTable,
+    EmptyState,
+    Field,
+    Input,
+    MobileCard,
+    Select,
+    useToast,
+} from "@/components/crm/ui"
+
+function stockBadgeClass(stock) {
+    return stock === 0
+        ? "bg-red-50 text-red-700"
+        : stock < 50
+          ? "bg-amber-50 text-amber-700"
+          : "bg-emerald-50 text-emerald-700"
+}
 
 export default function ProductsList() {
     const router = useRouter()
@@ -68,61 +87,113 @@ export default function ProductsList() {
         }
     }
 
+    const columns = useMemo(
+        () => [
+            {
+                key: "sku",
+                header: "Артикул",
+                sortable: true,
+                sortValue: p => p.sku,
+                render: p => (
+                    <Link
+                        href={`/crm/products/${p.id}`}
+                        onClick={e => e.stopPropagation()}
+                        className='font-medium text-neutral-900 hover:text-brand_main'
+                    >
+                        {p.sku}
+                    </Link>
+                ),
+            },
+            {
+                key: "category",
+                header: "Наименование",
+                sortable: true,
+                sortValue: p => p.category,
+                render: p => <span className='text-neutral-700'>{p.category}</span>,
+            },
+            {
+                key: "stock",
+                header: "Остаток, шт.",
+                align: "right",
+                sortable: true,
+                sortValue: p => Number(p.stockTotal) || 0,
+                render: p => {
+                    const stock = Number(p.stockTotal) || 0
+                    return (
+                        <span
+                            className={`inline-flex min-w-[3rem] justify-end rounded-full px-2 py-0.5 text-xs font-semibold ${stockBadgeClass(stock)}`}
+                        >
+                            {stock.toLocaleString("ru-RU")}
+                        </span>
+                    )
+                },
+            },
+            {
+                key: "basePrice",
+                header: "Цена за шт.",
+                align: "right",
+                sortable: true,
+                sortValue: p => Number(p.basePrice) || 0,
+                render: p => formatMoney(p.basePrice),
+            },
+            {
+                key: "transportPackQty",
+                header: "В упак., шт.",
+                align: "right",
+                render: p => p.transportPackQty,
+                hideable: true,
+            },
+            {
+                key: "recommendedLpuPrice",
+                header: "Реком. цена ЛПУ",
+                align: "right",
+                render: p =>
+                    p.recommendedLpuPrice ? formatMoney(p.recommendedLpuPrice) : "—",
+                hideable: true,
+            },
+        ],
+        [],
+    )
+
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3 rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-                <div className='flex-1 min-w-[220px]'>
-                    <label className='mb-1 block text-xs text-night_green/65'>Поиск</label>
-                    <div className='relative'>
-                        <LuSearch className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-night_green/40' />
-                        <input
-                            value={q}
-                            onChange={e => setQ(e.target.value)}
-                            placeholder='Артикул, наименование'
-                            className='w-full rounded-lg border border-brand_soft/60 bg-white pl-9 pr-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                        />
-                    </div>
-                </div>
-                <div className='min-w-[260px]'>
-                    <label className='mb-1 block text-xs text-night_green/65'>
-                        Наименование
-                    </label>
-                    <select
-                        value={category}
-                        onChange={e => setCategory(e.target.value)}
-                        className='w-full rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                    >
+            <div className='flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm'>
+                <Field label='Поиск' className='flex-1 min-w-[220px]'>
+                    <Input
+                        icon={LuSearch}
+                        value={q}
+                        onChange={e => setQ(e.target.value)}
+                        placeholder='Артикул, наименование'
+                    />
+                </Field>
+                <Field label='Наименование' className='min-w-[260px]'>
+                    <Select value={category} onChange={e => setCategory(e.target.value)}>
                         <option value=''>Все</option>
                         {categories.map(c => (
                             <option key={c} value={c}>
                                 {c}
                             </option>
                         ))}
-                    </select>
-                </div>
-                <button
+                    </Select>
+                </Field>
+                <Button
                     type='button'
+                    variant='secondary'
                     onClick={syncStock}
-                    disabled={syncing}
-                    className='inline-flex items-center gap-2 rounded-lg border border-brand_main/40 bg-white px-4 py-2 text-sm font-medium text-brand_main shadow-sm transition hover:bg-brand_main/5 disabled:opacity-50'
+                    loading={syncing}
                     title='Загрузить остатки из 1С'
                 >
-                    <LuRefreshCw
-                        className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`}
-                    />
-                    {syncing ? "Синхронизация…" : "Обновить остатки"}
-                </button>
-                <Link
-                    href='/crm/products/new'
-                    className='inline-flex items-center gap-2 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
-                >
+                    <LuRefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+                    Обновить остатки
+                </Button>
+                <Button href='/crm/products/new'>
                     <LuPlus className='h-4 w-4' />
                     Добавить
-                </Link>
+                </Button>
             </div>
 
             {error && (
-                <p className='rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
                     {error}
                 </p>
             )}
@@ -145,20 +216,14 @@ export default function ProductsList() {
                             onClick={() => router.push(`/crm/products/${p.id}`)}
                         >
                             <div className='flex items-start justify-between gap-2'>
-                                <span className='font-medium text-night_green'>{p.sku}</span>
+                                <span className='font-medium text-neutral-900'>{p.sku}</span>
                                 <span
-                                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                        stock === 0
-                                            ? "bg-red-50 text-red-700"
-                                            : stock < 50
-                                              ? "bg-amber-50 text-amber-800"
-                                              : "bg-green-50 text-green-800"
-                                    }`}
+                                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${stockBadgeClass(stock)}`}
                                 >
                                     {stock.toLocaleString("ru-RU")} шт.
                                 </span>
                             </div>
-                            <p className='mt-1 text-sm text-night_green/80'>{p.category}</p>
+                            <p className='mt-1 text-sm text-neutral-700'>{p.category}</p>
                             <div className='mt-2 space-y-1'>
                                 <CardRow label='Цена за шт.'>{formatMoney(p.basePrice)}</CardRow>
                                 <CardRow label='В упак., шт.'>{p.transportPackQty}</CardRow>
@@ -173,76 +238,22 @@ export default function ProductsList() {
                 })}
             </div>
 
-            <div className='hidden overflow-x-auto rounded-xl border border-brand_soft/40 bg-white/70 md:block'>
-                <table className='w-full text-sm'>
-                    <thead className='sticky top-0 z-10 bg-brand_soft/30 text-left text-xs uppercase tracking-wider text-night_green/70 backdrop-blur'>
-                        <tr>
-                            <th className='px-4 py-3'>Артикул</th>
-                            <th className='px-4 py-3'>Наименование</th>
-                            <th className='px-4 py-3 text-right'>Остаток, шт.</th>
-                            <th className='px-4 py-3 text-right'>Цена за шт.</th>
-                            <th className='px-4 py-3 text-right'>В упак., шт.</th>
-                            <th className='px-4 py-3 text-right'>Реком. цена ЛПУ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items === null && <TableSkeleton rows={5} cols={6} />}
-                        {items?.length === 0 && (
-                            <EmptyState
-                                colSpan={6}
-                                icon={LuPackage}
-                                title='Товаров не найдено'
-                                hint='Попробуйте другой запрос или добавьте новую позицию справочника.'
-                            />
-                        )}
-                        {items?.map(p => {
-                            const stock = Number(p.stockTotal) || 0
-                            return (
-                                <tr
-                                    key={p.id}
-                                    onClick={() => router.push(`/crm/products/${p.id}`)}
-                                    className='cursor-pointer border-t border-brand_soft/30 transition hover:bg-brand_soft/15'
-                                >
-                                    <td className='px-4 py-3'>
-                                        <Link
-                                            href={`/crm/products/${p.id}`}
-                                            className='font-medium text-night_green hover:text-brand_main'
-                                        >
-                                            {p.sku}
-                                        </Link>
-                                    </td>
-                                    <td className='px-4 py-3 text-night_green/80'>
-                                        {p.category}
-                                    </td>
-                                    <td className='px-4 py-3 text-right'>
-                                        <span
-                                            className={`inline-flex min-w-[3rem] justify-end rounded-full px-2 py-0.5 text-xs font-semibold ${
-                                                stock === 0
-                                                    ? "bg-red-50 text-red-700"
-                                                    : stock < 50
-                                                      ? "bg-amber-50 text-amber-800"
-                                                      : "bg-green-50 text-green-800"
-                                            }`}
-                                        >
-                                            {stock.toLocaleString("ru-RU")}
-                                        </span>
-                                    </td>
-                                    <td className='px-4 py-3 text-right text-night_green/80'>
-                                        {formatMoney(p.basePrice)}
-                                    </td>
-                                    <td className='px-4 py-3 text-right text-night_green/80'>
-                                        {p.transportPackQty}
-                                    </td>
-                                    <td className='px-4 py-3 text-right text-night_green/80'>
-                                        {p.recommendedLpuPrice
-                                            ? formatMoney(p.recommendedLpuPrice)
-                                            : "—"}
-                                    </td>
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </table>
+            <div className='hidden md:block'>
+                <DataTable
+                    columns={columns}
+                    rows={items || []}
+                    loading={items === null}
+                    getRowId={p => p.id}
+                    onRowClick={p => router.push(`/crm/products/${p.id}`)}
+                    initialSort={{ key: "sku", dir: "asc" }}
+                    empty={
+                        <EmptyState
+                            icon={LuPackage}
+                            title='Товаров не найдено'
+                            hint='Попробуйте другой запрос или добавьте новую позицию справочника.'
+                        />
+                    }
+                />
             </div>
         </div>
     )

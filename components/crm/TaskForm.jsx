@@ -4,6 +4,7 @@ import { TASK_RELATION_KINDS, TASK_RELATION_LABELS, TASK_TYPES } from "@/lib/crm
 import { notifyTasksChanged } from "@/lib/crm/tasks-events"
 import SearchableSelect from "./SearchableSelect"
 import TaskTypeIcon from "./TaskTypeIcon"
+import { Button } from "@/components/crm/ui"
 
 const todayIso = () => new Date().toISOString().slice(0, 10)
 const todayDateTime = () => {
@@ -244,8 +245,8 @@ export default function TaskForm({
     }
 
     const fieldClass =
-        "w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none"
-    const labelClass = "mb-1 block text-xs text-gray-600"
+        "w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20"
+    const labelClass = "mb-1.5 block text-xs font-medium text-neutral-500"
 
     return (
         <form onSubmit={handleSubmit} className={`space-y-4 ${compact ? "" : "max-w-3xl"}`}>
@@ -270,7 +271,7 @@ export default function TaskForm({
                             </option>
                         ))}
                     </select>
-                    <div className='mt-2 flex items-center gap-2 text-xs text-gray-600'>
+                    <div className='mt-2 flex items-center gap-2 text-xs text-neutral-500'>
                         <span
                             className={`inline-flex h-6 w-6 items-center justify-center rounded-full ${TASK_TYPES.find(t => t.key === form.type)?.bg}`}
                         >
@@ -292,11 +293,12 @@ export default function TaskForm({
             </div>
 
             <div className='space-y-2'>
-                <label className='flex items-center gap-2 text-sm text-gray-700'>
+                <label className='flex items-center gap-2 text-sm text-neutral-700'>
                     <input
                         type='checkbox'
                         checked={form.allDay}
                         onChange={onAllDayChange}
+                        className='h-4 w-4 rounded border-line text-brand_main focus:ring-brand_main/30'
                     />
                     Весь день
                 </label>
@@ -452,25 +454,21 @@ export default function TaskForm({
                 />
             </div>
 
-            {error && <p className='text-sm text-red-600'>{error}</p>}
+            {error && (
+                <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                    {error}
+                </p>
+            )}
 
             <div className='flex justify-end gap-2'>
                 {onCancel && (
-                    <button
-                        type='button'
-                        onClick={onCancel}
-                        className='rounded-lg border border-brand_soft/60 px-3 py-1.5 text-sm text-gray-700 hover:bg-brand_soft/30'
-                    >
+                    <Button type='button' variant='secondary' onClick={onCancel}>
                         Отмена
-                    </button>
+                    </Button>
                 )}
-                <button
-                    type='submit'
-                    disabled={loading}
-                    className='rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:cursor-not-allowed disabled:opacity-60'
-                >
-                    {loading ? "Сохраняем..." : isEdit ? "Сохранить" : "Создать"}
-                </button>
+                <Button type='submit' loading={loading}>
+                    {isEdit ? "Сохранить" : "Создать"}
+                </Button>
             </div>
         </form>
     )

@@ -47,11 +47,11 @@ export default function ImportExportSettings() {
     }
 
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-5'>
-            <h2 className='text-sm font-semibold uppercase tracking-wide text-gray-500'>
+        <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
+            <h2 className='text-sm font-semibold text-neutral-900'>
                 Импорт и экспорт (Excel)
             </h2>
-            <p className='mt-1 text-sm text-night_green/60'>
+            <p className='mt-1 text-sm text-neutral-500'>
                 Для переезда с другой CRM и резервных копий. Формат импорта совпадает
                 с форматом экспорта — выгрузите текущий список, чтобы получить образец
                 файла. Порядок переезда: сначала контрагенты, затем сделки и проекты.
@@ -59,7 +59,7 @@ export default function ImportExportSettings() {
 
             {/* Экспорт */}
             <div className='mt-4'>
-                <p className='mb-2 text-xs font-semibold uppercase tracking-wide text-night_green/50'>
+                <p className='mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400'>
                     Экспорт
                 </p>
                 <div className='flex flex-wrap gap-2'>
@@ -67,7 +67,7 @@ export default function ImportExportSettings() {
                         <a
                             key={e.key}
                             href={`/api/crm/export/${e.key}`}
-                            className='inline-flex items-center gap-2 rounded-lg border border-brand_soft/60 bg-white px-4 py-2 text-sm text-gray-700 shadow-sm transition hover:bg-brand_soft/20'
+                            className='inline-flex items-center gap-2 rounded-xl border border-line bg-white px-4 py-2 text-sm text-neutral-700 shadow-sm transition-colors hover:bg-surface_muted'
                             title={e.hint}
                         >
                             <LuDownload className='h-4 w-4 text-brand_main' />
@@ -79,14 +79,14 @@ export default function ImportExportSettings() {
 
             {/* Импорт */}
             <div className='mt-5'>
-                <p className='mb-2 text-xs font-semibold uppercase tracking-wide text-night_green/50'>
+                <p className='mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400'>
                     Импорт
                 </p>
                 <div className='flex flex-wrap items-center gap-2'>
                     <select
                         value={entity}
                         onChange={e => setEntity(e.target.value)}
-                        className='rounded-lg border border-brand_soft/60 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                        className='h-10 rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                     >
                         {ENTITIES.map(e => (
                             <option key={e.key} value={e.key}>
@@ -111,7 +111,7 @@ export default function ImportExportSettings() {
                         className='hidden'
                     />
                 </div>
-                <p className='mt-2 text-xs text-night_green/55'>
+                <p className='mt-2 text-xs text-neutral-400'>
                     Контрагенты сверяются по ИНН и названию — дубли пропускаются.
                     Сделки и проекты привязываются к контрагентам по ИНН/названию,
                     менеджеры — по email (иначе назначаетесь вы). При ошибке файл
@@ -119,7 +119,7 @@ export default function ImportExportSettings() {
                 </p>
 
                 {report && (
-                    <div className='mt-3 rounded-lg bg-brand_soft/15 p-3 text-sm text-night_green/80'>
+                    <div className='mt-3 rounded-lg bg-surface_muted p-3 text-sm text-neutral-700'>
                         <p>
                             Создано: <b>{report.created}</b>
                             {report.skipped > 0 && <> · пропущено дублей: <b>{report.skipped}</b></>}

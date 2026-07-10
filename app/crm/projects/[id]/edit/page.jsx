@@ -25,9 +25,9 @@ export default async function EditProjectPage({ params }) {
             <CrmBackLink
                 fallback={`/crm/projects/${item.id}`}
                 fallbackLabel={item.internalName}
-                className='inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary_green'
+                className='inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand_main'
             />
-            <h1 className='text-2xl font-semibold text-night_green'>Редактирование проекта</h1>
+            <h1 className='text-2xl font-semibold text-neutral-900'>Редактирование проекта</h1>
             <ProjectForm mode='edit' initial={initial} />
         </div>
     )

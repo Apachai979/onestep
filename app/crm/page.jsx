@@ -25,6 +25,7 @@ import { formatMoney } from "@/lib/crm/format"
 import { CHANGE_ACTION_LABELS, ENTITY_LABELS } from "@/lib/crm/change-log"
 import DashboardSearch from "@/components/crm/DashboardSearch"
 import LocalDateTime from "@/components/crm/LocalDateTime"
+import { Button, Card, StatCard, EmptyState } from "@/components/crm/ui"
 
 export const metadata = { title: "Главная | CRM" }
 
@@ -267,10 +268,10 @@ export default async function CrmHome() {
             {/* Header */}
             <div className='flex flex-wrap items-center justify-between gap-3'>
                 <div className='shrink-0'>
-                    <p className='text-xs uppercase tracking-wider text-night_green/55'>
+                    <p className='text-xs uppercase tracking-wider text-neutral-400'>
                         <LocalDateTime format='weekday' />
                     </p>
-                    <h1 className='mt-1 text-xl font-semibold text-night_green sm:text-2xl'>
+                    <h1 className='mt-1 text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl'>
                         Привет, {firstName} 👋
                     </h1>
                 </div>
@@ -278,27 +279,21 @@ export default async function CrmHome() {
                     <DashboardSearch />
                 </div>
                 <div className='flex flex-wrap gap-2'>
-                    <Link
-                        href='/crm/deals/new'
-                        className='inline-flex items-center gap-2 rounded-lg bg-brand_main px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand_main/90'
-                    >
+                    <Button href='/crm/deals/new'>
                         <LuBriefcase className='h-4 w-4' />
                         Новая сделка
-                    </Link>
-                    <Link
-                        href='/crm/projects/new'
-                        className='inline-flex items-center gap-2 rounded-lg border border-brand_soft/60 bg-white/70 px-3 py-2 text-sm font-medium text-night_green hover:bg-brand_soft/30'
-                    >
+                    </Button>
+                    <Button href='/crm/projects/new' variant='secondary'>
                         <LuLink className='h-4 w-4' />
                         Новый проект
-                    </Link>
+                    </Button>
                 </div>
             </div>
 
             {/* KPIs */}
             <div className='grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4'>
                 {kpis.map(k => (
-                    <KpiTile key={k.label} {...k} />
+                    <StatCard key={k.label} {...k} />
                 ))}
             </div>
 
@@ -352,21 +347,21 @@ export default async function CrmHome() {
                                 <Link
                                     key={s}
                                     href='/crm/deals'
-                                    className='group flex flex-col rounded-lg border border-brand_soft/40 bg-white/70 p-3 transition hover:border-brand_main/40 hover:bg-white'
+                                    className='group flex flex-col rounded-xl border border-line bg-white p-3 shadow-sm transition-all duration-200 hover:border-line_strong hover:shadow-md'
                                 >
                                     <div
                                         className={`inline-flex w-fit rounded-full px-2 py-0.5 text-[10px] font-medium ${DEAL_STATUS_COLORS[s]}`}
                                     >
                                         {DEAL_STATUS_LABELS[s]}
                                     </div>
-                                    <p className='mt-2 text-2xl font-semibold text-night_green'>
+                                    <p className='mt-2 text-2xl font-semibold text-neutral-900'>
                                         {stat.count}
                                     </p>
-                                    <p className='text-[11px] text-night_green/55'>
+                                    <p className='text-[11px] text-neutral-500'>
                                         {formatMoney(stat.sum)}
                                     </p>
                                     {recent.length > 0 && (
-                                        <ul className='mt-2 hidden space-y-0.5 border-t border-brand_soft/30 pt-2 text-[11px] text-night_green/70 sm:block'>
+                                        <ul className='mt-2 hidden space-y-0.5 border-t border-line pt-2 text-[11px] text-neutral-500 sm:block'>
                                             {recent.map(d => (
                                                 <li key={d.id} className='truncate'>
                                                     {dealDisplayTitle(d, d.counterparty?.name)}
@@ -407,16 +402,16 @@ export default async function CrmHome() {
                                         >
                                             <div className='min-w-0 flex-1'>
                                                 <div className='flex items-center gap-2'>
-                                                    <span className='font-mono text-sm font-semibold text-night_green'>
+                                                    <span className='font-mono text-sm font-semibold text-neutral-900'>
                                                         {sh.number}
                                                     </span>
                                                     {mine && (
-                                                        <span className='rounded-full bg-brand_main/15 px-1.5 py-0.5 text-[10px] font-semibold text-brand_main'>
+                                                        <span className='rounded-full bg-brand_main/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand_main'>
                                                             моя
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className='mt-0.5 truncate text-xs text-night_green/70'>
+                                                <p className='mt-0.5 truncate text-xs text-neutral-500'>
                                                     {sh.deal?.counterparty?.name || "—"}
                                                 </p>
                                             </div>
@@ -424,7 +419,7 @@ export default async function CrmHome() {
                                                 <p className='text-xs font-semibold text-red-700'>
                                                     <LocalDateTime value={sh.plannedDate} format='date' />
                                                 </p>
-                                                <p className='text-[10px] text-night_green/55'>
+                                                <p className='text-[10px] text-neutral-400'>
                                                     {SHIPMENT_STATUS_LABELS[sh.status]}
                                                 </p>
                                             </div>
@@ -455,17 +450,17 @@ export default async function CrmHome() {
                                 return (
                                     <li
                                         key={c.id}
-                                        className='flex items-start gap-2 rounded-md border border-brand_soft/30 bg-white/50 p-2 text-xs'
+                                        className='flex items-start gap-2 rounded-lg border border-line bg-surface_muted p-2 text-xs'
                                     >
                                         <span
                                             className={`mt-1 inline-flex h-1.5 w-1.5 shrink-0 rounded-full ${entry.dotClass}`}
                                         />
                                         <div className='min-w-0 flex-1'>
-                                            <p className='text-night_green'>
+                                            <p className='text-neutral-800'>
                                                 <span className='font-medium'>
                                                     {fullName(c.author)}
                                                 </span>{" "}
-                                                <span className='text-night_green/65'>
+                                                <span className='text-neutral-500'>
                                                     {entry.actionText}
                                                 </span>{" "}
                                                 {entry.targetHref ? (
@@ -481,7 +476,7 @@ export default async function CrmHome() {
                                                     </span>
                                                 )}
                                             </p>
-                                            <p className='text-[10px] text-night_green/45'>
+                                            <p className='text-[10px] text-neutral-400'>
                                                 {fmtRelative(c.createdAt)} ·{" "}
                                                 <LocalDateTime value={c.createdAt} />
                                             </p>
@@ -560,43 +555,18 @@ function describeChange(c, { dealMap, projectMap, counterpartyMap, auctionMap })
 
 // === presentational components ===
 
-function KpiTile({ label, value, href, icon: Icon, tone }) {
-    const toneClass =
-        tone === "danger"
-            ? "border-red-200 bg-red-50/60 text-red-700"
-            : tone === "warn"
-              ? "border-amber-200 bg-amber-50/60 text-amber-700"
-              : "border-brand_soft/50 bg-white/70 text-night_green"
-    return (
-        <Link
-            href={href}
-            className={`group flex items-center justify-between rounded-xl border ${toneClass} p-3 transition hover:shadow-sm hover:shadow-brand_main/10 sm:p-4`}
-        >
-            <div className='min-w-0'>
-                <p className='truncate text-[11px] uppercase tracking-wider opacity-70'>
-                    {label}
-                </p>
-                <p className='mt-1 text-2xl font-semibold leading-none sm:text-3xl'>
-                    {value}
-                </p>
-            </div>
-            <Icon className='hidden h-7 w-7 opacity-50 group-hover:opacity-80 sm:block' />
-        </Link>
-    )
-}
-
 function Widget({ title, icon: Icon, href, action, children }) {
     return (
-        <section className='rounded-xl border border-brand_soft/40 bg-white/70 p-4'>
-            <div className='mb-2.5 flex items-center justify-between'>
-                <h2 className='flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-night_green/70'>
+        <Card padding='md'>
+            <div className='mb-4 flex items-center justify-between'>
+                <h2 className='flex items-center gap-2 text-sm font-semibold text-neutral-900'>
                     <Icon className='h-4 w-4 text-brand_main' />
                     {title}
                 </h2>
                 {href && (
                     <Link
                         href={href}
-                        className='inline-flex items-center gap-1 text-xs font-medium text-brand_main hover:underline'
+                        className='inline-flex items-center gap-1 text-xs font-medium text-brand_main transition-colors hover:text-brand_main/80'
                     >
                         {action || "Открыть"}
                         <LuArrowRight className='h-3 w-3' />
@@ -604,50 +574,40 @@ function Widget({ title, icon: Icon, href, action, children }) {
                 )}
             </div>
             {children}
-        </section>
-    )
-}
-
-function EmptyState({ icon: Icon, title, hint }) {
-    return (
-        <div className='flex flex-col items-center justify-center rounded-lg border border-dashed border-brand_soft/50 px-4 py-6 text-center'>
-            <Icon className='mb-2 h-6 w-6 text-brand_main/60' />
-            <p className='text-sm font-medium text-night_green'>{title}</p>
-            {hint && <p className='mt-1 text-xs text-night_green/55'>{hint}</p>}
-        </div>
+        </Card>
     )
 }
 
 function TaskGroup({ title, tone, tasks }) {
     const toneClass =
         tone === "danger"
-            ? "border-red-200 bg-red-50/40"
+            ? "border-red-200 bg-red-50/50"
             : tone === "warn"
-              ? "border-amber-200 bg-amber-50/40"
-              : "border-brand_soft/40 bg-white/60"
+              ? "border-amber-200 bg-amber-50/50"
+              : "border-line bg-surface_muted"
     const titleClass =
         tone === "danger"
             ? "text-red-700"
             : tone === "warn"
               ? "text-amber-800"
-              : "text-night_green/70"
+              : "text-neutral-500"
     return (
-        <div className={`rounded-lg border ${toneClass} p-3`}>
+        <div className={`rounded-xl border ${toneClass} p-3`}>
             <p className={`mb-2 text-xs font-semibold uppercase ${titleClass}`}>{title}</p>
             <ul className='space-y-1.5'>
                 {tasks.map(t => (
                     <li key={t.id}>
                         <Link
                             href='/crm/tasks'
-                            className='flex items-start justify-between gap-3 rounded-md bg-white/70 p-2 text-sm hover:bg-white'
+                            className='flex items-start justify-between gap-3 rounded-lg bg-white p-2 text-sm shadow-sm transition-colors hover:bg-surface_muted'
                         >
                             <div className='min-w-0 flex-1'>
-                                <p className='truncate font-medium text-night_green'>{t.title}</p>
-                                <p className='truncate text-[11px] text-night_green/55'>
+                                <p className='truncate font-medium text-neutral-900'>{t.title}</p>
+                                <p className='truncate text-[11px] text-neutral-500'>
                                     {relationLabel(t)}
                                 </p>
                             </div>
-                            <div className='shrink-0 text-right text-[11px] text-night_green/65'>
+                            <div className='shrink-0 text-right text-[11px] text-neutral-500'>
                                 <span className='inline-flex items-center gap-1'>
                                     <LuClock className='h-3 w-3' />
                                     <LocalDateTime value={t.endAt} />

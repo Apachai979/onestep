@@ -1,5 +1,6 @@
 "use client"
 import { useCallback, useEffect, useState } from "react"
+import { Button } from "@/components/crm/ui"
 
 function fullName(c) {
     return (
@@ -87,7 +88,7 @@ export default function ProjectContactsPicker({
 
     if (!counterpartyId) {
         return (
-            <div className='rounded-lg border border-dashed border-brand_soft/60 p-3 text-sm text-gray-400'>
+            <div className='rounded-lg border border-dashed border-line p-3 text-sm text-neutral-400'>
                 Сначала выберите компанию
             </div>
         )
@@ -96,14 +97,14 @@ export default function ProjectContactsPicker({
     return (
         <div className='space-y-3'>
             <div className='flex items-center justify-between'>
-                <p className='text-sm font-medium text-night_green'>
+                <p className='text-sm font-medium text-neutral-900'>
                     {counterpartyName || "Контакты"}
                 </p>
                 {!showAdd && (
                     <button
                         type='button'
                         onClick={() => setShowAdd(true)}
-                        className='text-xs text-primary_green hover:text-contrast_green'
+                        className='text-xs font-medium text-brand_main hover:text-brand_main/80'
                     >
                         + Новый контакт
                     </button>
@@ -111,15 +112,15 @@ export default function ProjectContactsPicker({
             </div>
 
             {loading ? (
-                <p className='text-sm text-gray-400'>Загрузка...</p>
+                <p className='text-sm text-neutral-400'>Загрузка...</p>
             ) : contacts.length === 0 && !showAdd ? (
-                <p className='text-sm text-gray-400'>У компании пока нет контактов.</p>
+                <p className='text-sm text-neutral-400'>У компании пока нет контактов.</p>
             ) : (
                 <ul className='space-y-1.5'>
                     {contacts.map(c => (
                         <li
                             key={c.id}
-                            className='flex items-start gap-2 rounded-md border border-brand_soft/30 px-3 py-2'
+                            className='flex items-start gap-2 rounded-md border border-line px-3 py-2'
                         >
                             <input
                                 type='checkbox'
@@ -128,13 +129,13 @@ export default function ProjectContactsPicker({
                                 onChange={() => toggle(c.id)}
                             />
                             <div className='flex-1 text-sm'>
-                                <p className='font-medium text-night_green'>{fullName(c)}</p>
-                                <p className='text-xs text-gray-600'>
+                                <p className='font-medium text-neutral-900'>{fullName(c)}</p>
+                                <p className='text-xs text-neutral-500'>
                                     {[c.position, c.phone, c.email].filter(Boolean).join(" · ")}
                                 </p>
                             </div>
                             {c.isPrimary && (
-                                <span className='rounded-full bg-light_green/30 px-2 py-0.5 text-[10px] font-medium text-night_green'>
+                                <span className='rounded-full bg-brand_main/10 px-2 py-0.5 text-[10px] font-medium text-brand_main'>
                                     Основной
                                 </span>
                             )}
@@ -147,7 +148,7 @@ export default function ProjectContactsPicker({
                 /* НЕ <form>: пикер живёт внутри формы проекта, а вложенные формы
                    в HTML запрещены — браузер выбрасывает внутренний тег при SSR,
                    и submit уходил во внешнюю форму. */
-                <div className='space-y-2 rounded-lg border border-dashed border-primary_green/40 p-3'>
+                <div className='space-y-2 rounded-xl border border-dashed border-brand_main/40 bg-surface_muted p-3'>
                     <div className='grid gap-2 sm:grid-cols-2'>
                         <Field label='Имя' value={form.firstName} onChange={update("firstName")} />
                         <Field
@@ -171,24 +172,20 @@ export default function ProjectContactsPicker({
                     </div>
                     {error && <p className='text-xs text-red-600'>{error}</p>}
                     <div className='flex justify-end gap-2'>
-                        <button
+                        <Button
                             type='button'
+                            variant='secondary'
+                            size='sm'
                             onClick={() => {
                                 setShowAdd(false)
                                 setError("")
                             }}
-                            className='rounded-md border border-brand_soft/60 px-3 py-1 text-xs text-gray-700 hover:bg-brand_soft/30'
                         >
                             Отмена
-                        </button>
-                        <button
-                            type='button'
-                            onClick={handleAdd}
-                            disabled={saving}
-                            className='rounded-md bg-brand_main px-3 py-1 text-xs font-semibold text-white hover:bg-brand_main/90 disabled:opacity-60'
-                        >
-                            {saving ? "Сохраняем..." : "Добавить"}
-                        </button>
+                        </Button>
+                        <Button type='button' size='sm' onClick={handleAdd} loading={saving}>
+                            Добавить
+                        </Button>
                     </div>
                 </div>
             )}
@@ -199,10 +196,10 @@ export default function ProjectContactsPicker({
 function Field({ label, className = "", ...props }) {
     return (
         <div className={className}>
-            <label className='mb-0.5 block text-[11px] text-gray-600'>{label}</label>
+            <label className='mb-1 block text-[11px] font-medium text-neutral-500'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-md border border-brand_soft/60 px-2 py-1.5 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                className='w-full rounded-xl border border-line bg-white px-3 py-1.5 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
             />
         </div>
     )

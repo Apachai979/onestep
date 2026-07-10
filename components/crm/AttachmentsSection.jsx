@@ -28,8 +28,8 @@ const TONES = {
     ppt: "bg-orange-50 text-orange-700",
     image: "bg-violet-50 text-violet-700",
     zip: "bg-amber-50 text-amber-800",
-    text: "bg-gray-50 text-gray-700",
-    file: "bg-gray-50 text-gray-700",
+    text: "bg-surface_muted text-neutral-700",
+    file: "bg-surface_muted text-neutral-700",
 }
 
 function fullName(u) {
@@ -154,14 +154,14 @@ export default function AttachmentsSection({
                 className={`mb-4 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed py-6 text-center transition ${
                     dragOver
                         ? "border-brand_main bg-brand_main/5"
-                        : "border-brand_soft/50 hover:border-brand_main/60 hover:bg-brand_soft/15"
+                        : "border-line hover:border-brand_main/60 hover:bg-surface_muted"
                 }`}
             >
                 <LuUpload className='mb-2 h-6 w-6 text-brand_main/70' />
-                <p className='text-sm font-medium text-night_green'>
+                <p className='text-sm font-medium text-neutral-900'>
                     {uploading ? "Загружаем..." : "Перетащите файлы сюда или нажмите"}
                 </p>
-                <p className='mt-1 text-xs text-night_green/55'>
+                <p className='mt-1 text-xs text-neutral-400'>
                     PDF, Word, Excel, изображения и др. До 25 МБ на файл
                 </p>
                 <input
@@ -174,10 +174,10 @@ export default function AttachmentsSection({
             </div>
 
             {items === null && (
-                <p className='text-sm text-night_green/55'>Загрузка...</p>
+                <p className='text-sm text-neutral-400'>Загрузка...</p>
             )}
             {items?.length === 0 && (
-                <p className='text-sm text-night_green/55'>
+                <p className='text-sm text-neutral-400'>
                     Документов пока нет. Перетащите файлы сюда — карточка обзаведётся
                     архивом договоров, КП и переписки.
                 </p>
@@ -193,7 +193,7 @@ export default function AttachmentsSection({
                     return (
                         <li
                             key={att.id}
-                            className='group flex items-center gap-3 rounded-lg border border-brand_soft/40 bg-white/70 p-3 transition hover:border-brand_main/40'
+                            className='group flex items-center gap-3 rounded-lg border border-line bg-white p-3 transition hover:border-brand_main/40'
                         >
                             <span
                                 className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${tone}`}
@@ -206,11 +206,11 @@ export default function AttachmentsSection({
                                     target={inline ? "_blank" : undefined}
                                     rel='noopener noreferrer'
                                     title={att.fileName}
-                                    className='block truncate text-sm font-medium text-night_green hover:text-brand_main'
+                                    className='block truncate text-sm font-medium text-neutral-900 hover:text-brand_main'
                                 >
                                     {att.fileName}
                                 </a>
-                                <p className='truncate text-[11px] text-night_green/55'>
+                                <p className='truncate text-[11px] text-neutral-400'>
                                     {formatBytes(att.size)} · {fullName(att.uploadedBy)} ·{" "}
                                     {fmtDate(att.createdAt)}
                                 </p>
@@ -219,7 +219,7 @@ export default function AttachmentsSection({
                                 <button
                                     type='button'
                                     onClick={() => removeAttachment(att)}
-                                    className='inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-night_green/40 transition hover:bg-red-50 hover:text-red-600 md:opacity-0 md:group-hover:opacity-100'
+                                    className='inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-neutral-400 transition hover:bg-red-50 hover:text-red-600 md:opacity-0 md:group-hover:opacity-100'
                                     title='Удалить'
                                 >
                                     <LuTrash2 className='h-3.5 w-3.5' />

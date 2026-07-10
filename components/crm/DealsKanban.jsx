@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { LuPlus } from "react-icons/lu"
+import { LuPlus, LuSearch } from "react-icons/lu"
 import {
     DEAL_STATUSES,
     DEAL_STATUS_COLORS,
@@ -25,7 +25,7 @@ const COLUMN_ACCENT = {
 }
 import { calculateDealShipmentProgress, isShipmentOverdue } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
-import { useToast } from "@/components/crm/ui"
+import { Button, Field, Input, useToast } from "@/components/crm/ui"
 import DealLossDialog from "./DealLossDialog"
 
 function safeJson(text) {
@@ -151,22 +151,18 @@ export default function DealsKanban() {
     return (
         <div className='space-y-4'>
             <div className='flex flex-wrap items-end gap-3'>
-                <div className='flex-1 min-w-[240px]'>
-                    <label className='mb-1 block text-xs text-gray-600'>Поиск</label>
-                    <input
+                <Field label='Поиск' className='flex-1 min-w-[240px]'>
+                    <Input
+                        icon={LuSearch}
                         value={q}
                         onChange={e => setQ(e.target.value)}
                         placeholder='Название сделки или клиента'
-                        className='w-full rounded-lg border border-brand_soft/60 px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                     />
-                </div>
-                <Link
-                    href='/crm/deals/new'
-                    className='inline-flex items-center gap-2 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
-                >
+                </Field>
+                <Button href='/crm/deals/new'>
                     <LuPlus className='h-4 w-4' />
                     Новая сделка
-                </Link>
+                </Button>
             </div>
 
             {error && <p className='text-sm text-red-600'>{error}</p>}
@@ -181,10 +177,10 @@ export default function DealsKanban() {
                             onDragOver={onDragOver(status)}
                             onDragLeave={() => setDragOver(null)}
                             onDrop={onDrop(status)}
-                            className={`flex w-[290px] shrink-0 flex-col overflow-hidden rounded-xl border bg-gray-50 ${
+                            className={`flex w-[290px] shrink-0 flex-col overflow-hidden rounded-2xl border bg-surface_muted transition-shadow ${
                                 dragOver === status
-                                    ? "border-primary_green ring-2 ring-primary_green/30"
-                                    : "border-gray-200"
+                                    ? "border-brand_main ring-2 ring-brand_main/25"
+                                    : "border-line"
                             }`}
                         >
                             <div className={`h-0.5 w-full ${COLUMN_ACCENT[status]}`} />
@@ -196,12 +192,12 @@ export default function DealsKanban() {
                                         >
                                             {DEAL_STATUS_LABELS[status]}
                                         </span>
-                                        <span className='text-xs text-gray-500'>{list.length}</span>
+                                        <span className='text-xs text-neutral-400'>{list.length}</span>
                                     </div>
                                     {(status === "NEGOTIATION" || status === "CONTRACT") && (
                                         <Link
                                             href={`/crm/deals/new?status=${status}`}
-                                            className='rounded-md border border-brand_soft/60 px-2 py-0.5 text-xs text-gray-600 hover:bg-white hover:text-brand_main'
+                                            className='inline-flex h-6 w-6 items-center justify-center rounded-lg border border-line bg-white text-neutral-500 transition-colors hover:text-brand_main hover:border-brand_main/40'
                                             title='Добавить сделку с этим статусом'
                                         >
                                             +
@@ -209,16 +205,16 @@ export default function DealsKanban() {
                                     )}
                                 </div>
                                 {DEAL_STATUS_HINTS[status] && (
-                                    <p className='mb-1 text-[10px] leading-tight text-gray-500'>
+                                    <p className='mb-1 text-[10px] leading-tight text-neutral-400'>
                                         {DEAL_STATUS_HINTS[status]}
                                     </p>
                                 )}
-                                <p className='mb-3 text-xs text-gray-500'>
+                                <p className='mb-3 text-xs text-neutral-500'>
                                     Итого: {formatMoney(sum)}
                                 </p>
                                 <div className='flex flex-col gap-2'>
                                     {deals === null && (
-                                        <p className='text-xs text-gray-400'>Загрузка...</p>
+                                        <p className='text-xs text-neutral-400'>Загрузка...</p>
                                     )}
                                     {list.map(d => (
                                         <DealCard
@@ -230,7 +226,7 @@ export default function DealsKanban() {
                                         />
                                     ))}
                                     {deals !== null && list.length === 0 && (
-                                        <p className='text-xs italic text-gray-400'>Пусто</p>
+                                        <p className='text-xs italic text-neutral-400'>Пусто</p>
                                     )}
                                 </div>
                             </div>
@@ -266,39 +262,39 @@ function DealCard({ deal, dragging, onDragStart, onDragEnd }) {
             draggable
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
-            className={`block cursor-grab rounded-lg border bg-white p-3 text-sm shadow-sm transition hover:border-primary_green active:cursor-grabbing ${
-                dragging ? "opacity-50" : "border-gray-200"
+            className={`block cursor-grab rounded-xl border bg-white p-3 text-sm shadow-sm transition-all duration-200 hover:border-line_strong hover:shadow-md active:cursor-grabbing ${
+                dragging ? "opacity-50" : "border-line"
             }`}
         >
-            <p className='font-medium leading-snug text-night_green'>{title}</p>
-            <p className='mt-1 truncate text-xs text-gray-600'>
+            <p className='font-medium leading-snug text-neutral-900'>{title}</p>
+            <p className='mt-1 truncate text-xs text-neutral-500'>
                 {deal.counterparty?.name || "Без клиента"}
             </p>
             <div className='mt-2 flex items-center justify-between gap-2 text-xs'>
-                <span className='truncate text-gray-500'>{managerName(deal.manager)}</span>
-                <span className='shrink-0 font-semibold text-gray-700'>
+                <span className='truncate text-neutral-500'>{managerName(deal.manager)}</span>
+                <span className='shrink-0 font-semibold text-neutral-700'>
                     {formatMoney(deal.totalAmount)}
                 </span>
             </div>
             {progress && progress.totalOrdered > 0 && (
                 <div className='mt-2'>
-                    <div className='flex items-center justify-between text-[10px] text-gray-500'>
+                    <div className='flex items-center justify-between text-[10px] text-neutral-500'>
                         <span>
                             Отгружено {progress.percent}%
                             {progress.isFullyShipped && (
-                                <span className='ml-1 text-green-700'>· готово</span>
+                                <span className='ml-1 text-emerald-600'>· готово</span>
                             )}
                         </span>
                         {hasOverdue && (
-                            <span className='rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-semibold text-red-700'>
+                            <span className='rounded-full bg-red-50 px-1.5 py-0.5 text-[9px] font-semibold text-red-700'>
                                 Просрочка
                             </span>
                         )}
                     </div>
-                    <div className='mt-1 h-1.5 w-full overflow-hidden rounded-full bg-gray-200'>
+                    <div className='mt-1 h-1.5 w-full overflow-hidden rounded-full bg-neutral-200'>
                         <div
                             className={`h-full transition-all ${
-                                progress.isFullyShipped ? "bg-green-500" : "bg-brand_main"
+                                progress.isFullyShipped ? "bg-emerald-500" : "bg-brand_main"
                             }`}
                             style={{ width: `${progress.percent}%` }}
                         />

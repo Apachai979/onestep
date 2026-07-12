@@ -1,8 +1,23 @@
 "use client"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
+import { LuUsers } from "react-icons/lu"
 import { USER_ROLE_LABELS, USER_STATUS_LABELS } from "@/lib/crm/invite"
-import { CardListSkeleton, CardRow, MobileCard } from "@/components/crm/ui"
+import {
+    Badge,
+    CardListSkeleton,
+    CardRow,
+    DataTable,
+    EmptyState,
+    MobileCard,
+} from "@/components/crm/ui"
+
+const DATE_FMT = new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+})
 
 function fullName(u) {
     return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "—"
@@ -16,17 +31,29 @@ function safeJson(text) {
     }
 }
 
-const STATUS_CLASS = {
-    ACTIVE: "bg-emerald-50 text-emerald-700",
-    BLOCKED: "bg-red-50 text-red-700",
+function fmtDate(d) {
+    if (!d) return "—"
+    return DATE_FMT.format(new Date(d))
 }
 
-const ROLE_CLASS = {
-    ADMIN: "bg-amber-50 text-amber-700",
-    MANAGER: "bg-blue-50 text-blue-700",
+function RoleBadge({ role }) {
+    return (
+        <Badge tone={role === "ADMIN" ? "warning" : "info"} size='sm'>
+            {USER_ROLE_LABELS[role] || role}
+        </Badge>
+    )
+}
+
+function StatusBadge({ status }) {
+    return (
+        <Badge tone={status === "ACTIVE" ? "success" : "danger"} size='sm'>
+            {USER_STATUS_LABELS[status] || status}
+        </Badge>
+    )
 }
 
 export default function AdminUsersTable({ currentUserId }) {
+    const router = useRouter()
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
 
@@ -47,23 +74,110 @@ export default function AdminUsersTable({ currentUserId }) {
         load()
     }, [])
 
+    const columns = useMemo(
+        () => [
+            {
+                key: "name",
+                header: "ФИО",
+                sortable: true,
+                sortValue: u => fullName(u),
+                render: u => (
+                    <span className='inline-flex flex-wrap items-center gap-2'>
+                        <Link
+                            href={`/crm/users/${u.id}/edit`}
+                            onClick={e => e.stopPropagation()}
+                            className='font-medium text-neutral-900 hover:text-brand_main'
+                        >
+                            {fullName(u)}
+                        </Link>
+                        {u.id === currentUserId && (
+                            <span className='text-xs text-neutral-400'>(вы)</span>
+                        )}
+                    </span>
+                ),
+            },
+            {
+                key: "email",
+                header: "Email",
+                sortable: true,
+                sortValue: u => u.email,
+                render: u => u.email,
+            },
+            {
+                key: "phone",
+                header: "Телефон",
+                render: u => u.phone || "—",
+                hideable: true,
+            },
+            {
+                key: "position",
+                header: "Должность",
+                render: u => u.position || "—",
+                hideable: true,
+            },
+            {
+                key: "role",
+                header: "Роль",
+                sortable: true,
+                sortValue: u => USER_ROLE_LABELS[u.role] || u.role,
+                render: u => <RoleBadge role={u.role} />,
+            },
+            {
+                key: "status",
+                header: "Статус",
+                sortable: true,
+                sortValue: u => USER_STATUS_LABELS[u.status] || u.status,
+                render: u => <StatusBadge status={u.status} />,
+            },
+            {
+                key: "createdAt",
+                header: "Добавлен",
+                sortable: true,
+                sortValue: u => new Date(u.createdAt).getTime(),
+                render: u => (
+                    <span className='whitespace-nowrap text-neutral-500'>
+                        {fmtDate(u.createdAt)}
+                    </span>
+                ),
+                hideable: true,
+            },
+            {
+                key: "actions",
+                header: "",
+                align: "right",
+                render: u => (
+                    <Link
+                        href={`/crm/users/${u.id}/edit`}
+                        onClick={e => e.stopPropagation()}
+                        className='rounded-lg border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
+                    >
+                        Редактировать
+                    </Link>
+                ),
+            },
+        ],
+        [currentUserId],
+    )
+
+    const emptyState = (
+        <EmptyState icon={LuUsers} title='Сотрудников ещё нет' />
+    )
+
     return (
-        <section className='overflow-hidden rounded-2xl border border-line bg-white shadow-sm'>
-            <h2 className='border-b border-line px-6 py-3.5 text-sm font-semibold text-neutral-900'>
-                Сотрудники
-            </h2>
-            {error && <p className='px-5 py-2 text-sm text-red-600'>{error}</p>}
+        <section className='space-y-3'>
+            <h2 className='text-sm font-semibold text-neutral-900'>Сотрудники</h2>
+            {error && <p className='text-sm text-red-600'>{error}</p>}
 
             {/* Мобильные карточки */}
-            <div className='space-y-3 p-4 md:hidden'>
+            <div className='space-y-3 md:hidden'>
                 {items === null && <CardListSkeleton rows={3} />}
-                {items?.length === 0 && (
-                    <p className='py-4 text-center text-sm text-neutral-400'>
-                        Сотрудников ещё нет
-                    </p>
-                )}
+                {items?.length === 0 && emptyState}
                 {items?.map(u => (
-                    <MobileCard key={u.id}>
+                    <MobileCard
+                        key={u.id}
+                        onClick={() => router.push(`/crm/users/${u.id}/edit`)}
+                        className={u.status === "BLOCKED" ? "opacity-60" : ""}
+                    >
                         <div className='flex items-start justify-between gap-2'>
                             <span className='font-medium text-neutral-800'>
                                 {fullName(u)}
@@ -72,100 +186,37 @@ export default function AdminUsersTable({ currentUserId }) {
                                 )}
                             </span>
                             <span className='flex shrink-0 gap-1'>
-                                <span
-                                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${ROLE_CLASS[u.role] || ""}`}
-                                >
-                                    {USER_ROLE_LABELS[u.role] || u.role}
-                                </span>
-                                <span
-                                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[u.status] || ""}`}
-                                >
-                                    {USER_STATUS_LABELS[u.status] || u.status}
-                                </span>
+                                <RoleBadge role={u.role} />
+                                <StatusBadge status={u.status} />
                             </span>
                         </div>
                         <div className='mt-2 space-y-1'>
                             <CardRow label='Email'>{u.email}</CardRow>
                             <CardRow label='Телефон'>{u.phone || "—"}</CardRow>
                             <CardRow label='Должность'>{u.position || "—"}</CardRow>
-                        </div>
-                        <div className='mt-3 text-right'>
-                            <Link
-                                href={`/crm/users/${u.id}/edit`}
-                                className='rounded-md border border-line px-3 py-1.5 text-xs text-neutral-700 hover:bg-surface_muted'
-                            >
-                                Редактировать
-                            </Link>
+                            <CardRow label='Добавлен'>{fmtDate(u.createdAt)}</CardRow>
                         </div>
                     </MobileCard>
                 ))}
             </div>
 
-            <div className='hidden overflow-x-auto md:block'>
-                <table className='w-full text-sm'>
-                    <thead className='bg-surface_muted text-left text-xs font-medium uppercase tracking-wide text-neutral-500'>
-                        <tr>
-                            <th className='px-4 py-3'>ФИО</th>
-                            <th className='px-4 py-3'>Email</th>
-                            <th className='px-4 py-3'>Телефон</th>
-                            <th className='px-4 py-3'>Должность</th>
-                            <th className='px-4 py-3'>Роль</th>
-                            <th className='px-4 py-3'>Статус</th>
-                            <th className='px-4 py-3'></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items === null && (
-                            <tr>
-                                <td colSpan={7} className='px-4 py-6 text-center text-neutral-400'>
-                                    Загрузка...
-                                </td>
-                            </tr>
-                        )}
-                        {items?.length === 0 && (
-                            <tr>
-                                <td colSpan={7} className='px-4 py-6 text-center text-neutral-400'>
-                                    Сотрудников ещё нет
-                                </td>
-                            </tr>
-                        )}
-                        {items?.map(u => (
-                            <tr key={u.id} className='border-t border-line hover:bg-surface_muted'>
-                                <td className='px-4 py-3 text-neutral-800'>
-                                    {fullName(u)}
-                                    {u.id === currentUserId && (
-                                        <span className='ml-2 text-xs text-neutral-400'>(вы)</span>
-                                    )}
-                                </td>
-                                <td className='px-4 py-3 text-neutral-700'>{u.email}</td>
-                                <td className='px-4 py-3 text-neutral-700'>{u.phone || "—"}</td>
-                                <td className='px-4 py-3 text-neutral-700'>{u.position || "—"}</td>
-                                <td className='px-4 py-3'>
-                                    <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${ROLE_CLASS[u.role] || ""}`}
-                                    >
-                                        {USER_ROLE_LABELS[u.role] || u.role}
-                                    </span>
-                                </td>
-                                <td className='px-4 py-3'>
-                                    <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASS[u.status] || ""}`}
-                                    >
-                                        {USER_STATUS_LABELS[u.status] || u.status}
-                                    </span>
-                                </td>
-                                <td className='px-4 py-3 text-right'>
-                                    <Link
-                                        href={`/crm/users/${u.id}/edit`}
-                                        className='rounded-lg border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
-                                    >
-                                        Редактировать
-                                    </Link>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            {/* Десктоп-таблица */}
+            <div className='hidden md:block'>
+                <DataTable
+                    columns={columns}
+                    rows={items || []}
+                    loading={items === null}
+                    getRowId={u => u.id}
+                    onRowClick={u => router.push(`/crm/users/${u.id}/edit`)}
+                    rowClassName={u => (u.status === "BLOCKED" ? "opacity-60" : "")}
+                    searchable
+                    searchPlaceholder='Поиск по имени, email, должности'
+                    searchAccessor={u =>
+                        `${fullName(u)} ${u.email} ${u.phone ?? ""} ${u.position ?? ""}`
+                    }
+                    initialSort={{ key: "name", dir: "asc" }}
+                    empty={emptyState}
+                />
             </div>
         </section>
     )

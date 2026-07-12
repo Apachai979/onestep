@@ -107,6 +107,18 @@ export default function InvitesSection() {
         await load()
     }
 
+    async function handleReissue(id) {
+        const r = await fetch(`/api/crm/invites/${id}/reissue`, { method: "POST" })
+        const text = await r.text()
+        const data = text ? safeJson(text) : {}
+        if (!r.ok) {
+            toast.error(data?.error || "Не удалось обновить приглашение")
+            return
+        }
+        toast.success("Приглашение продлено — ссылка снова активна")
+        await load()
+    }
+
     async function copyLink(token) {
         const link = inviteLink(token)
         try {
@@ -271,6 +283,17 @@ export default function InvitesSection() {
                                     </button>
                                 </div>
                             )}
+                            {status === "EXPIRED" && (
+                                <div className='mt-3 flex justify-end gap-2'>
+                                    <button
+                                        type='button'
+                                        onClick={() => handleReissue(inv.id)}
+                                        className='rounded-md border border-line px-3 py-1.5 text-xs text-neutral-700 hover:bg-surface_muted'
+                                    >
+                                        Выслать заново
+                                    </button>
+                                </div>
+                            )}
                         </MobileCard>
                     )
                 })}
@@ -363,6 +386,15 @@ export default function InvitesSection() {
                                                         Отменить
                                                     </button>
                                                 </>
+                                            )}
+                                            {status === "EXPIRED" && (
+                                                <button
+                                                    type='button'
+                                                    onClick={() => handleReissue(inv.id)}
+                                                    className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
+                                                >
+                                                    Выслать заново
+                                                </button>
                                             )}
                                         </div>
                                     </td>

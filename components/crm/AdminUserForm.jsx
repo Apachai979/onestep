@@ -1,8 +1,9 @@
 "use client"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { LuCheck, LuCopy, LuEye, LuEyeOff, LuKeyRound } from "react-icons/lu"
 import { USER_ROLES, USER_ROLE_LABELS, USER_STATUSES, USER_STATUS_LABELS } from "@/lib/crm/invite"
-import { Button } from "@/components/crm/ui"
+import { Button, Modal, useToast } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -12,8 +13,19 @@ function safeJson(text) {
     }
 }
 
+// Криптостойкий пароль без похожих символов (0/O, 1/l/I).
+function generatePassword(length = 14) {
+    const chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    const arr = new Uint32Array(length)
+    crypto.getRandomValues(arr)
+    let out = ""
+    for (let i = 0; i < length; i++) out += chars[arr[i] % chars.length]
+    return out
+}
+
 export default function AdminUserForm({ initial, isSelf }) {
     const router = useRouter()
+    const [resetOpen, setResetOpen] = useState(false)
     const [form, setForm] = useState({
         firstName: initial.firstName ?? "",
         lastName: initial.lastName ?? "",
@@ -107,6 +119,22 @@ export default function AdminUserForm({ initial, isSelf }) {
                 </div>
             </Section>
 
+            <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
+                <h2 className='text-sm font-semibold text-neutral-900'>Безопасность</h2>
+                <p className='mt-1 text-sm text-neutral-500'>
+                    Задайте сотруднику новый пароль для входа в CRM.
+                </p>
+                <Button
+                    type='button'
+                    variant='secondary'
+                    className='mt-4'
+                    onClick={() => setResetOpen(true)}
+                >
+                    <LuKeyRound className='h-4 w-4' />
+                    Сбросить пароль
+                </Button>
+            </section>
+
             {error && (
                 <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
                     {error}
@@ -121,7 +149,149 @@ export default function AdminUserForm({ initial, isSelf }) {
                     Сохранить
                 </Button>
             </div>
+
+            <ResetPasswordModal
+                open={resetOpen}
+                onClose={() => setResetOpen(false)}
+                userId={initial.id}
+                email={initial.email}
+            />
         </form>
+    )
+}
+
+function ResetPasswordModal({ open, onClose, userId, email }) {
+    const toast = useToast()
+    const [password, setPassword] = useState("")
+    const [show, setShow] = useState(true)
+    const [copied, setCopied] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState("")
+
+    useEffect(() => {
+        if (open) {
+            setPassword("")
+            setShow(true)
+            setCopied(false)
+            setError("")
+        }
+    }, [open])
+
+    async function copy() {
+        try {
+            await navigator.clipboard.writeText(password)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 1500)
+        } catch {
+            window.prompt("Скопируйте пароль вручную:", password)
+        }
+    }
+
+    async function submit() {
+        setError("")
+        if (password.length < 8) {
+            setError("Пароль должен содержать минимум 8 символов")
+            return
+        }
+        setLoading(true)
+        const r = await fetch(`/api/crm/admin/users/${userId}/reset-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password }),
+        })
+        const text = await r.text()
+        const data = text ? safeJson(text) : {}
+        setLoading(false)
+        if (!r.ok) {
+            setError(data?.error || "Не удалось сбросить пароль")
+            return
+        }
+        toast.success("Пароль обновлён")
+        onClose()
+    }
+
+    return (
+        <Modal
+            open={open}
+            onClose={onClose}
+            title='Сброс пароля'
+            description={email}
+            size='md'
+            footer={
+                <>
+                    <Button type='button' variant='secondary' onClick={onClose}>
+                        Отмена
+                    </Button>
+                    <Button
+                        type='button'
+                        onClick={submit}
+                        loading={loading}
+                        disabled={password.length < 8}
+                    >
+                        Сохранить пароль
+                    </Button>
+                </>
+            }
+        >
+            <div className='space-y-3'>
+                <div>
+                    <label className='mb-1.5 block text-sm text-neutral-600'>Новый пароль</label>
+                    <div className='flex gap-2'>
+                        <input
+                            type={show ? "text" : "password"}
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            placeholder='Минимум 8 символов'
+                            autoComplete='new-password'
+                            className='h-10 flex-1 rounded-xl border border-line bg-white px-3 font-mono text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:font-sans placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                        />
+                        <button
+                            type='button'
+                            onClick={() => setShow(s => !s)}
+                            aria-label={show ? "Скрыть пароль" : "Показать пароль"}
+                            className='inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line text-neutral-500 hover:bg-surface_muted'
+                        >
+                            {show ? <LuEyeOff className='h-4 w-4' /> : <LuEye className='h-4 w-4' />}
+                        </button>
+                    </div>
+                </div>
+
+                <div className='flex flex-wrap gap-2'>
+                    <button
+                        type='button'
+                        onClick={() => {
+                            setPassword(generatePassword())
+                            setShow(true)
+                        }}
+                        className='inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-surface_muted'
+                    >
+                        <LuKeyRound className='h-3.5 w-3.5' />
+                        Сгенерировать
+                    </button>
+                    {password && (
+                        <button
+                            type='button'
+                            onClick={copy}
+                            className='inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-surface_muted'
+                        >
+                            {copied ? (
+                                <LuCheck className='h-3.5 w-3.5 text-emerald-600' />
+                            ) : (
+                                <LuCopy className='h-3.5 w-3.5' />
+                            )}
+                            {copied ? "Скопировано" : "Копировать"}
+                        </button>
+                    )}
+                </div>
+
+                {error && <p className='text-sm text-red-600'>{error}</p>}
+
+                <p className='rounded-lg bg-surface_muted p-3 text-xs leading-relaxed text-neutral-500'>
+                    Система не отправляет писем — передайте новый пароль сотруднику лично.
+                    Старый пароль перестанет работать сразу после сохранения.
+                </p>
+            </div>
+        </Modal>
     )
 }
 

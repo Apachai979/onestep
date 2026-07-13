@@ -76,12 +76,11 @@ export default async function DealPage({ params }) {
                 className='inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-brand_main'
             />
 
-            {/* Title row */}
-            <div className='flex flex-wrap items-start justify-between gap-3'>
+            {/* Шапка повторяет колонки тела страницы: правая ячейка (КП + статус)
+                стоит ровно над панелью активности и не сдвигает её вниз. */}
+            <div className='grid grid-cols-[minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='min-w-0'>
-                    <p className='text-xs uppercase tracking-wider text-neutral-400'>
-                        Сделка
-                    </p>
+                    <p className='text-xs uppercase tracking-wider text-neutral-400'>Сделка</p>
                     <h1 className='mt-0.5 truncate text-xl font-semibold text-neutral-900 sm:text-2xl'>
                         {dealDisplayTitle(item, item.counterparty?.name)}
                     </h1>
@@ -110,11 +109,11 @@ export default async function DealPage({ params }) {
                         </p>
                     )}
                 </div>
-                <div className='flex flex-col items-end gap-2'>
+                <div className='flex flex-wrap items-end justify-between gap-2'>
                     <DealStatusControl dealId={item.id} currentStatus={item.status} />
                     <Link
                         href={`/crm/deals/${item.id}/proposal`}
-                        className='inline-flex items-center gap-1.5 rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand_main/90'
+                        className='inline-flex items-center gap-1.5 rounded-lg bg-brand_main px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-brand_main/90'
                     >
                         <LuFileText className='h-3 w-3' />
                         Сформировать КП
@@ -122,20 +121,19 @@ export default async function DealPage({ params }) {
                 </div>
             </div>
 
-            {(item.status === "CANCELLED" || item.status === "ARCHIVED") &&
-                item.lossReason && (
-                    <div className='rounded-xl border border-red-200 bg-red-50/60 px-4 py-3'>
-                        <p className='text-xs font-semibold uppercase tracking-wide text-red-700'>
-                            Причина проигрыша
-                        </p>
-                        <p className='mt-1 text-sm text-red-900'>
-                            {DEAL_LOSS_REASON_LABELS[item.lossReason] || item.lossReason}
-                            {item.lossComment && (
-                                <span className='text-red-900/75'> — {item.lossComment}</span>
-                            )}
-                        </p>
-                    </div>
-                )}
+            {(item.status === "CANCELLED" || item.status === "ARCHIVED") && item.lossReason && (
+                <div className='rounded-xl border border-red-200 bg-red-50/60 px-4 py-3'>
+                    <p className='text-xs font-semibold uppercase tracking-wide text-red-700'>
+                        Причина проигрыша
+                    </p>
+                    <p className='mt-1 text-sm text-red-900'>
+                        {DEAL_LOSS_REASON_LABELS[item.lossReason] || item.lossReason}
+                        {item.lossComment && (
+                            <span className='text-red-900/75'> — {item.lossComment}</span>
+                        )}
+                    </p>
+                </div>
+            )}
 
             {/* Two-column body */}
             <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
@@ -177,10 +175,7 @@ export default async function DealPage({ params }) {
                                 </>
                             }
                         >
-                            <Row
-                                label='Сумма сделки'
-                                value={formatMoney(item.totalAmount)}
-                            />
+                            <Row label='Сумма сделки' value={formatMoney(item.totalAmount)} />
                             <Row
                                 label='Скидка'
                                 value={
@@ -191,11 +186,7 @@ export default async function DealPage({ params }) {
                             />
                             <Row
                                 label='Сумма со скидкой'
-                                value={
-                                    discountedTotal != null
-                                        ? formatMoney(discountedTotal)
-                                        : "—"
-                                }
+                                value={discountedTotal != null ? formatMoney(discountedTotal) : "—"}
                             />
                             <Row label='Менеджер' value={fullName(item.manager)} />
                         </Section>
@@ -260,9 +251,7 @@ function Section({ title, footer, action, columns = "sm:grid-cols-2 lg:grid-cols
                 </h2>
                 {action && <div className='shrink-0'>{action}</div>}
             </div>
-            <dl className={`grid flex-1 content-start gap-x-4 gap-y-2.5 ${columns}`}>
-                {children}
-            </dl>
+            <dl className={`grid flex-1 content-start gap-x-4 gap-y-2.5 ${columns}`}>{children}</dl>
             {footer && (
                 <p className='mt-3 border-t border-line pt-2 text-[11px] text-neutral-400'>
                     {footer}
@@ -321,9 +310,7 @@ function PartyCard({ label, org, contact }) {
 function Row({ label, value, className = "" }) {
     return (
         <div className={className}>
-            <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>
-                {label}
-            </dt>
+            <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>{label}</dt>
             <dd className='mt-0.5 text-sm text-neutral-900'>{value || "—"}</dd>
         </div>
     )

@@ -71,13 +71,11 @@ export default function StatusSelect({
                         : "border-line hover:border-brand_main/50"
                 }`}
             >
-                <span
-                    className={`h-2.5 w-2.5 shrink-0 rounded-full ${dotClass(colors[value])}`}
-                />
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dotClass(colors[value])}`} />
                 <span className='flex min-w-0 flex-col'>
-                    <span className='text-[10px] font-medium uppercase leading-3 tracking-wider text-neutral-400'>
+                    {/* <span className='text-[10px] font-medium uppercase leading-3 tracking-wider text-neutral-400'>
                         Статус
-                    </span>
+                    </span> */}
                     <span className='truncate text-sm font-semibold leading-5 text-neutral-900'>
                         {labels[value] || value}
                     </span>

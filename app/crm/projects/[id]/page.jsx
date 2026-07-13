@@ -70,7 +70,9 @@ export default async function ProjectPage({ params }) {
                 className='inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-brand_main'
             />
 
-            <div className='flex flex-wrap items-start justify-between gap-3'>
+            {/* Шапка повторяет колонки тела страницы: статус стоит в правой
+                колонке над панелью активности, как на карточке сделки. */}
+            <div className='grid grid-cols-[minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='min-w-0'>
                     <p className='text-xs uppercase tracking-wider text-neutral-400'>
                         Проект
@@ -79,10 +81,12 @@ export default async function ProjectPage({ params }) {
                         {item.internalName}
                     </h1>
                 </div>
-                <ProjectStatusControl
-                    projectId={item.id}
-                    currentStatus={item.status}
-                />
+                <div className='flex flex-wrap items-end justify-between gap-2'>
+                    <ProjectStatusControl
+                        projectId={item.id}
+                        currentStatus={item.status}
+                    />
+                </div>
             </div>
 
             {item.duplicateComment && (

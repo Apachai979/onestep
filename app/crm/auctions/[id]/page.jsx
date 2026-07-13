@@ -72,7 +72,7 @@ export default async function AuctionPage({ params }) {
     // Контакты заказчика: приоритет — выбранный на аукционе, затем выбранные
     // в проекте, затем основной контакт компании.
     const customerProjectContacts = item.project.contacts.filter(
-        c => c.counterpartyId === item.customerId,
+        c => c.counterpartyId === item.customerId
     )
     const customerContacts = item.customerContact
         ? [item.customerContact]
@@ -104,7 +104,9 @@ export default async function AuctionPage({ params }) {
                 className='inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-brand_main'
             />
 
-            <div className='flex flex-wrap items-start justify-between gap-3'>
+            {/* Шапка повторяет колонки тела страницы: статус стоит в правой
+                колонке над панелью активности, как на карточке сделки. */}
+            <div className='grid grid-cols-[minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='min-w-0'>
                     <p className='text-xs uppercase tracking-wider text-neutral-400'>
                         Аукцион · проект{" "}
@@ -119,7 +121,9 @@ export default async function AuctionPage({ params }) {
                         {item.purchaseNumber ? `Закупка № ${item.purchaseNumber}` : "Аукцион"}
                     </h1>
                 </div>
-                <AuctionStatusControl auctionId={item.id} currentStatus={item.status} />
+                <div className='flex flex-wrap items-end justify-between gap-2'>
+                    <AuctionStatusControl auctionId={item.id} currentStatus={item.status} />
+                </div>
             </div>
 
             {item.status === "LOST" && item.lossComment && (
@@ -195,14 +199,8 @@ export default async function AuctionPage({ params }) {
                         <Row label='Подведение итогов'>
                             <LocalDateTime value={item.resultsAt} />
                         </Row>
-                        <Row
-                            label='Количество заявок'
-                            value={item.bidsCount ?? "—"}
-                        />
-                        <Row
-                            label='Количество участников'
-                            value={item.participantsCount ?? "—"}
-                        />
+                        <Row label='Количество заявок' value={item.bidsCount ?? "—"} />
+                        <Row label='Количество участников' value={item.participantsCount ?? "—"} />
                         <Row label='Победитель' value={item.winner || "—"} />
                     </Section>
 
@@ -223,8 +221,8 @@ export default async function AuctionPage({ params }) {
                         </div>
                         {item.deals.length === 0 ? (
                             <p className='text-sm text-neutral-400'>
-                                Сделок по аукциону пока нет. Нажмите «Создать сделку» —
-                                поставщик и товарные позиции подставятся из аукциона.
+                                Сделок по аукциону пока нет. Нажмите «Создать сделку» — поставщик и
+                                товарные позиции подставятся из аукциона.
                             </p>
                         ) : (
                             <div className='space-y-2'>
@@ -239,7 +237,8 @@ export default async function AuctionPage({ params }) {
                                                 {dealDisplayTitle(d, d.counterparty?.name)}
                                             </p>
                                             <p className='mt-0.5 truncate text-xs text-neutral-500'>
-                                                {d.counterparty?.name || "—"} · {fullName(d.manager)}
+                                                {d.counterparty?.name || "—"} ·{" "}
+                                                {fullName(d.manager)}
                                             </p>
                                         </div>
                                         <div className='flex shrink-0 items-center gap-2'>
@@ -308,9 +307,7 @@ function Section({ title, footer, action, children }) {
 function Row({ label, value, children, className = "" }) {
     return (
         <div className={className}>
-            <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>
-                {label}
-            </dt>
+            <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>{label}</dt>
             <dd className='mt-0.5 text-sm text-neutral-900'>{children ?? value ?? "—"}</dd>
         </div>
     )
@@ -354,9 +351,7 @@ function PartyCard({ label, org, contacts, hint }) {
                         >
                             <p className='font-medium text-neutral-900'>{contactName(c)}</p>
                             <p className='text-xs text-neutral-500'>
-                                {[c.position, c.phone, c.email]
-                                    .filter(Boolean)
-                                    .join(" · ") || "—"}
+                                {[c.position, c.phone, c.email].filter(Boolean).join(" · ") || "—"}
                             </p>
                         </li>
                     ))}

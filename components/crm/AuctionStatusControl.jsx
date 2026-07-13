@@ -8,6 +8,7 @@ import {
 } from "@/lib/crm/auction"
 import { useToast } from "@/components/crm/ui"
 import DealLossDialog from "./DealLossDialog"
+import StatusSelect from "./StatusSelect"
 
 export default function AuctionStatusControl({ auctionId, currentStatus }) {
     const router = useRouter()
@@ -47,25 +48,15 @@ export default function AuctionStatusControl({ auctionId, currentStatus }) {
 
     return (
         <>
-            <select
+            <StatusSelect
                 value={status}
-                onChange={e => change(e.target.value)}
+                options={AUCTION_STATUSES}
+                labels={AUCTION_STATUS_LABELS}
+                colors={AUCTION_STATUS_COLORS}
                 disabled={loading}
                 title='Сменить статус аукциона'
-                className={`cursor-pointer appearance-none rounded-full border-0 bg-no-repeat px-3 py-1 pr-8 text-xs font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-brand_main/40 disabled:opacity-60 ${AUCTION_STATUS_COLORS[status] || ""}`}
-                style={{
-                    backgroundImage:
-                        "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E\")",
-                    backgroundPosition: "right 0.65rem center",
-                    backgroundSize: "10px 6px",
-                }}
-            >
-                {AUCTION_STATUSES.map(s => (
-                    <option key={s} value={s} className='bg-white text-gray-900'>
-                        {AUCTION_STATUS_LABELS[s]}
-                    </option>
-                ))}
-            </select>
+                onChange={change}
+            />
 
             {askReason && (
                 <DealLossDialog

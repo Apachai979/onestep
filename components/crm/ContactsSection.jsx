@@ -322,7 +322,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                         />
                         <Field
                             label='Сотовый телефон'
-                            placeholder='+79528888053'
+                            placeholder='+79999999999'
                             value={form.phone}
                             onChange={update("phone")}
                         />

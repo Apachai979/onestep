@@ -185,9 +185,7 @@ export default function ContactsDirectory() {
                         <span className='flex flex-col'>
                             {c.phone && <span>{c.phone}</span>}
                             {c.workPhone && (
-                                <span className='text-xs text-neutral-500'>
-                                    раб. {c.workPhone}
-                                </span>
+                                <span className='text-xs text-neutral-500'>раб. {c.workPhone}</span>
                             )}
                         </span>
                     ) : (
@@ -218,7 +216,7 @@ export default function ContactsDirectory() {
                     ),
             },
         ],
-        [],
+        []
     )
 
     return (
@@ -259,7 +257,10 @@ export default function ContactsDirectory() {
                         />
                         <p className='mt-1 text-xs text-neutral-400'>
                             Необязательно. Нужного контрагента нет? Создайте его в разделах{" "}
-                            <Link href='/crm/distributors' className='text-brand_main hover:underline'>
+                            <Link
+                                href='/crm/distributors'
+                                className='text-brand_main hover:underline'
+                            >
                                 «Дистрибьюторы»
                             </Link>{" "}
                             или{" "}
@@ -279,7 +280,7 @@ export default function ContactsDirectory() {
                         <Field
                             label='Сотовый телефон *'
                             required
-                            placeholder='+79528888053'
+                            placeholder='+79999999999'
                             value={form.phone}
                             onChange={update("phone")}
                         />
@@ -373,9 +374,7 @@ export default function ContactsDirectory() {
                         <div className='mt-2 space-y-1'>
                             {c.position && <CardRow label='Должность'>{c.position}</CardRow>}
                             <CardRow label='Телефон'>{c.phone || "—"}</CardRow>
-                            {c.workPhone && (
-                                <CardRow label='Раб. телефон'>{c.workPhone}</CardRow>
-                            )}
+                            {c.workPhone && <CardRow label='Раб. телефон'>{c.workPhone}</CardRow>}
                             <CardRow label='Email'>{c.email || "—"}</CardRow>
                             <CardRow label='Контрагент'>
                                 {c.counterparty ? (

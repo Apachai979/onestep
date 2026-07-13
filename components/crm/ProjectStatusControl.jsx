@@ -8,6 +8,7 @@ import {
 } from "@/lib/crm/project"
 import { useToast } from "@/components/crm/ui"
 import DealLossDialog from "./DealLossDialog"
+import StatusSelect from "./StatusSelect"
 
 export default function ProjectStatusControl({ projectId, currentStatus }) {
     const router = useRouter()
@@ -53,25 +54,15 @@ export default function ProjectStatusControl({ projectId, currentStatus }) {
 
     return (
         <>
-            <select
+            <StatusSelect
                 value={status}
-                onChange={e => change(e.target.value)}
+                options={options}
+                labels={PROJECT_STATUS_LABELS}
+                colors={PROJECT_STATUS_COLORS}
                 disabled={loading}
                 title='Сменить статус проекта'
-                className={`cursor-pointer appearance-none rounded-full border-0 bg-no-repeat px-3 py-1 pr-8 text-xs font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-brand_main/40 disabled:opacity-60 ${PROJECT_STATUS_COLORS[status] || ""}`}
-                style={{
-                    backgroundImage:
-                        "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E\")",
-                    backgroundPosition: "right 0.65rem center",
-                    backgroundSize: "10px 6px",
-                }}
-            >
-                {options.map(s => (
-                    <option key={s} value={s} className='bg-white text-gray-900'>
-                        {PROJECT_STATUS_LABELS[s] || s}
-                    </option>
-                ))}
-            </select>
+                onChange={change}
+            />
 
             {askReason && (
                 <DealLossDialog

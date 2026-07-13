@@ -74,7 +74,11 @@ export default function ContactEditForm({ initial }) {
     async function handleDelete() {
         const ok = await confirm({
             title: "Удалить контакт?",
-            description: `${form.firstName} ${form.lastName}`.trim() || form.email || form.phone || undefined,
+            description:
+                `${form.firstName} ${form.lastName}`.trim() ||
+                form.email ||
+                form.phone ||
+                undefined,
             confirmText: "Удалить",
             variant: "danger",
         })
@@ -104,16 +108,14 @@ export default function ContactEditForm({ initial }) {
     return (
         <form onSubmit={handleSave} className='space-y-4'>
             <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
-                <h2 className='mb-4 text-sm font-semibold text-neutral-900'>
-                    Контакт
-                </h2>
+                <h2 className='mb-4 text-sm font-semibold text-neutral-900'>Контакт</h2>
                 <div className='grid gap-3 sm:grid-cols-2'>
                     <Field label='Имя' value={form.firstName} onChange={update("firstName")} />
                     <Field label='Фамилия' value={form.lastName} onChange={update("lastName")} />
                     <Field
                         label='Сотовый телефон *'
                         required
-                        placeholder='+79528888053'
+                        placeholder='+79999999999'
                         value={form.phone}
                         onChange={update("phone")}
                     />

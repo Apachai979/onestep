@@ -20,6 +20,7 @@ export default async function ContactPage({ params }) {
         firstName: item.firstName,
         lastName: item.lastName,
         phone: item.phone,
+        workPhone: item.workPhone,
         email: item.email,
         position: item.position,
         isPrimary: item.isPrimary,

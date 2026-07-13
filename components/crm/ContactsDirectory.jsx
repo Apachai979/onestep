@@ -26,6 +26,7 @@ const EMPTY = {
     firstName: "",
     lastName: "",
     phone: "",
+    workPhone: "",
     email: "",
     birthDate: "",
     position: "",
@@ -179,7 +180,19 @@ export default function ContactsDirectory() {
             {
                 key: "phone",
                 header: "Телефон",
-                render: c => c.phone || "—",
+                render: c =>
+                    c.phone || c.workPhone ? (
+                        <span className='flex flex-col'>
+                            {c.phone && <span>{c.phone}</span>}
+                            {c.workPhone && (
+                                <span className='text-xs text-neutral-500'>
+                                    раб. {c.workPhone}
+                                </span>
+                            )}
+                        </span>
+                    ) : (
+                        "—"
+                    ),
             },
             {
                 key: "email",
@@ -264,10 +277,16 @@ export default function ContactsDirectory() {
                             onChange={update("lastName")}
                         />
                         <Field
-                            label='Телефон *'
+                            label='Сотовый телефон *'
                             required
+                            placeholder='+79528888053'
                             value={form.phone}
                             onChange={update("phone")}
+                        />
+                        <Field
+                            label='Рабочий телефон'
+                            value={form.workPhone}
+                            onChange={update("workPhone")}
                         />
                         <Field
                             label='Email'
@@ -354,6 +373,9 @@ export default function ContactsDirectory() {
                         <div className='mt-2 space-y-1'>
                             {c.position && <CardRow label='Должность'>{c.position}</CardRow>}
                             <CardRow label='Телефон'>{c.phone || "—"}</CardRow>
+                            {c.workPhone && (
+                                <CardRow label='Раб. телефон'>{c.workPhone}</CardRow>
+                            )}
                             <CardRow label='Email'>{c.email || "—"}</CardRow>
                             <CardRow label='Контрагент'>
                                 {c.counterparty ? (

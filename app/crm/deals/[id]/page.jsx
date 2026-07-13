@@ -54,6 +54,12 @@ export default async function DealPage({ params }) {
         quantity: i.quantity.toString(),
     }))
 
+    // Скидка в параметрах: сумма скидки и итог со скидкой считаются от суммы сделки.
+    const totalAmount = Number(item.totalAmount) || 0
+    const discountPct = item.discount != null ? Number(item.discount) : null
+    const discountAmount = discountPct != null ? (totalAmount * discountPct) / 100 : null
+    const discountedTotal = discountAmount != null ? totalAmount - discountAmount : null
+
     const itemsForClient = item.items.map(i => ({
         ...i,
         quantity: i.quantity.toString(),
@@ -178,8 +184,16 @@ export default async function DealPage({ params }) {
                             <Row
                                 label='Скидка'
                                 value={
-                                    item.discount != null
-                                        ? formatPercent(item.discount)
+                                    discountPct != null
+                                        ? `${formatPercent(discountPct)} (${formatMoney(discountAmount)})`
+                                        : "—"
+                                }
+                            />
+                            <Row
+                                label='Сумма со скидкой'
+                                value={
+                                    discountedTotal != null
+                                        ? formatMoney(discountedTotal)
                                         : "—"
                                 }
                             />
@@ -263,7 +277,14 @@ function Section({ title, footer, action, columns = "sm:grid-cols-2 lg:grid-cols
 function PartyCard({ label, org, contact }) {
     const contactName = contactDisplay(contact)
     const contactDetails = contact
-        ? [contact.position, contact.phone, contact.email].filter(Boolean).join(" · ")
+        ? [
+              contact.position,
+              contact.phone,
+              contact.workPhone ? `раб. ${contact.workPhone}` : null,
+              contact.email,
+          ]
+              .filter(Boolean)
+              .join(" · ")
         : ""
     return (
         <section className='flex flex-col rounded-xl border border-line bg-white p-4'>

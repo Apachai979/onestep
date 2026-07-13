@@ -294,20 +294,22 @@ export default function DealForm({
                                 </option>
                             ))}
                         </Select>
-                        <Input
-                            label='Скидка, %'
-                            type='number'
-                            min='0'
-                            max='100'
-                            step='0.01'
-                            inputMode='decimal'
-                            value={form.discount}
-                            onChange={e => {
-                                discountTouchedRef.current = true
-                                setForm(prev => ({ ...prev, discount: e.target.value }))
-                            }}
-                            hint='Используется в КП. Меняйте, если клиенту согласована особая скидка на эту сделку.'
-                        />
+                        {/* Верхняя подпись (как у соседнего «Статуса»), чтобы контролы стояли на одной линии */}
+                        <Field label='Скидка, %'>
+                            <Input
+                                type='number'
+                                min='0'
+                                max='100'
+                                step='0.01'
+                                inputMode='decimal'
+                                value={form.discount}
+                                onChange={e => {
+                                    discountTouchedRef.current = true
+                                    setForm(prev => ({ ...prev, discount: e.target.value }))
+                                }}
+                                hint='Используется в КП. Меняйте, если клиенту согласована особая скидка на эту сделку.'
+                            />
+                        </Field>
                         <Textarea
                             label='Адрес доставки'
                             containerClassName='sm:col-span-2'

@@ -18,6 +18,7 @@ export async function GET(request) {
             firstName: true,
             lastName: true,
             phone: true,
+            workPhone: true,
             email: true,
             position: true,
             isPrimary: true,
@@ -33,6 +34,7 @@ export async function GET(request) {
               return (
                   fn.includes(ql) ||
                   (c.phone || "").toLowerCase().includes(ql) ||
+                  (c.workPhone || "").toLowerCase().includes(ql) ||
                   (c.email || "").toLowerCase().includes(ql) ||
                   (c.position || "").toLowerCase().includes(ql) ||
                   (c.counterparty?.name || "").toLowerCase().includes(ql)

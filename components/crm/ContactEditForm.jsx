@@ -25,6 +25,7 @@ export default function ContactEditForm({ initial }) {
         firstName: initial.firstName ?? "",
         lastName: initial.lastName ?? "",
         phone: initial.phone ?? "",
+        workPhone: initial.workPhone ?? "",
         email: initial.email ?? "",
         birthDate: toIsoDate(initial.birthDate),
         position: initial.position ?? "",
@@ -110,10 +111,16 @@ export default function ContactEditForm({ initial }) {
                     <Field label='Имя' value={form.firstName} onChange={update("firstName")} />
                     <Field label='Фамилия' value={form.lastName} onChange={update("lastName")} />
                     <Field
-                        label='Телефон *'
+                        label='Сотовый телефон *'
                         required
+                        placeholder='+79528888053'
                         value={form.phone}
                         onChange={update("phone")}
+                    />
+                    <Field
+                        label='Рабочий телефон'
+                        value={form.workPhone}
+                        onChange={update("workPhone")}
                     />
                     <Field
                         label='Email'

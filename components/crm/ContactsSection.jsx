@@ -8,6 +8,7 @@ const EMPTY = {
     firstName: "",
     lastName: "",
     phone: "",
+    workPhone: "",
     email: "",
     birthDate: "",
     position: "",
@@ -90,6 +91,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
             firstName: contact.firstName ?? "",
             lastName: contact.lastName ?? "",
             phone: contact.phone ?? "",
+            workPhone: contact.workPhone ?? "",
             email: contact.email ?? "",
             birthDate: toIsoDate(contact.birthDate),
             position: contact.position ?? "",
@@ -276,7 +278,8 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                             </div>
                             {c.position && <p className='text-sm text-neutral-500'>{c.position}</p>}
                             <div className='mt-1 grid gap-1 text-sm text-neutral-700 sm:grid-cols-2'>
-                                {c.phone && <span>Тел.: {c.phone}</span>}
+                                {c.phone && <span>Сот.: {c.phone}</span>}
+                                {c.workPhone && <span>Раб.: {c.workPhone}</span>}
                                 {c.email && <span>{c.email}</span>}
                                 {c.birthDate && (
                                     <span>
@@ -317,7 +320,17 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                             value={form.lastName}
                             onChange={update("lastName")}
                         />
-                        <Field label='Телефон' value={form.phone} onChange={update("phone")} />
+                        <Field
+                            label='Сотовый телефон'
+                            placeholder='+79528888053'
+                            value={form.phone}
+                            onChange={update("phone")}
+                        />
+                        <Field
+                            label='Рабочий телефон'
+                            value={form.workPhone}
+                            onChange={update("workPhone")}
+                        />
                         <Field
                             label='Email'
                             type='email'

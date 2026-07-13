@@ -37,6 +37,14 @@ const Input = forwardRef(function Input(
         )
     }
 
+    // С реальным placeholder floating-механика не работает: пока поле пустое,
+    // label «падал» бы в центр и накладывался на текст placeholder. В этом
+    // случае держим подпись постоянно поднятой.
+    const hasRealPlaceholder = Boolean(rest.placeholder)
+    const labelFloatCls = hasRealPlaceholder
+        ? ""
+        : "peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-placeholder-shown:text-neutral-400 peer-focus:top-2.5 peer-focus:translate-y-0 peer-focus:text-xs"
+
     return (
         <div className={containerClassName}>
             <div className='relative'>
@@ -44,12 +52,12 @@ const Input = forwardRef(function Input(
                     ref={ref}
                     id={inputId}
                     placeholder=' '
-                    className={`peer h-14 w-full rounded-xl border bg-white px-3 pt-5 pb-1.5 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 disabled:bg-surface_muted disabled:text-neutral-400 ${borderCls} ${className}`}
+                    className={`peer h-14 w-full rounded-xl border bg-white px-3 pt-5 pb-1.5 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:outline-none focus:ring-2 disabled:bg-surface_muted disabled:text-neutral-400 ${borderCls} ${className}`}
                     {...rest}
                 />
                 <label
                     htmlFor={inputId}
-                    className={`pointer-events-none absolute left-3 top-2.5 text-xs transition-all duration-200 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-placeholder-shown:text-neutral-400 peer-focus:top-2.5 peer-focus:translate-y-0 peer-focus:text-xs ${hasError ? "text-red-500 peer-focus:text-red-500" : "text-neutral-500 peer-focus:text-brand_main"}`}
+                    className={`pointer-events-none absolute left-3 top-2.5 text-xs transition-all duration-200 ${labelFloatCls} ${hasError ? "text-red-500 peer-focus:text-red-500" : "text-neutral-500 peer-focus:text-brand_main"}`}
                 >
                     {label}
                     {required && <span className='ml-0.5 text-red-500'>*</span>}

@@ -270,15 +270,13 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
                             onChange={update("internalName")}
                             placeholder={autoInternalName}
                         />
-                        {mode === "edit" && (
-                            <Select label='Статус' value={form.status} onChange={update("status")}>
-                                {PROJECT_STATUSES.map(s => (
-                                    <option key={s} value={s}>
-                                        {PROJECT_STATUS_LABELS[s]}
-                                    </option>
-                                ))}
-                            </Select>
-                        )}
+                        <Select label='Статус' value={form.status} onChange={update("status")}>
+                            {PROJECT_STATUSES.map(s => (
+                                <option key={s} value={s}>
+                                    {PROJECT_STATUS_LABELS[s]}
+                                </option>
+                            ))}
+                        </Select>
                     </div>
                 </FormSection>
             </Card>

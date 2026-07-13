@@ -231,7 +231,7 @@ function AuctionCard({ auction, dragging, onDragStart, onDragEnd }) {
             draggable
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
-            className={`block cursor-grab rounded-xl border bg-white p-3 text-sm shadow-sm transition-all duration-200 hover:border-line_strong hover:shadow-md active:cursor-grabbing ${
+            className={`block cursor-pointer rounded-xl border bg-white p-3 text-sm shadow-sm transition-all duration-200 hover:border-line_strong hover:shadow-md ${
                 dragging ? "opacity-50" : "border-line"
             }`}
         >

@@ -79,19 +79,6 @@ export default async function DealPage({ params }) {
                     <h1 className='mt-0.5 truncate text-xl font-semibold text-neutral-900 sm:text-2xl'>
                         {dealDisplayTitle(item, item.counterparty?.name)}
                     </h1>
-                    <p className='mt-1 text-sm text-neutral-500'>
-                        Клиент:{" "}
-                        <Link
-                            href={`/crm/counterparties/${item.counterparty.id}`}
-                            className='underline hover:text-brand_main'
-                        >
-                            {item.counterparty.name}
-                        </Link>{" "}
-                        <span className='text-neutral-400'>·</span>{" "}
-                        {item.counterparty.type === "DISTRIBUTOR"
-                            ? "Дистрибьютор"
-                            : "Конечный потребитель"}
-                    </p>
                     {item.sourceProject && (
                         <p className='mt-1 text-sm text-blue-700'>
                             По проекту:{" "}
@@ -147,40 +134,58 @@ export default async function DealPage({ params }) {
             {/* Two-column body */}
             <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='min-w-0 space-y-4'>
-                    <Section
-                        title='Параметры'
-                        action={
-                            <Link
-                                href={`/crm/deals/${item.id}/edit`}
-                                className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
-                            >
-                                <LuPencil className='h-3 w-3' />
-                                Редактировать
-                            </Link>
-                        }
-                        footer={
-                            <>
-                                Создал {fullName(item.createdBy)} ·{" "}
-                                <LocalDateTime value={item.createdAt} />
-                                {item.updatedBy && (
-                                    <>
-                                        {" · "}изменил {fullName(item.updatedBy)} ·{" "}
-                                        <LocalDateTime value={item.updatedAt} />
-                                    </>
-                                )}
-                            </>
-                        }
-                    >
-                        <Row label='Сумма сделки' value={formatMoney(item.totalAmount)} />
-                        <Row
-                            label='Скидка'
-                            value={
-                                item.discount != null ? formatPercent(item.discount) : "—"
+                    {/* Клиент + параметры сделки — две карточки бок о бок */}
+                    <div className='grid items-stretch gap-4 sm:grid-cols-2'>
+                        <PartyCard
+                            label={
+                                item.counterparty.type === "DISTRIBUTOR"
+                                    ? "Клиент · Дистрибьютор"
+                                    : "Клиент · Конечный потребитель"
                             }
+                            org={item.counterparty}
+                            contact={item.contact}
                         />
-                        <Row label='Менеджер' value={fullName(item.manager)} />
-                        <Row label='Контактное лицо' value={contactDisplay(item.contact)} />
-                    </Section>
+
+                        <Section
+                            title='Параметры'
+                            action={
+                                <Link
+                                    href={`/crm/deals/${item.id}/edit`}
+                                    className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
+                                >
+                                    <LuPencil className='h-3 w-3' />
+                                    Редактировать
+                                </Link>
+                            }
+                            columns='sm:grid-cols-2'
+                            footer={
+                                <>
+                                    Создал {fullName(item.createdBy)} ·{" "}
+                                    <LocalDateTime value={item.createdAt} />
+                                    {item.updatedBy && (
+                                        <>
+                                            {" · "}изменил {fullName(item.updatedBy)} ·{" "}
+                                            <LocalDateTime value={item.updatedAt} />
+                                        </>
+                                    )}
+                                </>
+                            }
+                        >
+                            <Row
+                                label='Сумма сделки'
+                                value={formatMoney(item.totalAmount)}
+                            />
+                            <Row
+                                label='Скидка'
+                                value={
+                                    item.discount != null
+                                        ? formatPercent(item.discount)
+                                        : "—"
+                                }
+                            />
+                            <Row label='Менеджер' value={fullName(item.manager)} />
+                        </Section>
+                    </div>
 
                     {(item.deliveryAddress || item.note) && (
                         <Section title='Доставка и примечание'>
@@ -232,20 +237,61 @@ export default async function DealPage({ params }) {
     )
 }
 
-function Section({ title, footer, action, children }) {
+function Section({ title, footer, action, columns = "sm:grid-cols-2 lg:grid-cols-3", children }) {
     return (
-        <section className='rounded-xl border border-line bg-white p-4'>
+        <section className='flex flex-col rounded-xl border border-line bg-white p-4'>
             <div className='mb-2.5 flex items-center justify-between gap-3'>
                 <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                     {title}
                 </h2>
                 {action && <div className='shrink-0'>{action}</div>}
             </div>
-            <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>{children}</dl>
+            <dl className={`grid flex-1 content-start gap-x-4 gap-y-2.5 ${columns}`}>
+                {children}
+            </dl>
             {footer && (
                 <p className='mt-3 border-t border-line pt-2 text-[11px] text-neutral-400'>
                     {footer}
                 </p>
+            )}
+        </section>
+    )
+}
+
+// Самодостаточная карточка клиента сделки: роль, организация (ссылка),
+// регион и контактное лицо — вся информация о стороне в одном месте.
+function PartyCard({ label, org, contact }) {
+    const contactName = contactDisplay(contact)
+    const contactDetails = contact
+        ? [contact.position, contact.phone, contact.email].filter(Boolean).join(" · ")
+        : ""
+    return (
+        <section className='flex flex-col rounded-xl border border-line bg-white p-4'>
+            <p className='text-[10px] font-medium uppercase tracking-wider text-neutral-400'>
+                {label}
+            </p>
+            <Link
+                href={`/crm/counterparties/${org.id}`}
+                className='mt-1 block text-base font-semibold leading-snug text-neutral-900 hover:text-brand_main'
+            >
+                {org.name}
+            </Link>
+            <p className='mt-1 text-sm text-neutral-500'>
+                <span className='text-neutral-400'>Регион:</span> {org.region || "—"}
+            </p>
+
+            <div className='my-3 h-px bg-line' />
+
+            <p className='mb-2 text-[10px] font-medium uppercase tracking-wider text-neutral-400'>
+                Контактное лицо
+            </p>
+            {contact ? (
+                <div className='rounded-lg border border-line bg-surface_muted px-3 py-2 text-sm'>
+                    <p className='font-medium text-neutral-900'>{contactName}</p>
+                    <p className='text-xs text-neutral-500'>{contactDetails || "—"}</p>
+                </div>
+            ) : (
+                <p className='text-sm text-neutral-400'>Не выбрано.</p>
             )}
         </section>
     )

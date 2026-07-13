@@ -17,6 +17,7 @@ const CONTACT_SELECT = {
 const INCLUDE = {
     project: { select: { id: true, internalName: true } },
     customer: { select: CP_SELECT },
+    customerContact: { select: CONTACT_SELECT },
     supplier: { select: CP_SELECT },
     supplierContact: { select: CONTACT_SELECT },
     manager: { select: USER_SELECT },
@@ -85,6 +86,20 @@ export async function PATCH(request, { params }) {
         if (!c || c.counterpartyId !== supplierId) {
             return Response.json(
                 { error: "Контакт не принадлежит поставщику" },
+                { status: 400 },
+            )
+        }
+    }
+
+    if (data.customerContactId) {
+        const customerId = data.customerId ?? existing.customerId
+        const c = await prisma.contact.findUnique({
+            where: { id: data.customerContactId },
+            select: { counterpartyId: true },
+        })
+        if (!c || c.counterpartyId !== customerId) {
+            return Response.json(
+                { error: "Контакт не принадлежит заказчику" },
                 { status: 400 },
             )
         }

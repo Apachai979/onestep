@@ -47,6 +47,7 @@ export default function AuctionForm({ mode = "create", project, initial, current
     const [form, setForm] = useState(() => ({
         purchaseNumber: initial?.purchaseNumber ?? "",
         auctionUrl: initial?.auctionUrl ?? "",
+        customerContactId: initial?.customerContactId ?? "",
         supplierContactId: initial?.supplierContactId ?? "",
         nmck: toFormValue(initial?.nmck) === "0" ? "" : toFormValue(initial?.nmck),
         bidsDeadlineAt: isoToLocalInput(initial?.bidsDeadlineAt),
@@ -58,6 +59,7 @@ export default function AuctionForm({ mode = "create", project, initial, current
         winner: initial?.winner ?? "",
     }))
     const [contacts, setContacts] = useState([])
+    const [customerContacts, setCustomerContacts] = useState([])
     const [managers, setManagers] = useState([])
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
@@ -78,6 +80,15 @@ export default function AuctionForm({ mode = "create", project, initial, current
             .catch(() => setContacts([]))
     }, [supplier?.id])
 
+    // Контакты заказчика — для выбора контактного лица заказчика.
+    useEffect(() => {
+        if (!customer?.id) return
+        fetch(`/api/crm/counterparties/${customer.id}`)
+            .then(r => r.json())
+            .then(d => setCustomerContacts(d.item?.contacts || []))
+            .catch(() => setCustomerContacts([]))
+    }, [customer?.id])
+
     function update(field) {
         return e => setForm(prev => ({ ...prev, [field]: e.target.value }))
     }
@@ -90,6 +101,7 @@ export default function AuctionForm({ mode = "create", project, initial, current
         const payload = {
             purchaseNumber: form.purchaseNumber,
             auctionUrl: form.auctionUrl,
+            customerContactId: form.customerContactId || null,
             supplierContactId: form.supplierContactId || null,
             nmck: form.nmck,
             bidsDeadlineAt: localInputToIso(form.bidsDeadlineAt),
@@ -172,7 +184,27 @@ export default function AuctionForm({ mode = "create", project, initial, current
             <Section title='Стороны'>
                 <ReadOnly label='Заказчик (конечный потребитель проекта)' value={customer?.name} />
                 <ReadOnly label='Поставщик (дистрибьютор проекта)' value={supplier?.name} />
-                <div className='sm:col-span-2'>
+                <div>
+                    <label className='mb-1.5 block text-sm text-neutral-600'>Контакт заказчика</label>
+                    <select
+                        value={form.customerContactId}
+                        onChange={update("customerContactId")}
+                        className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                    >
+                        <option value=''>
+                            {customerContacts.length === 0
+                                ? "У заказчика нет контактов"
+                                : "— Не выбран —"}
+                        </option>
+                        {customerContacts.map(c => (
+                            <option key={c.id} value={c.id}>
+                                {contactName(c)}
+                                {c.position ? ` · ${c.position}` : ""}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div>
                     <label className='mb-1.5 block text-sm text-neutral-600'>Контакт поставщика</label>
                     <select
                         value={form.supplierContactId}

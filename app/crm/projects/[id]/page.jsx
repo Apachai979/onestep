@@ -106,7 +106,7 @@ export default async function ProjectPage({ params }) {
             <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='min-w-0 space-y-4'>
                     <Section
-                        title='Связка'
+                        title='Проект'
                         action={
                             <Link
                                 href={`/crm/projects/${item.id}/edit`}
@@ -128,47 +128,26 @@ export default async function ProjectPage({ params }) {
                             </>
                         }
                     >
-                        {/* Организация и её регион — в одном ряду 3-колоночной сетки */}
-                        <Row label='Конечный потребитель'>
-                            <Link
-                                href={`/crm/counterparties/${item.endCustomer.id}`}
-                                className='text-neutral-900 underline hover:text-brand_main'
-                            >
-                                {item.endCustomer.name}
-                            </Link>
-                        </Row>
-                        <Row label='Регион ЛПУ' value={item.endCustomer.region} />
-                        <Row label='Менеджер' value={fullName(item.manager)} />
-                        <Row label='Дистрибьютор'>
-                            <Link
-                                href={`/crm/counterparties/${item.distributor.id}`}
-                                className='text-neutral-900 underline hover:text-brand_main'
-                            >
-                                {item.distributor.name}
-                            </Link>
-                        </Row>
-                        <Row label='Регион дистрибьютора' value={item.distributor.region} />
+                        <Row label='Ответственный менеджер' value={fullName(item.manager)} />
                         <Row
                             label={`Сумма сделок по проекту${dealsCount ? ` (${dealsCount})` : ""}`}
                             value={formatMoney(dealsSum)}
                         />
                     </Section>
 
-                    <section className='rounded-xl border border-line bg-white p-4'>
-                        <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-neutral-500'>
-                            Контактные лица
-                        </h2>
-                        <div className='grid gap-4 sm:grid-cols-2'>
-                            <ContactGroup
-                                title='Конечный потребитель'
-                                contacts={contactsByCounterparty[item.endCustomerId]}
-                            />
-                            <ContactGroup
-                                title='Дистрибьютор'
-                                contacts={contactsByCounterparty[item.distributorId]}
-                            />
-                        </div>
-                    </section>
+                    {/* Две самодостаточные карточки сторон: организация + регион + контакты */}
+                    <div className='grid gap-4 sm:grid-cols-2'>
+                        <PartyCard
+                            label='Конечный потребитель'
+                            org={item.endCustomer}
+                            contacts={contactsByCounterparty[item.endCustomerId]}
+                        />
+                        <PartyCard
+                            label='Дистрибьютор'
+                            org={item.distributor}
+                            contacts={contactsByCounterparty[item.distributorId]}
+                        />
+                    </div>
 
                     <section className='rounded-xl border border-line bg-white p-4'>
                         <div className='mb-2.5 flex items-center justify-between gap-3'>
@@ -451,11 +430,29 @@ function Row({ label, value, children, className = "" }) {
     )
 }
 
-function ContactGroup({ title, contacts }) {
+// Самодостаточная карточка стороны сделки/проекта: заголовок роли,
+// организация (ссылка), регион и список её контактов — всё в одном месте,
+// чтобы структура считывалась за один взгляд.
+function PartyCard({ label, org, contacts }) {
     return (
-        <div>
-            <p className='mb-2 text-[10px] uppercase tracking-wider text-neutral-400'>
-                {title}
+        <section className='flex flex-col rounded-xl border border-line bg-white p-4'>
+            <p className='text-[10px] font-medium uppercase tracking-wider text-neutral-400'>
+                {label}
+            </p>
+            <Link
+                href={`/crm/counterparties/${org.id}`}
+                className='mt-1 block text-base font-semibold leading-snug text-neutral-900 hover:text-brand_main'
+            >
+                {org.name}
+            </Link>
+            <p className='mt-1 text-sm text-neutral-500'>
+                <span className='text-neutral-400'>Регион:</span> {org.region || "—"}
+            </p>
+
+            <div className='my-3 h-px bg-line' />
+
+            <p className='mb-2 text-[10px] font-medium uppercase tracking-wider text-neutral-400'>
+                Контакты
             </p>
             {contacts.length === 0 ? (
                 <p className='text-sm text-neutral-400'>Не выбраны.</p>
@@ -470,7 +467,7 @@ function ContactGroup({ title, contacts }) {
                         return (
                             <li
                                 key={c.id}
-                                className='rounded-md border border-line bg-surface_muted px-3 py-2 text-sm'
+                                className='rounded-lg border border-line bg-surface_muted px-3 py-2 text-sm'
                             >
                                 <p className='font-medium text-neutral-900'>{name}</p>
                                 <p className='text-xs text-neutral-500'>
@@ -483,6 +480,6 @@ function ContactGroup({ title, contacts }) {
                     })}
                 </ul>
             )}
-        </div>
+        </section>
     )
 }

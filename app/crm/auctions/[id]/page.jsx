@@ -31,9 +31,21 @@ export default async function AuctionPage({ params }) {
     const item = await prisma.auction.findUnique({
         where: { id: params.id },
         include: {
-            project: { select: { id: true, internalName: true } },
-            customer: { select: { id: true, name: true, region: true } },
+            // Контакты проекта — чтобы показать контактных лиц заказчика
+            // (у аукциона своего поля «контакт заказчика» нет, заказчик
+            // всегда равен конечному потребителю проекта).
+            project: { select: { id: true, internalName: true, contacts: true } },
+            customer: {
+                select: {
+                    id: true,
+                    name: true,
+                    region: true,
+                    // Фолбэк: основной контакт компании, если в проекте не выбраны.
+                    contacts: { where: { isPrimary: true }, take: 1 },
+                },
+            },
             supplier: { select: { id: true, name: true, region: true } },
+            customerContact: true,
             supplierContact: true,
             manager: true,
             updatedBy: true,
@@ -56,6 +68,24 @@ export default async function AuctionPage({ params }) {
               select: { id: true, fileName: true, size: true },
           })
         : null
+
+    // Контакты заказчика: приоритет — выбранный на аукционе, затем выбранные
+    // в проекте, затем основной контакт компании.
+    const customerProjectContacts = item.project.contacts.filter(
+        c => c.counterpartyId === item.customerId,
+    )
+    const customerContacts = item.customerContact
+        ? [item.customerContact]
+        : customerProjectContacts.length > 0
+          ? customerProjectContacts
+          : item.customer.contacts
+    const customerContactsHint = item.customerContact
+        ? "Выбран для аукциона"
+        : customerProjectContacts.length > 0
+          ? "Из карточки проекта"
+          : customerContacts.length > 0
+            ? "Основной контакт компании"
+            : null
 
     // Decimal → строки для клиентских компонентов.
     const itemsPlain = item.items.map(it => ({
@@ -103,6 +133,22 @@ export default async function AuctionPage({ params }) {
 
             <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='min-w-0 space-y-4'>
+                    {/* Две самодостаточные карточки сторон: организация + регион + контакты */}
+                    <div className='grid items-stretch gap-4 sm:grid-cols-2'>
+                        <PartyCard
+                            label='Заказчик'
+                            org={item.customer}
+                            contacts={customerContacts}
+                            hint={customerContactsHint}
+                        />
+                        <PartyCard
+                            label='Поставщик'
+                            org={item.supplier}
+                            contacts={item.supplierContact ? [item.supplierContact] : []}
+                            hint={item.supplierContact ? "Выбран для аукциона" : null}
+                        />
+                    </div>
+
                     <Section
                         title='Параметры'
                         action={
@@ -123,36 +169,6 @@ export default async function AuctionPage({ params }) {
                             ) : null
                         }
                     >
-                        <Row label='Заказчик'>
-                            <Link
-                                href={`/crm/counterparties/${item.customer.id}`}
-                                className='text-neutral-900 underline hover:text-brand_main'
-                            >
-                                {item.customer.name}
-                            </Link>
-                        </Row>
-                        <Row label='Поставщик'>
-                            <Link
-                                href={`/crm/counterparties/${item.supplier.id}`}
-                                className='text-neutral-900 underline hover:text-brand_main'
-                            >
-                                {item.supplier.name}
-                            </Link>
-                        </Row>
-                        <Row label='Контакт поставщика'>
-                            {item.supplierContact ? (
-                                <>
-                                    {contactName(item.supplierContact)}
-                                    {item.supplierContact.phone && (
-                                        <span className='block text-xs text-neutral-500'>
-                                            {item.supplierContact.phone}
-                                        </span>
-                                    )}
-                                </>
-                            ) : (
-                                "—"
-                            )}
-                        </Row>
                         <Row label='НМЦК' value={formatMoney(item.nmck)} />
                         <Row label='Ответственный менеджер' value={fullName(item.manager)} />
                         <Row label='Ссылка на аукцион'>
@@ -297,5 +313,55 @@ function Row({ label, value, children, className = "" }) {
             </dt>
             <dd className='mt-0.5 text-sm text-neutral-900'>{children ?? value ?? "—"}</dd>
         </div>
+    )
+}
+
+// Самодостаточная карточка стороны аукциона: роль, организация (ссылка),
+// регион и контакты — вся информация о стороне в одном месте.
+// hint — откуда взяты контакты («Из карточки проекта», «Выбран для аукциона»).
+function PartyCard({ label, org, contacts, hint }) {
+    return (
+        <section className='flex flex-col rounded-xl border border-line bg-white p-4'>
+            <p className='text-[10px] font-medium uppercase tracking-wider text-neutral-400'>
+                {label}
+            </p>
+            <Link
+                href={`/crm/counterparties/${org.id}`}
+                className='mt-1 block text-base font-semibold leading-snug text-neutral-900 hover:text-brand_main'
+            >
+                {org.name}
+            </Link>
+            <p className='mt-1 text-sm text-neutral-500'>
+                <span className='text-neutral-400'>Регион:</span> {org.region || "—"}
+            </p>
+
+            <div className='my-3 h-px bg-line' />
+
+            <div className='mb-2 flex items-baseline justify-between gap-2'>
+                <p className='text-[10px] font-medium uppercase tracking-wider text-neutral-400'>
+                    {contacts.length === 1 ? "Контакт" : "Контакты"}
+                </p>
+                {hint && <p className='text-[10px] text-neutral-400'>{hint}</p>}
+            </div>
+            {contacts.length === 0 ? (
+                <p className='text-sm text-neutral-400'>Не указаны.</p>
+            ) : (
+                <ul className='space-y-1.5'>
+                    {contacts.map(c => (
+                        <li
+                            key={c.id}
+                            className='rounded-lg border border-line bg-surface_muted px-3 py-2 text-sm'
+                        >
+                            <p className='font-medium text-neutral-900'>{contactName(c)}</p>
+                            <p className='text-xs text-neutral-500'>
+                                {[c.position, c.phone, c.email]
+                                    .filter(Boolean)
+                                    .join(" · ") || "—"}
+                            </p>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </section>
     )
 }

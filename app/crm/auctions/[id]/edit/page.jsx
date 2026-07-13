@@ -19,6 +19,7 @@ export default async function EditAuctionPage({ params }) {
         id: item.id,
         purchaseNumber: item.purchaseNumber,
         auctionUrl: item.auctionUrl,
+        customerContactId: item.customerContactId,
         supplierContactId: item.supplierContactId,
         supplierId: item.supplierId,
         nmck: item.nmck.toString(),

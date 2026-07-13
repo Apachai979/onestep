@@ -237,6 +237,7 @@ model Contact {
   deals          Deal[]    @relation("DealContact")
   shipments      Shipment[] @relation("ShipmentRecipient")
   auctions       Auction[] @relation("AuctionSupplierContact")
+  customerAuctions Auction[] @relation("AuctionCustomerContact")
 
   @@index([counterpartyId])
   @@map("contacts")
@@ -374,6 +375,8 @@ model Auction {
   project           Project      @relation("ProjectAuctions", fields: [projectId], references: [id], onDelete: Cascade)
   customerId        String
   customer          Counterparty @relation("AuctionCustomer", fields: [customerId], references: [id])
+  customerContactId String?
+  customerContact   Contact?     @relation("AuctionCustomerContact", fields: [customerContactId], references: [id], onDelete: SetNull)
   supplierId        String
   supplier          Counterparty @relation("AuctionSupplier", fields: [supplierId], references: [id])
   supplierContactId String?

@@ -29,6 +29,7 @@ Deployment is PM2-based via [ecosystem.config.js](ecosystem.config.js) (`pm2 dep
 - **Parallel route `@modal`** ([app/@modal/](app/@modal/)) is the modal slot. [app/@modal/default.jsx](app/@modal/default.jsx) returns `null` so the slot is empty on most routes.
 - **Intercepting route** [app/@modal/(.)feedbackform/page.jsx](app/@modal/(.)feedbackform/page.jsx) intercepts navigation to `/feedbackform` and renders it as a modal over the current page, while a direct visit to [app/feedbackform/](app/feedbackform/) renders the full page.
 - Catalog detail pages use `generateStaticParams` driven by the local JSON dataset (see below), not the database.
+- **Публичный сайт сейчас скрыт.** [middleware.ts](middleware.ts) редиректит всё, кроме `/crm`, `/authorize`, `/register`, `/api/*` и статики, на заглушку [app/maintenance/page.jsx](app/maintenance/page.jsx). Страницы сайта остаются в коде и билдятся. Чтобы вернуть сайт — задать `SITE_HIDDEN=false` в окружении (или снять флаг в middleware). Шапка и подвал не рендерятся на `/crm` и `/maintenance` — см. [components/HideOnCrm.jsx](components/HideOnCrm.jsx).
 
 ### Data layers — two parallel sources
 

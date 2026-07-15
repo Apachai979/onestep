@@ -36,7 +36,12 @@ export default async function DealPage({ params }) {
             manager: true,
             createdBy: true,
             updatedBy: true,
-            items: { orderBy: { createdAt: "asc" } },
+            items: {
+                orderBy: { createdAt: "asc" },
+                include: {
+                    product: { select: { unitWeightKg: true, unitVolumeM3: true } },
+                },
+            },
             sourceProject: {
                 select: { id: true, internalName: true },
             },
@@ -52,6 +57,8 @@ export default async function DealPage({ params }) {
         sku: i.sku,
         name: i.name,
         quantity: i.quantity.toString(),
+        unitWeightKg: i.product?.unitWeightKg != null ? i.product.unitWeightKg.toString() : null,
+        unitVolumeM3: i.product?.unitVolumeM3 != null ? i.product.unitVolumeM3.toString() : null,
     }))
 
     // Скидка в параметрах: сумма скидки и итог со скидкой считаются от суммы сделки.
@@ -60,7 +67,7 @@ export default async function DealPage({ params }) {
     const discountAmount = discountPct != null ? (totalAmount * discountPct) / 100 : null
     const discountedTotal = discountAmount != null ? totalAmount - discountAmount : null
 
-    const itemsForClient = item.items.map(i => ({
+    const itemsForClient = item.items.map(({ product: _product, ...i }) => ({
         ...i,
         quantity: i.quantity.toString(),
         amount: i.amount.toString(),

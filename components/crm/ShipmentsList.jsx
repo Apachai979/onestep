@@ -7,6 +7,9 @@ import {
     SHIPMENT_STATUSES,
     SHIPMENT_STATUS_COLORS,
     SHIPMENT_STATUS_LABELS,
+    calculateShipmentWeightVolume,
+    formatVolumeM3,
+    formatWeightKg,
     isShipmentOverdue,
 } from "@/lib/crm/shipment"
 import {
@@ -175,6 +178,18 @@ export default function ShipmentsList() {
                     return `${sh.items?.length || 0} (${fmtQty(totalQty)})`
                 },
             },
+            {
+                key: "weightVolume",
+                header: "Вес / Объём",
+                align: "right",
+                render: sh => {
+                    const wv = calculateShipmentWeightVolume(sh)
+                    return `${formatWeightKg(wv.weight)} / ${formatVolumeM3(wv.volume)}${
+                        wv.incomplete ? " *" : ""
+                    }`
+                },
+                hideable: true,
+            },
         ],
         [],
     )
@@ -234,6 +249,7 @@ export default function ShipmentsList() {
                 )}
                 {filtered?.map(sh => {
                     const totalQty = (sh.items || []).reduce((s, it) => s + num(it.quantity), 0)
+                    const wv = calculateShipmentWeightVolume(sh)
                     const overdue = isShipmentOverdue(sh)
                     return (
                         <MobileCard
@@ -268,6 +284,10 @@ export default function ShipmentsList() {
                                 <CardRow label='Отгружена'>{fmtDate(sh.shippedAt)}</CardRow>
                                 <CardRow label='Позиций / шт.'>
                                     {sh.items?.length || 0} ({fmtQty(totalQty)})
+                                </CardRow>
+                                <CardRow label='Вес / Объём'>
+                                    {formatWeightKg(wv.weight)} / {formatVolumeM3(wv.volume)}
+                                    {wv.incomplete ? " *" : ""}
                                 </CardRow>
                             </div>
                         </MobileCard>

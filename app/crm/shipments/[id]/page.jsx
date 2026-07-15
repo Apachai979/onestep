@@ -6,6 +6,9 @@ import prisma from "@/lib/client"
 import {
     SHIPMENT_STATUS_COLORS,
     SHIPMENT_STATUS_LABELS,
+    calculateShipmentWeightVolume,
+    formatVolumeM3,
+    formatWeightKg,
     isShipmentOverdue,
 } from "@/lib/crm/shipment"
 import ActivityPanel from "@/components/crm/ActivityPanel"
@@ -40,6 +43,13 @@ function recipientDisplay(item) {
     return parts.length ? parts.join(" · ") : null
 }
 
+function num(v) {
+    if (v === null || v === undefined || v === "") return 0
+    const s = typeof v === "object" && v.toString ? v.toString() : String(v)
+    const n = Number(s.replace(",", "."))
+    return Number.isFinite(n) ? n : 0
+}
+
 function fmtQty(v) {
     if (v === null || v === undefined) return "0"
     const s = typeof v === "object" && v.toString ? v.toString() : String(v)
@@ -64,7 +74,14 @@ export default async function ShipmentPage({ params }) {
             items: {
                 include: {
                     dealItem: {
-                        select: { id: true, name: true, sku: true, quantity: true, amount: true },
+                        select: {
+                            id: true,
+                            name: true,
+                            sku: true,
+                            quantity: true,
+                            amount: true,
+                            product: { select: { unitWeightKg: true, unitVolumeM3: true } },
+                        },
                     },
                 },
             },
@@ -76,6 +93,8 @@ export default async function ShipmentPage({ params }) {
     if (!item) notFound()
 
     const overdue = isShipmentOverdue(item)
+    const wv = calculateShipmentWeightVolume(item)
+    const wvHint = wv.incomplete ? " *" : ""
 
     return (
         <div className='space-y-5'>
@@ -138,6 +157,8 @@ export default async function ShipmentPage({ params }) {
                         />
                         <Row label='Перевозчик' value={item.carrier} />
                         <Row label='Трек-номер' value={item.trackingNumber} />
+                        <Row label='Вес' value={`${formatWeightKg(wv.weight)}${wvHint}`} />
+                        <Row label='Объём' value={`${formatVolumeM3(wv.volume)}${wvHint}`} />
                         <Row label='№ ТТН / документа' value={item.docNumber} />
                         <Row label='Получатель' value={recipientDisplay(item)} />
                         <Row
@@ -172,6 +193,8 @@ export default async function ShipmentPage({ params }) {
                                         <th className='px-3 py-2'>Наименование</th>
                                         <th className='px-3 py-2 text-right'>В сделке</th>
                                         <th className='px-3 py-2 text-right'>Отгружается</th>
+                                        <th className='px-3 py-2 text-right'>Вес</th>
+                                        <th className='px-3 py-2 text-right'>Объём</th>
                                         <th className='px-3 py-2'>Комментарий</th>
                                     </tr>
                                 </thead>
@@ -179,36 +202,60 @@ export default async function ShipmentPage({ params }) {
                                     {item.items.length === 0 && (
                                         <tr>
                                             <td
-                                                colSpan={5}
+                                                colSpan={7}
                                                 className='px-3 py-4 text-center text-neutral-400'
                                             >
                                                 Позиций нет
                                             </td>
                                         </tr>
                                     )}
-                                    {item.items.map(it => (
-                                        <tr
-                                            key={it.id}
-                                            className='border-t border-line'
-                                        >
-                                            <td className='px-3 py-2 text-neutral-900/75'>
-                                                {it.dealItem?.sku || "—"}
-                                            </td>
-                                            <td className='px-3 py-2 text-neutral-900'>
-                                                {it.dealItem?.name || "—"}
-                                            </td>
-                                            <td className='px-3 py-2 text-right text-neutral-900/75'>
-                                                {fmtQty(it.dealItem?.quantity)}
-                                            </td>
-                                            <td className='px-3 py-2 text-right font-semibold text-neutral-900'>
-                                                {fmtQty(it.quantity)}
-                                            </td>
-                                            <td className='px-3 py-2 text-neutral-500'>
-                                                {it.note || "—"}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {item.items.map(it => {
+                                        const qty = num(it.quantity)
+                                        const uw = it.dealItem?.product?.unitWeightKg
+                                        const uv = it.dealItem?.product?.unitVolumeM3
+                                        return (
+                                            <tr key={it.id} className='border-t border-line'>
+                                                <td className='px-3 py-2 text-neutral-900/75'>
+                                                    {it.dealItem?.sku || "—"}
+                                                </td>
+                                                <td className='px-3 py-2 text-neutral-900'>
+                                                    {it.dealItem?.name || "—"}
+                                                </td>
+                                                <td className='px-3 py-2 text-right text-neutral-900/75'>
+                                                    {fmtQty(it.dealItem?.quantity)}
+                                                </td>
+                                                <td className='px-3 py-2 text-right font-semibold text-neutral-900'>
+                                                    {fmtQty(it.quantity)}
+                                                </td>
+                                                <td className='px-3 py-2 text-right text-neutral-900/75'>
+                                                    {uw == null ? "—" : formatWeightKg(qty * num(uw))}
+                                                </td>
+                                                <td className='px-3 py-2 text-right text-neutral-900/75'>
+                                                    {uv == null ? "—" : formatVolumeM3(qty * num(uv))}
+                                                </td>
+                                                <td className='px-3 py-2 text-neutral-500'>
+                                                    {it.note || "—"}
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
                                 </tbody>
+                                {item.items.length > 0 && (
+                                    <tfoot>
+                                        <tr className='border-t border-line bg-surface_muted font-medium text-neutral-900'>
+                                            <td className='px-3 py-2' colSpan={4}>
+                                                Итого{wvHint && " (* не у всех товаров задан вес/объём)"}
+                                            </td>
+                                            <td className='px-3 py-2 text-right'>
+                                                {formatWeightKg(wv.weight)}
+                                            </td>
+                                            <td className='px-3 py-2 text-right'>
+                                                {formatVolumeM3(wv.volume)}
+                                            </td>
+                                            <td className='px-3 py-2' />
+                                        </tr>
+                                    </tfoot>
+                                )}
                             </table>
                         </div>
                     </section>

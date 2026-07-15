@@ -41,7 +41,16 @@ export async function GET(request) {
         orderBy: { createdAt: "desc" },
         include: {
             deal: { select: DEAL_SELECT },
-            items: true,
+            items: {
+                include: {
+                    dealItem: {
+                        select: {
+                            id: true,
+                            product: { select: { unitWeightKg: true, unitVolumeM3: true } },
+                        },
+                    },
+                },
+            },
             recipientContact: {
                 select: { id: true, firstName: true, lastName: true, phone: true, email: true },
             },

@@ -17,7 +17,19 @@ const DEAL_SELECT = {
 
 const FULL_INCLUDE = {
     deal: { select: DEAL_SELECT },
-    items: { include: { dealItem: { select: { id: true, name: true, sku: true, quantity: true } } } },
+    items: {
+        include: {
+            dealItem: {
+                select: {
+                    id: true,
+                    name: true,
+                    sku: true,
+                    quantity: true,
+                    product: { select: { unitWeightKg: true, unitVolumeM3: true } },
+                },
+            },
+        },
+    },
     recipientContact: {
         select: { id: true, firstName: true, lastName: true, phone: true, email: true },
     },
@@ -80,7 +92,7 @@ export async function PATCH(request, { params }) {
             data.shippedAt = new Date()
         }
     }
-    // Возврат в черновик или отмена — фактическая дата отгрузки очищается,
+    // Возврат в черновик — фактическая дата отгрузки очищается,
     // если её не передали явно в запросе.
     if (
         data.status &&

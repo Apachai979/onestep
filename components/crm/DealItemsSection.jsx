@@ -138,6 +138,16 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
         })
     }
 
+    function applyPrice(value) {
+        setForm(prev => {
+            const qty = parseNum(prev.quantity)
+            const unit = parseNum(value)
+            const next = { ...prev, unitPrice: Number.isFinite(unit) ? fmt(unit) : "" }
+            if (Number.isFinite(qty) && Number.isFinite(unit)) next.amount = fmt(qty * unit)
+            return next
+        })
+    }
+
     async function refresh() {
         const r = await fetch(apiBase)
         if (r.ok) {
@@ -194,6 +204,15 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
     }
 
     const formOpen = showAdd || editingId !== null
+
+    const selectedProduct = form.productId
+        ? products.find(p => p.id === form.productId)
+        : null
+    const basePrice = selectedProduct ? parseNum(selectedProduct.basePrice) : NaN
+    const recPrice = selectedProduct ? parseNum(selectedProduct.recommendedLpuPrice) : NaN
+    const currentUnit = parseNum(form.unitPrice)
+    const isBaseActive = Number.isFinite(basePrice) && Math.abs(currentUnit - basePrice) < 0.005
+    const isRecActive = Number.isFinite(recPrice) && Math.abs(currentUnit - recPrice) < 0.005
 
     return (
         <section className='rounded-xl border border-line bg-white p-5'>
@@ -341,6 +360,46 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
                             })}
                         </select>
                     </div>
+
+                    {selectedProduct &&
+                        (Number.isFinite(basePrice) || Number.isFinite(recPrice)) && (
+                            <div>
+                                <label className='mb-1 block text-xs text-neutral-500'>
+                                    Цена из справочника
+                                </label>
+                                <div className='flex flex-wrap gap-2'>
+                                    {Number.isFinite(basePrice) && (
+                                        <button
+                                            type='button'
+                                            onClick={() => applyPrice(selectedProduct.basePrice)}
+                                            className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+                                                isBaseActive
+                                                    ? "border-brand_main bg-brand_main/10 font-semibold text-neutral-900"
+                                                    : "border-line text-neutral-700 hover:bg-surface_muted"
+                                            }`}
+                                        >
+                                            Базовая: {formatMoney(selectedProduct.basePrice)}
+                                        </button>
+                                    )}
+                                    {Number.isFinite(recPrice) && (
+                                        <button
+                                            type='button'
+                                            onClick={() =>
+                                                applyPrice(selectedProduct.recommendedLpuPrice)
+                                            }
+                                            className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+                                                isRecActive
+                                                    ? "border-brand_main bg-brand_main/10 font-semibold text-neutral-900"
+                                                    : "border-line text-neutral-700 hover:bg-surface_muted"
+                                            }`}
+                                        >
+                                            Рекомендованная:{" "}
+                                            {formatMoney(selectedProduct.recommendedLpuPrice)}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                     <div className='grid gap-3 sm:grid-cols-4'>
                         <Field

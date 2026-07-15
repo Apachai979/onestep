@@ -179,13 +179,13 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
     const formOpen = showAdd || editing
 
     return (
-        <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
-            <div className='mb-4 flex items-center justify-between'>
+        <section className='rounded-2xl border border-line bg-white p-4 shadow-sm sm:p-6'>
+            <div className='mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
                 <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
                     Контакты
                 </h2>
                 {!formOpen && !showAttach && (
-                    <div className='flex flex-wrap gap-2'>
+                    <div className='flex flex-col gap-2 sm:flex-row sm:flex-wrap'>
                         <button
                             type='button'
                             onClick={startAttach}

@@ -186,45 +186,45 @@ export default async function CounterpartyPage({ params }) {
                         {projects.length === 0 ? (
                             <p className='text-sm text-neutral-400'>Проектов пока нет.</p>
                         ) : (
-                            <div className='overflow-x-auto rounded-lg border border-line'>
-                                <table className='w-full text-sm'>
-                                    <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
-                                        <tr>
-                                            <th className='px-3 py-2'>Аукцион</th>
-                                            <th className='px-3 py-2'>Проект</th>
-                                            <th className='px-3 py-2'>
-                                                {item.type === "DISTRIBUTOR"
-                                                    ? "Конечный потребитель"
-                                                    : "Дистрибьютор"}
-                                            </th>
-                                            <th className='px-3 py-2'>Менеджер</th>
-                                            <th className='px-3 py-2'>Статус</th>
-                                            <th className='px-3 py-2 text-right'>Сумма</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {projects.map(p => {
-                                            const counter =
-                                                item.type === "DISTRIBUTOR"
-                                                    ? p.endCustomer
-                                                    : p.distributor
-                                            return (
-                                                <tr
-                                                    key={p.id}
-                                                    className='border-t border-line hover:bg-surface_muted'
-                                                >
-                                                    <td className='px-3 py-2 text-neutral-900/75'>
-                                                        {p.externalAuctionId}
-                                                    </td>
-                                                    <td className='px-3 py-2'>
-                                                        <Link
-                                                            href={`/crm/projects/${p.id}`}
-                                                            className='font-medium text-neutral-900 hover:text-brand_main'
-                                                        >
-                                                            {p.internalName}
-                                                        </Link>
-                                                    </td>
-                                                    <td className='px-3 py-2 text-neutral-900/75'>
+                            <>
+                                {/* Карточки для мобильных */}
+                                <ul className='space-y-2 md:hidden'>
+                                    {projects.map(p => {
+                                        const counter =
+                                            item.type === "DISTRIBUTOR"
+                                                ? p.endCustomer
+                                                : p.distributor
+                                        const managerName = p.manager
+                                            ? `${p.manager.firstName ?? ""} ${p.manager.lastName ?? ""}`.trim() ||
+                                              p.manager.email
+                                            : "—"
+                                        return (
+                                            <li
+                                                key={p.id}
+                                                className='rounded-lg border border-line p-3'
+                                            >
+                                                <div className='flex items-start justify-between gap-2'>
+                                                    <Link
+                                                        href={`/crm/projects/${p.id}`}
+                                                        className='font-medium text-neutral-900 hover:text-brand_main'
+                                                    >
+                                                        {p.internalName}
+                                                    </Link>
+                                                    <span className='shrink-0 text-right text-sm font-medium text-neutral-900/75'>
+                                                        {formatMoney(p.totalAmount)}
+                                                    </span>
+                                                </div>
+                                                <dl className='mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-1 text-xs'>
+                                                    <dt className='text-neutral-400'>Аукцион</dt>
+                                                    <dd className='text-neutral-900/75'>
+                                                        {p.externalAuctionId || "—"}
+                                                    </dd>
+                                                    <dt className='text-neutral-400'>
+                                                        {item.type === "DISTRIBUTOR"
+                                                            ? "Конечный потребитель"
+                                                            : "Дистрибьютор"}
+                                                    </dt>
+                                                    <dd className='min-w-0 text-neutral-900/75'>
                                                         {counter ? (
                                                             <Link
                                                                 href={`/crm/counterparties/${counter.id}`}
@@ -235,25 +235,91 @@ export default async function CounterpartyPage({ params }) {
                                                         ) : (
                                                             "—"
                                                         )}
-                                                    </td>
-                                                    <td className='px-3 py-2 text-neutral-900/75'>
-                                                        {p.manager
-                                                            ? `${p.manager.firstName ?? ""} ${p.manager.lastName ?? ""}`.trim() ||
-                                                              p.manager.email
-                                                            : "—"}
-                                                    </td>
-                                                    <td className='px-3 py-2 text-neutral-900/75'>
+                                                    </dd>
+                                                    <dt className='text-neutral-400'>Менеджер</dt>
+                                                    <dd className='text-neutral-900/75'>
+                                                        {managerName}
+                                                    </dd>
+                                                    <dt className='text-neutral-400'>Статус</dt>
+                                                    <dd className='text-neutral-900/75'>
                                                         {PROJECT_STATUS_LABELS[p.status]}
-                                                    </td>
-                                                    <td className='px-3 py-2 text-right text-neutral-900/75'>
-                                                        {formatMoney(p.totalAmount)}
-                                                    </td>
-                                                </tr>
-                                            )
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
+                                                    </dd>
+                                                </dl>
+                                            </li>
+                                        )
+                                    })}
+                                </ul>
+
+                                {/* Таблица для планшетов и десктопа */}
+                                <div className='hidden overflow-x-auto rounded-lg border border-line md:block'>
+                                    <table className='w-full text-sm'>
+                                        <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
+                                            <tr>
+                                                <th className='px-3 py-2'>Аукцион</th>
+                                                <th className='px-3 py-2'>Проект</th>
+                                                <th className='px-3 py-2'>
+                                                    {item.type === "DISTRIBUTOR"
+                                                        ? "Конечный потребитель"
+                                                        : "Дистрибьютор"}
+                                                </th>
+                                                <th className='px-3 py-2'>Менеджер</th>
+                                                <th className='px-3 py-2'>Статус</th>
+                                                <th className='px-3 py-2 text-right'>Сумма</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {projects.map(p => {
+                                                const counter =
+                                                    item.type === "DISTRIBUTOR"
+                                                        ? p.endCustomer
+                                                        : p.distributor
+                                                return (
+                                                    <tr
+                                                        key={p.id}
+                                                        className='border-t border-line hover:bg-surface_muted'
+                                                    >
+                                                        <td className='px-3 py-2 text-neutral-900/75'>
+                                                            {p.externalAuctionId}
+                                                        </td>
+                                                        <td className='px-3 py-2'>
+                                                            <Link
+                                                                href={`/crm/projects/${p.id}`}
+                                                                className='font-medium text-neutral-900 hover:text-brand_main'
+                                                            >
+                                                                {p.internalName}
+                                                            </Link>
+                                                        </td>
+                                                        <td className='px-3 py-2 text-neutral-900/75'>
+                                                            {counter ? (
+                                                                <Link
+                                                                    href={`/crm/counterparties/${counter.id}`}
+                                                                    className='hover:text-brand_main'
+                                                                >
+                                                                    {counter.name}
+                                                                </Link>
+                                                            ) : (
+                                                                "—"
+                                                            )}
+                                                        </td>
+                                                        <td className='px-3 py-2 text-neutral-900/75'>
+                                                            {p.manager
+                                                                ? `${p.manager.firstName ?? ""} ${p.manager.lastName ?? ""}`.trim() ||
+                                                                  p.manager.email
+                                                                : "—"}
+                                                        </td>
+                                                        <td className='px-3 py-2 text-neutral-900/75'>
+                                                            {PROJECT_STATUS_LABELS[p.status]}
+                                                        </td>
+                                                        <td className='px-3 py-2 text-right text-neutral-900/75'>
+                                                            {formatMoney(p.totalAmount)}
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
                         )}
                     </section>
 

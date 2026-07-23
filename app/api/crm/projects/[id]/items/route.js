@@ -2,6 +2,7 @@ import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { PROJECT_ITEM_TRACKED_FIELDS, parseProjectItemPayload } from "@/lib/crm/project"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
+import { projectLockResponse } from "@/lib/crm/access"
 
 async function recalcTotalAndBump(tx, projectId, authorId) {
     const items = await tx.projectItem.findMany({
@@ -21,6 +22,9 @@ export async function POST(request, { params }) {
 
     const project = await prisma.project.findUnique({ where: { id: params.id } })
     if (!project) return Response.json({ error: "Проект не найден" }, { status: 404 })
+
+    const locked = projectLockResponse(project.status, session)
+    if (locked) return locked
 
     let body
     try {

@@ -3,7 +3,7 @@ import { useState } from "react"
 import ProjectsKanban from "./ProjectsKanban"
 import ProjectsList from "./ProjectsList"
 
-export default function ProjectsTabs() {
+export default function ProjectsTabs({ isAdmin = false }) {
     const [view, setView] = useState("kanban")
 
     return (
@@ -28,7 +28,7 @@ export default function ProjectsTabs() {
                 ))}
             </div>
 
-            {view === "kanban" ? <ProjectsKanban /> : <ProjectsList />}
+            {view === "kanban" ? <ProjectsKanban isAdmin={isAdmin} /> : <ProjectsList />}
         </div>
     )
 }

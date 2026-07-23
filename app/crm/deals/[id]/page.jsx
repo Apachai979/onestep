@@ -5,6 +5,7 @@ import { LuPencil, LuFileText } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_LOSS_REASON_LABELS, dealDisplayTitle } from "@/lib/crm/deal"
+import { isDealLocked } from "@/lib/crm/access"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import DealItemsSection from "@/components/crm/DealItemsSection"
@@ -51,6 +52,9 @@ export default async function DealPage({ params }) {
         },
     })
     if (!item) notFound()
+
+    // Завершённая сделка: менеджеру остаётся только панель активности.
+    const locked = isDealLocked(item.status, session)
 
     const dealItemsForClient = item.items.map(i => ({
         id: i.id,
@@ -118,16 +122,29 @@ export default async function DealPage({ params }) {
                     )}
                 </div>
                 <div className='flex flex-wrap items-end justify-between gap-2'>
-                    <DealStatusControl dealId={item.id} currentStatus={item.status} />
-                    <Link
-                        href={`/crm/deals/${item.id}/proposal`}
-                        className='inline-flex items-center gap-1.5 rounded-lg bg-brand_main px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-brand_main/90'
-                    >
-                        <LuFileText className='h-3 w-3' />
-                        Сформировать КП
-                    </Link>
+                    <DealStatusControl
+                        dealId={item.id}
+                        currentStatus={item.status}
+                        readOnly={locked}
+                    />
+                    {!locked && (
+                        <Link
+                            href={`/crm/deals/${item.id}/proposal`}
+                            className='inline-flex items-center gap-1.5 rounded-lg bg-brand_main px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-brand_main/90'
+                        >
+                            <LuFileText className='h-3 w-3' />
+                            Сформировать КП
+                        </Link>
+                    )}
                 </div>
             </div>
+
+            {locked && (
+                <div className='rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600'>
+                    Сделка завершена — карточка доступна только для просмотра. Работать
+                    можно с заметками, задачами и файлами; изменения вносит администратор.
+                </div>
+            )}
 
             {(item.status === "CANCELLED" || item.status === "ARCHIVED") && item.lossReason && (
                 <div className='rounded-xl border border-red-200 bg-red-50/60 px-4 py-3'>
@@ -161,13 +178,15 @@ export default async function DealPage({ params }) {
                         <Section
                             title='Параметры'
                             action={
-                                <Link
-                                    href={`/crm/deals/${item.id}/edit`}
-                                    className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
-                                >
-                                    <LuPencil className='h-3 w-3' />
-                                    Редактировать
-                                </Link>
+                                locked ? null : (
+                                    <Link
+                                        href={`/crm/deals/${item.id}/edit`}
+                                        className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
+                                    >
+                                        <LuPencil className='h-3 w-3' />
+                                        Редактировать
+                                    </Link>
+                                )
                             }
                             columns='sm:grid-cols-2'
                             footer={
@@ -225,7 +244,11 @@ export default async function DealPage({ params }) {
                         </Section>
                     )}
 
-                    <DealItemsSection dealId={item.id} initialItems={itemsForClient} />
+                    <DealItemsSection
+                        dealId={item.id}
+                        initialItems={itemsForClient}
+                        readOnly={locked}
+                    />
 
                     <DealShipmentsSection
                         dealId={item.id}
@@ -235,6 +258,7 @@ export default async function DealPage({ params }) {
                         initialDeliveryAddress={
                             item.deliveryAddress || item.counterparty.address || ""
                         }
+                        readOnly={locked}
                     />
                 </div>
 

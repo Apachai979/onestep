@@ -10,7 +10,7 @@ import { useToast } from "@/components/crm/ui"
 import DealLossDialog from "./DealLossDialog"
 import StatusSelect from "./StatusSelect"
 
-export default function ProjectStatusControl({ projectId, currentStatus }) {
+export default function ProjectStatusControl({ projectId, currentStatus, readOnly = false }) {
     const router = useRouter()
     const toast = useToast()
     const [status, setStatus] = useState(currentStatus)
@@ -59,8 +59,12 @@ export default function ProjectStatusControl({ projectId, currentStatus }) {
                 options={options}
                 labels={PROJECT_STATUS_LABELS}
                 colors={PROJECT_STATUS_COLORS}
-                disabled={loading}
-                title='Сменить статус проекта'
+                disabled={loading || readOnly}
+                title={
+                    readOnly
+                        ? "Статус этого проекта меняет только администратор"
+                        : "Сменить статус проекта"
+                }
                 onChange={change}
             />
 

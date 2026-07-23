@@ -2,6 +2,7 @@ import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { DEAL_ITEM_TRACKED_FIELDS, parseDealItemPayload } from "@/lib/crm/deal"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
+import { dealLockResponse } from "@/lib/crm/access"
 
 async function recalcTotalAndBump(tx, dealId, authorId) {
     const items = await tx.dealItem.findMany({ where: { dealId }, select: { amount: true } })
@@ -18,6 +19,9 @@ export async function POST(request, { params }) {
 
     const deal = await prisma.deal.findUnique({ where: { id: params.id } })
     if (!deal) return Response.json({ error: "Сделка не найдена" }, { status: 404 })
+
+    const locked = dealLockResponse(deal.status, session)
+    if (locked) return locked
 
     let body
     try {

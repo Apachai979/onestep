@@ -13,7 +13,10 @@ export default async function DealsPage() {
                 title='Сделки'
                 subtitle='Прямые продажи клиентам: канбан и список с фильтрами.'
             />
-            <DealsTabs currentUserId={session?.user?.id} />
+            <DealsTabs
+                currentUserId={session?.user?.id}
+                isAdmin={session?.user?.role === "ADMIN"}
+            />
         </div>
     )
 }

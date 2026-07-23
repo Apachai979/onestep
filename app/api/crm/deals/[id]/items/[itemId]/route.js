@@ -2,6 +2,16 @@ import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { DEAL_ITEM_TRACKED_FIELDS, parseDealItemPayload } from "@/lib/crm/deal"
 import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
+import { dealLockResponse } from "@/lib/crm/access"
+
+// Позиции наследуют блокировку родительской сделки.
+async function dealLock(dealId, session) {
+    const deal = await prisma.deal.findUnique({
+        where: { id: dealId },
+        select: { status: true },
+    })
+    return dealLockResponse(deal?.status, session)
+}
 
 async function recalcTotalAndBump(tx, dealId, authorId) {
     const items = await tx.dealItem.findMany({ where: { dealId }, select: { amount: true } })
@@ -20,6 +30,9 @@ export async function PATCH(request, { params }) {
     if (!existing || existing.dealId !== params.id) {
         return Response.json({ error: "Позиция не найдена" }, { status: 404 })
     }
+
+    const locked = await dealLock(params.id, session)
+    if (locked) return locked
 
     let body
     try {
@@ -67,6 +80,9 @@ export async function DELETE(_request, { params }) {
     if (!existing || existing.dealId !== params.id) {
         return Response.json({ error: "Позиция не найдена" }, { status: 404 })
     }
+
+    const locked = await dealLock(params.id, session)
+    if (locked) return locked
 
     await prisma.$transaction(async tx => {
         await tx.dealItem.delete({ where: { id: params.itemId } })

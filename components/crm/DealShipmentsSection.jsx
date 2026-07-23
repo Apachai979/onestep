@@ -68,12 +68,15 @@ const EMPTY_FORM = {
     note: "",
 }
 
+// readOnly — сделка заморожена (см. lib/crm/access.js): отгрузки только
+// смотрим, создавать и менять их нельзя.
 export default function DealShipmentsSection({
     dealId,
     dealItems,
     dealDiscount = null,
     counterpartyId,
     initialDeliveryAddress,
+    readOnly = false,
 }) {
     const router = useRouter()
     const toast = useToast()
@@ -303,7 +306,7 @@ export default function DealShipmentsSection({
                 <h2 className='text-sm font-semibold text-neutral-900'>
                     Отгрузки
                 </h2>
-                {!showForm && dealItems.length > 0 && (
+                {!readOnly && !showForm && dealItems.length > 0 && (
                     <button
                         type='button'
                         onClick={startAdd}
@@ -332,7 +335,7 @@ export default function DealShipmentsSection({
                         </div>
                     )}
 
-                    {showForm && (
+                    {showForm && !readOnly && (
                         <form
                             onSubmit={handleSubmit}
                             className='mt-4 space-y-4 rounded-lg border border-dashed border-brand_main/40 bg-surface_muted p-4'
@@ -650,6 +653,7 @@ export default function DealShipmentsSection({
                                 key={sh.id}
                                 shipment={sh}
                                 dealItems={dealItems}
+                                readOnly={readOnly}
                                 onEdit={() => startEdit(sh)}
                                 onShip={() => setStatus(sh.id, "SHIPPED")}
                                 onReopen={() => setStatus(sh.id, "DRAFT")}
@@ -767,7 +771,7 @@ function ProgressBlock({ progress, dealItems, totalWV }) {
     )
 }
 
-function ShipmentRow({ shipment, dealItems, onEdit, onShip, onReopen, onDelete }) {
+function ShipmentRow({ shipment, dealItems, readOnly, onEdit, onShip, onReopen, onDelete }) {
     const overdue = isShipmentOverdue(shipment)
     const itemsById = new Map(dealItems.map(di => [di.id, di]))
     const wv = calculateShipmentWeightVolume(shipment)
@@ -800,38 +804,42 @@ function ShipmentRow({ shipment, dealItems, onEdit, onShip, onReopen, onDelete }
                     >
                         Открыть
                     </Link>
-                    <button
-                        type='button'
-                        onClick={onEdit}
-                        className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
-                    >
-                        Изменить
-                    </button>
-                    {shipment.status === "DRAFT" && (
-                        <button
-                            type='button'
-                            onClick={onShip}
-                            className='rounded-lg bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-700'
-                        >
-                            Отгрузить
-                        </button>
+                    {!readOnly && (
+                        <>
+                            <button
+                                type='button'
+                                onClick={onEdit}
+                                className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
+                            >
+                                Изменить
+                            </button>
+                            {shipment.status === "DRAFT" && (
+                                <button
+                                    type='button'
+                                    onClick={onShip}
+                                    className='rounded-lg bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-700'
+                                >
+                                    Отгрузить
+                                </button>
+                            )}
+                            {shipment.status === "SHIPPED" && (
+                                <button
+                                    type='button'
+                                    onClick={onReopen}
+                                    className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
+                                >
+                                    В черновик
+                                </button>
+                            )}
+                            <button
+                                type='button'
+                                onClick={onDelete}
+                                className='rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50'
+                            >
+                                Удалить
+                            </button>
+                        </>
                     )}
-                    {shipment.status === "SHIPPED" && (
-                        <button
-                            type='button'
-                            onClick={onReopen}
-                            className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
-                        >
-                            В черновик
-                        </button>
-                    )}
-                    <button
-                        type='button'
-                        onClick={onDelete}
-                        className='rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50'
-                    >
-                        Удалить
-                    </button>
                 </div>
             </div>
 

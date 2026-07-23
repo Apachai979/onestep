@@ -2,6 +2,16 @@ import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { PROJECT_ITEM_TRACKED_FIELDS, parseProjectItemPayload } from "@/lib/crm/project"
 import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
+import { projectLockResponse } from "@/lib/crm/access"
+
+// Позиции наследуют блокировку родительского проекта.
+async function projectLock(projectId, session) {
+    const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { status: true },
+    })
+    return projectLockResponse(project?.status, session)
+}
 
 async function recalcTotalAndBump(tx, projectId, authorId) {
     const items = await tx.projectItem.findMany({
@@ -23,6 +33,9 @@ export async function PATCH(request, { params }) {
     if (!existing || existing.projectId !== params.id) {
         return Response.json({ error: "Позиция не найдена" }, { status: 404 })
     }
+
+    const locked = await projectLock(params.id, session)
+    if (locked) return locked
 
     let body
     try {
@@ -73,6 +86,9 @@ export async function DELETE(_request, { params }) {
     if (!existing || existing.projectId !== params.id) {
         return Response.json({ error: "Позиция не найдена" }, { status: 404 })
     }
+
+    const locked = await projectLock(params.id, session)
+    if (locked) return locked
 
     await prisma.$transaction(async tx => {
         await tx.projectItem.delete({ where: { id: params.itemId } })

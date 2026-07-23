@@ -10,7 +10,7 @@ import {
     dealDisplayTitle,
 } from "@/lib/crm/deal"
 
-// Kanban показывает пять активных колонок; ARCHIVED — свалка старых
+// Kanban показывает шесть активных колонок; ARCHIVED — свалка старых
 // CLOSED/CANCELLED (заполняется автоархиватором), из доски скрыт.
 const KANBAN_STATUSES = DEAL_STATUSES.filter(s => s !== "ARCHIVED")
 
@@ -20,12 +20,14 @@ const COLUMN_ACCENT = {
     NEGOTIATION: "bg-blue-300/70",
     CONTRACT: "bg-violet-300/70",
     EXECUTION: "bg-amber-300/70",
+    AWAITING: "bg-teal-300/70",
     CLOSED: "bg-green-300/70",
     CANCELLED: "bg-red-300/70",
 }
 import { calculateDealShipmentProgress, isShipmentOverdue } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
 import { Button, Field, Input, useToast } from "@/components/crm/ui"
+import { DEAL_LOCKED_STATUSES } from "@/lib/crm/access"
 import DealLossDialog from "./DealLossDialog"
 
 function safeJson(text) {
@@ -41,7 +43,7 @@ function managerName(u) {
     return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
 }
 
-export default function DealsKanban() {
+export default function DealsKanban({ isAdmin = false }) {
     const toast = useToast()
     const [deals, setDeals] = useState(null)
     const [error, setError] = useState("")
@@ -88,6 +90,11 @@ export default function DealsKanban() {
         }
         return map
     }, [filtered])
+
+    // Менеджер не вытаскивает сделку из «Закрыто»/«Не реализована»/архива.
+    function isLocked(status) {
+        return !isAdmin && DEAL_LOCKED_STATUSES.includes(status)
+    }
 
     async function moveDeal(dealId, newStatus, extra = {}) {
         const prev = deals
@@ -139,6 +146,8 @@ export default function DealsKanban() {
             if (!id) return
             const deal = deals?.find(d => d.id === id)
             if (!deal || deal.status === status) return
+            // Завершённую сделку менеджер не двигает — карточка заморожена.
+            if (isLocked(deal.status)) return
             // Перенос в «Не реализована» — только с причиной.
             if (status === "CANCELLED") {
                 setLosingDeal(deal)
@@ -220,6 +229,7 @@ export default function DealsKanban() {
                                         <DealCard
                                             key={d.id}
                                             deal={d}
+                                            locked={isLocked(d.status)}
                                             dragging={draggingId === d.id}
                                             onDragStart={onDragStart(d.id)}
                                             onDragEnd={onDragEnd}
@@ -249,7 +259,7 @@ export default function DealsKanban() {
     )
 }
 
-function DealCard({ deal, dragging, onDragStart, onDragEnd }) {
+function DealCard({ deal, locked, dragging, onDragStart, onDragEnd }) {
     const title = dealDisplayTitle(deal, deal.counterparty?.name)
     const hasItems = Array.isArray(deal.items) && deal.items.length > 0
     const progress = hasItems ? calculateDealShipmentProgress(deal) : null
@@ -259,9 +269,9 @@ function DealCard({ deal, dragging, onDragStart, onDragEnd }) {
     return (
         <Link
             href={`/crm/deals/${deal.id}`}
-            draggable
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
+            draggable={!locked}
+            onDragStart={locked ? undefined : onDragStart}
+            onDragEnd={locked ? undefined : onDragEnd}
             className={`block cursor-pointer rounded-xl border bg-white p-3 text-sm shadow-sm transition-all duration-200 hover:border-line_strong hover:shadow-md ${
                 dragging ? "opacity-50" : "border-line"
             }`}

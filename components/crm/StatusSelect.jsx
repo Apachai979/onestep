@@ -13,6 +13,7 @@ const DOT_BY_HUE = {
     blue: "bg-blue-500",
     violet: "bg-violet-500",
     amber: "bg-amber-500",
+    teal: "bg-teal-500",
     emerald: "bg-emerald-500",
     red: "bg-red-500",
     neutral: "bg-neutral-400",

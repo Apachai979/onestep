@@ -25,7 +25,13 @@ function fmt(n) {
 
 // apiBase позволяет переиспользовать секцию для других сущностей с таким же
 // API позиций (например, аукционы: /api/crm/auctions/{id}).
-export default function DealItemsSection({ dealId, initialItems, apiBase: apiBaseProp }) {
+// readOnly — карточка заморожена (см. lib/crm/access.js): только просмотр.
+export default function DealItemsSection({
+    dealId,
+    initialItems,
+    apiBase: apiBaseProp,
+    readOnly = false,
+}) {
     const apiBase = apiBaseProp || `/api/crm/deals/${dealId}`
     const router = useRouter()
     const toast = useToast()
@@ -203,7 +209,7 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
         router.refresh()
     }
 
-    const formOpen = showAdd || editingId !== null
+    const formOpen = !readOnly && (showAdd || editingId !== null)
 
     const selectedProduct = form.productId
         ? products.find(p => p.id === form.productId)
@@ -229,7 +235,7 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
                 <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
                     Товарные позиции
                 </h2>
-                {!formOpen && (
+                {!readOnly && !formOpen && (
                     <button
                         type='button'
                         onClick={startAdd}
@@ -264,22 +270,24 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
                             <CardRow label='Кол-во'>{toFormValue(it.quantity)}</CardRow>
                             <CardRow label='Сумма'>{formatMoney(it.amount)}</CardRow>
                         </div>
-                        <div className='mt-3 flex justify-end gap-2'>
-                            <button
-                                type='button'
-                                onClick={() => startEdit(it)}
-                                className='rounded-md border border-line px-3 py-1.5 text-xs text-neutral-700 hover:bg-surface_muted'
-                            >
-                                Изменить
-                            </button>
-                            <button
-                                type='button'
-                                onClick={() => handleDelete(it.id)}
-                                className='rounded-md border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50'
-                            >
-                                Удалить
-                            </button>
-                        </div>
+                        {!readOnly && (
+                            <div className='mt-3 flex justify-end gap-2'>
+                                <button
+                                    type='button'
+                                    onClick={() => startEdit(it)}
+                                    className='rounded-md border border-line px-3 py-1.5 text-xs text-neutral-700 hover:bg-surface_muted'
+                                >
+                                    Изменить
+                                </button>
+                                <button
+                                    type='button'
+                                    onClick={() => handleDelete(it.id)}
+                                    className='rounded-md border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50'
+                                >
+                                    Удалить
+                                </button>
+                            </div>
+                        )}
                     </MobileCard>
                 ))}
             </div>
@@ -321,22 +329,24 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
                                     {formatMoney(it.amount)}
                                 </td>
                                 <td className='px-3 py-2 text-right'>
-                                    <div className='flex justify-end gap-2'>
-                                        <button
-                                            type='button'
-                                            onClick={() => startEdit(it)}
-                                            className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
-                                        >
-                                            Изменить
-                                        </button>
-                                        <button
-                                            type='button'
-                                            onClick={() => handleDelete(it.id)}
-                                            className='rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50'
-                                        >
-                                            Удалить
-                                        </button>
-                                    </div>
+                                    {!readOnly && (
+                                        <div className='flex justify-end gap-2'>
+                                            <button
+                                                type='button'
+                                                onClick={() => startEdit(it)}
+                                                className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
+                                            >
+                                                Изменить
+                                            </button>
+                                            <button
+                                                type='button'
+                                                onClick={() => handleDelete(it.id)}
+                                                className='rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50'
+                                            >
+                                                Удалить
+                                            </button>
+                                        </div>
+                                    )}
                                 </td>
                             </tr>
                         ))}

@@ -7,6 +7,7 @@ import {
     calculateDealItemRemaining,
     generateShipmentNumber,
 } from "@/lib/crm/shipment"
+import { dealLockResponse } from "@/lib/crm/access"
 
 const DEAL_SELECT = {
     id: true,
@@ -99,6 +100,9 @@ export async function POST(request) {
         },
     })
     if (!deal) return Response.json({ error: "Сделка не найдена" }, { status: 400 })
+
+    const locked = dealLockResponse(deal.status, session)
+    if (locked) return locked
 
     if (data.recipientContactId) {
         const c = await prisma.contact.findUnique({

@@ -1,7 +1,10 @@
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import ProjectForm from "@/components/crm/ProjectForm"
 import CrmBackLink from "@/components/crm/CrmBackLink"
+import { isProjectLocked } from "@/lib/crm/access"
 
 export const metadata = { title: "Редактирование проекта | CRM" }
 
@@ -11,6 +14,11 @@ export default async function EditProjectPage({ params }) {
         include: { contacts: { select: { id: true } } },
     })
     if (!item) notFound()
+
+    const session = await getServerSession(authOptions)
+    if (isProjectLocked(item.status, session)) {
+        redirect(`/crm/projects/${item.id}`)
+    }
 
     const initial = {
         ...item,

@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import ProposalView from "@/components/crm/ProposalView"
+import { isDealLocked } from "@/lib/crm/access"
 
 export const metadata = { title: "Коммерческое предложение | CRM" }
 
@@ -33,6 +34,10 @@ export default async function ProposalPage({ params }) {
         },
     })
     if (!deal) notFound()
+
+    if (isDealLocked(deal.status, session)) {
+        redirect(`/crm/deals/${deal.id}`)
+    }
 
     const items = await prisma.dealItem.findMany({
         where: { dealId: deal.id },

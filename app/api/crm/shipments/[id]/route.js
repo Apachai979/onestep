@@ -5,6 +5,7 @@ import {
     parseShipmentItemPayload,
     calculateDealItemRemaining,
 } from "@/lib/crm/shipment"
+import { dealLockResponse } from "@/lib/crm/access"
 
 const DEAL_SELECT = {
     id: true,
@@ -55,9 +56,12 @@ export async function PATCH(request, { params }) {
 
     const existing = await prisma.shipment.findUnique({
         where: { id: params.id },
-        include: { items: true, deal: { select: { counterpartyId: true } } },
+        include: { items: true, deal: { select: { counterpartyId: true, status: true } } },
     })
     if (!existing) return Response.json({ error: "Не найдено" }, { status: 404 })
+
+    const locked = dealLockResponse(existing.deal?.status, session)
+    if (locked) return locked
 
     let body
     try {
@@ -172,8 +176,14 @@ export async function DELETE(_request, { params }) {
     const { session, response } = await requireCrmSession()
     if (!session) return response
 
-    const existing = await prisma.shipment.findUnique({ where: { id: params.id } })
+    const existing = await prisma.shipment.findUnique({
+        where: { id: params.id },
+        include: { deal: { select: { status: true } } },
+    })
     if (!existing) return Response.json({ error: "Не найдено" }, { status: 404 })
+
+    const locked = dealLockResponse(existing.deal?.status, session)
+    if (locked) return locked
 
     await prisma.shipment.delete({ where: { id: params.id } })
     return Response.json({ ok: true })

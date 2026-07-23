@@ -3,6 +3,7 @@ import { requireCrmSession } from "@/lib/crm/session"
 import { requireAdmin } from "@/lib/crm/admin"
 import { DEAL_TRACKED_FIELDS, parseDealPayload } from "@/lib/crm/deal"
 import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
+import { dealLockResponse } from "@/lib/crm/access"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
@@ -43,6 +44,11 @@ export async function PATCH(request, { params }) {
 
     const existing = await prisma.deal.findUnique({ where: { id: params.id } })
     if (!existing) return Response.json({ error: "Не найдено" }, { status: 404 })
+
+    // Проверяем текущий статус: перевести сделку В «Закрыто»/«Не реализована»
+    // менеджер может, а изменить её после этого — уже нет.
+    const locked = dealLockResponse(existing.status, session)
+    if (locked) return locked
 
     let body
     try {

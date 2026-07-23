@@ -8,7 +8,7 @@ const TABS = [
     { key: "list", label: "Список" },
 ]
 
-export default function DealsTabs({ currentUserId }) {
+export default function DealsTabs({ currentUserId, isAdmin = false }) {
     const [tab, setTab] = useState("kanban")
 
     return (
@@ -30,7 +30,7 @@ export default function DealsTabs({ currentUserId }) {
                 ))}
             </div>
             {tab === "kanban" ? (
-                <DealsKanban />
+                <DealsKanban isAdmin={isAdmin} />
             ) : (
                 <DealsList currentUserId={currentUserId} />
             )}

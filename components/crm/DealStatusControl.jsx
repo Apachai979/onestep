@@ -6,7 +6,7 @@ import { useToast } from "@/components/crm/ui"
 import DealLossDialog from "./DealLossDialog"
 import StatusSelect from "./StatusSelect"
 
-export default function DealStatusControl({ dealId, currentStatus }) {
+export default function DealStatusControl({ dealId, currentStatus, readOnly = false }) {
     const router = useRouter()
     const toast = useToast()
     const [status, setStatus] = useState(currentStatus)
@@ -49,8 +49,12 @@ export default function DealStatusControl({ dealId, currentStatus }) {
                 options={DEAL_STATUSES}
                 labels={DEAL_STATUS_LABELS}
                 colors={DEAL_STATUS_COLORS}
-                disabled={loading}
-                title='Сменить статус сделки'
+                disabled={loading || readOnly}
+                title={
+                    readOnly
+                        ? "Статус завершённой сделки меняет только администратор"
+                        : "Сменить статус сделки"
+                }
                 onChange={change}
             />
 

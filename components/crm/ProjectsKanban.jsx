@@ -9,6 +9,7 @@ import {
 } from "@/lib/crm/project"
 import { formatMoney } from "@/lib/crm/format"
 import { Badge, Button, Field, Input, useToast } from "@/components/crm/ui"
+import { PROJECT_LOCKED_STATUSES } from "@/lib/crm/access"
 import DealLossDialog from "./DealLossDialog"
 
 function safeJson(text) {
@@ -33,7 +34,7 @@ const COLUMN_ACCENT = {
     NO_NEED: "bg-amber-300/70",
 }
 
-export default function ProjectsKanban() {
+export default function ProjectsKanban({ isAdmin = false }) {
     const toast = useToast()
     const [projects, setProjects] = useState(null)
     const [error, setError] = useState("")
@@ -80,6 +81,11 @@ export default function ProjectsKanban() {
         }
         return map
     }, [filtered])
+
+    // Менеджер не возвращает проект из «Проработано, нет потребности».
+    function isLocked(status) {
+        return !isAdmin && PROJECT_LOCKED_STATUSES.includes(status)
+    }
 
     async function moveProject(projectId, newStatus, extra = {}) {
         const prev = projects
@@ -133,6 +139,8 @@ export default function ProjectsKanban() {
             if (!id) return
             const project = projects?.find(p => p.id === id)
             if (!project || project.status === status) return
+            // Проработанный проект менеджер не двигает — карточка заморожена.
+            if (isLocked(project.status)) return
             // «Проработано, нет потребности» — только с указанием причины.
             if (status === "NO_NEED") {
                 setNoNeedProject(project)
@@ -196,6 +204,7 @@ export default function ProjectsKanban() {
                                         <ProjectCard
                                             key={p.id}
                                             project={p}
+                                            locked={isLocked(p.status)}
                                             dragging={draggingId === p.id}
                                             onDragStart={onDragStart(p.id)}
                                             onDragEnd={onDragEnd}
@@ -232,13 +241,13 @@ export default function ProjectsKanban() {
     )
 }
 
-function ProjectCard({ project, dragging, onDragStart, onDragEnd }) {
+function ProjectCard({ project, locked, dragging, onDragStart, onDragEnd }) {
     return (
         <Link
             href={`/crm/projects/${project.id}`}
-            draggable
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
+            draggable={!locked}
+            onDragStart={locked ? undefined : onDragStart}
+            onDragEnd={locked ? undefined : onDragEnd}
             className={`block cursor-pointer rounded-xl border bg-white p-3 text-sm shadow-sm transition-all duration-200 hover:border-line_strong hover:shadow-md ${
                 dragging ? "opacity-50" : "border-line"
             }`}

@@ -7,6 +7,7 @@ import prisma from "@/lib/client"
 import { DEAL_STATUS_LABELS } from "@/lib/crm/deal"
 import { AUCTION_STATUS_COLORS, AUCTION_STATUS_LABELS } from "@/lib/crm/auction"
 import { formatMoney } from "@/lib/crm/format"
+import { isProjectLocked } from "@/lib/crm/access"
 import { CardRow, MobileCard } from "@/components/crm/ui/MobileCards"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
 import ActivityPanel from "@/components/crm/ActivityPanel"
@@ -48,6 +49,9 @@ export default async function ProjectPage({ params }) {
     })
     if (!item) notFound()
 
+    // «Проработано, нет потребности»: менеджеру карточка только для чтения.
+    const locked = isProjectLocked(item.status, session)
+
     // Сумма проекта — производная: сумма всех сделок, привязанных к проекту.
     const dealsSum = item.deals.reduce((s, d) => s + Number(d.totalAmount || 0), 0)
     const dealsCount = item.deals.length
@@ -85,6 +89,7 @@ export default async function ProjectPage({ params }) {
                     <ProjectStatusControl
                         projectId={item.id}
                         currentStatus={item.status}
+                        readOnly={locked}
                     />
                 </div>
             </div>
@@ -107,18 +112,27 @@ export default async function ProjectPage({ params }) {
                 </div>
             )}
 
+            {locked && (
+                <div className='rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600'>
+                    Проект проработан — карточка доступна только для просмотра. Работать
+                    можно с заметками, задачами и файлами; изменения вносит администратор.
+                </div>
+            )}
+
             <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='min-w-0 space-y-4'>
                     <Section
                         title='Проект'
                         action={
-                            <Link
-                                href={`/crm/projects/${item.id}/edit`}
-                                className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
-                            >
-                                <LuPencil className='h-3 w-3' />
-                                Редактировать
-                            </Link>
+                            locked ? null : (
+                                <Link
+                                    href={`/crm/projects/${item.id}/edit`}
+                                    className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
+                                >
+                                    <LuPencil className='h-3 w-3' />
+                                    Редактировать
+                                </Link>
+                            )
                         }
                         footer={
                             <>

@@ -6,6 +6,7 @@ import {
     parseProjectPayload,
 } from "@/lib/crm/project"
 import { diffEntities, logChange } from "@/lib/crm/change-log"
+import { projectLockResponse } from "@/lib/crm/access"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
@@ -45,6 +46,9 @@ export async function PATCH(request, { params }) {
 
     const existing = await prisma.project.findUnique({ where: { id: params.id } })
     if (!existing) return Response.json({ error: "Не найдено" }, { status: 404 })
+
+    const locked = projectLockResponse(existing.status, session)
+    if (locked) return locked
 
     let body
     try {

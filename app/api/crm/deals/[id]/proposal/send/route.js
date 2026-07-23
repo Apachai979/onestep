@@ -5,12 +5,22 @@ import { renderProposalPdf } from "@/lib/crm/proposal-pdf"
 import { isMailConfigured, sendMail } from "@/lib/crm/mailer"
 import { saveFile } from "@/lib/crm/storage/local"
 import { logChange } from "@/lib/crm/change-log"
+import { dealLockResponse } from "@/lib/crm/access"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function POST(request, { params }) {
     const { session, response } = await requireCrmSession()
     if (!session) return response
+
+    const deal = await prisma.deal.findUnique({
+        where: { id: params.id },
+        select: { status: true },
+    })
+    if (!deal) return Response.json({ error: "Сделка не найдена" }, { status: 404 })
+
+    const locked = dealLockResponse(deal.status, session)
+    if (locked) return locked
 
     if (!isMailConfigured()) {
         return Response.json(

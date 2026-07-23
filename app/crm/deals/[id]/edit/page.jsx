@@ -1,8 +1,11 @@
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import DealForm from "@/components/crm/DealForm"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import { dealDisplayTitle } from "@/lib/crm/deal"
+import { isDealLocked } from "@/lib/crm/access"
 
 export const metadata = { title: "Редактирование сделки | CRM" }
 
@@ -12,6 +15,11 @@ export default async function EditDealPage({ params }) {
         include: { counterparty: { select: { name: true } } },
     })
     if (!item) notFound()
+
+    const session = await getServerSession(authOptions)
+    if (isDealLocked(item.status, session)) {
+        redirect(`/crm/deals/${item.id}`)
+    }
 
     const initial = {
         ...item,

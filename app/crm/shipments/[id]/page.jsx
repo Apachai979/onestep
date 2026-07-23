@@ -9,38 +9,19 @@ import {
     calculateShipmentWeightVolume,
     formatVolumeM3,
     formatWeightKg,
+    hasShipmentRecipient,
     isShipmentOverdue,
 } from "@/lib/crm/shipment"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import LocalDateTime from "@/components/crm/LocalDateTime"
+import ShipmentRecipient from "@/components/crm/ShipmentRecipient"
 
 export const metadata = { title: "Отгрузка | CRM" }
 
 function fullName(u) {
     if (!u) return "—"
     return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
-}
-
-function contactName(c) {
-    if (!c) return "—"
-    const fn = `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim()
-    return fn || c.email || c.phone || "Контакт"
-}
-
-function recipientDisplay(item) {
-    if (item.recipientContact) {
-        const c = item.recipientContact
-        const name = contactName(c)
-        const extras = [c.phone, c.email].filter(Boolean).join(" · ")
-        return extras ? `${name} (${extras})` : name
-    }
-    const parts = [
-        item.recipientName,
-        item.recipientPhone,
-        item.recipientEmail,
-    ].filter(Boolean)
-    return parts.length ? parts.join(" · ") : null
 }
 
 function num(v) {
@@ -160,7 +141,14 @@ export default async function ShipmentPage({ params }) {
                         <Row label='Вес' value={`${formatWeightKg(wv.weight)}${wvHint}`} />
                         <Row label='Объём' value={`${formatVolumeM3(wv.volume)}${wvHint}`} />
                         <Row label='№ ТТН / документа' value={item.docNumber} />
-                        <Row label='Получатель' value={recipientDisplay(item)} />
+                        <Row
+                            label='Получатель'
+                            value={
+                                hasShipmentRecipient(item) ? (
+                                    <ShipmentRecipient shipment={item} />
+                                ) : null
+                            }
+                        />
                         <Row
                             label='Адрес доставки'
                             value={item.deliveryAddress}

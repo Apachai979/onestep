@@ -12,6 +12,7 @@ import {
     EmptyState,
     MobileCard,
 } from "@/components/crm/ui"
+import PhoneLink from "./PhoneLink"
 
 const DATE_FMT = new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
@@ -106,7 +107,7 @@ export default function AdminUsersTable({ currentUserId }) {
             {
                 key: "phone",
                 header: "Телефон",
-                render: u => u.phone || "—",
+                render: u => (u.phone ? <PhoneLink phone={u.phone} /> : "—"),
                 hideable: true,
             },
             {
@@ -192,7 +193,9 @@ export default function AdminUsersTable({ currentUserId }) {
                         </div>
                         <div className='mt-2 space-y-1'>
                             <CardRow label='Email'>{u.email}</CardRow>
-                            <CardRow label='Телефон'>{u.phone || "—"}</CardRow>
+                            <CardRow label='Телефон'>
+                                {u.phone ? <PhoneLink phone={u.phone} /> : "—"}
+                            </CardRow>
                             <CardRow label='Должность'>{u.position || "—"}</CardRow>
                             <CardRow label='Добавлен'>{fmtDate(u.createdAt)}</CardRow>
                         </div>

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { LuBriefcase, LuCheck, LuTrash2, LuUndo2 } from "react-icons/lu"
 import { Button, CardListSkeleton, CardRow, EmptyState, MobileCard, useConfirm, useToast } from "@/components/crm/ui"
+import PhoneLink from "./PhoneLink"
 import SearchableSelect from "./SearchableSelect"
 
 const DATE_FMT = new Intl.DateTimeFormat("ru-RU", {
@@ -150,12 +151,7 @@ export default function LeadsList() {
                             <div className='mt-2 space-y-1'>
                                 {lead.phone && (
                                     <CardRow label='Телефон'>
-                                        <a
-                                            href={`tel:${lead.phone.replace(/\s/g, "")}`}
-                                            className='text-brand_main hover:underline'
-                                        >
-                                            {lead.phone}
-                                        </a>
+                                        <PhoneLink phone={lead.phone} />
                                     </CardRow>
                                 )}
                                 {lead.email && (
@@ -244,14 +240,7 @@ export default function LeadsList() {
                                         {lead.lastName ? ` ${lead.lastName}` : ""}
                                     </td>
                                     <td className='px-4 py-3'>
-                                        {lead.phone && (
-                                            <a
-                                                href={`tel:${lead.phone.replace(/\s/g, "")}`}
-                                                className='block text-brand_main hover:underline'
-                                            >
-                                                {lead.phone}
-                                            </a>
-                                        )}
+                                        <PhoneLink phone={lead.phone} className='block' />
                                         {lead.email && (
                                             <a
                                                 href={`mailto:${lead.email}`}

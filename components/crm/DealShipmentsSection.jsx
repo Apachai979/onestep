@@ -10,10 +10,13 @@ import {
     calculateShipmentWeightVolume,
     formatVolumeM3,
     formatWeightKg,
+    hasShipmentRecipient,
     isShipmentOverdue,
 } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
 import { useConfirm, useToast } from "@/components/crm/ui"
+import PhoneLink from "@/components/crm/PhoneLink"
+import ShipmentRecipient from "@/components/crm/ShipmentRecipient"
 
 function num(v) {
     if (v === null || v === undefined || v === "") return 0
@@ -434,12 +437,11 @@ export default function DealShipmentsSection({
                                                 x => x.id === form.recipientContactId,
                                             )
                                             if (!c) return null
-                                            const phones = [c.phone, c.email]
-                                                .filter(Boolean)
-                                                .join(" · ")
-                                            return phones ? (
+                                            return c.phone || c.email ? (
                                                 <p className='mt-1.5 text-xs text-neutral-500'>
-                                                    {phones}
+                                                    <PhoneLink phone={c.phone} />
+                                                    {c.phone && c.email && " · "}
+                                                    {c.email}
                                                 </p>
                                             ) : (
                                                 <p className='mt-1.5 text-xs italic text-neutral-400'>
@@ -864,23 +866,9 @@ function ShipmentRow({ shipment, dealItems, readOnly, onEdit, onShip, onReopen, 
                 {shipment.docNumber && (
                     <Meta label='ТТН' value={shipment.docNumber} />
                 )}
-                {(() => {
-                    let value = null
-                    if (shipment.recipientContact) {
-                        const c = shipment.recipientContact
-                        const name = contactName(c) || "—"
-                        const extras = [c.phone, c.email].filter(Boolean).join(" · ")
-                        value = extras ? `${name} (${extras})` : name
-                    } else {
-                        const parts = [
-                            shipment.recipientName,
-                            shipment.recipientPhone,
-                            shipment.recipientEmail,
-                        ].filter(Boolean)
-                        if (parts.length) value = parts.join(" · ")
-                    }
-                    return value ? <Meta label='Получатель' value={value} /> : null
-                })()}
+                {hasShipmentRecipient(shipment) && (
+                    <Meta label='Получатель' value={<ShipmentRecipient shipment={shipment} />} />
+                )}
                 {shipment.deliveryAddress && (
                     <Meta
                         label='Адрес'

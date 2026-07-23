@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useConfirm, useToast } from "@/components/crm/ui"
+import PhoneLink from "./PhoneLink"
 import SearchableSelect from "./SearchableSelect"
 
 const EMPTY = {
@@ -280,8 +281,16 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                             </div>
                             {c.position && <p className='text-sm text-neutral-500'>{c.position}</p>}
                             <div className='mt-1 grid gap-1 text-sm text-neutral-700 sm:grid-cols-2'>
-                                {c.phone && <span>Сот.: {c.phone}</span>}
-                                {c.workPhone && <span>Раб.: {c.workPhone}</span>}
+                                {c.phone && (
+                                    <span>
+                                        Сот.: <PhoneLink phone={c.phone} />
+                                    </span>
+                                )}
+                                {c.workPhone && (
+                                    <span>
+                                        Раб.: <PhoneLink phone={c.workPhone} />
+                                    </span>
+                                )}
                                 {c.email && <span>{c.email}</span>}
                                 {c.birthDate && (
                                     <span>

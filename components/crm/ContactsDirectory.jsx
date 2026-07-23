@@ -15,6 +15,7 @@ import {
     MobileCard,
     useToast,
 } from "@/components/crm/ui"
+import PhoneLink from "./PhoneLink"
 import SearchableSelect from "./SearchableSelect"
 
 const TYPE_LABELS = {
@@ -182,10 +183,12 @@ export default function ContactsDirectory() {
                 header: "Телефон",
                 render: c =>
                     c.phone || c.workPhone ? (
-                        <span className='flex flex-col'>
-                            {c.phone && <span>{c.phone}</span>}
+                        <span className='flex flex-col items-start'>
+                            <PhoneLink phone={c.phone} />
                             {c.workPhone && (
-                                <span className='text-xs text-neutral-500'>раб. {c.workPhone}</span>
+                                <PhoneLink phone={c.workPhone} className='text-xs'>
+                                    раб. {c.workPhone}
+                                </PhoneLink>
                             )}
                         </span>
                     ) : (
@@ -373,8 +376,14 @@ export default function ContactsDirectory() {
                         </div>
                         <div className='mt-2 space-y-1'>
                             {c.position && <CardRow label='Должность'>{c.position}</CardRow>}
-                            <CardRow label='Телефон'>{c.phone || "—"}</CardRow>
-                            {c.workPhone && <CardRow label='Раб. телефон'>{c.workPhone}</CardRow>}
+                            <CardRow label='Телефон'>
+                                {c.phone ? <PhoneLink phone={c.phone} /> : "—"}
+                            </CardRow>
+                            {c.workPhone && (
+                                <CardRow label='Раб. телефон'>
+                                    <PhoneLink phone={c.workPhone} />
+                                </CardRow>
+                            )}
                             <CardRow label='Email'>{c.email || "—"}</CardRow>
                             <CardRow label='Контрагент'>
                                 {c.counterparty ? (

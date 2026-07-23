@@ -16,6 +16,7 @@ import ContactsSection from "@/components/crm/ContactsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import LocalDateTime from "@/components/crm/LocalDateTime"
+import PhoneLink from "@/components/crm/PhoneLink"
 
 export const metadata = { title: "Контрагент | CRM" }
 
@@ -120,7 +121,10 @@ export default async function CounterpartyPage({ params }) {
                         }
                     >
                         <Row label='Регион' value={item.region} />
-                        <Row label='Телефон' value={item.phone} />
+                        <Row
+                            label='Телефон'
+                            value={item.phone ? <PhoneLink phone={item.phone} /> : null}
+                        />
                         <Row label='Email' value={item.email} />
                         <Row
                             label='Ответственный менеджер'

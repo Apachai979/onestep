@@ -10,6 +10,7 @@ import AuctionStatusControl from "@/components/crm/AuctionStatusControl"
 import AuctionProtocolSection from "@/components/crm/AuctionProtocolSection"
 import DealItemsSection from "@/components/crm/DealItemsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
+import ContactMeta from "@/components/crm/ContactMeta"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import LocalDateTime from "@/components/crm/LocalDateTime"
 
@@ -350,9 +351,7 @@ function PartyCard({ label, org, contacts, hint }) {
                             className='rounded-lg border border-line bg-surface_muted px-3 py-2 text-sm'
                         >
                             <p className='font-medium text-neutral-900'>{contactName(c)}</p>
-                            <p className='text-xs text-neutral-500'>
-                                {[c.position, c.phone, c.email].filter(Boolean).join(" · ") || "—"}
-                            </p>
+                            <ContactMeta contact={c} />
                         </li>
                     ))}
                 </ul>

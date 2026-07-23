@@ -14,6 +14,11 @@ import {
     Input,
     MobileCard,
 } from "@/components/crm/ui"
+import PhoneLink from "./PhoneLink"
+
+function counterpartyPhone(item) {
+    return item.phone || item.contacts?.[0]?.phone || null
+}
 
 function primaryContactName(item) {
     const primary = item.contacts?.[0]
@@ -104,7 +109,12 @@ export default function CounterpartyList({ type, newHref }) {
             {
                 key: "phone",
                 header: "Телефон",
-                render: item => item.phone || item.contacts?.[0]?.phone || "—",
+                render: item =>
+                    counterpartyPhone(item) ? (
+                        <PhoneLink phone={counterpartyPhone(item)} />
+                    ) : (
+                        "—"
+                    ),
                 hideable: true,
             },
             {
@@ -176,7 +186,11 @@ export default function CounterpartyList({ type, newHref }) {
                             <CardRow label='ИНН'>{item.inn || "—"}</CardRow>
                             <CardRow label='Контакт'>{primaryContactName(item)}</CardRow>
                             <CardRow label='Телефон'>
-                                {item.phone || item.contacts?.[0]?.phone || "—"}
+                                {counterpartyPhone(item) ? (
+                                    <PhoneLink phone={counterpartyPhone(item)} />
+                                ) : (
+                                    "—"
+                                )}
                             </CardRow>
                             <CardRow label='Бюджет'>{formatMoney(item.totalRevenue)}</CardRow>
                             <CardRow label='Скидка'>{formatPercent(item.discount)}</CardRow>

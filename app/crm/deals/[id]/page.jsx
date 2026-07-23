@@ -12,6 +12,7 @@ import DealItemsSection from "@/components/crm/DealItemsSection"
 import DealStatusControl from "@/components/crm/DealStatusControl"
 import DealShipmentsSection from "@/components/crm/DealShipmentsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
+import ContactMeta from "@/components/crm/ContactMeta"
 import LocalDateTime from "@/components/crm/LocalDateTime"
 
 export const metadata = { title: "Сделка | CRM" }
@@ -298,16 +299,6 @@ function Section({ title, footer, action, columns = "sm:grid-cols-2 lg:grid-cols
 // регион и контактное лицо — вся информация о стороне в одном месте.
 function PartyCard({ label, org, contact }) {
     const contactName = contactDisplay(contact)
-    const contactDetails = contact
-        ? [
-              contact.position,
-              contact.phone,
-              contact.workPhone ? `раб. ${contact.workPhone}` : null,
-              contact.email,
-          ]
-              .filter(Boolean)
-              .join(" · ")
-        : ""
     return (
         <section className='flex flex-col rounded-xl border border-line bg-white p-4'>
             <p className='text-[10px] font-medium uppercase tracking-wider text-neutral-400'>
@@ -331,7 +322,7 @@ function PartyCard({ label, org, contact }) {
             {contact ? (
                 <div className='rounded-lg border border-line bg-surface_muted px-3 py-2 text-sm'>
                     <p className='font-medium text-neutral-900'>{contactName}</p>
-                    <p className='text-xs text-neutral-500'>{contactDetails || "—"}</p>
+                    <ContactMeta contact={contact} />
                 </div>
             ) : (
                 <p className='text-sm text-neutral-400'>Не выбрано.</p>

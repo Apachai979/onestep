@@ -164,6 +164,7 @@ export default function RelatedTasksSection({
                 <TaskCloseModal
                     task={closing}
                     canClose={closing.status === "OPEN" && canClose(closing)}
+                    canReopen={closing.status !== "OPEN" && canClose(closing)}
                     onClose={() => setClosing(null)}
                     onClosed={() => {
                         setClosing(null)

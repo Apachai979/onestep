@@ -95,15 +95,37 @@ function relationLink(t) {
     return null
 }
 
-export default function TaskCloseModal({ task, onClose, onClosed, canClose = true }) {
+export default function TaskCloseModal({
+    task,
+    onClose,
+    onClosed,
+    canClose = true,
+    canReopen = false,
+}) {
     const [status, setStatus] = useState("DONE")
     const [result, setResult] = useState("")
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
+    const [reopening, setReopening] = useState(false)
 
     const ts = timeStatus(task)
     const rel = relationLink(task)
     const readOnly = !canClose
+
+    async function reopen() {
+        setError("")
+        setReopening(true)
+        const res = await fetch(`/api/crm/tasks/${task.id}/close`, { method: "DELETE" })
+        const text = await res.text()
+        const data = text ? safeJson(text) : {}
+        setReopening(false)
+        if (!res.ok) {
+            setError(data?.error || "Не удалось вернуть задачу в работу")
+            return
+        }
+        notifyTasksChanged()
+        if (onClosed) onClosed(data.item)
+    }
 
     async function submit(e) {
         e.preventDefault()
@@ -264,7 +286,18 @@ export default function TaskCloseModal({ task, onClose, onClosed, canClose = tru
 
                 {error && <p className='text-sm text-red-600'>{error}</p>}
 
-                <div className='flex justify-end gap-2'>
+                <div className='flex flex-wrap justify-end gap-2'>
+                    {task.status !== "OPEN" && canReopen && (
+                        <Button
+                            type='button'
+                            variant='secondary'
+                            loading={reopening}
+                            onClick={reopen}
+                            className='mr-auto'
+                        >
+                            Вернуть в работу
+                        </Button>
+                    )}
                     <Button type='button' variant='secondary' onClick={onClose}>
                         {readOnly ? "Закрыть" : "Отмена"}
                     </Button>

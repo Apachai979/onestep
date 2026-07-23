@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
 import TaskList from "./TaskList"
+import TasksKanban from "./TasksKanban"
 import TaskCalendar from "./TaskCalendar"
 import TaskForm from "./TaskForm"
 import { Button, Modal } from "@/components/crm/ui"
@@ -26,6 +27,7 @@ export default function TasksTabs({ currentUserId, currentUserRole }) {
                 <div className='inline-flex rounded-xl border border-line bg-white p-1 text-sm shadow-sm'>
                     {[
                         { key: "list", label: "Список" },
+                        { key: "kanban", label: "Канбан" },
                         { key: "calendar", label: "Календарь" },
                     ].map(t => (
                         <button
@@ -63,6 +65,11 @@ export default function TasksTabs({ currentUserId, currentUserRole }) {
 
             {view === "list" ? (
                 <TaskList
+                    currentUserId={currentUserId}
+                    currentUserRole={currentUserRole}
+                />
+            ) : view === "kanban" ? (
+                <TasksKanban
                     currentUserId={currentUserId}
                     currentUserRole={currentUserRole}
                 />

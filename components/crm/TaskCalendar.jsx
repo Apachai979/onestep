@@ -1,9 +1,10 @@
 "use client"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { TASK_TYPE_MAP } from "@/lib/crm/task"
-import { onTasksChanged } from "@/lib/crm/tasks-events"
+import { notifyTasksChanged, onTasksChanged } from "@/lib/crm/tasks-events"
 import TaskTypeIcon from "./TaskTypeIcon"
 import TaskCloseModal from "./TaskCloseModal"
+import { useToast } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -78,9 +79,12 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
         d.setHours(0, 0, 0, 0)
         return d
     })
+    const toast = useToast()
     const [items, setItems] = useState([])
     const [error, setError] = useState("")
     const [closing, setClosing] = useState(null)
+    const [draggingId, setDraggingId] = useState(null)
+    const [dragOverKey, setDragOverKey] = useState(null)
 
     const range = useMemo(() => {
         if (view === "day") return { start: startOfDay(cursor), end: addDays(startOfDay(cursor), 1) }
@@ -159,6 +163,98 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
     function canClose(t) {
         if (currentUserRole === "ADMIN") return true
         return t.assigneeId === currentUserId || t.createdById === currentUserId
+    }
+
+    // Перенос задачи на другой день (и, для задач со временем, на другой час).
+    // Закрытые задачи сервер редактировать не даёт, поэтому их не таскаем.
+    async function moveTaskToDay(taskId, day, hour = null) {
+        const task = items.find(t => t.id === taskId)
+        if (!task || task.status !== "OPEN") return
+
+        let payload
+        let optimistic
+        if (task.allDay) {
+            const { start, end } = taskDayRange(task)
+            const delta = daysBetween(start, startOfDay(day))
+            if (delta === 0) return
+            const newStart = addDays(start, delta)
+            const newEnd = addDays(end, delta)
+            payload = { startAt: ymd(newStart), endAt: ymd(newEnd), allDay: true }
+            optimistic = {
+                startAt: `${ymd(newStart)}T00:00:00.000Z`,
+                endAt: `${ymd(newEnd)}T23:59:59.999Z`,
+            }
+        } else {
+            const s = new Date(task.startAt)
+            const e = new Date(task.endAt)
+            const duration = e.getTime() - s.getTime()
+            const delta = daysBetween(startOfDay(s), startOfDay(day))
+            const newStart = addDays(s, delta)
+            if (hour != null) newStart.setHours(hour, s.getMinutes(), 0, 0)
+            const newEnd =
+                hour != null
+                    ? new Date(newStart.getTime() + duration)
+                    : addDays(e, delta)
+            if (newStart.getTime() === s.getTime()) return
+            payload = {
+                startAt: newStart.toISOString(),
+                endAt: newEnd.toISOString(),
+                allDay: false,
+            }
+            optimistic = {
+                startAt: newStart.toISOString(),
+                endAt: newEnd.toISOString(),
+            }
+        }
+
+        const prev = items
+        setItems(curr => curr.map(t => (t.id === taskId ? { ...t, ...optimistic } : t)))
+        try {
+            const r = await fetch(`/api/crm/tasks/${taskId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            })
+            if (!r.ok) {
+                const text = await r.text()
+                const d = text ? safeJson(text) : {}
+                throw new Error(d?.error || "Не удалось перенести задачу")
+            }
+            notifyTasksChanged()
+        } catch (err) {
+            setItems(prev)
+            toast.error(err.message)
+        }
+    }
+
+    const dnd = {
+        draggingId,
+        dragOverKey,
+        canDrag: t => t.status === "OPEN",
+        onDragStart: t => e => {
+            setDraggingId(t.id)
+            e.dataTransfer.effectAllowed = "move"
+            e.dataTransfer.setData("text/plain", t.id)
+        },
+        onDragEnd: () => {
+            setDraggingId(null)
+            setDragOverKey(null)
+        },
+        onDragOverKey: key => e => {
+            e.preventDefault()
+            e.dataTransfer.dropEffect = "move"
+            setDragOverKey(k => (k === key ? k : key))
+        },
+        onDragLeave: () => setDragOverKey(null),
+        onDrop:
+            (day, hour = null) =>
+            e => {
+                e.preventDefault()
+                const id = e.dataTransfer.getData("text/plain") || draggingId
+                setDragOverKey(null)
+                setDraggingId(null)
+                if (id) moveTaskToDay(id, day, hour)
+            },
     }
 
     const headerLabel =
@@ -240,6 +336,7 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
                     onPick={setClosing}
                     canClose={canClose}
                     onCreateAt={onCreateAt}
+                    dnd={dnd}
                 />
             )}
             {view === "week" && (
@@ -261,6 +358,7 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
                             onPick={setClosing}
                             canClose={canClose}
                             onCreateAt={onCreateAt}
+                            dnd={dnd}
                         />
                     </div>
                 </>
@@ -273,6 +371,7 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
                     onPick={setClosing}
                     canClose={canClose}
                     onCreateAt={onCreateAt}
+                    dnd={dnd}
                 />
             )}
 
@@ -280,6 +379,7 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
                 <TaskCloseModal
                     task={closing}
                     canClose={closing.status === "OPEN" && canClose(closing)}
+                    canReopen={closing.status !== "OPEN" && canClose(closing)}
                     onClose={() => setClosing(null)}
                     onClosed={() => {
                         setClosing(null)
@@ -347,7 +447,7 @@ function layoutSegments(items, rangeStart, colCount, predicate = null) {
     return segments
 }
 
-function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
+function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt, dnd }) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
@@ -387,10 +487,14 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
                             {days.map((d, di) => {
                                 const inMonth = d.getMonth() === cursor.getMonth()
                                 const isToday = isSameDay(d, today)
+                                const dropKey = `m:${ymd(d)}`
                                 return (
                                     <div
                                         key={di}
                                         onClick={() => onCreateAt?.({ date: ymd(d) })}
+                                        onDragOver={dnd.onDragOverKey(dropKey)}
+                                        onDragLeave={dnd.onDragLeave}
+                                        onDrop={dnd.onDrop(d)}
                                         style={{
                                             height: MONTH_HEADER_H + eventsAreaHeight,
                                         }}
@@ -398,6 +502,10 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
                                             inMonth
                                                 ? "bg-white hover:bg-surface_muted"
                                                 : "bg-surface_muted text-neutral-400"
+                                        } ${
+                                            dnd.dragOverKey === dropKey
+                                                ? "bg-brand_main/10 ring-2 ring-inset ring-brand_main/40"
+                                                : ""
                                         }`}
                                     >
                                         <div className='flex items-center justify-between px-1.5 pt-1'>
@@ -428,6 +536,7 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
                                     key={seg.task.id}
                                     seg={seg}
                                     colCount={7}
+                                    dnd={dnd}
                                     onClick={e => {
                                         e.stopPropagation()
                                         onPick(seg.task)
@@ -442,14 +551,18 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt }) {
     )
 }
 
-function SpanningTask({ seg, colCount, onClick }) {
+function SpanningTask({ seg, colCount, onClick, dnd }) {
     const { task, startCol, endCol, lane } = seg
     const meta = TASK_TYPE_MAP[task.type]
     const closed = task.status !== "OPEN"
+    const draggable = !!dnd && dnd.canDrag(task)
     return (
         <button
             type='button'
             onClick={onClick}
+            draggable={draggable}
+            onDragStart={draggable ? dnd.onDragStart(task) : undefined}
+            onDragEnd={draggable ? dnd.onDragEnd : undefined}
             style={{
                 top: lane * (LANE_HEIGHT + LANE_GAP) + 2,
                 left: `calc(${startCol} * (100% / ${colCount}) + 2px)`,
@@ -458,6 +571,8 @@ function SpanningTask({ seg, colCount, onClick }) {
             }}
             className={`pointer-events-auto absolute flex items-center gap-1 overflow-hidden rounded border border-l-4 px-1.5 text-[11px] ${meta?.bg || "bg-neutral-100"} ${meta?.border || "border-gray-400"} ${
                 closed ? "opacity-50 line-through" : "hover:brightness-95"
+            } ${draggable ? "cursor-grab active:cursor-grabbing" : ""} ${
+                dnd?.draggingId === task.id ? "opacity-40" : ""
             }`}
         >
             <TaskTypeIcon type={task.type} />
@@ -466,7 +581,7 @@ function SpanningTask({ seg, colCount, onClick }) {
     )
 }
 
-function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
+function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt, dnd }) {
     const hours = []
     for (let h = HOUR_START; h <= HOUR_END; h++) hours.push(h)
     const today = new Date()
@@ -537,13 +652,23 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
                                 gridTemplateColumns: `repeat(${days.length}, minmax(0,1fr))`,
                             }}
                         >
-                            {days.map((d, i) => (
-                                <div
-                                    key={i}
-                                    onClick={() => onCreateAt?.({ date: ymd(d) })}
-                                    className='cursor-pointer border-l border-line hover:bg-amber-50'
-                                />
-                            ))}
+                            {days.map((d, i) => {
+                                const dropKey = `a:${ymd(d)}`
+                                return (
+                                    <div
+                                        key={i}
+                                        onClick={() => onCreateAt?.({ date: ymd(d) })}
+                                        onDragOver={dnd.onDragOverKey(dropKey)}
+                                        onDragLeave={dnd.onDragLeave}
+                                        onDrop={dnd.onDrop(d)}
+                                        className={`cursor-pointer border-l border-line hover:bg-amber-50 ${
+                                            dnd.dragOverKey === dropKey
+                                                ? "bg-brand_main/10 ring-2 ring-inset ring-brand_main/40"
+                                                : ""
+                                        }`}
+                                    />
+                                )
+                            })}
                         </div>
                         {/* Spanning bars */}
                         {allDaySegments.map(seg => (
@@ -551,6 +676,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
                                 key={seg.task.id}
                                 seg={seg}
                                 colCount={days.length}
+                                dnd={dnd}
                                 onClick={e => {
                                     e.stopPropagation()
                                     onPick(seg.task)
@@ -586,15 +712,27 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
                                 className='relative border-l border-line'
                                 style={{ height: totalHeight }}
                             >
-                                {hours.map((h, idx) => (
-                                    <div
-                                        key={h}
-                                        onClick={() => onCreateAt?.({ date: ymd(d), hour: h })}
-                                        className='cursor-pointer border-b border-line hover:bg-surface_muted'
-                                        style={{ height: HOUR_HEIGHT }}
-                                        title={`Создать задачу в ${String(h).padStart(2, "0")}:00`}
-                                    />
-                                ))}
+                                {hours.map(h => {
+                                    const dropKey = `h:${ymd(d)}:${h}`
+                                    return (
+                                        <div
+                                            key={h}
+                                            onClick={() =>
+                                                onCreateAt?.({ date: ymd(d), hour: h })
+                                            }
+                                            onDragOver={dnd.onDragOverKey(dropKey)}
+                                            onDragLeave={dnd.onDragLeave}
+                                            onDrop={dnd.onDrop(d, h)}
+                                            className={`cursor-pointer border-b border-line hover:bg-surface_muted ${
+                                                dnd.dragOverKey === dropKey
+                                                    ? "bg-brand_main/10 ring-2 ring-inset ring-brand_main/40"
+                                                    : ""
+                                            }`}
+                                            style={{ height: HOUR_HEIGHT }}
+                                            title={`Создать задачу в ${String(h).padStart(2, "0")}:00`}
+                                        />
+                                    )
+                                })}
                                 {list.map(t => {
                                     const pos = positionTimed(t, d)
                                     if (!pos) return null
@@ -603,6 +741,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt }) {
                                             key={t.id}
                                             task={t}
                                             pos={pos}
+                                            dnd={dnd}
                                             onClick={e => {
                                                 e.stopPropagation()
                                                 onPick(t)
@@ -651,19 +790,25 @@ function positionTimed(task, day) {
     return { top, height }
 }
 
-function TimedTask({ task, pos, onClick }) {
+function TimedTask({ task, pos, onClick, dnd }) {
     const meta = TASK_TYPE_MAP[task.type]
     const closed = task.status !== "OPEN"
     const start = new Date(task.startAt)
     const end = new Date(task.endAt)
     const timeStr = `${start.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}–${end.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}`
+    const draggable = !!dnd && dnd.canDrag(task)
     return (
         <button
             type='button'
             onClick={onClick}
+            draggable={draggable}
+            onDragStart={draggable ? dnd.onDragStart(task) : undefined}
+            onDragEnd={draggable ? dnd.onDragEnd : undefined}
             style={{ top: pos.top, height: pos.height }}
             className={`absolute left-0.5 right-0.5 overflow-hidden rounded border border-l-4 px-1.5 py-1 text-left text-[11px] shadow-sm ${meta?.bg || "bg-neutral-100"} ${meta?.border || "border-gray-400"} ${
                 closed ? "opacity-50 line-through" : "hover:brightness-95"
+            } ${draggable ? "cursor-grab active:cursor-grabbing" : ""} ${
+                dnd?.draggingId === task.id ? "opacity-40" : ""
             }`}
         >
             <div className='flex items-center gap-1 font-medium'>

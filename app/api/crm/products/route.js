@@ -1,5 +1,6 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
+import { requireAdmin } from "@/lib/crm/admin"
 import { parseProductPayload } from "@/lib/crm/product"
 
 export async function GET(request) {
@@ -43,7 +44,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-    const { session, response } = await requireCrmSession()
+    const { session, response } = await requireAdmin()
     if (!session) return response
 
     let body

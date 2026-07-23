@@ -1,4 +1,6 @@
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import ProductForm from "@/components/crm/ProductForm"
 import CrmBackLink from "@/components/crm/CrmBackLink"
@@ -6,6 +8,11 @@ import CrmBackLink from "@/components/crm/CrmBackLink"
 export const metadata = { title: "Редактирование товара | CRM" }
 
 export default async function EditProductPage({ params }) {
+    const session = await getServerSession(authOptions)
+    if (session?.user?.role !== "ADMIN") {
+        redirect(`/crm/products/${params.id}`)
+    }
+
     const item = await prisma.product.findUnique({ where: { id: params.id } })
     if (!item) notFound()
 

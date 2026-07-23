@@ -25,7 +25,7 @@ function stockBadgeClass(stock) {
           : "bg-emerald-50 text-emerald-700"
 }
 
-export default function ProductsList() {
+export default function ProductsList({ canManage = false }) {
     const router = useRouter()
     const toast = useToast()
     const [items, setItems] = useState(null)
@@ -186,10 +186,12 @@ export default function ProductsList() {
                     <LuRefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
                     Обновить остатки
                 </Button>
-                <Button href='/crm/products/new'>
-                    <LuPlus className='h-4 w-4' />
-                    Добавить
-                </Button>
+                {canManage && (
+                    <Button href='/crm/products/new'>
+                        <LuPlus className='h-4 w-4' />
+                        Добавить
+                    </Button>
+                )}
             </div>
 
             {error && (

@@ -1,5 +1,6 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
+import { requireAdmin } from "@/lib/crm/admin"
 import { AUCTION_TRACKED_FIELDS, parseAuctionPayload } from "@/lib/crm/auction"
 import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
 
@@ -129,7 +130,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(_request, { params }) {
-    const { session, response } = await requireCrmSession()
+    const { session, response } = await requireAdmin()
     if (!session) return response
 
     const existing = await prisma.auction.findUnique({ where: { id: params.id } })

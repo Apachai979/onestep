@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { getServerSession } from "next-auth"
 import { LuPencil, LuWarehouse } from "react-icons/lu"
+import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { formatMoney } from "@/lib/crm/format"
 import { contentLines } from "@/lib/crm/product"
@@ -20,6 +22,9 @@ export default async function ProductPage({ params }) {
         },
     })
     if (!item) notFound()
+
+    const session = await getServerSession(authOptions)
+    const canManage = session?.user?.role === "ADMIN"
 
     const lines = contentLines(item.contents)
     const totalPieces = totalStockPieces(item.stocks)
@@ -49,13 +54,15 @@ export default async function ProductPage({ params }) {
                         <p className='mt-1 text-sm text-neutral-500'>{item.name}</p>
                     )}
                 </div>
-                <Link
-                    href={`/crm/products/${item.id}/edit`}
-                    className='inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-medium text-neutral-900/75 hover:bg-surface_muted'
-                >
-                    <LuPencil className='h-3.5 w-3.5' />
-                    Редактировать
-                </Link>
+                {canManage && (
+                    <Link
+                        href={`/crm/products/${item.id}/edit`}
+                        className='inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-medium text-neutral-900/75 hover:bg-surface_muted'
+                    >
+                        <LuPencil className='h-3.5 w-3.5' />
+                        Редактировать
+                    </Link>
+                )}
             </div>
 
             <div className='grid items-start gap-5 lg:grid-cols-2'>

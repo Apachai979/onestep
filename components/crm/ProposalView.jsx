@@ -60,6 +60,7 @@ function fmtAuto(n, digits) {
 export default function ProposalView({
     dealId,
     buyer,
+    endCustomer = "",
     contactName = "",
     contactEmail = "",
     items,
@@ -76,6 +77,10 @@ export default function ProposalView({
         date: todayInput(),
         validDays: 60,
         buyer,
+        endCustomer: endCustomer || "",
+        // Галочка «Выводить в КП». Пустое значение прячет строку в любом случае —
+        // если конечного потребителя в проекте нет, в документе он не появится.
+        showEndCustomer: true,
         deliveryTerm: "90 дней с момента оплаты",
         paymentTerm: "100%",
         deliveryCondition: "самовывоз, отгрузка производится кратно транспортным упаковкам",
@@ -92,6 +97,8 @@ export default function ProposalView({
     function update(field) {
         return e => setForm(prev => ({ ...prev, [field]: e.target.value }))
     }
+
+    const showEndCustomerRow = form.showEndCustomer && Boolean(form.endCustomer.trim())
 
     const totals = useMemo(() => {
         const sub = Number(subtotal) || 0
@@ -247,6 +254,43 @@ export default function ProposalView({
                 <Field label='Покупатель'>
                     <Input value={form.buyer} onChange={update("buyer")} />
                 </Field>
+                <Field
+                    label='Конечный потребитель'
+                    action={
+                        <label
+                            className={`inline-flex items-center gap-1.5 text-xs ${
+                                showEndCustomerRow
+                                    ? "text-neutral-500"
+                                    : "text-neutral-300"
+                            }`}
+                            title={
+                                form.endCustomer.trim()
+                                    ? "Выводить строку в КП"
+                                    : "Поле пустое — строка в КП не выводится"
+                            }
+                        >
+                            <input
+                                type='checkbox'
+                                checked={showEndCustomerRow}
+                                disabled={!form.endCustomer.trim()}
+                                onChange={e =>
+                                    setForm(prev => ({
+                                        ...prev,
+                                        showEndCustomer: e.target.checked,
+                                    }))
+                                }
+                                className='rounded accent-brand_main disabled:opacity-40'
+                            />
+                            Выводить в КП
+                        </label>
+                    }
+                >
+                    <Input
+                        value={form.endCustomer}
+                        onChange={update("endCustomer")}
+                        placeholder='подтягивается из проекта'
+                    />
+                </Field>
                 <div className='grid gap-3 sm:grid-cols-3'>
                     <Field label='Срок поставки'>
                         <Input
@@ -375,6 +419,12 @@ export default function ProposalView({
 
                 <dl className='mt-5 space-y-1 text-[10.5pt]'>
                     <ParamRow label='Покупатель' value={form.buyer} />
+                    {showEndCustomerRow && (
+                        <ParamRow
+                            label='Конечный потребитель'
+                            value={form.endCustomer}
+                        />
+                    )}
                     <ParamRow label='Срок поставки' value={form.deliveryTerm} />
                     <ParamRow label='Условия оплаты' value={form.paymentTerm} />
                     <ParamRow label='Условия поставки' value={form.deliveryCondition} />
@@ -686,10 +736,13 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
     )
 }
 
-function Field({ label, children }) {
+function Field({ label, children, action = null }) {
     return (
         <div>
-            <label className='mb-1 block text-xs text-neutral-500'>{label}</label>
+            <div className='mb-1 flex items-center justify-between gap-3'>
+                <label className='block text-xs text-neutral-500'>{label}</label>
+                {action}
+            </div>
             {children}
         </div>
     )

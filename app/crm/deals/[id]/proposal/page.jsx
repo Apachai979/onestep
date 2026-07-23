@@ -22,6 +22,14 @@ export default async function ProposalPage({ params }) {
             counterparty: true,
             contact: true,
             manager: true,
+            // Конечный потребитель для КП берётся из проекта-источника,
+            // а для сделок из аукциона — из проекта этого аукциона.
+            sourceProject: { include: { endCustomer: { select: { name: true } } } },
+            sourceAuction: {
+                include: {
+                    project: { include: { endCustomer: { select: { name: true } } } },
+                },
+            },
         },
     })
     if (!deal) notFound()
@@ -100,10 +108,16 @@ export default async function ProposalPage({ params }) {
         ? `${deal.contact.firstName ?? ""} ${deal.contact.lastName ?? ""}`.trim()
         : ""
 
+    const endCustomer =
+        deal.sourceProject?.endCustomer?.name ||
+        deal.sourceAuction?.project?.endCustomer?.name ||
+        ""
+
     return (
         <ProposalView
             dealId={deal.id}
             buyer={deal.counterparty.name}
+            endCustomer={endCustomer}
             contactName={contactName}
             contactEmail={deal.contact?.email || deal.counterparty?.email || ""}
             items={itemsForClient}

@@ -388,6 +388,7 @@ export function ProposalDoc({ data }) {
         date,
         validDays,
         buyer,
+        endCustomer,
         deliveryTerm,
         paymentTerm,
         deliveryCondition,
@@ -423,6 +424,9 @@ export function ProposalDoc({ data }) {
 
                 <View style={s.paramsBlock}>
                     <ParamRow label='Покупатель' value={buyer} />
+                    {endCustomer ? (
+                        <ParamRow label='Конечный потребитель' value={endCustomer} />
+                    ) : null}
                     <ParamRow label='Срок поставки' value={deliveryTerm} />
                     <ParamRow label='Условия оплаты' value={paymentTerm} />
                     <ParamRow label='Условия поставки' value={deliveryCondition} />

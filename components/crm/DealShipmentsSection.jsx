@@ -12,6 +12,7 @@ import {
     formatWeightKg,
     isShipmentOverdue,
 } from "@/lib/crm/shipment"
+import { formatMoney } from "@/lib/crm/format"
 import { useConfirm, useToast } from "@/components/crm/ui"
 
 function num(v) {
@@ -70,6 +71,7 @@ const EMPTY_FORM = {
 export default function DealShipmentsSection({
     dealId,
     dealItems,
+    dealDiscount = null,
     counterpartyId,
     initialDeliveryAddress,
 }) {
@@ -111,8 +113,8 @@ export default function DealShipmentsSection({
     }, [counterpartyId])
 
     const deal = useMemo(
-        () => ({ items: dealItems, shipments }),
-        [dealItems, shipments],
+        () => ({ items: dealItems, shipments, discount: dealDiscount }),
+        [dealItems, shipments, dealDiscount],
     )
 
     const progress = useMemo(() => calculateDealShipmentProgress(deal), [deal])
@@ -675,6 +677,29 @@ function ProgressBlock({ progress, dealItems, totalWV }) {
                     )}
                 </span>
             </div>
+            {progress.amountOrderedGross > 0 && (
+                <div className='mb-2 text-right text-xs text-neutral-500'>
+                    Отгружено на{" "}
+                    <span className='font-medium text-neutral-800'>
+                        {formatMoney(progress.amountShipped)}
+                    </span>{" "}
+                    из {formatMoney(progress.amountOrdered)}
+                    {progress.amountRemaining > 0 && (
+                        <>
+                            {" "}
+                            · остаток{" "}
+                            <span className='font-medium text-amber-700'>
+                                {formatMoney(progress.amountRemaining)}
+                            </span>
+                        </>
+                    )}
+                    {progress.discountPercent > 0 && (
+                        <span className='ml-1 text-neutral-400'>
+                            (со скидкой {fmtQty(progress.discountPercent)} %)
+                        </span>
+                    )}
+                </div>
+            )}
             {totalWV && (totalWV.weight > 0 || totalWV.volume > 0) && (
                 <div className='mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-600'>
                     <span>

@@ -12,6 +12,7 @@ const EMPTY = {
     email: "",
     birthDate: "",
     position: "",
+    comment: "",
     isPrimary: false,
 }
 
@@ -95,6 +96,7 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
             email: contact.email ?? "",
             birthDate: toIsoDate(contact.birthDate),
             position: contact.position ?? "",
+            comment: contact.comment ?? "",
             isPrimary: !!contact.isPrimary,
         })
         setEditingId(contact.id)
@@ -287,6 +289,11 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                                     </span>
                                 )}
                             </div>
+                            {c.comment && (
+                                <p className='mt-1 whitespace-pre-wrap text-sm text-neutral-500'>
+                                    {c.comment}
+                                </p>
+                            )}
                         </div>
                         <div className='flex gap-2'>
                             <button
@@ -347,6 +354,17 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                             label='Должность'
                             value={form.position}
                             onChange={update("position")}
+                        />
+                    </div>
+                    <div>
+                        <label className='mb-1 block text-xs font-medium text-neutral-500'>
+                            Комментарий
+                        </label>
+                        <textarea
+                            value={form.comment}
+                            onChange={update("comment")}
+                            rows={3}
+                            className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                         />
                     </div>
                     <label className='flex items-center gap-2 text-sm text-neutral-700'>

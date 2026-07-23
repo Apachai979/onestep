@@ -23,6 +23,7 @@ export default async function ContactPage({ params }) {
         workPhone: item.workPhone,
         email: item.email,
         position: item.position,
+        comment: item.comment,
         isPrimary: item.isPrimary,
         counterpartyId: item.counterpartyId,
         birthDate: item.birthDate ? item.birthDate.toISOString() : null,

@@ -29,6 +29,7 @@ export default function ContactEditForm({ initial }) {
         email: initial.email ?? "",
         birthDate: toIsoDate(initial.birthDate),
         position: initial.position ?? "",
+        comment: initial.comment ?? "",
         isPrimary: !!initial.isPrimary,
     })
     const [cpId, setCpId] = useState(initial.counterpartyId ?? "")
@@ -137,6 +138,17 @@ export default function ContactEditForm({ initial }) {
                         onChange={update("birthDate")}
                     />
                     <Field label='Должность' value={form.position} onChange={update("position")} />
+                </div>
+                <div className='mt-3'>
+                    <label className='mb-1 block text-xs font-medium text-neutral-500'>
+                        Комментарий
+                    </label>
+                    <textarea
+                        value={form.comment}
+                        onChange={update("comment")}
+                        rows={3}
+                        className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                    />
                 </div>
             </section>
 

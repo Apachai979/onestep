@@ -57,6 +57,7 @@ export default async function DealPage({ params }) {
         sku: i.sku,
         name: i.name,
         quantity: i.quantity.toString(),
+        amount: i.amount.toString(),
         unitWeightKg: i.product?.unitWeightKg != null ? i.product.unitWeightKg.toString() : null,
         unitVolumeM3: i.product?.unitVolumeM3 != null ? i.product.unitVolumeM3.toString() : null,
     }))
@@ -229,6 +230,7 @@ export default async function DealPage({ params }) {
                     <DealShipmentsSection
                         dealId={item.id}
                         dealItems={dealItemsForClient}
+                        dealDiscount={discountPct}
                         counterpartyId={item.counterparty.id}
                         initialDeliveryAddress={
                             item.deliveryAddress || item.counterparty.address || ""

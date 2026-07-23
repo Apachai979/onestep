@@ -214,6 +214,15 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
     const isBaseActive = Number.isFinite(basePrice) && Math.abs(currentUnit - basePrice) < 0.005
     const isRecActive = Number.isFinite(recPrice) && Math.abs(currentUnit - recPrice) < 0.005
 
+    // Подсказка под «Количество»: сколько это транспортных упаковок + остаток штук.
+    const packQty = selectedProduct ? parseNum(selectedProduct.transportPackQty) : NaN
+    const qtyNum = parseNum(form.quantity)
+    const hasPackHint =
+        Number.isFinite(packQty) && packQty > 0 && Number.isFinite(qtyNum) && qtyNum > 0
+    const packHint = hasPackHint
+        ? `${Math.floor(qtyNum / packQty)} тр. упаковок + ${qtyNum % packQty} шт.`
+        : null
+
     return (
         <section className='rounded-xl border border-line bg-white p-5'>
             <div className='mb-4 flex items-center justify-between'>
@@ -352,9 +361,20 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
                             <option value=''>— Свободный ввод —</option>
                             {products.map(p => {
                                 const stock = Number(p.stockTotal) || 0
+                                const packQtyOpt = Number(p.transportPackQty) || 0
+                                const boxes =
+                                    packQtyOpt > 0 ? Math.floor(stock / packQtyOpt) : null
+                                const packLabel =
+                                    packQtyOpt > 0
+                                        ? ` · в упаковке: ${packQtyOpt.toLocaleString("ru-RU")} шт.`
+                                        : ""
+                                const stockLabel =
+                                    boxes !== null
+                                        ? `остаток: ${stock.toLocaleString("ru-RU")} шт. (≈ ${boxes.toLocaleString("ru-RU")} кор.)`
+                                        : `остаток: ${stock.toLocaleString("ru-RU")} шт.`
                                 return (
                                     <option key={p.id} value={p.id}>
-                                        {p.sku} · {p.category} · остаток: {stock.toLocaleString("ru-RU")} шт.
+                                        {p.sku} · {p.category}{packLabel} · {stockLabel}
                                     </option>
                                 )
                             })}
@@ -429,6 +449,7 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
                             inputMode='numeric'
                             value={form.quantity}
                             onChange={onQuantityChange}
+                            hint={packHint}
                         />
                         <Field
                             label='Цена за единицу, ₽'
@@ -473,7 +494,7 @@ export default function DealItemsSection({ dealId, initialItems, apiBase: apiBas
     )
 }
 
-function Field({ label, className = "", ...props }) {
+function Field({ label, className = "", hint, ...props }) {
     return (
         <div className={className}>
             <label className='mb-1 block text-xs text-neutral-500'>{label}</label>
@@ -481,6 +502,7 @@ function Field({ label, className = "", ...props }) {
                 {...props}
                 className='w-full rounded-lg border border-line px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
             />
+            {hint && <p className='mt-1 text-[11px] font-medium text-brand_main'>{hint}</p>}
         </div>
     )
 }

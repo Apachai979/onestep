@@ -9,7 +9,7 @@ import { useToast } from "@/components/crm/ui"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 
 const SELLER = {
-    name: 'ООО «OneStep»',
+    name: 'ООО «НЕОМЕД»',
     address: "634015, Томская область, г. Томск, ул. Циолковского, 19/1, пом. 24",
     phones: "+7 (495) 231-01-11 · +7 (985) 231-01-11",
     email: "info@onestep.su",

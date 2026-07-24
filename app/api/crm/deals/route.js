@@ -27,6 +27,7 @@ export async function GET(request) {
     const status = searchParams.get("status")
     const counterpartyId = searchParams.get("counterpartyId")
     const managerId = searchParams.get("managerId")
+    const isAuction = searchParams.get("isAuction")
     const q = searchParams.get("q")?.trim()
 
     const where = {}
@@ -38,6 +39,8 @@ export async function GET(request) {
     }
     if (counterpartyId) where.counterpartyId = counterpartyId
     if (managerId) where.managerId = managerId
+    if (isAuction === "true") where.isAuction = true
+    else if (isAuction === "false") where.isAuction = false
 
     // Ленивая архивация: старые CLOSED/CANCELLED → ARCHIVED. Одна короткая
     // UPDATE-строка, чтобы Kanban/список не приходилось чистить руками.
@@ -116,9 +119,31 @@ export async function POST(request) {
         return Response.json({ error: "Менеджер не найден" }, { status: 400 })
     }
 
-    // Позиции переносятся из источника: аукцион в приоритете (если задан),
-    // иначе — проект. Так «сделка из аукциона» получает позиции аукциона,
-    // а не проекта, даже когда привязаны оба.
+    if (data.auctionCustomerId) {
+        const cust = await prisma.counterparty.findUnique({
+            where: { id: data.auctionCustomerId },
+            select: { id: true },
+        })
+        if (!cust) return Response.json({ error: "Заказчик не найден" }, { status: 400 })
+
+        if (data.auctionCustomerContactId) {
+            const c = await prisma.contact.findUnique({
+                where: { id: data.auctionCustomerContactId },
+                select: { counterpartyId: true },
+            })
+            if (!c || c.counterpartyId !== data.auctionCustomerId) {
+                return Response.json(
+                    { error: "Контакт не принадлежит заказчику" },
+                    { status: 400 },
+                )
+            }
+        }
+    } else if (data.auctionCustomerContactId) {
+        // Контакт заказчика без самого заказчика — игнорируем.
+        data.auctionCustomerContactId = null
+    }
+
+    // Позиции переносятся из проекта-источника (если задан).
     let sourceItems = []
 
     if (data.sourceProjectId) {
@@ -129,33 +154,16 @@ export async function POST(request) {
         if (!sourceProject) {
             return Response.json({ error: "Проект-источник не найден" }, { status: 400 })
         }
-        if (!data.sourceAuctionId) sourceItems = sourceProject.items
-    }
-
-    if (data.sourceAuctionId) {
-        const sourceAuction = await prisma.auction.findUnique({
-            where: { id: data.sourceAuctionId },
-            include: { items: true },
-        })
-        if (!sourceAuction) {
-            return Response.json({ error: "Аукцион-источник не найден" }, { status: 400 })
-        }
-        sourceItems = sourceAuction.items
+        sourceItems = sourceProject.items
     }
 
     const created = await prisma.$transaction(async tx => {
         const deal = await tx.deal.create({
             data: {
-                title: data.title ?? null,
+                ...data,
                 status: data.status || "NEGOTIATION",
                 totalAmount: data.totalAmount ?? "0",
-                note: data.note ?? null,
-                counterpartyId: data.counterpartyId,
-                contactId: data.contactId ?? null,
-                managerId: data.managerId,
                 createdById: session.user.id,
-                sourceProjectId: data.sourceProjectId ?? null,
-                sourceAuctionId: data.sourceAuctionId ?? null,
             },
             include: {
                 counterparty: { select: COUNTERPARTY_SELECT },

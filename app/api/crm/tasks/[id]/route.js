@@ -15,7 +15,6 @@ const INCLUDE = {
     project: { select: { id: true, internalName: true } },
     distributor: { select: CP_SELECT },
     endCustomer: { select: CP_SELECT },
-    auction: { select: { id: true, purchaseNumber: true } },
 }
 
 export async function GET(_request, { params }) {

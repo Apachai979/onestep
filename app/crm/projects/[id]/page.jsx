@@ -5,7 +5,6 @@ import { LuPencil, LuPlus } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_STATUS_LABELS } from "@/lib/crm/deal"
-import { AUCTION_STATUS_COLORS, AUCTION_STATUS_LABELS } from "@/lib/crm/auction"
 import { formatMoney } from "@/lib/crm/format"
 import { isProjectLocked } from "@/lib/crm/access"
 import { CardRow, MobileCard } from "@/components/crm/ui/MobileCards"
@@ -37,12 +36,6 @@ export default async function ProjectPage({ params }) {
                 orderBy: { createdAt: "desc" },
                 include: {
                     counterparty: { select: { id: true, name: true } },
-                    manager: { select: { firstName: true, lastName: true, email: true } },
-                },
-            },
-            auctions: {
-                orderBy: { createdAt: "desc" },
-                include: {
                     manager: { select: { firstName: true, lastName: true, email: true } },
                 },
             },
@@ -171,20 +164,20 @@ export default async function ProjectPage({ params }) {
                     <section className='rounded-xl border border-line bg-white p-4'>
                         <div className='mb-2.5 flex items-center justify-between gap-3'>
                             <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
-                                Сделки по проекту ({dealsCount})
+                                Сделки и аукционы ({dealsCount})
                             </h2>
                             {item.status !== "NO_NEED" && (
                                 <SectionCreateButton
                                     href={`/crm/deals/new?fromProjectId=${item.id}`}
-                                    label='Создать сделку'
+                                    label='Создать сделку/аукцион'
                                 />
                             )}
                         </div>
                         {item.deals.length === 0 ? (
                             <p className='text-sm text-neutral-400'>
-                                Связанных сделок пока нет. Нажмите «Создать сделку» — или
+                                Связанных сделок пока нет. Нажмите «Создать сделку/аукцион» — или
                                 привяжите существующую через поле «Проект-источник» в её
-                                форме.
+                                форме. Для аукциона отметьте галочку в форме сделки.
                             </p>
                         ) : (
                             <>
@@ -198,8 +191,11 @@ export default async function ProjectPage({ params }) {
                                     >
                                         <MobileCard>
                                         <div className='flex items-start justify-between gap-2'>
-                                            <span className='min-w-0 font-medium text-neutral-900'>
-                                                {d.title || `Сделка с ${d.counterparty?.name || "клиентом"}`}
+                                            <span className='flex min-w-0 items-center gap-1.5 font-medium text-neutral-900'>
+                                                {d.isAuction && <AuctionBadge />}
+                                                <span className='min-w-0 truncate'>
+                                                    {d.title || `Сделка с ${d.counterparty?.name || "клиентом"}`}
+                                                </span>
                                             </span>
                                             <span className='shrink-0 rounded-full bg-surface_muted px-2 py-0.5 text-xs font-medium text-neutral-700'>
                                                 {DEAL_STATUS_LABELS[d.status] || d.status}
@@ -241,8 +237,9 @@ export default async function ProjectPage({ params }) {
                                                 <td className='p-0'>
                                                     <Link
                                                         href={`/crm/deals/${d.id}`}
-                                                        className='block px-3 py-2 font-medium text-neutral-900'
+                                                        className='flex items-center gap-1.5 px-3 py-2 font-medium text-neutral-900'
                                                     >
+                                                        {d.isAuction && <AuctionBadge />}
                                                         {d.title || `Сделка с ${d.counterparty?.name || "клиентом"}`}
                                                     </Link>
                                                 </td>
@@ -264,122 +261,6 @@ export default async function ProjectPage({ params }) {
                                                 <td className='p-0 text-neutral-900/75'>
                                                     <Link href={`/crm/deals/${d.id}`} className='block px-3 py-2 text-right'>
                                                         {formatMoney(d.totalAmount)}
-                                                    </Link>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                            </>
-                        )}
-                    </section>
-
-                    <section className='rounded-xl border border-line bg-white p-4'>
-                        <div className='mb-2.5 flex items-center justify-between gap-3'>
-                            <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
-                                Аукционы по проекту ({item.auctions.length})
-                            </h2>
-                            {item.status !== "NO_NEED" && (
-                                <SectionCreateButton
-                                    href={`/crm/auctions/new?fromProjectId=${item.id}`}
-                                    label='Создать аукцион'
-                                />
-                            )}
-                        </div>
-                        {item.auctions.length === 0 ? (
-                            <p className='text-sm text-neutral-400'>
-                                Аукционов пока нет. Нажмите «Создать аукцион» — заказчик и
-                                поставщик подставятся из проекта.
-                            </p>
-                        ) : (
-                            <>
-                            {/* Мобильные карточки */}
-                            <div className='space-y-3 md:hidden'>
-                                {item.auctions.map(a => (
-                                    <Link
-                                        key={a.id}
-                                        href={`/crm/auctions/${a.id}`}
-                                        className='block transition hover:bg-surface_muted'
-                                    >
-                                        <MobileCard>
-                                        <div className='flex items-start justify-between gap-2'>
-                                            <span className='min-w-0 font-medium text-neutral-900'>
-                                                {a.purchaseNumber
-                                                    ? `Закупка № ${a.purchaseNumber}`
-                                                    : "Аукцион"}
-                                            </span>
-                                            <span
-                                                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${AUCTION_STATUS_COLORS[a.status] || ""}`}
-                                            >
-                                                {AUCTION_STATUS_LABELS[a.status] || a.status}
-                                            </span>
-                                        </div>
-                                        <div className='mt-2 space-y-1'>
-                                            <CardRow label='НМЦК'>
-                                                <span className='font-medium text-neutral-800'>
-                                                    {formatMoney(a.nmck)}
-                                                </span>
-                                            </CardRow>
-                                            <CardRow label='Аукцион'>
-                                                <LocalDateTime value={a.auctionAt} />
-                                            </CardRow>
-                                            <CardRow label='Менеджер'>{fullName(a.manager)}</CardRow>
-                                        </div>
-                                        </MobileCard>
-                                    </Link>
-                                ))}
-                            </div>
-
-                            <div className='hidden overflow-x-auto rounded-lg border border-line md:block'>
-                                <table className='w-full text-sm'>
-                                    <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
-                                        <tr>
-                                            <th className='px-3 py-2'>Закупка</th>
-                                            <th className='px-3 py-2'>Статус</th>
-                                            <th className='px-3 py-2'>Аукцион</th>
-                                            <th className='px-3 py-2'>Менеджер</th>
-                                            <th className='px-3 py-2 text-right'>НМЦК</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {item.auctions.map(a => (
-                                            <tr
-                                                key={a.id}
-                                                className='border-t border-line hover:bg-surface_muted'
-                                            >
-                                                <td className='p-0'>
-                                                    <Link
-                                                        href={`/crm/auctions/${a.id}`}
-                                                        className='block px-3 py-2 font-medium text-neutral-900'
-                                                    >
-                                                        {a.purchaseNumber
-                                                            ? `№ ${a.purchaseNumber}`
-                                                            : "Аукцион"}
-                                                    </Link>
-                                                </td>
-                                                <td className='p-0'>
-                                                    <Link href={`/crm/auctions/${a.id}`} className='block px-3 py-2'>
-                                                        <span
-                                                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${AUCTION_STATUS_COLORS[a.status] || ""}`}
-                                                        >
-                                                            {AUCTION_STATUS_LABELS[a.status] || a.status}
-                                                        </span>
-                                                    </Link>
-                                                </td>
-                                                <td className='p-0 text-neutral-900/75'>
-                                                    <Link href={`/crm/auctions/${a.id}`} className='block px-3 py-2'>
-                                                        <LocalDateTime value={a.auctionAt} />
-                                                    </Link>
-                                                </td>
-                                                <td className='p-0 text-neutral-900/75'>
-                                                    <Link href={`/crm/auctions/${a.id}`} className='block px-3 py-2'>
-                                                        {fullName(a.manager)}
-                                                    </Link>
-                                                </td>
-                                                <td className='p-0 text-neutral-900/75'>
-                                                    <Link href={`/crm/auctions/${a.id}`} className='block px-3 py-2 text-right'>
-                                                        {formatMoney(a.nmck)}
                                                     </Link>
                                                 </td>
                                             </tr>
@@ -416,6 +297,15 @@ function SectionCreateButton({ href, label }) {
             <LuPlus className='h-3.5 w-3.5' />
             {label}
         </Link>
+    )
+}
+
+// Компактный бейдж «Аукцион» для строк сделок-аукционов в списке проекта.
+function AuctionBadge() {
+    return (
+        <span className='shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700'>
+            Аукцион
+        </span>
     )
 }
 

@@ -24,7 +24,7 @@ function fmt(n) {
 }
 
 // apiBase позволяет переиспользовать секцию для других сущностей с таким же
-// API позиций (например, аукционы: /api/crm/auctions/{id}).
+// API позиций (по умолчанию — сделки).
 // readOnly — карточка заморожена (см. lib/crm/access.js): только просмотр.
 export default function DealItemsSection({
     dealId,

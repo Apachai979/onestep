@@ -42,6 +42,14 @@ function fmtDate(d) {
     return new Date(d).toLocaleDateString("ru-RU")
 }
 
+function AuctionTag() {
+    return (
+        <span className='shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700'>
+            Аукцион
+        </span>
+    )
+}
+
 export default function DealsList({ currentUserId }) {
     const router = useRouter()
     const [items, setItems] = useState(null)
@@ -50,6 +58,7 @@ export default function DealsList({ currentUserId }) {
         status: "",
         counterpartyId: "",
         managerId: "",
+        isAuction: "",
         q: "",
     })
     const [counterparties, setCounterparties] = useState([])
@@ -75,6 +84,7 @@ export default function DealsList({ currentUserId }) {
         if (filters.status) params.set("status", filters.status)
         if (filters.counterpartyId) params.set("counterpartyId", filters.counterpartyId)
         if (filters.managerId) params.set("managerId", filters.managerId)
+        if (filters.isAuction) params.set("isAuction", filters.isAuction)
         if (filters.q.trim()) params.set("q", filters.q.trim())
         const r = await fetch(`/api/crm/deals?${params.toString()}`)
         const text = await r.text()
@@ -90,7 +100,7 @@ export default function DealsList({ currentUserId }) {
     useEffect(() => {
         load()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filters.status, filters.counterpartyId, filters.managerId])
+    }, [filters.status, filters.counterpartyId, filters.managerId, filters.isAuction])
 
     const counterpartyOptions = useMemo(
         () =>
@@ -129,8 +139,9 @@ export default function DealsList({ currentUserId }) {
                     <Link
                         href={`/crm/deals/${d.id}`}
                         onClick={e => e.stopPropagation()}
-                        className='font-medium text-neutral-900 transition-colors hover:text-brand_main'
+                        className='inline-flex items-center gap-1.5 font-medium text-neutral-900 transition-colors hover:text-brand_main'
                     >
+                        {d.isAuction && <AuctionTag />}
                         {dealDisplayTitle(d, d.counterparty?.name)}
                     </Link>
                 ),
@@ -212,6 +223,15 @@ export default function DealsList({ currentUserId }) {
                         </option>
                     ))}
                 </Select>
+                <Select
+                    label='Тип'
+                    value={filters.isAuction}
+                    onChange={e => setFilters(p => ({ ...p, isAuction: e.target.value }))}
+                >
+                    <option value=''>Все</option>
+                    <option value='true'>Только аукционы</option>
+                    <option value='false'>Без аукционов</option>
+                </Select>
                 <div className='flex items-end'>
                     {currentUserId && (
                         <Button
@@ -273,8 +293,11 @@ export default function DealsList({ currentUserId }) {
                 {items?.map(d => (
                     <MobileCard key={d.id} onClick={() => router.push(`/crm/deals/${d.id}`)}>
                         <div className='flex items-start justify-between gap-2'>
-                            <span className='font-medium text-neutral-900'>
-                                {dealDisplayTitle(d, d.counterparty?.name)}
+                            <span className='flex min-w-0 items-center gap-1.5 font-medium text-neutral-900'>
+                                {d.isAuction && <AuctionTag />}
+                                <span className='min-w-0 truncate'>
+                                    {dealDisplayTitle(d, d.counterparty?.name)}
+                                </span>
                             </span>
                             <Badge className={DEAL_STATUS_COLORS[d.status]}>
                                 {DEAL_STATUS_LABELS[d.status] || d.status}

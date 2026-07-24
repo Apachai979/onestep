@@ -57,13 +57,6 @@ function relationLink(t) {
         }
     if (t.project)
         return { href: `/crm/projects/${t.project.id}`, label: t.project.internalName }
-    if (t.auction)
-        return {
-            href: `/crm/auctions/${t.auction.id}`,
-            label: t.auction.purchaseNumber
-                ? `Аукцион: закупка № ${t.auction.purchaseNumber}`
-                : "Аукцион",
-        }
     if (t.distributor)
         return { href: `/crm/counterparties/${t.distributor.id}`, label: t.distributor.name }
     if (t.endCustomer)

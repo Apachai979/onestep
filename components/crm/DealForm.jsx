@@ -20,10 +20,22 @@ const EMPTY = {
     managerId: "",
     status: "NEGOTIATION",
     sourceProjectId: "",
-    sourceAuctionId: "",
     note: "",
     deliveryAddress: "",
     discount: "",
+    // Аукцион
+    isAuction: false,
+    purchaseNumber: "",
+    auctionUrl: "",
+    nmck: "",
+    bidsDeadlineAt: "",
+    auctionAt: "",
+    resultsAt: "",
+    participantsCount: "",
+    bidsCount: "",
+    winner: "",
+    auctionCustomerId: "",
+    auctionCustomerContactId: "",
 }
 
 function safeJson(text) {
@@ -43,13 +55,34 @@ function contactName(c) {
     return fn || c.email || c.phone || "Контакт без имени"
 }
 
+// ISO (UTC) → значение для <input type="datetime-local"> в местном времени.
+function isoToLocalInput(iso) {
+    if (!iso) return ""
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return ""
+    const pad = n => String(n).padStart(2, "0")
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+// Местное значение datetime-local → ISO (UTC).
+function localInputToIso(v) {
+    if (!v) return null
+    const d = new Date(v)
+    return Number.isNaN(d.getTime()) ? null : d.toISOString()
+}
+
+function toFormValue(v) {
+    if (v === null || v === undefined) return ""
+    return String(v)
+}
+
 export default function DealForm({
     initial,
     mode = "create",
     currentUserId,
     defaultStatus,
     fromProject,
-    fromAuction,
+    defaultIsAuction = false,
 }) {
     const router = useRouter()
 
@@ -59,24 +92,15 @@ export default function DealForm({
                 ...EMPTY,
                 managerId: currentUserId || "",
                 status: defaultStatus || "NEGOTIATION",
+                isAuction: defaultIsAuction,
             }
-            if (fromAuction) {
-                // Сделка из аукциона: клиент — поставщик аукциона (дистрибьютор),
-                // менеджер и контакт — из аукциона, привязка к аукциону и его
-                // проекту. Позиции переносятся на сервере при создании.
-                base.title = fromAuction.purchaseNumber
-                    ? `По закупке № ${fromAuction.purchaseNumber}`
-                    : "По аукциону"
-                base.counterpartyId = fromAuction.supplierId || ""
-                base.contactId = fromAuction.supplierContactId || ""
-                base.managerId = fromAuction.managerId || currentUserId || ""
-                base.sourceProjectId = fromAuction.projectId || ""
-                base.sourceAuctionId = fromAuction.id
-            } else if (fromProject) {
+            if (fromProject) {
                 base.title = `По проекту: ${fromProject.internalName}`
                 base.counterpartyId = fromProject.distributorId
                 base.managerId = fromProject.managerId || currentUserId || ""
                 base.sourceProjectId = fromProject.id
+                // Аукцион: заказчик = конечный потребитель проекта.
+                if (defaultIsAuction) base.auctionCustomerId = fromProject.endCustomerId || ""
             }
             return base
         }
@@ -87,18 +111,30 @@ export default function DealForm({
             managerId: initial.managerId ?? "",
             status: initial.status ?? "NEGOTIATION",
             sourceProjectId: initial.sourceProjectId ?? "",
-            sourceAuctionId: initial.sourceAuctionId ?? "",
             note: initial.note ?? "",
             deliveryAddress: initial.deliveryAddress ?? "",
             discount:
                 initial.discount === null || initial.discount === undefined
                     ? ""
                     : String(initial.discount),
+            isAuction: Boolean(initial.isAuction),
+            purchaseNumber: initial.purchaseNumber ?? "",
+            auctionUrl: initial.auctionUrl ?? "",
+            nmck: toFormValue(initial.nmck) === "0" ? "" : toFormValue(initial.nmck),
+            bidsDeadlineAt: isoToLocalInput(initial.bidsDeadlineAt),
+            auctionAt: isoToLocalInput(initial.auctionAt),
+            resultsAt: isoToLocalInput(initial.resultsAt),
+            participantsCount: toFormValue(initial.participantsCount),
+            bidsCount: toFormValue(initial.bidsCount),
+            winner: initial.winner ?? "",
+            auctionCustomerId: initial.auctionCustomerId ?? "",
+            auctionCustomerContactId: initial.auctionCustomerContactId ?? "",
         }
     })
     const [counterparties, setCounterparties] = useState([])
     const [managers, setManagers] = useState([])
     const [contacts, setContacts] = useState([])
+    const [customerContacts, setCustomerContacts] = useState([])
     const [projects, setProjects] = useState([])
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
@@ -153,6 +189,18 @@ export default function DealForm({
             .catch(() => setContacts([]))
     }, [form.counterpartyId])
 
+    // Контакты заказчика аукциона.
+    useEffect(() => {
+        if (!form.auctionCustomerId) {
+            setCustomerContacts([])
+            return
+        }
+        fetch(`/api/crm/counterparties/${form.auctionCustomerId}`)
+            .then(r => r.json())
+            .then(d => setCustomerContacts(d.item?.contacts || []))
+            .catch(() => setCustomerContacts([]))
+    }, [form.auctionCustomerId])
+
     function update(field) {
         return e => setForm(prev => ({ ...prev, [field]: e.target.value }))
     }
@@ -179,7 +227,14 @@ export default function DealForm({
             ...form,
             contactId: form.contactId || null,
             sourceProjectId: form.sourceProjectId || null,
-            sourceAuctionId: form.sourceAuctionId || null,
+            // Аукцион: даты — в ISO; поля-заказчика чистим, если аукцион выключен.
+            bidsDeadlineAt: form.isAuction ? localInputToIso(form.bidsDeadlineAt) : null,
+            auctionAt: form.isAuction ? localInputToIso(form.auctionAt) : null,
+            resultsAt: form.isAuction ? localInputToIso(form.resultsAt) : null,
+            auctionCustomerId: form.isAuction ? form.auctionCustomerId || null : null,
+            auctionCustomerContactId: form.isAuction
+                ? form.auctionCustomerContactId || null
+                : null,
         }
         const url = mode === "create" ? "/api/crm/deals" : `/api/crm/deals/${initial.id}`
         const method = mode === "create" ? "POST" : "PATCH"
@@ -294,7 +349,6 @@ export default function DealForm({
                                 </option>
                             ))}
                         </Select>
-                        {/* Верхняя подпись (как у соседнего «Статуса»), чтобы контролы стояли на одной линии */}
                         <Field label='Скидка, %'>
                             <Input
                                 type='number'
@@ -326,6 +380,141 @@ export default function DealForm({
                             onChange={update("note")}
                         />
                     </div>
+                </FormSection>
+            </Card>
+
+            <Card>
+                <FormSection
+                    title='Аукцион (госзакупка)'
+                    description='Включите, если сделка идёт через аукцион. Появятся параметры закупки и заказчик.'
+                >
+                    <label className='flex cursor-pointer items-center gap-2 text-sm text-neutral-800'>
+                        <input
+                            type='checkbox'
+                            checked={form.isAuction}
+                            onChange={e => {
+                                const on = e.target.checked
+                                setForm(prev => ({
+                                    ...prev,
+                                    isAuction: on,
+                                    // При включении из проекта подставляем заказчика —
+                                    // конечного потребителя проекта, если ещё не выбран.
+                                    auctionCustomerId:
+                                        on && !prev.auctionCustomerId && fromProject?.endCustomerId
+                                            ? fromProject.endCustomerId
+                                            : prev.auctionCustomerId,
+                                }))
+                            }}
+                            className='h-4 w-4 rounded border-line text-brand_main focus:ring-brand_main/30'
+                        />
+                        Это аукцион
+                    </label>
+
+                    {form.isAuction && (
+                        <div className='mt-4 grid gap-4 sm:grid-cols-2'>
+                            <Input
+                                label='Номер закупки'
+                                value={form.purchaseNumber}
+                                onChange={update("purchaseNumber")}
+                                placeholder='Например: 0365200004425000012'
+                            />
+                            <Input
+                                label='Ссылка на аукцион'
+                                type='url'
+                                value={form.auctionUrl}
+                                onChange={update("auctionUrl")}
+                                placeholder='https://zakupki.gov.ru/...'
+                            />
+                            <Input
+                                label='НМЦК, ₽'
+                                type='number'
+                                step='0.01'
+                                min='0'
+                                inputMode='decimal'
+                                value={form.nmck}
+                                onChange={update("nmck")}
+                            />
+                            <Field label='Заказчик (конечный потребитель)'>
+                                <SearchableSelect
+                                    value={form.auctionCustomerId}
+                                    onChange={id =>
+                                        setForm(prev => ({
+                                            ...prev,
+                                            auctionCustomerId: id,
+                                            auctionCustomerContactId: "",
+                                        }))
+                                    }
+                                    placeholder='— Не выбран —'
+                                    options={counterpartyOptions}
+                                />
+                            </Field>
+                            <Field label='Контакт заказчика'>
+                                <SearchableSelect
+                                    value={form.auctionCustomerContactId}
+                                    onChange={id =>
+                                        setForm(prev => ({
+                                            ...prev,
+                                            auctionCustomerContactId: id,
+                                        }))
+                                    }
+                                    disabled={!form.auctionCustomerId}
+                                    placeholder={
+                                        !form.auctionCustomerId
+                                            ? "Сначала выберите заказчика"
+                                            : customerContacts.length === 0
+                                              ? "У заказчика нет контактов"
+                                              : "— Не выбран —"
+                                    }
+                                    options={customerContacts.map(c => ({
+                                        id: c.id,
+                                        label: contactName(c),
+                                        search: `${c.firstName ?? ""} ${c.lastName ?? ""} ${c.email ?? ""} ${c.phone ?? ""}`,
+                                    }))}
+                                />
+                            </Field>
+                            <Input
+                                label='Окончание сбора заявок'
+                                type='datetime-local'
+                                value={form.bidsDeadlineAt}
+                                onChange={update("bidsDeadlineAt")}
+                            />
+                            <Input
+                                label='Проведение аукциона'
+                                type='datetime-local'
+                                value={form.auctionAt}
+                                onChange={update("auctionAt")}
+                            />
+                            <Input
+                                label='Подведение итогов'
+                                type='datetime-local'
+                                value={form.resultsAt}
+                                onChange={update("resultsAt")}
+                            />
+                            <Input
+                                label='Количество заявок'
+                                type='number'
+                                min='0'
+                                step='1'
+                                value={form.bidsCount}
+                                onChange={update("bidsCount")}
+                            />
+                            <Input
+                                label='Количество участников'
+                                type='number'
+                                min='0'
+                                step='1'
+                                value={form.participantsCount}
+                                onChange={update("participantsCount")}
+                            />
+                            <Input
+                                label='Победитель'
+                                containerClassName='sm:col-span-2'
+                                value={form.winner}
+                                onChange={update("winner")}
+                                placeholder='Название организации-победителя'
+                            />
+                        </div>
+                    )}
                 </FormSection>
             </Card>
 

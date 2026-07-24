@@ -28,6 +28,8 @@ export async function GET(_request, { params }) {
             createdBy: { select: MANAGER_SELECT },
             updatedBy: { select: MANAGER_SELECT },
             contact: { select: CONTACT_SELECT },
+            auctionCustomer: { select: COUNTERPARTY_SELECT },
+            auctionCustomerContact: { select: CONTACT_SELECT },
             items: { orderBy: { createdAt: "asc" } },
             sourceProject: {
                 select: { id: true, internalName: true, externalAuctionId: true },
@@ -100,6 +102,26 @@ export async function PATCH(request, { params }) {
         })
         if (!m || m.status !== "ACTIVE") {
             return Response.json({ error: "Менеджер не найден" }, { status: 400 })
+        }
+    }
+    if (data.auctionCustomerId) {
+        const cust = await prisma.counterparty.findUnique({
+            where: { id: data.auctionCustomerId },
+            select: { id: true },
+        })
+        if (!cust) return Response.json({ error: "Заказчик не найден" }, { status: 400 })
+    }
+    if (data.auctionCustomerContactId) {
+        const targetCust = data.auctionCustomerId ?? existing.auctionCustomerId
+        const c = await prisma.contact.findUnique({
+            where: { id: data.auctionCustomerContactId },
+            select: { counterpartyId: true },
+        })
+        if (!c || c.counterpartyId !== targetCust) {
+            return Response.json(
+                { error: "Контакт не принадлежит заказчику" },
+                { status: 400 },
+            )
         }
     }
 

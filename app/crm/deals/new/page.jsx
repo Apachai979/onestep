@@ -37,23 +37,9 @@ export default async function NewDealPage({ searchParams }) {
         }
     }
 
-    let fromAuction = null
-    if (searchParams?.fromAuctionId) {
-        const a = await prisma.auction.findUnique({
-            where: { id: searchParams.fromAuctionId },
-            select: {
-                id: true,
-                purchaseNumber: true,
-                projectId: true,
-                supplierId: true,
-                supplierContactId: true,
-                managerId: true,
-                project: { select: { id: true, internalName: true } },
-                supplier: { select: { id: true, name: true } },
-            },
-        })
-        if (a) fromAuction = a
-    }
+    // Из проекта можно создать и обычную сделку, и аукцион — режим выбирается
+    // галочкой в форме. Ссылка «Создать аукцион» приходит с ?auction=1.
+    const defaultIsAuction = searchParams?.auction === "1"
 
     return (
         <div className='max-w-4xl space-y-4'>
@@ -62,30 +48,10 @@ export default async function NewDealPage({ searchParams }) {
                 fallbackLabel='Сделки'
                 className='inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand_main'
             />
-            <h1 className='text-2xl font-semibold text-neutral-900'>Новая сделка</h1>
-            {fromAuction && (
-                <div className='rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900'>
-                    На основании аукциона{" "}
-                    <Link
-                        href={`/crm/auctions/${fromAuction.id}`}
-                        className='font-medium underline'
-                    >
-                        {fromAuction.purchaseNumber
-                            ? `Закупка № ${fromAuction.purchaseNumber}`
-                            : "Аукцион"}
-                    </Link>{" "}
-                    (проект{" "}
-                    <Link
-                        href={`/crm/projects/${fromAuction.projectId}`}
-                        className='font-medium underline'
-                    >
-                        {fromAuction.project?.internalName}
-                    </Link>
-                    ). Клиент — поставщик аукциона, менеджер, привязка к аукциону и проекту,
-                    а также товарные позиции перенесены — отредактируйте при необходимости.
-                </div>
-            )}
-            {!fromAuction && fromProject && (
+            <h1 className='text-2xl font-semibold text-neutral-900'>
+                {defaultIsAuction ? "Новая сделка / аукцион" : "Новая сделка"}
+            </h1>
+            {fromProject && (
                 <div className='rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900'>
                     На основании проекта{" "}
                     <Link
@@ -104,7 +70,7 @@ export default async function NewDealPage({ searchParams }) {
                     currentUserId={session?.user?.id}
                     defaultStatus={defaultStatus}
                     fromProject={fromProject}
-                    fromAuction={fromAuction}
+                    defaultIsAuction={defaultIsAuction}
                 />
             </Suspense>
         </div>

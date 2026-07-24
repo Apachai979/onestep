@@ -276,7 +276,14 @@ function DealCard({ deal, locked, dragging, onDragStart, onDragEnd }) {
                 dragging ? "opacity-50" : "border-line"
             }`}
         >
-            <p className='font-medium leading-snug text-neutral-900'>{title}</p>
+            <p className='flex items-start gap-1.5 font-medium leading-snug text-neutral-900'>
+                {deal.isAuction && (
+                    <span className='mt-0.5 shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700'>
+                        Аукцион
+                    </span>
+                )}
+                <span className='min-w-0'>{title}</span>
+            </p>
             <p className='mt-1 truncate text-xs text-neutral-500'>
                 {deal.counterparty?.name || "Без клиента"}
             </p>

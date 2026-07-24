@@ -24,13 +24,9 @@ export default async function ProposalPage({ params }) {
             contact: true,
             manager: true,
             // Конечный потребитель для КП берётся из проекта-источника,
-            // а для сделок из аукциона — из проекта этого аукциона.
+            // а для сделок-аукционов — это заказчик аукциона.
             sourceProject: { include: { endCustomer: { select: { name: true } } } },
-            sourceAuction: {
-                include: {
-                    project: { include: { endCustomer: { select: { name: true } } } },
-                },
-            },
+            auctionCustomer: { select: { name: true } },
         },
     })
     if (!deal) notFound()
@@ -114,8 +110,8 @@ export default async function ProposalPage({ params }) {
         : ""
 
     const endCustomer =
+        deal.auctionCustomer?.name ||
         deal.sourceProject?.endCustomer?.name ||
-        deal.sourceAuction?.project?.endCustomer?.name ||
         ""
 
     return (

@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getServerSession } from "next-auth"
-import { LuPencil, LuFileText } from "react-icons/lu"
+import { LuPencil, LuFileText, LuExternalLink } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_LOSS_REASON_LABELS, dealDisplayTitle } from "@/lib/crm/deal"
@@ -9,6 +9,7 @@ import { isDealLocked } from "@/lib/crm/access"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import DealItemsSection from "@/components/crm/DealItemsSection"
+import DealParamsTabs from "@/components/crm/DealParamsTabs"
 import DealStatusControl from "@/components/crm/DealStatusControl"
 import DealShipmentsSection from "@/components/crm/DealShipmentsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
@@ -47,9 +48,8 @@ export default async function DealPage({ params }) {
             sourceProject: {
                 select: { id: true, internalName: true },
             },
-            sourceAuction: {
-                select: { id: true, purchaseNumber: true },
-            },
+            auctionCustomer: { select: { id: true, name: true, region: true } },
+            auctionCustomerContact: true,
         },
     })
     if (!item) notFound()
@@ -81,6 +81,47 @@ export default async function DealPage({ params }) {
         updatedAt: i.updatedAt.toISOString(),
     }))
 
+    const editAction = locked ? null : (
+        <Link
+            href={`/crm/deals/${item.id}/edit`}
+            className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
+        >
+            <LuPencil className='h-3 w-3' />
+            Редактировать
+        </Link>
+    )
+
+    const paramsFooter = (
+        <>
+            Создал {fullName(item.createdBy)} · <LocalDateTime value={item.createdAt} />
+            {item.updatedBy && (
+                <>
+                    {" · "}изменил {fullName(item.updatedBy)} ·{" "}
+                    <LocalDateTime value={item.updatedAt} />
+                </>
+            )}
+        </>
+    )
+
+    const dealParamRows = (
+        <>
+            <Row label='Сумма сделки' value={formatMoney(item.totalAmount)} />
+            <Row
+                label='Скидка'
+                value={
+                    discountPct != null
+                        ? `${formatPercent(discountPct)} (${formatMoney(discountAmount)})`
+                        : "—"
+                }
+            />
+            <Row
+                label='Сумма со скидкой'
+                value={discountedTotal != null ? formatMoney(discountedTotal) : "—"}
+            />
+            <Row label='Менеджер' value={fullName(item.manager)} />
+        </>
+    )
+
     return (
         <div className='space-y-4'>
             <CrmBackLink
@@ -97,6 +138,12 @@ export default async function DealPage({ params }) {
                     <h1 className='mt-0.5 truncate text-xl font-semibold text-neutral-900 sm:text-2xl'>
                         {dealDisplayTitle(item, item.counterparty?.name)}
                     </h1>
+                    {item.isAuction && (
+                        <span className='mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700'>
+                            Аукцион
+                            {item.purchaseNumber ? ` · № ${item.purchaseNumber}` : ""}
+                        </span>
+                    )}
                     {item.sourceProject && (
                         <p className='mt-1 text-sm text-blue-700'>
                             По проекту:{" "}
@@ -105,19 +152,6 @@ export default async function DealPage({ params }) {
                                 className='underline hover:text-blue-900'
                             >
                                 {item.sourceProject.internalName}
-                            </Link>
-                        </p>
-                    )}
-                    {item.sourceAuction && (
-                        <p className='mt-1 text-sm text-blue-700'>
-                            По аукциону:{" "}
-                            <Link
-                                href={`/crm/auctions/${item.sourceAuction.id}`}
-                                className='underline hover:text-blue-900'
-                            >
-                                {item.sourceAuction.purchaseNumber
-                                    ? `Закупка № ${item.sourceAuction.purchaseNumber}`
-                                    : "Аукцион"}
                             </Link>
                         </p>
                     )}
@@ -164,7 +198,7 @@ export default async function DealPage({ params }) {
             {/* Two-column body */}
             <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='min-w-0 space-y-4'>
-                    {/* Клиент + параметры сделки — две карточки бок о бок */}
+                    {/* Стороны: клиент, а для аукциона ещё и заказчик */}
                     <div className='grid items-stretch gap-4 sm:grid-cols-2'>
                         <PartyCard
                             label={
@@ -176,49 +210,86 @@ export default async function DealPage({ params }) {
                             contact={item.contact}
                         />
 
-                        <Section
-                            title='Параметры'
-                            action={
-                                locked ? null : (
-                                    <Link
-                                        href={`/crm/deals/${item.id}/edit`}
-                                        className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
-                                    >
-                                        <LuPencil className='h-3 w-3' />
-                                        Редактировать
-                                    </Link>
-                                )
-                            }
-                            columns='sm:grid-cols-2'
-                            footer={
-                                <>
-                                    Создал {fullName(item.createdBy)} ·{" "}
-                                    <LocalDateTime value={item.createdAt} />
-                                    {item.updatedBy && (
-                                        <>
-                                            {" · "}изменил {fullName(item.updatedBy)} ·{" "}
-                                            <LocalDateTime value={item.updatedAt} />
-                                        </>
-                                    )}
-                                </>
-                            }
-                        >
-                            <Row label='Сумма сделки' value={formatMoney(item.totalAmount)} />
-                            <Row
-                                label='Скидка'
-                                value={
-                                    discountPct != null
-                                        ? `${formatPercent(discountPct)} (${formatMoney(discountAmount)})`
-                                        : "—"
-                                }
+                        {item.isAuction ? (
+                            <PartyCard
+                                label='Заказчик · Конечный потребитель'
+                                org={item.auctionCustomer}
+                                contact={item.auctionCustomerContact}
                             />
-                            <Row
-                                label='Сумма со скидкой'
-                                value={discountedTotal != null ? formatMoney(discountedTotal) : "—"}
-                            />
-                            <Row label='Менеджер' value={fullName(item.manager)} />
-                        </Section>
+                        ) : (
+                            <Section
+                                title='Параметры'
+                                action={editAction}
+                                columns='sm:grid-cols-2'
+                                footer={paramsFooter}
+                            >
+                                {dealParamRows}
+                            </Section>
+                        )}
                     </div>
+
+                    {item.isAuction && (
+                        <DealParamsTabs
+                            action={editAction}
+                            tabs={[
+                                {
+                                    label: "Параметры сделки",
+                                    content: (
+                                        <>
+                                            <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>
+                                                {dealParamRows}
+                                            </dl>
+                                            <p className='mt-3 border-t border-line pt-2 text-[11px] text-neutral-400'>
+                                                {paramsFooter}
+                                            </p>
+                                        </>
+                                    ),
+                                },
+                                {
+                                    label: "Параметры аукциона",
+                                    content: (
+                                        <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>
+                                            <Row label='НМЦК' value={formatMoney(item.nmck)} />
+                                            <Row
+                                                label='Номер закупки'
+                                                value={item.purchaseNumber || "—"}
+                                            />
+                                            <Row label='Ссылка на аукцион'>
+                                                {item.auctionUrl ? (
+                                                    <a
+                                                        href={item.auctionUrl}
+                                                        target='_blank'
+                                                        rel='noopener noreferrer'
+                                                        className='inline-flex items-center gap-1 text-brand_main hover:underline'
+                                                    >
+                                                        Открыть
+                                                        <LuExternalLink className='h-3.5 w-3.5' />
+                                                    </a>
+                                                ) : (
+                                                    "—"
+                                                )}
+                                            </Row>
+                                            <Row label='Окончание сбора заявок'>
+                                                <LocalDateTime value={item.bidsDeadlineAt} />
+                                            </Row>
+                                            <Row label='Проведение аукциона'>
+                                                <LocalDateTime value={item.auctionAt} />
+                                            </Row>
+                                            <Row label='Подведение итогов'>
+                                                <LocalDateTime value={item.resultsAt} />
+                                            </Row>
+                                            <Row label='Количество заявок' value={item.bidsCount ?? "—"} />
+                                            <Row
+                                                label='Количество участников'
+                                                value={item.participantsCount ?? "—"}
+                                            />
+                                            <Row label='Победитель' value={item.winner || "—"} />
+                                        </dl>
+                                    ),
+                                },
+                            ]}
+                        />
+                    )}
 
                     {(item.deliveryAddress || item.note) && (
                         <Section title='Доставка и примечание'>
@@ -331,11 +402,11 @@ function PartyCard({ label, org, contact }) {
     )
 }
 
-function Row({ label, value, className = "" }) {
+function Row({ label, value, children, className = "" }) {
     return (
         <div className={className}>
             <dt className='text-[10px] uppercase tracking-wider text-neutral-400'>{label}</dt>
-            <dd className='mt-0.5 text-sm text-neutral-900'>{value || "—"}</dd>
+            <dd className='mt-0.5 text-sm text-neutral-900'>{children ?? value ?? "—"}</dd>
         </div>
     )
 }

@@ -150,7 +150,7 @@ export default async function DealPage({ params }) {
             {(item.status === "CANCELLED" || item.status === "ARCHIVED") && item.lossReason && (
                 <div className='rounded-xl border border-red-200 bg-red-50/60 px-4 py-3'>
                     <p className='text-xs font-semibold uppercase tracking-wide text-red-700'>
-                        Причина проигрыша
+                        Причина отмены
                     </p>
                     <p className='mt-1 text-sm text-red-900'>
                         {DEAL_LOSS_REASON_LABELS[item.lossReason] || item.lossReason}

@@ -1,6 +1,14 @@
 "use client"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import {
+    LuPencil,
+    LuTrash2,
+    LuSmartphone,
+    LuPhone,
+    LuMail,
+    LuCake,
+} from "react-icons/lu"
 import { useConfirm, useToast } from "@/components/crm/ui"
 import PhoneLink from "./PhoneLink"
 import SearchableSelect from "./SearchableSelect"
@@ -182,9 +190,9 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
     const formOpen = showAdd || editing
 
     return (
-        <section className='rounded-2xl border border-line bg-white p-4 shadow-sm sm:p-6'>
-            <div className='mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-                <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
+        <section className='rounded-xl border border-line bg-white p-4'>
+            <div className='mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+                <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                     Контакты
                 </h2>
                 {!formOpen && !showAttach && (
@@ -262,62 +270,81 @@ export default function ContactsSection({ counterpartyId, initialContacts }) {
                 <p className='text-sm text-neutral-400'>Контактов пока нет.</p>
             )}
 
-            <ul className='space-y-3'>
+            <ul className='space-y-2'>
                 {contacts.map(c => (
                     <li
                         key={c.id}
-                        className='flex flex-col gap-2 rounded-lg border border-line p-3 sm:flex-row sm:items-start sm:justify-between'
+                        className='flex items-start justify-between gap-3 rounded-lg border border-line px-3 py-2.5'
                     >
-                        <div className='flex-1'>
-                            <div className='flex flex-wrap items-center gap-2'>
+                        <div className='min-w-0 flex-1'>
+                            <div className='flex flex-wrap items-center gap-x-2 gap-y-1'>
                                 <span className='font-medium text-neutral-900'>
                                     {fullName(c) || "Без имени"}
                                 </span>
                                 {c.isPrimary && (
-                                    <span className='rounded-full bg-brand_main/10 px-2 py-0.5 text-xs font-medium text-brand_main'>
+                                    <span className='rounded-full bg-brand_main/10 px-1.5 py-0.5 text-[10px] font-medium text-brand_main'>
                                         Основной
                                     </span>
                                 )}
+                                {c.position && (
+                                    <span className='text-xs text-neutral-400'>· {c.position}</span>
+                                )}
                             </div>
-                            {c.position && <p className='text-sm text-neutral-500'>{c.position}</p>}
-                            <div className='mt-1 grid gap-1 text-sm text-neutral-700 sm:grid-cols-2'>
+                            <div className='mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-600'>
                                 {c.phone && (
-                                    <span>
-                                        Сот.: <PhoneLink phone={c.phone} />
+                                    <span className='inline-flex items-center gap-1'>
+                                        <LuSmartphone className='h-3 w-3 text-neutral-400' />
+                                        <PhoneLink phone={c.phone} />
                                     </span>
                                 )}
                                 {c.workPhone && (
-                                    <span>
-                                        Раб.: <PhoneLink phone={c.workPhone} />
+                                    <span className='inline-flex items-center gap-1'>
+                                        <LuPhone className='h-3 w-3 text-neutral-400' />
+                                        <PhoneLink phone={c.workPhone} />
                                     </span>
                                 )}
-                                {c.email && <span>{c.email}</span>}
+                                {c.email && (
+                                    <span className='inline-flex items-center gap-1'>
+                                        <LuMail className='h-3 w-3 text-neutral-400' />
+                                        <a
+                                            href={`mailto:${c.email}`}
+                                            className='hover:text-brand_main'
+                                        >
+                                            {c.email}
+                                        </a>
+                                    </span>
+                                )}
                                 {c.birthDate && (
-                                    <span>
-                                        Д/р: {new Date(c.birthDate).toLocaleDateString("ru-RU")}
+                                    <span className='inline-flex items-center gap-1'>
+                                        <LuCake className='h-3 w-3 text-neutral-400' />
+                                        {new Date(c.birthDate).toLocaleDateString("ru-RU")}
                                     </span>
                                 )}
                             </div>
                             {c.comment && (
-                                <p className='mt-1 whitespace-pre-wrap text-sm text-neutral-500'>
+                                <p className='mt-1 whitespace-pre-wrap text-xs text-neutral-500'>
                                     {c.comment}
                                 </p>
                             )}
                         </div>
-                        <div className='flex gap-2'>
+                        <div className='flex shrink-0 gap-1 self-center'>
                             <button
                                 type='button'
                                 onClick={() => startEdit(c)}
-                                className='rounded-md border border-line px-3 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
+                                title='Изменить'
+                                aria-label='Изменить контакт'
+                                className='rounded-md border border-line p-1.5 text-neutral-500 transition hover:bg-surface_muted hover:text-neutral-900'
                             >
-                                Изменить
+                                <LuPencil className='h-3.5 w-3.5' />
                             </button>
                             <button
                                 type='button'
                                 onClick={() => handleDelete(c.id)}
-                                className='rounded-md border border-red-200 px-3 py-1 text-xs text-red-600 hover:bg-red-50'
+                                title='Удалить'
+                                aria-label='Удалить контакт'
+                                className='rounded-md border border-red-200 p-1.5 text-red-500 transition hover:bg-red-50'
                             >
-                                Удалить
+                                <LuTrash2 className='h-3.5 w-3.5' />
                             </button>
                         </div>
                     </li>

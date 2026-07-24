@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getServerSession } from "next-auth"
-import { LuPencil } from "react-icons/lu"
+import { LuBuilding2, LuPencil, LuUser } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import {
@@ -11,7 +11,7 @@ import {
     COUNTERPARTY_TYPE_LABELS,
 } from "@/lib/crm/counterparty"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
-import { PROJECT_STATUS_LABELS } from "@/lib/crm/project"
+import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import ContactsSection from "@/components/crm/ContactsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import CrmBackLink from "@/components/crm/CrmBackLink"
@@ -68,6 +68,11 @@ export default async function CounterpartyPage({ params }) {
           item.updatedBy.email
         : null
 
+    const managerName = item.manager
+        ? `${item.manager.firstName ?? ""} ${item.manager.lastName ?? ""}`.trim() ||
+          item.manager.email
+        : "—"
+
     const taskRelationKind =
         item.type === "DISTRIBUTOR" ? "distributor" : "endCustomer"
 
@@ -79,19 +84,53 @@ export default async function CounterpartyPage({ params }) {
                 className='inline-flex items-center gap-1 text-xs text-neutral-400 hover:text-brand_main'
             />
 
-            <div className='flex flex-wrap items-start justify-between gap-3'>
-                <div className='min-w-0'>
-                    <p className='text-xs uppercase tracking-wider text-neutral-400'>
-                        {COUNTERPARTY_TYPE_LABELS[item.type]}
-                    </p>
-                    <h1 className='mt-0.5 text-xl font-semibold text-neutral-900 sm:text-2xl'>
-                        {item.name}
-                    </h1>
-                    <p className='mt-1 text-sm text-neutral-500'>
-                        {[item.region, item.inn && `ИНН ${item.inn}`]
-                            .filter(Boolean)
-                            .join(" · ")}
-                    </p>
+            <div className='grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
+                <div className='flex flex-wrap items-start justify-between gap-4'>
+                    <div className='min-w-0'>
+                        <div className='flex flex-wrap items-center gap-2'>
+                            <h1 className='text-xl font-semibold text-neutral-900 sm:text-2xl'>
+                                {item.name}
+                            </h1>
+                            <span className='rounded-full bg-brand_main/10 px-2.5 py-0.5 text-xs font-medium text-brand_main'>
+                                {COUNTERPARTY_TYPE_LABELS[item.type]}
+                            </span>
+                        </div>
+                        <p className='mt-1 text-sm text-neutral-500'>
+                            {[
+                                item.region,
+                                item.inn && `ИНН ${item.inn}`,
+                                item.manager && `Менеджер ${managerName}`,
+                            ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                        </p>
+                    </div>
+                    <div className='flex items-center gap-4 sm:gap-5'>
+                        <div className='text-right'>
+                            <p className='text-[10px] uppercase tracking-wider text-neutral-400'>
+                                Бюджет
+                            </p>
+                            <p className='mt-0.5 text-lg font-semibold text-brand_main'>
+                                {formatMoney(item.totalRevenue)}
+                            </p>
+                        </div>
+                        <div className='h-9 w-px bg-line' />
+                        <div className='text-right'>
+                            <p className='text-[10px] uppercase tracking-wider text-neutral-400'>
+                                Скидка
+                            </p>
+                            <p className='mt-0.5 text-lg font-semibold text-neutral-900'>
+                                {formatPercent(item.discount)}
+                            </p>
+                        </div>
+                        <Link
+                            href={`/crm/counterparties/${item.id}/edit`}
+                            className='inline-flex items-center gap-1.5 self-end rounded-lg border border-line bg-white px-2.5 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-surface_muted'
+                        >
+                            <LuPencil className='h-3.5 w-3.5' />
+                            Изменить
+                        </Link>
+                    </div>
                 </div>
             </div>
 
@@ -99,15 +138,6 @@ export default async function CounterpartyPage({ params }) {
                 <div className='min-w-0 space-y-4'>
                     <Section
                         title='Основное'
-                        action={
-                            <Link
-                                href={`/crm/counterparties/${item.id}/edit`}
-                                className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
-                            >
-                                <LuPencil className='h-3 w-3' />
-                                Редактировать
-                            </Link>
-                        }
                         footer={
                             <>
                                 Создал {createdByName} · <LocalDateTime value={item.createdAt} />
@@ -159,6 +189,87 @@ export default async function CounterpartyPage({ params }) {
                         )}
                     </Section>
 
+                    <section className='rounded-xl border border-line bg-white p-4'>
+                        <h2 className='mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-500'>
+                            Связи{projects.length > 0 ? ` · ${projects.length}` : ""}
+                        </h2>
+                        {projects.length === 0 ? (
+                            <p className='text-sm text-neutral-400'>Проектов пока нет.</p>
+                        ) : (
+                            <div>
+                                {/* Узел-контрагент */}
+                                <div className='flex items-center'>
+                                    <span className='h-3 w-3 shrink-0 rounded-full bg-brand_main ring-4 ring-brand_main/15' />
+                                </div>
+                                {/* Ветви к проектам */}
+                                <ul className='ml-[5px] border-l border-line'>
+                                    {projects.map(p => {
+                                        const managerName = p.manager
+                                            ? `${p.manager.firstName ?? ""} ${p.manager.lastName ?? ""}`.trim() ||
+                                              p.manager.email
+                                            : "—"
+                                        const counter =
+                                            item.type === "DISTRIBUTOR"
+                                                ? p.endCustomer
+                                                : p.distributor
+                                        return (
+                                            <li key={p.id} className='relative pl-6 pt-3'>
+                                                <span className='absolute left-0 top-8 h-px w-6 bg-line' />
+                                                <Link
+                                                    href={`/crm/projects/${p.id}`}
+                                                    className='block rounded-lg border border-line px-3 py-2.5 transition hover:border-brand_main/40 hover:bg-surface_muted'
+                                                >
+                                                    <div className='flex items-start justify-between gap-3'>
+                                                        <div className='min-w-0'>
+                                                            <div className='flex items-center gap-2'>
+                                                                <span
+                                                                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                                                                        PROJECT_STATUS_COLORS[p.status] ||
+                                                                        "bg-neutral-100 text-neutral-500"
+                                                                    }`}
+                                                                >
+                                                                    <span className='h-1.5 w-1.5 rounded-full bg-current' />
+                                                                    {PROJECT_STATUS_LABELS[p.status]}
+                                                                </span>
+                                                                <p className='truncate text-sm font-medium text-neutral-900'>
+                                                                    {p.internalName}
+                                                                </p>
+                                                            </div>
+                                                            <div className='mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-neutral-500'>
+                                                                <span className='inline-flex min-w-0 items-center gap-1'>
+                                                                    <LuUser className='h-3 w-3 shrink-0' />
+                                                                    <span className='truncate'>
+                                                                        {managerName}
+                                                                    </span>
+                                                                </span>
+                                                                {counter && (
+                                                                    <span className='inline-flex min-w-0 items-center gap-1'>
+                                                                        <LuBuilding2 className='h-3 w-3 shrink-0' />
+                                                                        <span className='truncate'>
+                                                                            {counter.name}
+                                                                        </span>
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <span className='shrink-0 text-sm font-semibold text-neutral-900'>
+                                                            {formatMoney(p.totalAmount)}
+                                                        </span>
+                                                    </div>
+                                                </Link>
+                                            </li>
+                                        )
+                                    })}
+                                </ul>
+                            </div>
+                        )}
+                    </section>
+
+                    <ContactsSection
+                        counterpartyId={item.id}
+                        initialContacts={contactsForClient}
+                    />
+
                     <Section title='Реквизиты и финансы'>
                         <Row label='ИНН' value={item.inn} />
                         <Row label='КПП' value={item.kpp} />
@@ -167,166 +278,9 @@ export default async function CounterpartyPage({ params }) {
                         <Row label='ОКВЭД' value={item.okved} />
                         <Row label='БИК' value={item.bik} />
                         <Row label='Расчётный счёт' value={item.bankAccount} />
-                        <Row
-                            label='Корреспондентский счёт'
-                            value={item.bankCorrAccount}
-                        />
+                        <Row label='Корреспондентский счёт' value={item.bankCorrAccount} />
                         <Row label='Название банка' value={item.bankName} />
-                        <Row
-                            label='Бюджет (сумма сделок)'
-                            value={formatMoney(item.totalRevenue)}
-                        />
-                        <Row label='Скидка клиента' value={formatPercent(item.discount)} />
                     </Section>
-
-                    <ContactsSection
-                        counterpartyId={item.id}
-                        initialContacts={contactsForClient}
-                    />
-
-                    <section className='rounded-xl border border-line bg-white p-4'>
-                        <h2 className='mb-2.5 text-xs font-semibold uppercase tracking-wide text-neutral-500'>
-                            История связок ({projects.length})
-                        </h2>
-                        {projects.length === 0 ? (
-                            <p className='text-sm text-neutral-400'>Проектов пока нет.</p>
-                        ) : (
-                            <>
-                                {/* Карточки для мобильных */}
-                                <ul className='space-y-2 md:hidden'>
-                                    {projects.map(p => {
-                                        const counter =
-                                            item.type === "DISTRIBUTOR"
-                                                ? p.endCustomer
-                                                : p.distributor
-                                        const managerName = p.manager
-                                            ? `${p.manager.firstName ?? ""} ${p.manager.lastName ?? ""}`.trim() ||
-                                              p.manager.email
-                                            : "—"
-                                        return (
-                                            <li
-                                                key={p.id}
-                                                className='rounded-lg border border-line p-3'
-                                            >
-                                                <div className='flex items-start justify-between gap-2'>
-                                                    <Link
-                                                        href={`/crm/projects/${p.id}`}
-                                                        className='font-medium text-neutral-900 hover:text-brand_main'
-                                                    >
-                                                        {p.internalName}
-                                                    </Link>
-                                                    <span className='shrink-0 text-right text-sm font-medium text-neutral-900/75'>
-                                                        {formatMoney(p.totalAmount)}
-                                                    </span>
-                                                </div>
-                                                <dl className='mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-1 text-xs'>
-                                                    <dt className='text-neutral-400'>Аукцион</dt>
-                                                    <dd className='text-neutral-900/75'>
-                                                        {p.externalAuctionId || "—"}
-                                                    </dd>
-                                                    <dt className='text-neutral-400'>
-                                                        {item.type === "DISTRIBUTOR"
-                                                            ? "Конечный потребитель"
-                                                            : "Дистрибьютор"}
-                                                    </dt>
-                                                    <dd className='min-w-0 text-neutral-900/75'>
-                                                        {counter ? (
-                                                            <Link
-                                                                href={`/crm/counterparties/${counter.id}`}
-                                                                className='hover:text-brand_main'
-                                                            >
-                                                                {counter.name}
-                                                            </Link>
-                                                        ) : (
-                                                            "—"
-                                                        )}
-                                                    </dd>
-                                                    <dt className='text-neutral-400'>Менеджер</dt>
-                                                    <dd className='text-neutral-900/75'>
-                                                        {managerName}
-                                                    </dd>
-                                                    <dt className='text-neutral-400'>Статус</dt>
-                                                    <dd className='text-neutral-900/75'>
-                                                        {PROJECT_STATUS_LABELS[p.status]}
-                                                    </dd>
-                                                </dl>
-                                            </li>
-                                        )
-                                    })}
-                                </ul>
-
-                                {/* Таблица для планшетов и десктопа */}
-                                <div className='hidden overflow-x-auto rounded-lg border border-line md:block'>
-                                    <table className='w-full text-sm'>
-                                        <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
-                                            <tr>
-                                                <th className='px-3 py-2'>Аукцион</th>
-                                                <th className='px-3 py-2'>Проект</th>
-                                                <th className='px-3 py-2'>
-                                                    {item.type === "DISTRIBUTOR"
-                                                        ? "Конечный потребитель"
-                                                        : "Дистрибьютор"}
-                                                </th>
-                                                <th className='px-3 py-2'>Менеджер</th>
-                                                <th className='px-3 py-2'>Статус</th>
-                                                <th className='px-3 py-2 text-right'>Сумма</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {projects.map(p => {
-                                                const counter =
-                                                    item.type === "DISTRIBUTOR"
-                                                        ? p.endCustomer
-                                                        : p.distributor
-                                                return (
-                                                    <tr
-                                                        key={p.id}
-                                                        className='border-t border-line hover:bg-surface_muted'
-                                                    >
-                                                        <td className='px-3 py-2 text-neutral-900/75'>
-                                                            {p.externalAuctionId}
-                                                        </td>
-                                                        <td className='px-3 py-2'>
-                                                            <Link
-                                                                href={`/crm/projects/${p.id}`}
-                                                                className='font-medium text-neutral-900 hover:text-brand_main'
-                                                            >
-                                                                {p.internalName}
-                                                            </Link>
-                                                        </td>
-                                                        <td className='px-3 py-2 text-neutral-900/75'>
-                                                            {counter ? (
-                                                                <Link
-                                                                    href={`/crm/counterparties/${counter.id}`}
-                                                                    className='hover:text-brand_main'
-                                                                >
-                                                                    {counter.name}
-                                                                </Link>
-                                                            ) : (
-                                                                "—"
-                                                            )}
-                                                        </td>
-                                                        <td className='px-3 py-2 text-neutral-900/75'>
-                                                            {p.manager
-                                                                ? `${p.manager.firstName ?? ""} ${p.manager.lastName ?? ""}`.trim() ||
-                                                                  p.manager.email
-                                                                : "—"}
-                                                        </td>
-                                                        <td className='px-3 py-2 text-neutral-900/75'>
-                                                            {PROJECT_STATUS_LABELS[p.status]}
-                                                        </td>
-                                                        <td className='px-3 py-2 text-right text-neutral-900/75'>
-                                                            {formatMoney(p.totalAmount)}
-                                                        </td>
-                                                    </tr>
-                                                )
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </>
-                        )}
-                    </section>
 
                     {item.note && (
                         <Section title='Примечание'>

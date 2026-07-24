@@ -9,7 +9,7 @@ import { useToast } from "@/components/crm/ui"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 
 const SELLER = {
-    name: 'ООО «НЕОМЕД»',
+    name: "ООО «НЕОМЕД»",
     address: "634015, Томская область, г. Томск, ул. Циолковского, 19/1, пом. 24",
     phones: "+7 (495) 231-01-11 · +7 (985) 231-01-11",
     email: "info@onestep.su",
@@ -84,7 +84,7 @@ export default function ProposalView({
         deliveryTerm: "90 дней с момента оплаты",
         paymentTerm: "100%",
         deliveryCondition: "самовывоз, отгрузка производится кратно транспортным упаковкам",
-        intro: `Компания ${SELLER.name} предлагает вашему вниманию коммерческое предложение на поставку следующей продукции:`,
+        intro: `Компания ${SELLER.name}, официальный дистрибьютор «OneStep», предлагает вашему вниманию коммерческое предложение на поставку следующей продукции:`,
         discount: defaultDiscount || 0,
         vatRate: 10,
         volume: defaultVolume > 0 ? fmtAuto(defaultVolume, 3) : "",
@@ -170,10 +170,7 @@ export default function ProposalView({
             const uploadForm = new FormData()
             uploadForm.append("entityType", "Deal")
             uploadForm.append("entityId", dealId)
-            uploadForm.append(
-                "file",
-                new File([blob], fileName, { type: "application/pdf" }),
-            )
+            uploadForm.append("file", new File([blob], fileName, { type: "application/pdf" }))
             const upRes = await fetch("/api/crm/attachments", {
                 method: "POST",
                 body: uploadForm,
@@ -259,9 +256,7 @@ export default function ProposalView({
                     action={
                         <label
                             className={`inline-flex items-center gap-1.5 text-xs ${
-                                showEndCustomerRow
-                                    ? "text-neutral-500"
-                                    : "text-neutral-300"
+                                showEndCustomerRow ? "text-neutral-500" : "text-neutral-300"
                             }`}
                             title={
                                 form.endCustomer.trim()
@@ -293,10 +288,7 @@ export default function ProposalView({
                 </Field>
                 <div className='grid gap-3 sm:grid-cols-3'>
                     <Field label='Срок поставки'>
-                        <Input
-                            value={form.deliveryTerm}
-                            onChange={update("deliveryTerm")}
-                        />
+                        <Input value={form.deliveryTerm} onChange={update("deliveryTerm")} />
                     </Field>
                     <Field label='Условия оплаты'>
                         <Input value={form.paymentTerm} onChange={update("paymentTerm")} />
@@ -354,22 +346,13 @@ export default function ProposalView({
                 </div>
                 <div className='grid gap-3 sm:grid-cols-3'>
                     <Field label='Подписант — имя'>
-                        <Input
-                            value={form.senderName}
-                            onChange={update("senderName")}
-                        />
+                        <Input value={form.senderName} onChange={update("senderName")} />
                     </Field>
                     <Field label='Телефон'>
-                        <Input
-                            value={form.senderPhone}
-                            onChange={update("senderPhone")}
-                        />
+                        <Input value={form.senderPhone} onChange={update("senderPhone")} />
                     </Field>
                     <Field label='Email'>
-                        <Input
-                            value={form.senderEmail}
-                            onChange={update("senderEmail")}
-                        />
+                        <Input value={form.senderEmail} onChange={update("senderEmail")} />
                     </Field>
                 </div>
             </section>
@@ -387,161 +370,154 @@ export default function ProposalView({
 
             {/* На мобильном КП листается по горизонтали как документ A4 */}
             <div className='overflow-x-auto rounded-xl print:overflow-visible'>
-            <article
-                className='proposal mx-auto min-w-[210mm] max-w-[210mm] bg-white px-10 py-8 text-[10.5pt] leading-snug text-black shadow-sm print:min-w-0 print:max-w-none print:p-0 print:shadow-none'
-            >
-                <header className='flex items-start justify-between gap-6 border-b border-black/10 pb-4'>
-                    <div className='shrink-0'>
-                        <Image
-                            src='/logo_name.svg'
-                            alt='OneStep'
-                            width={160}
-                            height={48}
-                            priority
-                        />
+                <article className='proposal mx-auto min-w-[210mm] max-w-[210mm] bg-white px-10 py-8 text-[10.5pt] leading-snug text-black shadow-sm print:min-w-0 print:max-w-none print:p-0 print:shadow-none'>
+                    <header className='flex items-start justify-between gap-6 border-b border-black/10 pb-4'>
+                        <div className='shrink-0'>
+                            <Image
+                                src='/logo_name.svg'
+                                alt='OneStep'
+                                width={160}
+                                height={48}
+                                priority
+                            />
+                        </div>
+                        <div className='text-right text-[9pt] text-black/80'>
+                            <p>{SELLER.address}</p>
+                            <p>{SELLER.phones}</p>
+                            <p>{SELLER.email}</p>
+                            <p>{SELLER.site}</p>
+                        </div>
+                    </header>
+
+                    <div className='mt-6 text-center'>
+                        <h1 className='text-base font-semibold'>
+                            Коммерческое предложение № {form.number} от {fmtInputDate(form.date)}
+                        </h1>
+                        <p className='mt-0.5 text-[9.5pt] italic text-black/70'>
+                            действительно {form.validDays} рабочих дней
+                        </p>
                     </div>
-                    <div className='text-right text-[9pt] text-black/80'>
-                        <p>{SELLER.address}</p>
-                        <p>{SELLER.phones}</p>
-                        <p>{SELLER.email}</p>
-                        <p>{SELLER.site}</p>
-                    </div>
-                </header>
 
-                <div className='mt-6 text-center'>
-                    <h1 className='text-base font-semibold'>
-                        Коммерческое предложение № {form.number} от {fmtInputDate(form.date)}
-                    </h1>
-                    <p className='mt-0.5 text-[9.5pt] italic text-black/70'>
-                        действительно {form.validDays} рабочих дней
-                    </p>
-                </div>
-
-                <dl className='mt-5 space-y-1 text-[10.5pt]'>
-                    <ParamRow label='Покупатель' value={form.buyer} />
-                    {showEndCustomerRow && (
-                        <ParamRow
-                            label='Конечный потребитель'
-                            value={form.endCustomer}
-                        />
-                    )}
-                    <ParamRow label='Срок поставки' value={form.deliveryTerm} />
-                    <ParamRow label='Условия оплаты' value={form.paymentTerm} />
-                    <ParamRow label='Условия поставки' value={form.deliveryCondition} />
-                </dl>
-
-                <p className='mt-4'>{form.intro}</p>
-
-                <table className='mt-3 w-full border-collapse text-[9pt]'>
-                    <thead>
-                        <tr className='bg-black/5'>
-                            <Th className='w-[3%]'>№</Th>
-                            <Th className='w-[12%]'>Артикул</Th>
-                            <Th>Наименование товара</Th>
-                            <Th className='w-[7%]'>Кол-во шт.</Th>
-                            <Th className='w-[8%]'>Цена за шт.</Th>
-                            <Th className='w-[7%]'>Кол-во шт. в тр. уп.</Th>
-                            <Th className='w-[8%]'>Цена за уп.</Th>
-                            <Th className='w-[7%]'>Кол-во тр. упаковок</Th>
-                            <Th className='w-[11%]'>Сумма, руб.</Th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items.map(it => (
-                            <tr key={it.n} className='align-top'>
-                                <Td className='text-center'>{it.n}</Td>
-                                <Td>{it.sku || "—"}</Td>
-                                <Td>
-                                    <p className='font-medium'>{it.name}</p>
-                                    {it.contents && (
-                                        <p className='mt-1 whitespace-pre-wrap text-[8.5pt] text-black/75'>
-                                            {it.contents}
-                                        </p>
-                                    )}
-                                </Td>
-                                <Td className='text-right'>{fmtQty(it.qty)}</Td>
-                                <Td className='text-right'>{fmtMoneyPlain(it.unitPrice)}</Td>
-                                <Td className='text-right'>
-                                    {it.packQty ? fmtQty(it.packQty) : "—"}
-                                </Td>
-                                <Td className='text-right'>
-                                    {it.packPrice !== null ? fmtMoneyPlain(it.packPrice) : "—"}
-                                </Td>
-                                <Td className='text-right'>
-                                    {it.packs !== null
-                                        ? Number.isInteger(it.packs)
-                                            ? it.packs
-                                            : fmtQty(it.packs)
-                                        : "—"}
-                                </Td>
-                                <Td className='text-right'>{fmtMoneyPlain(it.amount)}</Td>
-                            </tr>
-                        ))}
-                        {items.length === 0 && (
-                            <tr>
-                                <Td colSpan={9} className='text-center text-black/50'>
-                                    В сделке нет товарных позиций
-                                </Td>
-                            </tr>
+                    <dl className='mt-5 space-y-1 text-[10.5pt]'>
+                        <ParamRow label='Покупатель' value={form.buyer} />
+                        {showEndCustomerRow && (
+                            <ParamRow label='Конечный потребитель' value={form.endCustomer} />
                         )}
-                    </tbody>
-                </table>
+                        <ParamRow label='Срок поставки' value={form.deliveryTerm} />
+                        <ParamRow label='Условия оплаты' value={form.paymentTerm} />
+                        <ParamRow label='Условия поставки' value={form.deliveryCondition} />
+                    </dl>
 
-                <div className='mt-3 flex justify-end'>
-                    <table className='border-collapse text-[9.5pt]'>
+                    <p className='mt-4'>{form.intro}</p>
+
+                    <table className='mt-3 w-full border-collapse text-[9pt]'>
+                        <thead>
+                            <tr className='bg-black/5'>
+                                <Th className='w-[3%]'>№</Th>
+                                <Th className='w-[12%]'>Артикул</Th>
+                                <Th>Наименование товара</Th>
+                                <Th className='w-[7%]'>Кол-во шт.</Th>
+                                <Th className='w-[8%]'>Цена за шт.</Th>
+                                <Th className='w-[7%]'>Кол-во шт. в тр. уп.</Th>
+                                <Th className='w-[8%]'>Цена за уп.</Th>
+                                <Th className='w-[7%]'>Кол-во тр. упаковок</Th>
+                                <Th className='w-[11%]'>Сумма, руб.</Th>
+                            </tr>
+                        </thead>
                         <tbody>
-                            <TotalsRow label='ИТОГО:' value={fmtMoneyPlain(totals.sub)} />
-                            {totals.discountPct > 0 && (
-                                <>
-                                    <TotalsRow
-                                        label='Скидка:'
-                                        value={`${totals.discountPct}%`}
-                                    />
-                                    <TotalsRow
-                                        label='Сумма скидки:'
-                                        value={fmtMoneyPlain(totals.discountAmount)}
-                                    />
-                                    <TotalsRow
-                                        label='Итого со скидкой:'
-                                        value={fmtMoneyPlain(totals.finalAmount)}
-                                    />
-                                </>
-                            )}
-                            {totals.vatRate > 0 && (
-                                <TotalsRow
-                                    label={`В т.ч. НДС ${totals.vatRate}%:`}
-                                    value={fmtMoneyPlain(totals.vatAmount)}
-                                />
+                            {items.map(it => (
+                                <tr key={it.n} className='align-top'>
+                                    <Td className='text-center'>{it.n}</Td>
+                                    <Td>{it.sku || "—"}</Td>
+                                    <Td>
+                                        <p className='font-medium'>{it.name}</p>
+                                        {it.contents && (
+                                            <p className='mt-1 whitespace-pre-wrap text-[8.5pt] text-black/75'>
+                                                {it.contents}
+                                            </p>
+                                        )}
+                                    </Td>
+                                    <Td className='text-right'>{fmtQty(it.qty)}</Td>
+                                    <Td className='text-right'>{fmtMoneyPlain(it.unitPrice)}</Td>
+                                    <Td className='text-right'>
+                                        {it.packQty ? fmtQty(it.packQty) : "—"}
+                                    </Td>
+                                    <Td className='text-right'>
+                                        {it.packPrice !== null ? fmtMoneyPlain(it.packPrice) : "—"}
+                                    </Td>
+                                    <Td className='text-right'>
+                                        {it.packs !== null
+                                            ? Number.isInteger(it.packs)
+                                                ? it.packs
+                                                : fmtQty(it.packs)
+                                            : "—"}
+                                    </Td>
+                                    <Td className='text-right'>{fmtMoneyPlain(it.amount)}</Td>
+                                </tr>
+                            ))}
+                            {items.length === 0 && (
+                                <tr>
+                                    <Td colSpan={9} className='text-center text-black/50'>
+                                        В сделке нет товарных позиций
+                                    </Td>
+                                </tr>
                             )}
                         </tbody>
                     </table>
-                </div>
 
-                <p className='mt-4 font-semibold'>
-                    Итого: {fmtMoneyPlain(totals.finalAmount)}
-                </p>
-                <p className='italic text-black/85'>{totals.words}</p>
-
-                {(form.volume || form.weight) && (
-                    <div className='mt-3 text-right text-[9pt] italic text-black/70'>
-                        {form.volume && <p>Объём груза, м³: {form.volume}</p>}
-                        {form.weight && <p>Вес груза, кг: {form.weight}</p>}
+                    <div className='mt-3 flex justify-end'>
+                        <table className='border-collapse text-[9.5pt]'>
+                            <tbody>
+                                <TotalsRow label='ИТОГО:' value={fmtMoneyPlain(totals.sub)} />
+                                {totals.discountPct > 0 && (
+                                    <>
+                                        <TotalsRow
+                                            label='Скидка:'
+                                            value={`${totals.discountPct}%`}
+                                        />
+                                        <TotalsRow
+                                            label='Сумма скидки:'
+                                            value={fmtMoneyPlain(totals.discountAmount)}
+                                        />
+                                        <TotalsRow
+                                            label='Итого со скидкой:'
+                                            value={fmtMoneyPlain(totals.finalAmount)}
+                                        />
+                                    </>
+                                )}
+                                {totals.vatRate > 0 && (
+                                    <TotalsRow
+                                        label={`В т.ч. НДС ${totals.vatRate}%:`}
+                                        value={fmtMoneyPlain(totals.vatAmount)}
+                                    />
+                                )}
+                            </tbody>
+                        </table>
                     </div>
-                )}
 
-                <p className='mt-5 text-[8.5pt] text-black/70'>
-                    Настоящее коммерческое предложение не является офертой (в соответствии со
-                    ст. 435 ГК РФ). {SELLER.name} оставляет за собой право не заключать договор,
-                    либо заключить договор на иных условиях, отличных от предложенных.
-                </p>
+                    <p className='mt-4 font-semibold'>Итого: {fmtMoneyPlain(totals.finalAmount)}</p>
+                    <p className='italic text-black/85'>{totals.words}</p>
 
-                <div className='mt-6 text-[9.5pt]'>
-                    <p>С уважением,</p>
-                    <p>{form.senderName || "—"}</p>
-                    {form.senderPhone && <p>Тел. {form.senderPhone}</p>}
-                    {form.senderEmail && <p>Email: {form.senderEmail}</p>}
-                </div>
-            </article>
+                    {(form.volume || form.weight) && (
+                        <div className='mt-3 text-right text-[9pt] italic text-black/70'>
+                            {form.volume && <p>Объём груза, м³: {form.volume}</p>}
+                            {form.weight && <p>Вес груза, кг: {form.weight}</p>}
+                        </div>
+                    )}
+
+                    <p className='mt-5 text-[8.5pt] text-black/70'>
+                        Настоящее коммерческое предложение не является офертой (в соответствии со
+                        ст. 435 ГК РФ). {SELLER.name} оставляет за собой право не заключать договор,
+                        либо заключить договор на иных условиях, отличных от предложенных.
+                    </p>
+
+                    <div className='mt-6 text-[9.5pt]'>
+                        <p>С уважением,</p>
+                        <p>{form.senderName || "—"}</p>
+                        {form.senderPhone && <p>Тел. {form.senderPhone}</p>}
+                        {form.senderEmail && <p>Email: {form.senderEmail}</p>}
+                    </div>
+                </article>
             </div>
 
             <style jsx global>{`
@@ -660,9 +636,7 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
                 <h2 className='mb-1 text-lg font-semibold text-neutral-900'>
                     Отправить КП на email
                 </h2>
-                <p className='mb-4 text-sm text-neutral-500'>
-                    Вложение: {fileName}
-                </p>
+                <p className='mb-4 text-sm text-neutral-500'>Вложение: {fileName}</p>
 
                 {loading ? (
                     <p className='py-6 text-sm text-neutral-400'>Загрузка шаблона...</p>
@@ -767,9 +741,7 @@ function ParamRow({ label, value }) {
 }
 
 function Th({ children, className = "" }) {
-    return (
-        <th className={`text-center font-semibold ${className}`}>{children}</th>
-    )
+    return <th className={`text-center font-semibold ${className}`}>{children}</th>
 }
 
 function Td({ children, className = "", ...rest }) {

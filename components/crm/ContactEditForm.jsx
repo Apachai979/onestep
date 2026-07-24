@@ -1,6 +1,14 @@
 "use client"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import {
+    LuUser,
+    LuSmartphone,
+    LuPhone,
+    LuMail,
+    LuCake,
+    LuBriefcase,
+} from "react-icons/lu"
 import { Button, useConfirm, useToast } from "@/components/crm/ui"
 import SearchableSelect from "./SearchableSelect"
 
@@ -111,10 +119,21 @@ export default function ContactEditForm({ initial }) {
             <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
                 <h2 className='mb-4 text-sm font-semibold text-neutral-900'>Контакт</h2>
                 <div className='grid gap-3 sm:grid-cols-2'>
-                    <Field label='Имя' value={form.firstName} onChange={update("firstName")} />
-                    <Field label='Фамилия' value={form.lastName} onChange={update("lastName")} />
+                    <Field
+                        label='Имя'
+                        icon={LuUser}
+                        value={form.firstName}
+                        onChange={update("firstName")}
+                    />
+                    <Field
+                        label='Фамилия'
+                        icon={LuUser}
+                        value={form.lastName}
+                        onChange={update("lastName")}
+                    />
                     <Field
                         label='Сотовый телефон *'
+                        icon={LuSmartphone}
                         required
                         placeholder='+79999999999'
                         value={form.phone}
@@ -122,22 +141,30 @@ export default function ContactEditForm({ initial }) {
                     />
                     <Field
                         label='Рабочий телефон'
+                        icon={LuPhone}
                         value={form.workPhone}
                         onChange={update("workPhone")}
                     />
                     <Field
                         label='Email'
+                        icon={LuMail}
                         type='email'
                         value={form.email}
                         onChange={update("email")}
                     />
                     <Field
                         label='Дата рождения'
+                        icon={LuCake}
                         type='date'
                         value={form.birthDate}
                         onChange={update("birthDate")}
                     />
-                    <Field label='Должность' value={form.position} onChange={update("position")} />
+                    <Field
+                        label='Должность'
+                        icon={LuBriefcase}
+                        value={form.position}
+                        onChange={update("position")}
+                    />
                 </div>
                 <div className='mt-3'>
                     <label className='mb-1 block text-xs font-medium text-neutral-500'>
@@ -153,9 +180,24 @@ export default function ContactEditForm({ initial }) {
             </section>
 
             <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
-                <h2 className='mb-4 text-sm font-semibold text-neutral-900'>
-                    Привязка к контрагенту
-                </h2>
+                <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
+                    <h2 className='text-sm font-semibold text-neutral-900'>
+                        Привязка к контрагенту
+                    </h2>
+                    <label
+                        className={`flex items-center gap-2 text-sm ${
+                            cpId ? "text-neutral-700" : "text-neutral-400"
+                        }`}
+                    >
+                        <input
+                            type='checkbox'
+                            checked={form.isPrimary && !!cpId}
+                            disabled={!cpId}
+                            onChange={update("isPrimary")}
+                        />
+                        Основной контакт контрагента
+                    </label>
+                </div>
                 <SearchableSelect
                     value={cpId}
                     onChange={setCpId}
@@ -163,19 +205,6 @@ export default function ContactEditForm({ initial }) {
                     emptyLabel='Контрагент не найден'
                     options={cpOptions}
                 />
-                <label
-                    className={`mt-3 flex items-center gap-2 text-sm ${
-                        cpId ? "text-neutral-700" : "text-neutral-400"
-                    }`}
-                >
-                    <input
-                        type='checkbox'
-                        checked={form.isPrimary && !!cpId}
-                        disabled={!cpId}
-                        onChange={update("isPrimary")}
-                    />
-                    Основной контакт контрагента
-                </label>
                 {!cpId && (
                     <p className='mt-1 text-xs text-neutral-400'>
                         «Основной» доступен только при привязке к контрагенту.
@@ -215,14 +244,21 @@ export default function ContactEditForm({ initial }) {
     )
 }
 
-function Field({ label, ...props }) {
+function Field({ label, icon: Icon, ...props }) {
     return (
         <div>
             <label className='mb-1 block text-xs font-medium text-neutral-500'>{label}</label>
-            <input
-                {...props}
-                className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
-            />
+            <div className='relative'>
+                {Icon && (
+                    <Icon className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400' />
+                )}
+                <input
+                    {...props}
+                    className={`h-10 w-full rounded-xl border border-line bg-white text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20 ${
+                        Icon ? "pl-9 pr-3" : "px-3"
+                    }`}
+                />
+            </div>
         </div>
     )
 }

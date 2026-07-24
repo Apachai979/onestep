@@ -79,6 +79,7 @@ async function importCounterparties(tx, wb, report, session) {
                     labelToKey(CP_TYPE_LABELS, cellStr(row["тип"])) || "END_CUSTOMER",
                 name,
                 region: cellStr(row["регион"]) || "—",
+                city: cellStr(row["город"]) || null,
                 inn,
                 kpp: cellStr(row["кпп"]) || null,
                 ogrn: cellStr(row["огрн"]) || null,

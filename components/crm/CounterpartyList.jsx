@@ -95,6 +95,14 @@ export default function CounterpartyList({ type, newHref }) {
                 render: item => item.region || "—",
             },
             {
+                key: "city",
+                header: "Город",
+                sortable: true,
+                sortValue: item => item.city || "",
+                render: item => item.city || "—",
+                hideable: true,
+            },
+            {
                 key: "inn",
                 header: "ИНН",
                 render: item => item.inn || "—",
@@ -183,6 +191,7 @@ export default function CounterpartyList({ type, newHref }) {
                             </span>
                         </div>
                         <div className='mt-2 space-y-1'>
+                            <CardRow label='Город'>{item.city || "—"}</CardRow>
                             <CardRow label='ИНН'>{item.inn || "—"}</CardRow>
                             <CardRow label='Контакт'>{primaryContactName(item)}</CardRow>
                             <CardRow label='Телефон'>

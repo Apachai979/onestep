@@ -85,6 +85,7 @@ model Counterparty {
   type            String
   name            String
   region          String
+  city            String?
   inn             String?
   kpp             String?
   ogrn            String?

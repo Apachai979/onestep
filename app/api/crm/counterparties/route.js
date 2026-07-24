@@ -7,6 +7,7 @@ const COUNTERPARTY_TRACKED_FIELDS = [
     "type",
     "name",
     "region",
+    "city",
     "inn",
     "kpp",
     "ogrn",

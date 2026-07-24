@@ -121,6 +121,7 @@ export default async function CounterpartyPage({ params }) {
                         }
                     >
                         <Row label='Регион' value={item.region} />
+                        <Row label='Город' value={item.city} />
                         <Row
                             label='Телефон'
                             value={item.phone ? <PhoneLink phone={item.phone} /> : null}

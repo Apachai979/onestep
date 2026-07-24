@@ -23,6 +23,7 @@ const DADATA_PARTY_FIELDS = [
     "okpo",
     "okved",
     "region",
+    "city",
     "address",
     "phone",
     "email",
@@ -32,6 +33,7 @@ const BIK_RE = /^\d{9}$/
 const EMPTY = {
     name: "",
     region: "",
+    city: "",
     inn: "",
     kpp: "",
     ogrn: "",
@@ -205,6 +207,7 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                     className='lg:col-span-2'
                 />
                 <Field label='Регион *' value={form.region} onChange={update("region")} required />
+                <Field label='Город' value={form.city} onChange={update("city")} />
                 <Field label='Телефон' value={form.phone} onChange={update("phone")} />
                 <Field
                     label='Email'

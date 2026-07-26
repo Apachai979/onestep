@@ -81,16 +81,6 @@ export default async function DealPage({ params }) {
         updatedAt: i.updatedAt.toISOString(),
     }))
 
-    const editAction = locked ? null : (
-        <Link
-            href={`/crm/deals/${item.id}/edit`}
-            className='inline-flex items-center gap-1 rounded-md border border-line bg-white px-2 py-1 text-[11px] font-medium text-neutral-900/75 hover:bg-surface_muted'
-        >
-            <LuPencil className='h-3 w-3' />
-            Редактировать
-        </Link>
-    )
-
     const paramsFooter = (
         <>
             Создал {fullName(item.createdBy)} · <LocalDateTime value={item.createdAt} />
@@ -133,27 +123,38 @@ export default async function DealPage({ params }) {
             {/* Шапка повторяет колонки тела страницы: правая ячейка (КП + статус)
                 стоит ровно над панелью активности и не сдвигает её вниз. */}
             <div className='grid grid-cols-[minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
-                <div className='min-w-0'>
-                    <p className='text-xs uppercase tracking-wider text-neutral-400'>Сделка</p>
-                    <h1 className='mt-0.5 truncate text-xl font-semibold text-neutral-900 sm:text-2xl'>
-                        {dealDisplayTitle(item, item.counterparty?.name)}
-                    </h1>
-                    {item.isAuction && (
-                        <span className='mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700'>
-                            Аукцион
-                            {item.purchaseNumber ? ` · № ${item.purchaseNumber}` : ""}
-                        </span>
-                    )}
-                    {item.sourceProject && (
-                        <p className='mt-1 text-sm text-blue-700'>
-                            По проекту:{" "}
-                            <Link
-                                href={`/crm/projects/${item.sourceProject.id}`}
-                                className='underline hover:text-blue-900'
-                            >
-                                {item.sourceProject.internalName}
-                            </Link>
-                        </p>
+                <div className='flex min-w-0 items-end justify-between gap-3'>
+                    <div className='min-w-0'>
+                        <p className='text-xs uppercase tracking-wider text-neutral-400'>Сделка</p>
+                        <h1 className='mt-0.5 truncate text-xl font-semibold text-neutral-900 sm:text-2xl'>
+                            {dealDisplayTitle(item, item.counterparty?.name)}
+                        </h1>
+                        {item.isAuction && (
+                            <span className='mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700'>
+                                Аукцион
+                                {item.purchaseNumber ? ` · № ${item.purchaseNumber}` : ""}
+                            </span>
+                        )}
+                        {item.sourceProject && (
+                            <p className='mt-1 text-sm text-blue-700'>
+                                По проекту:{" "}
+                                <Link
+                                    href={`/crm/projects/${item.sourceProject.id}`}
+                                    className='underline hover:text-blue-900'
+                                >
+                                    {item.sourceProject.internalName}
+                                </Link>
+                            </p>
+                        )}
+                    </div>
+                    {!locked && (
+                        <Link
+                            href={`/crm/deals/${item.id}/edit`}
+                            className='inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-surface_muted'
+                        >
+                            <LuPencil className='h-3.5 w-3.5' />
+                            Редактировать
+                        </Link>
                     )}
                 </div>
                 <div className='flex flex-wrap items-end justify-between gap-2'>
@@ -219,7 +220,6 @@ export default async function DealPage({ params }) {
                         ) : (
                             <Section
                                 title='Параметры'
-                                action={editAction}
                                 columns='sm:grid-cols-2'
                                 footer={paramsFooter}
                             >
@@ -230,7 +230,6 @@ export default async function DealPage({ params }) {
 
                     {item.isAuction && (
                         <DealParamsTabs
-                            action={editAction}
                             tabs={[
                                 {
                                     label: "Параметры сделки",

@@ -3,7 +3,11 @@ import { requireCrmSession } from "@/lib/crm/session"
 import { requireAdmin } from "@/lib/crm/admin"
 import { DEAL_TRACKED_FIELDS, parseDealPayload } from "@/lib/crm/deal"
 import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
-import { dealLockResponse } from "@/lib/crm/access"
+import {
+    DEAL_PARTIES_LOCKED_ERROR,
+    dealLockResponse,
+    dealProjectPartiesError,
+} from "@/lib/crm/access"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
@@ -73,6 +77,47 @@ export async function PATCH(request, { params }) {
     if (data.status && data.status !== "CANCELLED" && data.status !== "ARCHIVED") {
         if (existing.lossReason && data.lossReason === undefined) data.lossReason = null
         if (existing.lossComment && data.lossComment === undefined) data.lossComment = null
+    }
+
+    // Привязку к проекту не переставляют: иначе запрет на смену сторон
+    // обходится отвязкой и повторной привязкой к другому проекту.
+    if (
+        existing.sourceProjectId &&
+        data.sourceProjectId !== undefined &&
+        data.sourceProjectId !== existing.sourceProjectId
+    ) {
+        return Response.json({ error: DEAL_PARTIES_LOCKED_ERROR }, { status: 400 })
+    }
+
+    // Стороны сделки с проектом сверяем с самим проектом, а не с прежними
+    // значениями: заказчик, подставленный из проекта при включении галки
+    // «аукцион», — это нормальное изменение, а не подмена. Значения, которые не
+    // трогают, не проверяем — старые записи с рассинхроном остаются
+    // редактируемыми (и их можно привести к проекту).
+    const linkingProject =
+        data.sourceProjectId !== undefined && data.sourceProjectId !== existing.sourceProjectId
+    const projectId = linkingProject ? data.sourceProjectId : existing.sourceProjectId
+    if (projectId) {
+        // При новой привязке проверяем итоговые стороны сделки, при обычном
+        // редактировании — только те, что реально меняются.
+        const pick = field => {
+            if (linkingProject) {
+                return data[field] !== undefined ? data[field] : existing[field]
+            }
+            return data[field] && data[field] !== existing[field] ? data[field] : null
+        }
+        const parties = {
+            counterpartyId: pick("counterpartyId"),
+            auctionCustomerId: pick("auctionCustomerId"),
+        }
+        if (parties.counterpartyId || parties.auctionCustomerId) {
+            const project = await prisma.project.findUnique({
+                where: { id: projectId },
+                select: { distributorId: true, endCustomerId: true },
+            })
+            const partiesError = dealProjectPartiesError(project, parties)
+            if (partiesError) return Response.json({ error: partiesError }, { status: 400 })
+        }
     }
 
     if (data.counterpartyId) {

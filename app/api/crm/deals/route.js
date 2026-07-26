@@ -7,6 +7,7 @@ import {
     parseDealPayload,
 } from "@/lib/crm/deal"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
+import { dealProjectPartiesError } from "@/lib/crm/access"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
@@ -92,6 +93,22 @@ export async function POST(request) {
     const { data, error } = parseDealPayload(body)
     if (error) return Response.json({ error }, { status: 400 })
 
+    // Позиции переносятся из проекта-источника, а стороны сделки должны ему
+    // соответствовать — проверяем до валидации контактов, чтобы дальше по коду
+    // клиент и заказчик были уже окончательными.
+    let sourceProject = null
+    if (data.sourceProjectId) {
+        sourceProject = await prisma.project.findUnique({
+            where: { id: data.sourceProjectId },
+            include: { items: true },
+        })
+        if (!sourceProject) {
+            return Response.json({ error: "Проект-источник не найден" }, { status: 400 })
+        }
+        const partiesError = dealProjectPartiesError(sourceProject, data)
+        if (partiesError) return Response.json({ error: partiesError }, { status: 400 })
+    }
+
     const cp = await prisma.counterparty.findUnique({
         where: { id: data.counterpartyId },
         select: { id: true, type: true },
@@ -143,19 +160,7 @@ export async function POST(request) {
         data.auctionCustomerContactId = null
     }
 
-    // Позиции переносятся из проекта-источника (если задан).
-    let sourceItems = []
-
-    if (data.sourceProjectId) {
-        const sourceProject = await prisma.project.findUnique({
-            where: { id: data.sourceProjectId },
-            include: { items: true },
-        })
-        if (!sourceProject) {
-            return Response.json({ error: "Проект-источник не найден" }, { status: 400 })
-        }
-        sourceItems = sourceProject.items
-    }
+    const sourceItems = sourceProject?.items ?? []
 
     const created = await prisma.$transaction(async tx => {
         const deal = await tx.deal.create({

@@ -20,6 +20,9 @@ export default async function EditProjectPage({ params }) {
         redirect(`/crm/projects/${item.id}`)
     }
 
+    // Есть сделка по проекту — стороны проекта уже нельзя переназначить.
+    const dealsCount = await prisma.deal.count({ where: { sourceProjectId: item.id } })
+
     const initial = {
         ...item,
         totalAmount: item.totalAmount.toString(),
@@ -36,7 +39,7 @@ export default async function EditProjectPage({ params }) {
                 className='inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand_main'
             />
             <h1 className='text-2xl font-semibold text-neutral-900'>Редактирование проекта</h1>
-            <ProjectForm mode='edit' initial={initial} />
+            <ProjectForm mode='edit' initial={initial} partiesLocked={dealsCount > 0} />
         </div>
     )
 }

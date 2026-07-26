@@ -6,7 +6,7 @@ import {
     parseProjectPayload,
 } from "@/lib/crm/project"
 import { diffEntities, logChange } from "@/lib/crm/change-log"
-import { projectLockResponse } from "@/lib/crm/access"
+import { PROJECT_PARTIES_LOCKED_ERROR, projectLockResponse } from "@/lib/crm/access"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
@@ -71,6 +71,17 @@ export async function PATCH(request, { params }) {
     if (data.status && data.status !== "NO_NEED") {
         if (existing.lossComment && data.lossComment === undefined) data.lossComment = null
         if (existing.lossReason && data.lossReason === undefined) data.lossReason = null
+    }
+
+    // Стороны проекта фиксируются, как только по нему появилась сделка.
+    const partiesChanged =
+        (data.distributorId && data.distributorId !== existing.distributorId) ||
+        (data.endCustomerId && data.endCustomerId !== existing.endCustomerId)
+    if (partiesChanged) {
+        const dealsCount = await prisma.deal.count({ where: { sourceProjectId: params.id } })
+        if (dealsCount > 0) {
+            return Response.json({ error: PROJECT_PARTIES_LOCKED_ERROR }, { status: 400 })
+        }
     }
 
     if (data.distributorId) {

@@ -36,7 +36,14 @@ function isoDate(d) {
     return x.toISOString().slice(0, 10)
 }
 
-export default function ProjectForm({ initial, mode = "create", currentUserId }) {
+// partiesLocked — по проекту уже есть сделка, стороны менять нельзя
+// (см. PROJECT_PARTIES_LOCKED_ERROR в lib/crm/access).
+export default function ProjectForm({
+    initial,
+    mode = "create",
+    currentUserId,
+    partiesLocked = false,
+}) {
     const router = useRouter()
 
     const [form, setForm] = useState(() => {
@@ -156,6 +163,10 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
             internalName: form.internalName.trim() || null,
             contactIds,
         }
+        if (partiesLocked) {
+            delete payload.distributorId
+            delete payload.endCustomerId
+        }
 
         const res = await send(payload)
         setLoading(false)
@@ -198,7 +209,11 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
             <Card>
                 <FormSection
                     title='Участники'
-                    description='Конечный потребитель, дистрибьютор и ответственный менеджер.'
+                    description={
+                        partiesLocked
+                            ? "По проекту уже создана сделка — конечного потребителя и дистрибьютора изменить нельзя."
+                            : "Конечный потребитель, дистрибьютор и ответственный менеджер."
+                    }
                 >
                     <div className='grid gap-4 sm:grid-cols-2'>
                         <Field label='Конечный потребитель' required>
@@ -208,6 +223,7 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
                                     setForm(prev => ({ ...prev, endCustomerId: id }))
                                 }
                                 required
+                                disabled={partiesLocked}
                                 placeholder='Введите название или ИНН'
                                 options={customerOptions}
                             />
@@ -219,6 +235,7 @@ export default function ProjectForm({ initial, mode = "create", currentUserId })
                                     setForm(prev => ({ ...prev, distributorId: id }))
                                 }
                                 required
+                                disabled={partiesLocked}
                                 placeholder='Введите название или ИНН'
                                 options={distributorOptions}
                             />

@@ -12,7 +12,12 @@ export const metadata = { title: "Редактирование сделки | CR
 export default async function EditDealPage({ params }) {
     const item = await prisma.deal.findUnique({
         where: { id: params.id },
-        include: { counterparty: { select: { name: true } } },
+        include: {
+            counterparty: { select: { name: true } },
+            sourceProject: {
+                select: { id: true, internalName: true, distributorId: true, endCustomerId: true },
+            },
+        },
     })
     if (!item) notFound()
 
@@ -41,7 +46,7 @@ export default async function EditDealPage({ params }) {
                 className='inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand_main'
             />
             <h1 className='text-2xl font-semibold text-neutral-900'>Редактирование сделки</h1>
-            <DealForm mode='edit' initial={initial} />
+            <DealForm mode='edit' initial={initial} linkedProject={item.sourceProject} />
         </div>
     )
 }

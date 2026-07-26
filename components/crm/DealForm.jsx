@@ -76,12 +76,15 @@ function toFormValue(v) {
     return String(v)
 }
 
+// linkedProject — проект-источник у уже созданной сделки. Его наличие
+// замораживает стороны сделки (см. DEAL_PARTIES_LOCKED_ERROR в lib/crm/access).
 export default function DealForm({
     initial,
     mode = "create",
     currentUserId,
     defaultStatus,
     fromProject,
+    linkedProject = null,
     defaultIsAuction = false,
 }) {
     const router = useRouter()
@@ -138,6 +141,24 @@ export default function DealForm({
     const [projects, setProjects] = useState([])
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
+
+    // fromProject/linkedProject известны сразу, список projects догружается —
+    // ищем по всем трём источникам.
+    function projectById(id) {
+        if (!id) return null
+        if (fromProject?.id === id) return fromProject
+        if (linkedProject?.id === id) return linkedProject
+        return projects.find(p => p.id === id) || null
+    }
+
+    const sourceProject = projectById(form.sourceProjectId)
+
+    // Проект-источник задаёт стороны сделки: пока он выбран, клиент и заказчик
+    // берутся из него и не редактируются.
+    const partiesLocked = Boolean(form.sourceProjectId)
+    // Саму привязку к проекту у созданной сделки тоже не меняют — иначе запрет
+    // на смену сторон обходится отвязкой и повторной привязкой.
+    const projectLocked = mode === "edit" && Boolean(initial?.sourceProjectId)
 
     // Трогал ли менеджер поле скидки вручную. Если да — авто-подстановка из
     // карточки клиента больше не перезаписывает значение. У существующей сделки
@@ -236,6 +257,13 @@ export default function DealForm({
                 ? form.auctionCustomerContactId || null
                 : null,
         }
+        // У сделки, уже привязанной к проекту, эти поля неизменны — не шлём их
+        // вовсе, чтобы не спорить с сервером из-за старых записей, где клиент
+        // разошёлся с дистрибьютором проекта.
+        if (projectLocked) {
+            delete payload.counterpartyId
+            delete payload.sourceProjectId
+        }
         const url = mode === "create" ? "/api/crm/deals" : `/api/crm/deals/${initial.id}`
         const method = mode === "create" ? "POST" : "PATCH"
 
@@ -262,7 +290,11 @@ export default function DealForm({
             <Card>
                 <FormSection
                     title='Основное'
-                    description='Клиент, ответственный менеджер и привязка сделки.'
+                    description={
+                        partiesLocked
+                            ? "Сделка привязана к проекту — клиент и заказчик берутся из него и не редактируются."
+                            : "Клиент, ответственный менеджер и привязка сделки."
+                    }
                 >
                     <div className='grid gap-4 sm:grid-cols-2'>
                         <Input
@@ -282,6 +314,7 @@ export default function DealForm({
                                     }))
                                 }
                                 required
+                                disabled={partiesLocked}
                                 placeholder='Введите название или ИНН'
                                 options={counterpartyOptions}
                             />
@@ -320,9 +353,33 @@ export default function DealForm({
                         <Field label='Проект-источник' className='sm:col-span-2'>
                             <SearchableSelect
                                 value={form.sourceProjectId}
-                                onChange={id =>
-                                    setForm(prev => ({ ...prev, sourceProjectId: id }))
-                                }
+                                onChange={id => {
+                                    const p = projectById(id)
+                                    setForm(prev => ({
+                                        ...prev,
+                                        sourceProjectId: id,
+                                        // Стороны подтягиваются из проекта; контакты
+                                        // сбрасываем, они принадлежали другой компании.
+                                        ...(p
+                                            ? {
+                                                  counterpartyId: p.distributorId,
+                                                  contactId:
+                                                      p.distributorId === prev.counterpartyId
+                                                          ? prev.contactId
+                                                          : "",
+                                                  auctionCustomerId: prev.isAuction
+                                                      ? p.endCustomerId
+                                                      : prev.auctionCustomerId,
+                                                  auctionCustomerContactId:
+                                                      prev.isAuction &&
+                                                      p.endCustomerId !== prev.auctionCustomerId
+                                                          ? ""
+                                                          : prev.auctionCustomerContactId,
+                                              }
+                                            : {}),
+                                    }))
+                                }}
+                                disabled={projectLocked}
                                 placeholder='— Без привязки —'
                                 emptyLabel='Проект не найден'
                                 options={projects.map(p => ({
@@ -397,11 +454,11 @@ export default function DealForm({
                                 setForm(prev => ({
                                     ...prev,
                                     isAuction: on,
-                                    // При включении из проекта подставляем заказчика —
-                                    // конечного потребителя проекта, если ещё не выбран.
+                                    // При включении у сделки с проектом заказчик —
+                                    // конечный потребитель проекта, поле заблокировано.
                                     auctionCustomerId:
-                                        on && !prev.auctionCustomerId && fromProject?.endCustomerId
-                                            ? fromProject.endCustomerId
+                                        on && !prev.auctionCustomerId && sourceProject
+                                            ? sourceProject.endCustomerId || ""
                                             : prev.auctionCustomerId,
                                 }))
                             }}
@@ -444,6 +501,7 @@ export default function DealForm({
                                             auctionCustomerContactId: "",
                                         }))
                                     }
+                                    disabled={partiesLocked}
                                     placeholder='— Не выбран —'
                                     options={counterpartyOptions}
                                 />

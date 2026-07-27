@@ -1,4 +1,5 @@
 export { default as PageHeader } from "./PageHeader"
+export { default as EntityHeading } from "./EntityHeading"
 export { default as Section } from "./Section"
 export { default as EmptyState } from "./EmptyState"
 export { default as TableSkeleton } from "./TableSkeleton"

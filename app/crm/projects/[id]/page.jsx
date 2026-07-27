@@ -12,6 +12,7 @@ import ActivityPanel from "@/components/crm/ActivityPanel"
 import ContactMeta from "@/components/crm/ContactMeta"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import LocalDateTime from "@/components/crm/LocalDateTime"
+import { EntityHeading } from "@/components/crm/ui"
 
 export const metadata = { title: "Проект | CRM" }
 
@@ -74,14 +75,11 @@ export default async function ProjectPage({ params }) {
                 колонке над панелью активности, как на карточке сделки. */}
             <div className='grid grid-cols-[minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='flex min-w-0 items-end justify-between gap-3'>
-                    <div className='min-w-0'>
-                        <p className='text-xs uppercase tracking-wider text-neutral-400'>
-                            Проект
-                        </p>
-                        <h1 className='mt-0.5 text-xl font-semibold text-neutral-900 sm:text-2xl'>
-                            {item.internalName}
-                        </h1>
-                    </div>
+                    <EntityHeading
+                        tone='blue'
+                        label='Проект'
+                        title={item.internalName}
+                    />
                     {!locked && (
                         <Link
                             href={`/crm/projects/${item.id}/edit`}

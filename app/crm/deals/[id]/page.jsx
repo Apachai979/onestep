@@ -15,6 +15,7 @@ import DealShipmentsSection from "@/components/crm/DealShipmentsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import ContactMeta from "@/components/crm/ContactMeta"
 import LocalDateTime from "@/components/crm/LocalDateTime"
+import { EntityHeading } from "@/components/crm/ui"
 
 export const metadata = { title: "Сделка | CRM" }
 
@@ -124,17 +125,16 @@ export default async function DealPage({ params }) {
                 стоит ровно над панелью активности и не сдвигает её вниз. */}
             <div className='grid grid-cols-[minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
                 <div className='flex min-w-0 items-end justify-between gap-3'>
-                    <div className='min-w-0'>
-                        <p className='text-xs uppercase tracking-wider text-neutral-400'>Сделка</p>
-                        <h1 className='mt-0.5 truncate text-xl font-semibold text-neutral-900 sm:text-2xl'>
-                            {dealDisplayTitle(item, item.counterparty?.name)}
-                        </h1>
-                        {item.isAuction && (
-                            <span className='mt-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700'>
-                                Аукцион
-                                {item.purchaseNumber ? ` · № ${item.purchaseNumber}` : ""}
-                            </span>
-                        )}
+                    <EntityHeading
+                        tone={item.isAuction ? "amber" : "brand"}
+                        label={item.isAuction ? "Аукцион" : "Сделка"}
+                        meta={
+                            item.isAuction && item.purchaseNumber
+                                ? `№ ${item.purchaseNumber}`
+                                : null
+                        }
+                        title={dealDisplayTitle(item, item.counterparty?.name)}
+                    >
                         {item.sourceProject && (
                             <p className='mt-1 text-sm text-blue-700'>
                                 По проекту:{" "}
@@ -146,7 +146,7 @@ export default async function DealPage({ params }) {
                                 </Link>
                             </p>
                         )}
-                    </div>
+                    </EntityHeading>
                     {!locked && (
                         <Link
                             href={`/crm/deals/${item.id}/edit`}

@@ -383,7 +383,7 @@ export default function DealItemsSection({
                                     {it.isShipped ? (
                                         <span
                                             title={shippedNote(it)}
-                                            className='inline-flex flex-col items-end gap-0.5 whitespace-nowrap'
+                                            className='inline-flex flex-col items-center gap-0.5 whitespace-nowrap'
                                         >
                                             <Badge tone='success'>Отгружена</Badge>
                                             {isPartiallyShipped(it) && (

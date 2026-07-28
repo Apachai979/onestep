@@ -2,7 +2,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { LuMail, LuPrinter, LuSave } from "react-icons/lu"
+import { LuFileSpreadsheet, LuMail, LuPrinter, LuSave } from "react-icons/lu"
 import { rublesToWords } from "@/lib/crm/number-to-words"
 import { fillTemplate } from "@/lib/crm/template"
 import { useToast } from "@/components/crm/ui"
@@ -145,7 +145,39 @@ export default function ProposalView({
 
     const toast = useToast()
     const [saving, setSaving] = useState(false)
+    const [exporting, setExporting] = useState(false)
     const [sendOpen, setSendOpen] = useState(false)
+
+    async function handleExportXlsx() {
+        if (typeof window === "undefined") return
+        setExporting(true)
+        try {
+            const res = await fetch(`/api/crm/deals/${dealId}/proposal/xlsx`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(form),
+            })
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}))
+                toast.error(data?.error || "Не удалось сформировать Excel")
+                return
+            }
+            const blob = await res.blob()
+            const fileName = `${fileNameRef.current || "Коммерческое предложение"}.xlsx`
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = fileName
+            document.body.appendChild(a)
+            a.click()
+            a.remove()
+            URL.revokeObjectURL(url)
+        } catch (err) {
+            toast.error(err?.message || "Не удалось сформировать Excel")
+        } finally {
+            setExporting(false)
+        }
+    }
 
     async function handleSaveToDeal() {
         if (typeof window === "undefined") return
@@ -215,6 +247,16 @@ export default function ProposalView({
                     >
                         <LuSave className={`h-4 w-4 ${saving ? "animate-spin" : ""}`} />
                         {saving ? "Сохраняем…" : "Сохранить в сделку"}
+                    </button>
+                    <button
+                        type='button'
+                        onClick={handleExportXlsx}
+                        disabled={exporting}
+                        className='inline-flex items-center justify-center gap-1.5 rounded-lg border border-brand_main/40 bg-white px-4 py-2 text-sm font-semibold text-brand_main shadow-sm transition hover:bg-brand_main/5 disabled:opacity-50'
+                        title='Скачать КП таблицей Excel (.xlsx)'
+                    >
+                        <LuFileSpreadsheet className='h-4 w-4' />
+                        {exporting ? "Формируем…" : "Скачать Excel"}
                     </button>
                     <button
                         type='button'

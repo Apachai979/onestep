@@ -7,6 +7,7 @@ import {
     DEAL_STATUS_COLORS,
     DEAL_STATUS_HINTS,
     DEAL_STATUS_LABELS,
+    dealDiscountedTotal,
     dealDisplayTitle,
 } from "@/lib/crm/deal"
 
@@ -179,7 +180,7 @@ export default function DealsKanban({ isAdmin = false }) {
             <div className='flex gap-3 overflow-x-auto pb-3'>
                 {KANBAN_STATUSES.map(status => {
                     const list = byStatus[status] || []
-                    const sum = list.reduce((s, d) => s + Number(d.totalAmount || 0), 0)
+                    const sum = list.reduce((s, d) => s + dealDiscountedTotal(d), 0)
                     return (
                         <div
                             key={status}
@@ -265,6 +266,9 @@ function DealCard({ deal, locked, dragging, onDragStart, onDragEnd }) {
     const progress = hasItems ? calculateDealShipmentProgress(deal) : null
     const hasOverdue =
         Array.isArray(deal.shipments) && deal.shipments.some(isShipmentOverdue)
+    // На карточке показываем сумму со скидкой — это то, что реально получим.
+    const discountPct = deal.discount != null ? Number(deal.discount) : 0
+    const amount = dealDiscountedTotal(deal)
 
     return (
         <Link
@@ -289,8 +293,15 @@ function DealCard({ deal, locked, dragging, onDragStart, onDragEnd }) {
             </p>
             <div className='mt-2 flex items-center justify-between gap-2 text-xs'>
                 <span className='truncate text-neutral-500'>{managerName(deal.manager)}</span>
-                <span className='shrink-0 font-semibold text-neutral-700'>
-                    {formatMoney(deal.totalAmount)}
+                <span
+                    className='shrink-0 font-semibold text-neutral-700'
+                    title={
+                        discountPct > 0
+                            ? `Сумма со скидкой ${discountPct}% (без скидки ${formatMoney(deal.totalAmount)})`
+                            : undefined
+                    }
+                >
+                    {formatMoney(amount)}
                 </span>
             </div>
             {progress && progress.totalOrdered > 0 && (

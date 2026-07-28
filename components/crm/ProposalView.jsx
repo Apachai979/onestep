@@ -2,7 +2,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { LuFileSpreadsheet, LuMail, LuPrinter, LuSave } from "react-icons/lu"
+import { LuChevronDown, LuFileSpreadsheet, LuMail, LuPrinter, LuSave } from "react-icons/lu"
 import { rublesToWords } from "@/lib/crm/number-to-words"
 import { fillTemplate } from "@/lib/crm/template"
 import { useToast } from "@/components/crm/ui"
@@ -147,6 +147,9 @@ export default function ProposalView({
     const [saving, setSaving] = useState(false)
     const [exporting, setExporting] = useState(false)
     const [sendOpen, setSendOpen] = useState(false)
+    // Параметры обычно правят один раз в начале — блок сворачивается,
+    // чтобы сам документ был выше на экране.
+    const [paramsOpen, setParamsOpen] = useState(true)
 
     async function handleExportXlsx() {
         if (typeof window === "undefined") return
@@ -270,133 +273,148 @@ export default function ProposalView({
                 </div>
             </div>
 
-            <section className='space-y-4 rounded-xl border border-line bg-white p-5 print:hidden'>
-                <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
-                    Параметры КП
-                </h2>
-                <div className='grid gap-3 sm:grid-cols-3'>
-                    <Field label='Номер КП'>
-                        <Input value={form.number} onChange={update("number")} />
-                    </Field>
-                    <Field label='Дата'>
-                        <Input type='date' value={form.date} onChange={update("date")} />
-                    </Field>
-                    <Field label='Действительно, рабочих дней'>
-                        <Input
-                            type='number'
-                            min='1'
-                            value={form.validDays}
-                            onChange={update("validDays")}
-                        />
-                    </Field>
-                </div>
-                <Field label='Покупатель'>
-                    <Input value={form.buyer} onChange={update("buyer")} />
-                </Field>
-                <Field
-                    label='Конечный потребитель'
-                    action={
-                        <label
-                            className={`inline-flex items-center gap-1.5 text-xs ${
-                                showEndCustomerRow ? "text-neutral-500" : "text-neutral-300"
-                            }`}
-                            title={
-                                form.endCustomer.trim()
-                                    ? "Выводить строку в КП"
-                                    : "Поле пустое — строка в КП не выводится"
+            <section className='rounded-xl border border-line bg-white print:hidden'>
+                <button
+                    type='button'
+                    onClick={() => setParamsOpen(o => !o)}
+                    className='flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left'
+                    title={paramsOpen ? "Свернуть параметры" : "Развернуть параметры"}
+                >
+                    <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
+                        Параметры КП
+                    </h2>
+                    <LuChevronDown
+                        className={`h-4 w-4 shrink-0 text-neutral-400 transition ${
+                            paramsOpen ? "rotate-180" : ""
+                        }`}
+                    />
+                </button>
+                {paramsOpen && (
+                    <div className='grid grid-cols-1 gap-x-3 gap-y-2 border-t border-line px-4 pb-4 pt-3 sm:grid-cols-12'>
+                        <Field label='Номер КП' className='sm:col-span-3'>
+                            <Input value={form.number} onChange={update("number")} />
+                        </Field>
+                        <Field label='Дата' className='sm:col-span-3'>
+                            <Input type='date' value={form.date} onChange={update("date")} />
+                        </Field>
+                        <Field label='Действ., раб. дней' className='sm:col-span-2'>
+                            <Input
+                                type='number'
+                                min='1'
+                                value={form.validDays}
+                                onChange={update("validDays")}
+                            />
+                        </Field>
+                        <Field label='Скидка, %' className='sm:col-span-2'>
+                            <Input
+                                type='number'
+                                min='0'
+                                max='100'
+                                step='0.01'
+                                value={form.discount}
+                                onChange={update("discount")}
+                            />
+                        </Field>
+                        <Field label='НДС, %' className='sm:col-span-2'>
+                            <Input
+                                type='number'
+                                min='0'
+                                max='100'
+                                step='0.01'
+                                value={form.vatRate}
+                                onChange={update("vatRate")}
+                            />
+                        </Field>
+
+                        <Field label='Покупатель' className='sm:col-span-6'>
+                            <Input value={form.buyer} onChange={update("buyer")} />
+                        </Field>
+                        <Field
+                            label='Конечный потребитель'
+                            className='sm:col-span-6'
+                            action={
+                                <label
+                                    className={`inline-flex items-center gap-1 text-[11px] ${
+                                        showEndCustomerRow
+                                            ? "text-neutral-500"
+                                            : "text-neutral-300"
+                                    }`}
+                                    title={
+                                        form.endCustomer.trim()
+                                            ? "Выводить строку в КП"
+                                            : "Поле пустое — строка в КП не выводится"
+                                    }
+                                >
+                                    <input
+                                        type='checkbox'
+                                        checked={showEndCustomerRow}
+                                        disabled={!form.endCustomer.trim()}
+                                        onChange={e =>
+                                            setForm(prev => ({
+                                                ...prev,
+                                                showEndCustomer: e.target.checked,
+                                            }))
+                                        }
+                                        className='h-3.5 w-3.5 rounded accent-brand_main disabled:opacity-40'
+                                    />
+                                    Выводить в КП
+                                </label>
                             }
                         >
-                            <input
-                                type='checkbox'
-                                checked={showEndCustomerRow}
-                                disabled={!form.endCustomer.trim()}
-                                onChange={e =>
-                                    setForm(prev => ({
-                                        ...prev,
-                                        showEndCustomer: e.target.checked,
-                                    }))
-                                }
-                                className='rounded accent-brand_main disabled:opacity-40'
+                            <Input
+                                value={form.endCustomer}
+                                onChange={update("endCustomer")}
+                                placeholder='подтягивается из проекта'
                             />
-                            Выводить в КП
-                        </label>
-                    }
-                >
-                    <Input
-                        value={form.endCustomer}
-                        onChange={update("endCustomer")}
-                        placeholder='подтягивается из проекта'
-                    />
-                </Field>
-                <div className='grid gap-3 sm:grid-cols-3'>
-                    <Field label='Срок поставки'>
-                        <Input value={form.deliveryTerm} onChange={update("deliveryTerm")} />
-                    </Field>
-                    <Field label='Условия оплаты'>
-                        <Input value={form.paymentTerm} onChange={update("paymentTerm")} />
-                    </Field>
-                    <Field label='Условия поставки'>
-                        <Input
-                            value={form.deliveryCondition}
-                            onChange={update("deliveryCondition")}
-                        />
-                    </Field>
-                </div>
-                <Field label='Вступительная строка'>
-                    <textarea
-                        rows={2}
-                        value={form.intro}
-                        onChange={update("intro")}
-                        className='w-full rounded-lg border border-line px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
-                    />
-                </Field>
-                <div className='grid gap-3 sm:grid-cols-4'>
-                    <Field label='Скидка, %'>
-                        <Input
-                            type='number'
-                            min='0'
-                            max='100'
-                            step='0.01'
-                            value={form.discount}
-                            onChange={update("discount")}
-                        />
-                    </Field>
-                    <Field label='Ставка НДС, %'>
-                        <Input
-                            type='number'
-                            min='0'
-                            max='100'
-                            step='0.01'
-                            value={form.vatRate}
-                            onChange={update("vatRate")}
-                        />
-                    </Field>
-                    <Field label='Объём груза, м³ (авто)'>
-                        <Input
-                            value={form.volume}
-                            onChange={update("volume")}
-                            placeholder='считается из позиций'
-                        />
-                    </Field>
-                    <Field label='Вес груза, кг (авто)'>
-                        <Input
-                            value={form.weight}
-                            onChange={update("weight")}
-                            placeholder='считается из позиций'
-                        />
-                    </Field>
-                </div>
-                <div className='grid gap-3 sm:grid-cols-3'>
-                    <Field label='Подписант — имя'>
-                        <Input value={form.senderName} onChange={update("senderName")} />
-                    </Field>
-                    <Field label='Телефон'>
-                        <Input value={form.senderPhone} onChange={update("senderPhone")} />
-                    </Field>
-                    <Field label='Email'>
-                        <Input value={form.senderEmail} onChange={update("senderEmail")} />
-                    </Field>
-                </div>
+                        </Field>
+
+                        <Field label='Срок поставки' className='sm:col-span-4'>
+                            <Input value={form.deliveryTerm} onChange={update("deliveryTerm")} />
+                        </Field>
+                        <Field label='Условия оплаты' className='sm:col-span-4'>
+                            <Input value={form.paymentTerm} onChange={update("paymentTerm")} />
+                        </Field>
+                        <Field label='Условия поставки' className='sm:col-span-4'>
+                            <Input
+                                value={form.deliveryCondition}
+                                onChange={update("deliveryCondition")}
+                            />
+                        </Field>
+
+                        <Field label='Вступительная строка' className='sm:col-span-8'>
+                            <textarea
+                                rows={2}
+                                value={form.intro}
+                                onChange={update("intro")}
+                                className='w-full rounded-lg border border-line px-2.5 py-1.5 text-[13px] shadow-sm focus:border-brand_main focus:outline-none'
+                            />
+                        </Field>
+                        <Field label='Объём, м³ (авто)' className='sm:col-span-2'>
+                            <Input
+                                value={form.volume}
+                                onChange={update("volume")}
+                                placeholder='из позиций'
+                            />
+                        </Field>
+                        <Field label='Вес, кг (авто)' className='sm:col-span-2'>
+                            <Input
+                                value={form.weight}
+                                onChange={update("weight")}
+                                placeholder='из позиций'
+                            />
+                        </Field>
+
+                        <Field label='Подписант — имя' className='sm:col-span-4'>
+                            <Input value={form.senderName} onChange={update("senderName")} />
+                        </Field>
+                        <Field label='Телефон' className='sm:col-span-4'>
+                            <Input value={form.senderPhone} onChange={update("senderPhone")} />
+                        </Field>
+                        <Field label='Email' className='sm:col-span-4'>
+                            <Input value={form.senderEmail} onChange={update("senderEmail")} />
+                        </Field>
+                    </div>
+                )}
             </section>
 
             {sendOpen && (
@@ -752,11 +770,11 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
     )
 }
 
-function Field({ label, children, action = null }) {
+function Field({ label, children, action = null, className = "" }) {
     return (
-        <div>
-            <div className='mb-1 flex items-center justify-between gap-3'>
-                <label className='block text-xs text-neutral-500'>{label}</label>
+        <div className={className}>
+            <div className='mb-0.5 flex items-center justify-between gap-2'>
+                <label className='block truncate text-[11px] text-neutral-500'>{label}</label>
                 {action}
             </div>
             {children}
@@ -768,7 +786,7 @@ function Input(props) {
     return (
         <input
             {...props}
-            className='w-full rounded-lg border border-line px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+            className='w-full rounded-lg border border-line px-2.5 py-1.5 text-[13px] shadow-sm focus:border-brand_main focus:outline-none'
         />
     )
 }

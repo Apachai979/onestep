@@ -4,7 +4,9 @@ import { requireAdmin } from "@/lib/crm/admin"
 import { DEAL_TRACKED_FIELDS, parseDealPayload } from "@/lib/crm/deal"
 import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
 import {
+    DEAL_DISCOUNT_SHIPPED_ERROR,
     DEAL_PARTIES_LOCKED_ERROR,
+    dealItemShipmentUsage,
     dealLockResponse,
     dealProjectPartiesError,
 } from "@/lib/crm/access"
@@ -18,6 +20,14 @@ const CONTACT_SELECT = {
     phone: true,
     email: true,
     position: true,
+}
+
+// Форма присылает скидку при каждом сохранении, поэтому «менялась ли она»
+// решаем по значению: Decimal из БД против строки из payload, null ≠ 0.
+function decimalChanged(next, current) {
+    const a = next === null || next === undefined || next === "" ? null : Number(next)
+    const b = current === null || current === undefined ? null : Number(current)
+    return a !== b
 }
 
 export async function GET(_request, { params }) {
@@ -35,13 +45,29 @@ export async function GET(_request, { params }) {
             auctionCustomer: { select: COUNTERPARTY_SELECT },
             auctionCustomerContact: { select: CONTACT_SELECT },
             items: { orderBy: { createdAt: "asc" } },
+            shipments: {
+                select: {
+                    number: true,
+                    status: true,
+                    items: { select: { dealItemId: true, quantity: true } },
+                },
+            },
             sourceProject: {
                 select: { id: true, internalName: true, externalAuctionId: true },
             },
         },
     })
     if (!item) return Response.json({ error: "Не найдено" }, { status: 404 })
-    return Response.json({ item })
+
+    // Позиции отдаём вместе с их «отгруженностью»: раздел товарных позиций
+    // блокирует правку тех строк, что попали в проведённый документ.
+    const { shipments, ...deal } = item
+    return Response.json({
+        item: {
+            ...deal,
+            items: deal.items.map(i => ({ ...i, ...dealItemShipmentUsage(i.id, shipments) })),
+        },
+    })
 }
 
 export async function PATCH(request, { params }) {
@@ -77,6 +103,18 @@ export async function PATCH(request, { params }) {
     if (data.status && data.status !== "CANCELLED" && data.status !== "ARCHIVED") {
         if (existing.lossReason && data.lossReason === undefined) data.lossReason = null
         if (existing.lossComment && data.lossComment === undefined) data.lossComment = null
+    }
+
+    // Скидка входит в расчёт сумм отгрузки (priceFactor в
+    // calculateDealShipmentProgress), поэтому после проведения документа она
+    // фиксируется — иначе запрет на правку позиций обходится через скидку.
+    if (data.discount !== undefined && decimalChanged(data.discount, existing.discount)) {
+        const shipped = await prisma.shipment.count({
+            where: { dealId: params.id, status: "SHIPPED" },
+        })
+        if (shipped > 0) {
+            return Response.json({ error: DEAL_DISCOUNT_SHIPPED_ERROR }, { status: 403 })
+        }
     }
 
     // Привязку к проекту не переставляют: иначе запрет на смену сторон

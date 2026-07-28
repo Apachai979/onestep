@@ -26,6 +26,11 @@ export default async function EditDealPage({ params }) {
         redirect(`/crm/deals/${item.id}`)
     }
 
+    // Скидка входит в суммы отгрузок — после проведения документа не меняется.
+    const shippedCount = await prisma.shipment.count({
+        where: { dealId: item.id, status: "SHIPPED" },
+    })
+
     const initial = {
         ...item,
         totalAmount: item.totalAmount.toString(),
@@ -46,7 +51,12 @@ export default async function EditDealPage({ params }) {
                 className='inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand_main'
             />
             <h1 className='text-2xl font-semibold text-neutral-900'>Редактирование сделки</h1>
-            <DealForm mode='edit' initial={initial} linkedProject={item.sourceProject} />
+            <DealForm
+                mode='edit'
+                initial={initial}
+                linkedProject={item.sourceProject}
+                discountLocked={shippedCount > 0}
+            />
         </div>
     )
 }

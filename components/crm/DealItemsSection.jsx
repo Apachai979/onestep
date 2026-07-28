@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { formatMoney } from "@/lib/crm/format"
-import { CardRow, MobileCard, useConfirm, useToast } from "@/components/crm/ui"
+import { Badge, CardRow, MobileCard, useConfirm, useToast } from "@/components/crm/ui"
 
 const EMPTY = { sku: "", name: "", quantity: "1", unitPrice: "", amount: "0", productId: "" }
 
@@ -21,6 +21,28 @@ function parseNum(v) {
 function fmt(n) {
     if (!Number.isFinite(n)) return ""
     return (Math.round(n * 100) / 100).toString()
+}
+
+// Позиция «заморожена», если попала в проведённую отгрузку: править и удалять
+// её нельзя (см. DEAL_ITEM_SHIPPED_ERROR в lib/crm/access.js). Флаги приходят с
+// позицией — и со страницы, и из GET сделки при refresh().
+// Отгружено меньше, чем в заказе: остаток поедет следующим документом, но
+// позиция всё равно зафиксирована — уже проведённое пересчёту не подлежит.
+function isPartiallyShipped(item) {
+    if (!item?.isShipped) return false
+    const ordered = parseNum(item.quantity)
+    if (!Number.isFinite(ordered) || ordered <= 0) return false
+    return parseNum(item.shippedQty) < ordered
+}
+
+function shippedNote(item) {
+    if (!item?.isShipped) return null
+    const lead = isPartiallyShipped(item) ? "Частично отгружено" : "Отгружено"
+    const qty = `${item.shippedQty} из ${toFormValue(item.quantity)}`
+    const where = (item.shippedIn || []).filter(Boolean).join(", ")
+    return where
+        ? `${lead} ${qty} по документу ${where} — позиция зафиксирована`
+        : `${lead} ${qty} — позиция зафиксирована`
 }
 
 // apiBase позволяет переиспользовать секцию для других сущностей с таким же
@@ -43,6 +65,12 @@ export default function DealItemsSection({
     const [showAdd, setShowAdd] = useState(false)
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
+
+    // Проведение отгрузки делает router.refresh() — подхватываем новые позиции
+    // с сервера, иначе кнопки правки остались бы на уже отгруженных строках.
+    useEffect(() => {
+        setItems(initialItems)
+    }, [initialItems])
 
     useEffect(() => {
         fetch("/api/crm/products")
@@ -191,9 +219,19 @@ export default function DealItemsSection({
 
     async function handleDelete(id) {
         const it = items.find(x => x.id === id)
+        // Строки черновиков отгрузок удалятся вместе с позицией — предупреждаем.
+        const draftIn = (it?.draftIn || []).filter(Boolean)
+        const description = [
+            it?.name || null,
+            draftIn.length > 0
+                ? `Позиция распределена в черновиках отгрузок ${draftIn.join(", ")} — там она тоже исчезнет.`
+                : null,
+        ]
+            .filter(Boolean)
+            .join(" ")
         const ok = await confirm({
             title: "Удалить позицию?",
-            description: it?.name || undefined,
+            description: description || undefined,
             confirmText: "Удалить",
             variant: "danger",
         })
@@ -229,12 +267,22 @@ export default function DealItemsSection({
         ? `${Math.floor(qtyNum / packQty)} тр. упаковок + ${qtyNum % packQty} шт.`
         : null
 
+    const hasShippedItems = items.some(it => it.isShipped)
+
     return (
         <section className='rounded-xl border border-line bg-white p-5'>
             <div className='mb-4 flex items-center justify-between'>
-                <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
-                    Товарные позиции
-                </h2>
+                <div>
+                    <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
+                        Товарные позиции
+                    </h2>
+                    {hasShippedItems && (
+                        <p className='mt-1 text-xs text-neutral-400'>
+                            Позиции из проведённых отгрузок зафиксированы. Чтобы их изменить,
+                            верните отгрузку в черновик.
+                        </p>
+                    )}
+                </div>
                 {!readOnly && !formOpen && (
                     <button
                         type='button'
@@ -270,7 +318,10 @@ export default function DealItemsSection({
                             <CardRow label='Кол-во'>{toFormValue(it.quantity)}</CardRow>
                             <CardRow label='Сумма'>{formatMoney(it.amount)}</CardRow>
                         </div>
-                        {!readOnly && (
+                        {it.isShipped && (
+                            <p className='mt-2 text-[11px] text-emerald-700'>{shippedNote(it)}</p>
+                        )}
+                        {!readOnly && !it.isShipped && (
                             <div className='mt-3 flex justify-end gap-2'>
                                 <button
                                     type='button'
@@ -329,23 +380,37 @@ export default function DealItemsSection({
                                     {formatMoney(it.amount)}
                                 </td>
                                 <td className='px-3 py-2 text-right'>
-                                    {!readOnly && (
-                                        <div className='flex justify-end gap-2'>
-                                            <button
-                                                type='button'
-                                                onClick={() => startEdit(it)}
-                                                className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
-                                            >
-                                                Изменить
-                                            </button>
-                                            <button
-                                                type='button'
-                                                onClick={() => handleDelete(it.id)}
-                                                className='rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50'
-                                            >
-                                                Удалить
-                                            </button>
-                                        </div>
+                                    {it.isShipped ? (
+                                        <span
+                                            title={shippedNote(it)}
+                                            className='inline-flex flex-col items-end gap-0.5 whitespace-nowrap'
+                                        >
+                                            <Badge tone='success'>Отгружена</Badge>
+                                            {isPartiallyShipped(it) && (
+                                                <span className='text-[10px] leading-none text-neutral-400'>
+                                                    (частично)
+                                                </span>
+                                            )}
+                                        </span>
+                                    ) : (
+                                        !readOnly && (
+                                            <div className='flex justify-end gap-2'>
+                                                <button
+                                                    type='button'
+                                                    onClick={() => startEdit(it)}
+                                                    className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
+                                                >
+                                                    Изменить
+                                                </button>
+                                                <button
+                                                    type='button'
+                                                    onClick={() => handleDelete(it.id)}
+                                                    className='rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50'
+                                                >
+                                                    Удалить
+                                                </button>
+                                            </div>
+                                        )
                                     )}
                                 </td>
                             </tr>

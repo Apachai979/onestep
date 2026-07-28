@@ -5,7 +5,7 @@ import { LuPencil, LuFileText, LuExternalLink } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_LOSS_REASON_LABELS, dealDisplayTitle } from "@/lib/crm/deal"
-import { isDealLocked } from "@/lib/crm/access"
+import { dealItemShipmentUsage, isDealLocked } from "@/lib/crm/access"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import DealItemsSection from "@/components/crm/DealItemsSection"
@@ -51,6 +51,14 @@ export default async function DealPage({ params }) {
             },
             auctionCustomer: { select: { id: true, name: true, region: true } },
             auctionCustomerContact: true,
+            // Нужны, чтобы понять, какие позиции уже ушли в проведённые отгрузки.
+            shipments: {
+                select: {
+                    number: true,
+                    status: true,
+                    items: { select: { dealItemId: true, quantity: true } },
+                },
+            },
         },
     })
     if (!item) notFound()
@@ -80,6 +88,8 @@ export default async function DealPage({ params }) {
         amount: i.amount.toString(),
         createdAt: i.createdAt.toISOString(),
         updatedAt: i.updatedAt.toISOString(),
+        // Позиция из проведённой отгрузки редактированию не подлежит.
+        ...dealItemShipmentUsage(i.id, item.shipments),
     }))
 
     const paramsFooter = (

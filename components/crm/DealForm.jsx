@@ -78,6 +78,8 @@ function toFormValue(v) {
 
 // linkedProject — проект-источник у уже созданной сделки. Его наличие
 // замораживает стороны сделки (см. DEAL_PARTIES_LOCKED_ERROR в lib/crm/access).
+// discountLocked — по сделке есть проведённая отгрузка, скидка участвует в её
+// суммах (DEAL_DISCOUNT_SHIPPED_ERROR) и дальше не меняется.
 export default function DealForm({
     initial,
     mode = "create",
@@ -86,6 +88,7 @@ export default function DealForm({
     fromProject,
     linkedProject = null,
     defaultIsAuction = false,
+    discountLocked = false,
 }) {
     const router = useRouter()
 
@@ -196,8 +199,9 @@ export default function DealForm({
             .then(d => {
                 setContacts(d.item?.contacts || [])
                 // Скидку берём из карточки клиента, только если менеджер не задал её
-                // вручную. Иначе (ручное значение) — не трогаем.
-                if (discountTouchedRef.current) return
+                // вручную. Иначе (ручное значение) — не трогаем. Зафиксированную
+                // отгрузкой скидку не перебиваем тем более: сервер такое отклонит.
+                if (discountTouchedRef.current || discountLocked) return
                 const cpDiscount = d.item?.discount
                 setForm(prev => ({
                     ...prev,
@@ -208,7 +212,7 @@ export default function DealForm({
                 }))
             })
             .catch(() => setContacts([]))
-    }, [form.counterpartyId])
+    }, [form.counterpartyId, discountLocked])
 
     // Контакты заказчика аукциона.
     useEffect(() => {
@@ -414,11 +418,16 @@ export default function DealForm({
                                 step='0.01'
                                 inputMode='decimal'
                                 value={form.discount}
+                                disabled={discountLocked}
                                 onChange={e => {
                                     discountTouchedRef.current = true
                                     setForm(prev => ({ ...prev, discount: e.target.value }))
                                 }}
-                                hint='Используется в КП. Меняйте, если клиенту согласована особая скидка на эту сделку.'
+                                hint={
+                                    discountLocked
+                                        ? "По сделке есть проведённая отгрузка — скидка зафиксирована: её правка пересчитала бы суммы уже отгруженного."
+                                        : "Используется в КП. Меняйте, если клиенту согласована особая скидка на эту сделку."
+                                }
                             />
                         </Field>
                         <Textarea

@@ -121,9 +121,13 @@ export default function CrmShell({ user, role, children }) {
             { href: "/crm/customers", label: "Конечные потребители", icon: LuStethoscope },
             { href: "/crm/contacts", label: "Контакты", icon: LuContact },
             { href: "/crm/products", label: "Товары", icon: LuPackage },
+            {
+                href: "/crm/users",
+                label: role === "ADMIN" ? "Пользователи" : "Сотрудники",
+                icon: LuUsers,
+            },
         ]
         if (role === "ADMIN") {
-            base.push({ href: "/crm/users", label: "Пользователи", icon: LuUsers })
             base.push({ href: "/crm/settings", label: "Настройки", icon: LuSettings })
         }
         return base
@@ -249,22 +253,26 @@ export default function CrmShell({ user, role, children }) {
                 <div className='relative shrink-0 border-t border-line p-2'>
                     <InstallAppButton showLabels={showLabels} onDone={onClose} />
                     <div className='flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-neutral-50'>
-                        <div
-                            className='flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand_main text-white text-sm font-semibold'
-                            title={user?.name || user?.email || ""}
+                        <Link
+                            href='/crm/profile'
+                            onClick={onClose}
+                            title='Мой профиль'
+                            className='flex min-w-0 flex-1 items-center gap-3'
                         >
-                            {userInitials(user?.name, user?.email)}
-                        </div>
-                        <div
-                            className={`min-w-0 flex-1 transition-opacity duration-150 ${showLabels}`}
-                        >
-                            <p className='truncate text-sm font-medium text-neutral-900'>
-                                {user?.name || user?.email || "—"}
-                            </p>
-                            <p className='truncate text-[11px] text-neutral-500'>
-                                {role === "ADMIN" ? "Администратор" : "Менеджер"}
-                            </p>
-                        </div>
+                            <span className='flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand_main text-white text-sm font-semibold'>
+                                {userInitials(user?.name, user?.email)}
+                            </span>
+                            <span
+                                className={`min-w-0 flex-1 transition-opacity duration-150 ${showLabels}`}
+                            >
+                                <span className='block truncate text-sm font-medium text-neutral-900'>
+                                    {user?.name || user?.email || "—"}
+                                </span>
+                                <span className='block truncate text-[11px] text-neutral-500'>
+                                    {role === "ADMIN" ? "Администратор" : "Менеджер"}
+                                </span>
+                            </span>
+                        </Link>
                         <button
                             type='button'
                             onClick={() => signOut({ callbackUrl: "/" })}

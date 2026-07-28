@@ -54,10 +54,15 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        async jwt({ token, user }) {
+        async jwt({ token, user, trigger, session }) {
             if (user) {
                 token.id = (user as { id?: string }).id
                 token.role = (user as { role?: string }).role ?? "MANAGER"
+            }
+            // Сотрудник поменял имя на /crm/profile — обновляем токен, иначе в
+            // шапке и подписях останется старое значение до перелогина.
+            if (trigger === "update" && (session as { name?: string })?.name) {
+                token.name = (session as { name?: string }).name
             }
             return token
         },

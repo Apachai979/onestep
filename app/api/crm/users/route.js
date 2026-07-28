@@ -7,7 +7,16 @@ export async function GET() {
 
     const items = await prisma.user.findMany({
         where: { status: "ACTIVE", role: { in: ["MANAGER", "ADMIN"] } },
-        select: { id: true, firstName: true, lastName: true, email: true, role: true },
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            phone: true,
+            position: true,
+            telegram: true,
+        },
         orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     })
     return Response.json({ items })

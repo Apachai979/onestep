@@ -9,6 +9,7 @@ import {
     COMPANY_KIND_LABELS,
     COUNTERPARTY_SOURCE_LABELS,
     COUNTERPARTY_TYPE_LABELS,
+    websiteHref,
 } from "@/lib/crm/counterparty"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS } from "@/lib/crm/project"
@@ -157,6 +158,21 @@ export default async function CounterpartyPage({ params }) {
                             value={item.phone ? <PhoneLink phone={item.phone} /> : null}
                         />
                         <Row label='Email' value={item.email} />
+                        <Row
+                            label='Веб-сайт'
+                            value={
+                                item.website ? (
+                                    <a
+                                        href={websiteHref(item.website)}
+                                        target='_blank'
+                                        rel='noreferrer noopener'
+                                        className='break-all text-brand_main hover:underline'
+                                    >
+                                        {item.website}
+                                    </a>
+                                ) : null
+                            }
+                        />
                         <Row
                             label='Ответственный менеджер'
                             value={

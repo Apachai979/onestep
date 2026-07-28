@@ -21,6 +21,7 @@ const COUNTERPARTY_TRACKED_FIELDS = [
     "discount",
     "phone",
     "email",
+    "website",
     "address",
     "source",
     "companyKind",

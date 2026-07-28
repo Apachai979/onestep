@@ -18,8 +18,14 @@ model User {
   lastName     String?
   phone        String?
   position     String?
+  telegram     String?
   role         String   @default("MANAGER")
   status       String   @default("ACTIVE")
+  // Заполняется телеграм-ботом при привязке, пользователь его не вводит.
+  telegramChatId String?
+  // JSON-строка с личными настройками (каналы уведомлений и т.п.).
+  // SQLite не умеет Json, поэтому храним текстом.
+  prefs        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -96,6 +102,7 @@ model Counterparty {
   discount        Decimal?
   phone           String?
   email           String?
+  website         String?
   address         String?
   source          String?
   companyKind     String?

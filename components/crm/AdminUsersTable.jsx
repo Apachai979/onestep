@@ -111,6 +111,12 @@ export default function AdminUsersTable({ currentUserId }) {
                 hideable: true,
             },
             {
+                key: "telegram",
+                header: "Телеграм",
+                render: u => u.telegram || "—",
+                hideable: true,
+            },
+            {
                 key: "position",
                 header: "Должность",
                 render: u => u.position || "—",
@@ -196,6 +202,7 @@ export default function AdminUsersTable({ currentUserId }) {
                             <CardRow label='Телефон'>
                                 {u.phone ? <PhoneLink phone={u.phone} /> : "—"}
                             </CardRow>
+                            <CardRow label='Телеграм'>{u.telegram || "—"}</CardRow>
                             <CardRow label='Должность'>{u.position || "—"}</CardRow>
                             <CardRow label='Добавлен'>{fmtDate(u.createdAt)}</CardRow>
                         </div>

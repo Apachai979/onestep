@@ -22,6 +22,7 @@ export default async function EditUserPage({ params }) {
             lastName: true,
             phone: true,
             position: true,
+            telegram: true,
             role: true,
             status: true,
         },

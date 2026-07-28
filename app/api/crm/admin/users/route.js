@@ -13,6 +13,7 @@ export async function GET() {
             lastName: true,
             phone: true,
             position: true,
+            telegram: true,
             role: true,
             status: true,
             createdAt: true,

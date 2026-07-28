@@ -30,6 +30,7 @@ export default function AdminUserForm({ initial, isSelf }) {
         firstName: initial.firstName ?? "",
         lastName: initial.lastName ?? "",
         phone: initial.phone ?? "",
+        telegram: initial.telegram ?? "",
         position: initial.position ?? "",
         role: initial.role,
         status: initial.status,
@@ -68,6 +69,12 @@ export default function AdminUserForm({ initial, isSelf }) {
                 <Field label='Имя' value={form.firstName} onChange={update("firstName")} />
                 <Field label='Фамилия' value={form.lastName} onChange={update("lastName")} />
                 <Field label='Телефон' value={form.phone} onChange={update("phone")} />
+                <Field
+                    label='Телеграм'
+                    value={form.telegram}
+                    onChange={update("telegram")}
+                    placeholder='@username'
+                />
                 <Field
                     label='Должность'
                     value={form.position}

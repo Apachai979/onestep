@@ -47,6 +47,7 @@ const EMPTY = {
     discount: "",
     phone: "",
     email: "",
+    website: "",
     address: "",
     source: "",
     companyKind: "",
@@ -214,6 +215,12 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
                     type='email'
                     value={form.email}
                     onChange={update("email")}
+                />
+                <Field
+                    label='Веб-сайт'
+                    value={form.website}
+                    onChange={update("website")}
+                    placeholder='example.ru'
                 />
                 <div>
                     <label className='mb-1.5 block text-sm text-neutral-600'>

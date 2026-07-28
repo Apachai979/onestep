@@ -180,6 +180,7 @@ async function importCounterparties(tx, wb, report, session) {
                 okved: cellStr(row["оквэд"]) || null,
                 phone: cellStr(row["телефон"]) || null,
                 email: cellStr(row["email"]) || null,
+                website: cellStr(row["веб-сайт"]) || null,
                 managerId: userByEmail(row["менеджер (email)"]),
                 address: cellStr(row["адрес"]) || null,
                 // Источник — enum: нераспознанную подпись кладём в «Другое»,

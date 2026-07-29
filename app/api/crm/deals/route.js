@@ -52,6 +52,7 @@ export async function GET(request) {
         orderBy: { createdAt: "desc" },
         include: {
             counterparty: { select: COUNTERPARTY_SELECT },
+            payer: { select: { id: true, name: true, inn: true } },
             manager: { select: MANAGER_SELECT },
             createdBy: { select: MANAGER_SELECT },
             contact: { select: CONTACT_SELECT },
@@ -72,7 +73,15 @@ export async function GET(request) {
               const ql = q.toLowerCase()
               const title = (d.title || "").toLowerCase()
               const cp = (d.counterparty?.name || "").toLowerCase()
-              return title.includes(ql) || cp.includes(ql)
+              // Клиент присылает реквизиты плательщика — по ним тоже ищем.
+              const payer = (d.payer?.name || "").toLowerCase()
+              const payerInn = (d.payer?.inn || "").toLowerCase()
+              return (
+                  title.includes(ql) ||
+                  cp.includes(ql) ||
+                  payer.includes(ql) ||
+                  payerInn.includes(ql)
+              )
           })
         : items
 
@@ -125,6 +134,18 @@ export async function POST(request) {
                 { error: "Контакт не принадлежит выбранному клиенту" },
                 { status: 400 },
             )
+        }
+    }
+
+    if (data.payerId) {
+        // Плательщик, совпадающий с клиентом, — это отсутствие плательщика.
+        if (data.payerId === data.counterpartyId) data.payerId = null
+        else {
+            const p = await prisma.counterparty.findUnique({
+                where: { id: data.payerId },
+                select: { id: true },
+            })
+            if (!p) return Response.json({ error: "Плательщик не найден" }, { status: 400 })
         }
     }
 

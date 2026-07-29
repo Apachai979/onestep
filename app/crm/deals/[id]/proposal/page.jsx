@@ -21,6 +21,9 @@ export default async function ProposalPage({ params }) {
         where: { id: params.id },
         include: {
             counterparty: true,
+            // Если документы оформляются на другое юрлицо клиента, покупателем
+            // в КП должно быть именно оно.
+            payer: { select: { name: true, email: true } },
             contact: true,
             manager: true,
             // Конечный потребитель для КП берётся из проекта-источника,
@@ -117,7 +120,7 @@ export default async function ProposalPage({ params }) {
     return (
         <ProposalView
             dealId={deal.id}
-            buyer={deal.counterparty.name}
+            buyer={deal.payer?.name || deal.counterparty.name}
             endCustomer={endCustomer}
             contactName={contactName}
             contactEmail={deal.contact?.email || deal.counterparty?.email || ""}

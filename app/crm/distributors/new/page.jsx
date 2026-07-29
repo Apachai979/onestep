@@ -3,7 +3,7 @@ import CrmBackLink from "@/components/crm/CrmBackLink"
 
 export const metadata = { title: "Новый дистрибьютор | CRM" }
 
-export default function NewDistributorPage() {
+export default function NewDistributorPage({ searchParams }) {
     return (
         <div className='max-w-3xl space-y-4'>
             <CrmBackLink
@@ -12,7 +12,11 @@ export default function NewDistributorPage() {
                 className='inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand_main'
             />
             <h1 className='text-2xl font-semibold text-neutral-900'>Новый дистрибьютор</h1>
-            <CounterpartyForm type='DISTRIBUTOR' mode='create' />
+            <CounterpartyForm
+                type='DISTRIBUTOR'
+                mode='create'
+                attachGroupId={searchParams?.group || ""}
+            />
         </div>
     )
 }

@@ -10,6 +10,7 @@ import { formatMoney, formatPercent } from "@/lib/crm/format"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import DealItemsSection from "@/components/crm/DealItemsSection"
 import DealParamsTabs from "@/components/crm/DealParamsTabs"
+import DealPayerCard from "@/components/crm/DealPayerCard"
 import DealStatusControl from "@/components/crm/DealStatusControl"
 import DealShipmentsSection from "@/components/crm/DealShipmentsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
@@ -36,6 +37,7 @@ export default async function DealPage({ params }) {
         where: { id: params.id },
         include: {
             counterparty: true,
+            payer: true,
             contact: true,
             manager: true,
             createdBy: true,
@@ -65,6 +67,23 @@ export default async function DealPage({ params }) {
 
     // Завершённая сделка: менеджеру остаётся только панель активности.
     const locked = isDealLocked(item.status, session)
+
+    // В клиентский компонент отдаём только реквизиты: Decimal-поля карточки
+    // контрагента не сериализуются.
+    const payerForClient = item.payer
+        ? {
+              id: item.payer.id,
+              name: item.payer.name,
+              inn: item.payer.inn,
+              kpp: item.payer.kpp,
+              ogrn: item.payer.ogrn,
+              address: item.payer.address,
+              bankName: item.payer.bankName,
+              bankAccount: item.payer.bankAccount,
+              bankCorrAccount: item.payer.bankCorrAccount,
+              bik: item.payer.bik,
+          }
+        : null
 
     const dealItemsForClient = item.items.map(i => ({
         id: i.id,
@@ -237,6 +256,13 @@ export default async function DealPage({ params }) {
                             </Section>
                         )}
                     </div>
+
+                    {payerForClient && (
+                        <DealPayerCard
+                            payer={payerForClient}
+                            clientName={item.counterparty.name}
+                        />
+                    )}
 
                     {item.isAuction && (
                         <DealParamsTabs

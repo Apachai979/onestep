@@ -14,6 +14,7 @@ import {
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import ContactsSection from "@/components/crm/ContactsSection"
+import CounterpartyGroupSection from "@/components/crm/CounterpartyGroupSection"
 import CounterpartyTypeSwitch from "@/components/crm/CounterpartyTypeSwitch"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import CrmBackLink from "@/components/crm/CrmBackLink"
@@ -31,6 +32,23 @@ export default async function CounterpartyPage({ params }) {
             updatedBy: { select: { firstName: true, lastName: true, email: true } },
             manager: { select: { firstName: true, lastName: true, email: true } },
             contacts: { orderBy: [{ isPrimary: "desc" }, { lastName: "asc" }, { firstName: "asc" }] },
+            group: {
+                include: {
+                    members: {
+                        orderBy: { name: "asc" },
+                        select: {
+                            id: true,
+                            name: true,
+                            type: true,
+                            inn: true,
+                            kpp: true,
+                            region: true,
+                            totalRevenue: true,
+                            isGroupPrimary: true,
+                        },
+                    },
+                },
+            },
         },
     })
     if (!item) notFound()
@@ -53,6 +71,28 @@ export default async function CounterpartyPage({ params }) {
         createdAt: c.createdAt.toISOString(),
         updatedAt: c.updatedAt.toISOString(),
     }))
+
+    // Decimal не сериализуется в клиентский компонент — приводим к строке.
+    const groupForClient = item.group
+        ? {
+              id: item.group.id,
+              name: item.group.name,
+              discount: item.group.discount != null ? item.group.discount.toString() : null,
+              note: item.group.note,
+              members: item.group.members.map(m => ({
+                  ...m,
+                  totalRevenue: m.totalRevenue.toString(),
+              })),
+          }
+        : null
+
+    // Скидка группы перекрывает личную: иначе клиент получил бы условия получше,
+    // просто оформив сделку на другое своё юрлицо.
+    const groupDiscount = item.group?.discount ?? null
+    const shownDiscount = groupDiscount ?? item.discount
+    const groupBudget = item.group
+        ? item.group.members.reduce((acc, m) => acc + Number(m.totalRevenue || 0), 0)
+        : null
 
     const backHref = item.type === "DISTRIBUTOR" ? "/crm/distributors" : "/crm/customers"
     const backLabel =
@@ -104,6 +144,17 @@ export default async function CounterpartyPage({ params }) {
                                 .filter(Boolean)
                                 .join(" · ")}
                         </p>
+                        {item.group && (
+                            <p className='mt-1.5 inline-flex flex-wrap items-center gap-1.5 rounded-lg bg-surface_muted px-2 py-1 text-xs text-neutral-600'>
+                                <LuBuilding2 className='h-3.5 w-3.5 text-neutral-400' />
+                                Входит в «{item.group.name}»
+                                {item.group.members.length > 1 && (
+                                    <span className='text-neutral-400'>
+                                        · ещё {pluralEntities(item.group.members.length - 1)}
+                                    </span>
+                                )}
+                            </p>
+                        )}
                     </div>
                     <div className='flex items-center gap-4 sm:gap-5'>
                         <div className='text-right'>
@@ -113,6 +164,11 @@ export default async function CounterpartyPage({ params }) {
                             <p className='mt-0.5 text-lg font-semibold text-brand_main'>
                                 {formatMoney(item.totalRevenue)}
                             </p>
+                            {groupBudget !== null && item.group.members.length > 1 && (
+                                <p className='text-[11px] text-neutral-400'>
+                                    группа {formatMoney(groupBudget)}
+                                </p>
+                            )}
                         </div>
                         <div className='h-9 w-px bg-line' />
                         <div className='text-right'>
@@ -120,8 +176,11 @@ export default async function CounterpartyPage({ params }) {
                                 Скидка
                             </p>
                             <p className='mt-0.5 text-lg font-semibold text-neutral-900'>
-                                {formatPercent(item.discount)}
+                                {formatPercent(shownDiscount)}
                             </p>
+                            {groupDiscount != null && (
+                                <p className='text-[11px] text-neutral-400'>из группы</p>
+                            )}
                         </div>
                         <Link
                             href={`/crm/counterparties/${item.id}/edit`}
@@ -303,6 +362,14 @@ export default async function CounterpartyPage({ params }) {
                         <Row label='Название банка' value={item.bankName} />
                     </Section>
 
+                    <CounterpartyGroupSection
+                        counterpartyId={item.id}
+                        counterpartyName={item.name}
+                        counterpartyType={item.type}
+                        initialGroup={groupForClient}
+                    />
+
+
                     {item.note && (
                         <Section title='Примечание'>
                             <p className='whitespace-pre-wrap text-sm text-neutral-700 sm:col-span-2 lg:col-span-3'>
@@ -323,6 +390,14 @@ export default async function CounterpartyPage({ params }) {
             </div>
         </div>
     )
+}
+
+function pluralEntities(n) {
+    const mod10 = n % 10
+    const mod100 = n % 100
+    if (mod10 === 1 && mod100 !== 11) return `${n} юрлицо`
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} юрлица`
+    return `${n} юрлиц`
 }
 
 function Section({ title, footer, action, children }) {

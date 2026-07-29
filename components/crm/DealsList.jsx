@@ -151,7 +151,19 @@ export default function DealsList({ currentUserId }) {
                 header: "Клиент",
                 sortable: true,
                 sortValue: d => d.counterparty?.name || "",
-                render: d => d.counterparty?.name || "—",
+                render: d => (
+                    <span className='inline-flex flex-wrap items-center gap-1.5'>
+                        {d.counterparty?.name || "—"}
+                        {d.payer && (
+                            <span
+                                title={`Документы на «${d.payer.name}»`}
+                                className='rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800'
+                            >
+                                платит {d.payer.name}
+                            </span>
+                        )}
+                    </span>
+                ),
             },
             {
                 key: "manager",

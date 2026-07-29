@@ -16,6 +16,7 @@ import {
 const EMPTY = {
     title: "",
     counterpartyId: "",
+    payerId: "",
     contactId: "",
     managerId: "",
     status: "NEGOTIATION",
@@ -113,6 +114,7 @@ export default function DealForm({
         return {
             title: initial.title ?? "",
             counterpartyId: initial.counterpartyId ?? "",
+            payerId: initial.payerId ?? "",
             contactId: initial.contactId ?? "",
             managerId: initial.managerId ?? "",
             status: initial.status ?? "NEGOTIATION",
@@ -140,6 +142,8 @@ export default function DealForm({
     const [counterparties, setCounterparties] = useState([])
     const [managers, setManagers] = useState([])
     const [contacts, setContacts] = useState([])
+    // Группа компаний клиента — её юрлица предлагаются как плательщики первыми.
+    const [clientGroup, setClientGroup] = useState(null)
     const [customerContacts, setCustomerContacts] = useState([])
     const [projects, setProjects] = useState([])
     const [error, setError] = useState("")
@@ -192,17 +196,21 @@ export default function DealForm({
     useEffect(() => {
         if (!form.counterpartyId) {
             setContacts([])
+            setClientGroup(null)
             return
         }
         fetch(`/api/crm/counterparties/${form.counterpartyId}`)
             .then(r => r.json())
             .then(d => {
                 setContacts(d.item?.contacts || [])
+                setClientGroup(d.item?.group || null)
                 // Скидку берём из карточки клиента, только если менеджер не задал её
                 // вручную. Иначе (ручное значение) — не трогаем. Зафиксированную
                 // отгрузкой скидку не перебиваем тем более: сервер такое отклонит.
                 if (discountTouchedRef.current || discountLocked) return
-                const cpDiscount = d.item?.discount
+                // effectiveDiscount учитывает скидку группы компаний: она
+                // перекрывает личную скидку юрлица.
+                const cpDiscount = d.item?.effectiveDiscount ?? d.item?.discount
                 setForm(prev => ({
                     ...prev,
                     discount:
@@ -211,7 +219,10 @@ export default function DealForm({
                             : String(cpDiscount),
                 }))
             })
-            .catch(() => setContacts([]))
+            .catch(() => {
+                setContacts([])
+                setClientGroup(null)
+            })
     }, [form.counterpartyId, discountLocked])
 
     // Контакты заказчика аукциона.
@@ -243,6 +254,29 @@ export default function DealForm({
         [counterparties]
     )
 
+    // Плательщик: сначала другие юрлица группы клиента (обычный случай —
+    // «договор оформим на нашу вторую компанию»), затем вся база.
+    const payerOptions = useMemo(() => {
+        const groupIds = new Set(
+            (clientGroup?.members || [])
+                .map(m => m.id)
+                .filter(id => id !== form.counterpartyId),
+        )
+        const decorate = c => ({
+            ...c,
+            sublabel: groupIds.has(c.id)
+                ? `Юрлицо группы «${clientGroup.name}»${c.inn ? ` · ИНН ${c.inn}` : ""}`
+                : c.sublabel,
+        })
+        const inGroup = []
+        const rest = []
+        for (const c of counterpartyOptions) {
+            if (c.id === form.counterpartyId) continue
+            ;(groupIds.has(c.id) ? inGroup : rest).push(decorate(c))
+        }
+        return [...inGroup, ...rest]
+    }, [counterpartyOptions, clientGroup, form.counterpartyId])
+
     async function handleSubmit(e) {
         e.preventDefault()
         setError("")
@@ -251,6 +285,7 @@ export default function DealForm({
         const payload = {
             ...form,
             contactId: form.contactId || null,
+            payerId: form.payerId || null,
             sourceProjectId: form.sourceProjectId || null,
             // Аукцион: даты — в ISO; поля-заказчика чистим, если аукцион выключен.
             bidsDeadlineAt: form.isAuction ? localInputToIso(form.bidsDeadlineAt) : null,
@@ -315,6 +350,9 @@ export default function DealForm({
                                         ...prev,
                                         counterpartyId: id,
                                         contactId: "",
+                                        // Плательщик из прошлой группы к новому
+                                        // клиенту отношения не имеет.
+                                        payerId: id === prev.payerId ? "" : prev.payerId,
                                     }))
                                 }
                                 required
@@ -322,6 +360,27 @@ export default function DealForm({
                                 placeholder='Введите название или ИНН'
                                 options={counterpartyOptions}
                             />
+                        </Field>
+                        <Field
+                            label='Плательщик (на кого документы)'
+                            className='sm:col-span-2'
+                        >
+                            <SearchableSelect
+                                value={form.payerId}
+                                onChange={id => setForm(prev => ({ ...prev, payerId: id }))}
+                                disabled={!form.counterpartyId}
+                                placeholder={
+                                    !form.counterpartyId
+                                        ? "Сначала выберите клиента"
+                                        : "— Тот же, что клиент —"
+                                }
+                                emptyLabel='Юрлицо не найдено'
+                                options={payerOptions}
+                            />
+                            <p className='mt-1 text-xs text-neutral-500'>
+                                Заполните, если договор и счёт клиент просит оформить на другое
+                                своё юрлицо. Скидка и история остаются за клиентом.
+                            </p>
                         </Field>
                         <Field label='Контактное лицо'>
                             <SearchableSelect

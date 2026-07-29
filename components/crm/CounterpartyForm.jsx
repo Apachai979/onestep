@@ -62,7 +62,7 @@ function toFormValue(v) {
     return String(v)
 }
 
-export default function CounterpartyForm({ type, initial, mode = "create" }) {
+export default function CounterpartyForm({ type, initial, mode = "create", attachGroupId = "" }) {
     const router = useRouter()
     const effectiveType = mode === "edit" ? initial?.type : type
     const isEndCustomer = effectiveType === "END_CUSTOMER"
@@ -191,6 +191,24 @@ export default function CounterpartyForm({ type, initial, mode = "create" }) {
         }
         const data = await res.json()
         const id = data.item?.id || initial?.id
+
+        // Карточку могли создавать из группы компаний («ещё одно юрлицо клиента») —
+        // сразу привязываем, чтобы менеджеру не пришлось делать это вручную.
+        if (mode === "create" && attachGroupId && id) {
+            const attach = await fetch(
+                `/api/crm/counterparty-groups/${attachGroupId}/members`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ counterpartyId: id }),
+                },
+            )
+            if (!attach.ok) {
+                const d = await attach.json().catch(() => ({}))
+                console.error("[CounterpartyForm] attach to group failed:", d)
+            }
+        }
+
         router.push(`/crm/counterparties/${id}`)
         router.refresh()
     }

@@ -3,7 +3,7 @@ import CrmBackLink from "@/components/crm/CrmBackLink"
 
 export const metadata = { title: "Новый конечный потребитель | CRM" }
 
-export default function NewCustomerPage() {
+export default function NewCustomerPage({ searchParams }) {
     return (
         <div className='max-w-3xl space-y-4'>
             <CrmBackLink
@@ -12,7 +12,11 @@ export default function NewCustomerPage() {
                 className='inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-brand_main'
             />
             <h1 className='text-2xl font-semibold text-neutral-900'>Новый конечный потребитель</h1>
-            <CounterpartyForm type='END_CUSTOMER' mode='create' />
+            <CounterpartyForm
+                type='END_CUSTOMER'
+                mode='create'
+                attachGroupId={searchParams?.group || ""}
+            />
         </div>
     )
 }

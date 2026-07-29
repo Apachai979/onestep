@@ -1,6 +1,7 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { parseCounterpartyPayload } from "@/lib/crm/counterparty"
+import { effectiveDiscount } from "@/lib/crm/counterparty-group"
 import { diffEntities, logChange } from "@/lib/crm/change-log"
 
 const COUNTERPARTY_TRACKED_FIELDS = [
@@ -40,10 +41,31 @@ export async function GET(_request, { params }) {
             createdBy: { select: { id: true, firstName: true, lastName: true, email: true } },
             updatedBy: { select: { id: true, firstName: true, lastName: true, email: true } },
             contacts: { orderBy: [{ isPrimary: "desc" }, { lastName: "asc" }, { firstName: "asc" }] },
+            group: {
+                include: {
+                    members: {
+                        orderBy: { name: "asc" },
+                        select: {
+                            id: true,
+                            name: true,
+                            type: true,
+                            inn: true,
+                            kpp: true,
+                            region: true,
+                            totalRevenue: true,
+                            isGroupPrimary: true,
+                        },
+                    },
+                },
+            },
         },
     })
     if (!item) return Response.json({ error: "Не найдено" }, { status: 404 })
-    return Response.json({ item })
+    // Скидка группы перекрывает личную — потребителям (форма сделки) удобнее
+    // получить готовое значение, чем считать самим.
+    return Response.json({
+        item: { ...item, effectiveDiscount: effectiveDiscount(item) },
+    })
 }
 
 export async function PATCH(request, { params }) {

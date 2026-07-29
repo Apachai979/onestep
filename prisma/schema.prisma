@@ -83,6 +83,22 @@ model Invite {
   @@map("invites")
 }
 
+// Группа компаний: клиент может работать через несколько своих юрлиц
+// («договор заключим с другого ООО, это тоже мы»). Каждое юрлицо остаётся
+// самостоятельным Counterparty со своими сделками и контактами, группа лишь
+// связывает их: общая скидка, суммарный бюджет, поиск по ИНН любого из них.
+model CounterpartyGroup {
+  id        String         @id @default(cuid())
+  name      String
+  discount  Decimal?
+  note      String?
+  members   Counterparty[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@map("counterparty_groups")
+}
+
 model Counterparty {
   id              String   @id @default(cuid())
   type            String
@@ -109,6 +125,10 @@ model Counterparty {
   activityArea    String?
   note            String?
   contacts        Contact[]
+  // Группа компаний: одно из юрлиц помечается головным (isGroupPrimary).
+  groupId         String?
+  group           CounterpartyGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  isGroupPrimary  Boolean  @default(false)
   managerId       String?
   manager         User?    @relation("CounterpartyManager", fields: [managerId], references: [id], onDelete: SetNull)
   createdById     String?
@@ -122,12 +142,14 @@ model Counterparty {
   projectsAsEndCustomer  Project[] @relation("ProjectEndCustomer")
   deals                  Deal[]    @relation("DealCounterparty")
   dealsAsAuctionCustomer Deal[]    @relation("DealAuctionCustomer")
+  dealsAsPayer           Deal[]    @relation("DealPayer")
   tasksAsDistributor     Task[]    @relation("TaskDistributor")
   tasksAsEndCustomer     Task[]    @relation("TaskEndCustomer")
 
   @@unique([inn, kpp])
   @@index([type])
   @@index([region])
+  @@index([groupId])
   @@map("counterparties")
 }
 
@@ -274,6 +296,11 @@ model Deal {
   counterparty   Counterparty @relation("DealCounterparty", fields: [counterpartyId], references: [id])
   contactId      String?
   contact        Contact?     @relation("DealContact", fields: [contactId], references: [id], onDelete: SetNull)
+  // Юрлицо, на которое оформляются договор и счёт. Пусто — плательщик
+  // совпадает с клиентом; заполнено — клиент попросил оформить документы
+  // на другое юрлицо своей группы.
+  payerId        String?
+  payer          Counterparty? @relation("DealPayer", fields: [payerId], references: [id], onDelete: SetNull)
   // Заказчик аукциона (конечный потребитель) и его контакт — только при isAuction.
   auctionCustomerId        String?
   auctionCustomer          Counterparty? @relation("DealAuctionCustomer", fields: [auctionCustomerId], references: [id], onDelete: SetNull)
@@ -300,6 +327,7 @@ model Deal {
   @@index([managerId])
   @@index([sourceProjectId])
   @@index([isAuction])
+  @@index([payerId])
   @@map("deals")
 }
 

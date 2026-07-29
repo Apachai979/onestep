@@ -12,6 +12,22 @@ import {
 } from "@/lib/crm/access"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
+// Плательщика показывают вместе с реквизитами — их переносят в счёт (счета
+// выставляют в 1С, поэтому важно, чтобы данные были под рукой и без опечаток).
+const PAYER_SELECT = {
+    id: true,
+    name: true,
+    type: true,
+    region: true,
+    inn: true,
+    kpp: true,
+    ogrn: true,
+    address: true,
+    bankName: true,
+    bankAccount: true,
+    bankCorrAccount: true,
+    bik: true,
+}
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
 const CONTACT_SELECT = {
     id: true,
@@ -38,6 +54,7 @@ export async function GET(_request, { params }) {
         where: { id: params.id },
         include: {
             counterparty: { select: COUNTERPARTY_SELECT },
+            payer: { select: PAYER_SELECT },
             manager: { select: MANAGER_SELECT },
             createdBy: { select: MANAGER_SELECT },
             updatedBy: { select: MANAGER_SELECT },
@@ -178,6 +195,18 @@ export async function PATCH(request, { params }) {
             )
         }
     }
+    if (data.payerId) {
+        // Плательщик, совпадающий с клиентом, — это отсутствие плательщика.
+        const targetCp = data.counterpartyId ?? existing.counterpartyId
+        if (data.payerId === targetCp) data.payerId = null
+        else {
+            const p = await prisma.counterparty.findUnique({
+                where: { id: data.payerId },
+                select: { id: true },
+            })
+            if (!p) return Response.json({ error: "Плательщик не найден" }, { status: 400 })
+        }
+    }
     if (data.managerId) {
         const m = await prisma.user.findUnique({
             where: { id: data.managerId },
@@ -217,6 +246,7 @@ export async function PATCH(request, { params }) {
             },
             include: {
                 counterparty: { select: COUNTERPARTY_SELECT },
+                payer: { select: PAYER_SELECT },
                 manager: { select: MANAGER_SELECT },
                 createdBy: { select: MANAGER_SELECT },
                 updatedBy: { select: MANAGER_SELECT },

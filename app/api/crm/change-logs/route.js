@@ -5,9 +5,11 @@ import { ENTITY_LABELS, enumValueLabel } from "@/lib/crm/change-log"
 const RELATION_FIELDS = {
     Counterparty: {
         managerId: { model: "user" },
+        groupId: { model: "counterpartyGroup" },
     },
     Deal: {
         counterpartyId: { model: "counterparty" },
+        payerId: { model: "counterparty" },
         contactId: { model: "contact" },
         managerId: { model: "user" },
         sourceProjectId: { model: "project" },
@@ -64,6 +66,7 @@ function projectTitle(p) {
 async function resolveRelations(items) {
     const ids = {
         counterparty: new Set(),
+        counterpartyGroup: new Set(),
         contact: new Set(),
         user: new Set(),
         product: new Set(),
@@ -86,10 +89,16 @@ async function resolveRelations(items) {
         }
     }
 
-    const [counterparties, contacts, users, products, deals, projects] = await Promise.all([
+    const [counterparties, groups, contacts, users, products, deals, projects] = await Promise.all([
         ids.counterparty.size
             ? prisma.counterparty.findMany({
                   where: { id: { in: Array.from(ids.counterparty) } },
+                  select: { id: true, name: true },
+              })
+            : [],
+        ids.counterpartyGroup.size
+            ? prisma.counterpartyGroup.findMany({
+                  where: { id: { in: Array.from(ids.counterpartyGroup) } },
                   select: { id: true, name: true },
               })
             : [],
@@ -127,6 +136,7 @@ async function resolveRelations(items) {
 
     return {
         counterparty: new Map(counterparties.map(x => [x.id, x.name])),
+        counterpartyGroup: new Map(groups.map(x => [x.id, x.name])),
         contact: new Map(contacts.map(c => [c.id, contactName(c)])),
         user: new Map(users.map(u => [u.id, fullName(u)])),
         product: new Map(products.map(p => [p.id, `${p.sku} · ${p.category}`])),

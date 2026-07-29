@@ -119,9 +119,11 @@ export async function GET(request) {
                 id: d.id,
                 title: dealDisplayTitle(d, d.counterparty?.name),
                 // Сделки по одному проекту называются одинаково — различить их в
-                // выдаче помогают статус, сумма и дата.
+                // выдаче помогают статус, сумма и дата. Клиента у них не
+                // показываем: он всегда дистрибьютор проекта, названного в
+                // заголовке, и только занимает место.
                 subtitle: [
-                    d.counterparty?.name,
+                    d.sourceProject ? null : d.counterparty?.name,
                     DEAL_STATUS_LABELS[d.status] || d.status,
                     formatMoney(dealDiscountedTotal(d)),
                     new Date(d.createdAt).toLocaleDateString("ru-RU"),

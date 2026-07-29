@@ -1,6 +1,11 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
-import { dealDisplayTitle } from "@/lib/crm/deal"
+import {
+    DEAL_STATUS_LABELS,
+    dealDisplayTitle,
+    dealDiscountedTotal,
+} from "@/lib/crm/deal"
+import { formatMoney } from "@/lib/crm/format"
 
 const LIMIT = 7
 
@@ -49,6 +54,8 @@ export async function GET(request) {
                 title: true,
                 status: true,
                 totalAmount: true,
+                discount: true,
+                createdAt: true,
                 counterparty: { select: { name: true } },
                 // Сделке из проекта название даёт проект — см. dealDisplayTitle.
                 sourceProject: { select: { internalName: true } },
@@ -111,7 +118,16 @@ export async function GET(request) {
             .map(d => ({
                 id: d.id,
                 title: dealDisplayTitle(d, d.counterparty?.name),
-                subtitle: d.counterparty?.name || "",
+                // Сделки по одному проекту называются одинаково — различить их в
+                // выдаче помогают статус, сумма и дата.
+                subtitle: [
+                    d.counterparty?.name,
+                    DEAL_STATUS_LABELS[d.status] || d.status,
+                    formatMoney(dealDiscountedTotal(d)),
+                    new Date(d.createdAt).toLocaleDateString("ru-RU"),
+                ]
+                    .filter(Boolean)
+                    .join(" · "),
                 href: `/crm/deals/${d.id}`,
             })),
         projects: projects

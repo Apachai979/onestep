@@ -1,6 +1,6 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
-import { canCloseTask, parseTaskPayload, taskLogParents } from "@/lib/crm/task"
+import { canManageTask, parseTaskPayload, taskLogParents } from "@/lib/crm/task"
 import { diffEntities, logChange } from "@/lib/crm/change-log"
 
 const TASK_LOG_FIELDS = ["title", "type", "status", "result", "assigneeId", "startAt", "endAt"]
@@ -43,6 +43,13 @@ export async function PATCH(request, { params }) {
     const existing = await prisma.task.findUnique({ where: { id: params.id } })
     if (!existing) return Response.json({ error: "Не найдено" }, { status: 404 })
 
+    if (!canManageTask(existing, session)) {
+        return Response.json(
+            { error: "Менять задачу может ответственный, создатель или администратор" },
+            { status: 403 },
+        )
+    }
+
     if (existing.status !== "OPEN") {
         return Response.json(
             { error: "Закрытую задачу нельзя редактировать. Создайте новую." },
@@ -57,7 +64,9 @@ export async function PATCH(request, { params }) {
         return Response.json({ error: "Некорректный JSON" }, { status: 400 })
     }
 
-    const { data, error } = parseTaskPayload(body, { partial: true })
+    // existing нужен парсеру: без него PATCH с одним только сроком не знает
+    // ни даты начала, ни того, задача «на весь день» или со временем.
+    const { data, error } = parseTaskPayload(body, { partial: true, current: existing })
     if (error) return Response.json({ error }, { status: 400 })
 
     const updated = await prisma.task.update({
@@ -90,7 +99,7 @@ export async function DELETE(_request, { params }) {
     const existing = await prisma.task.findUnique({ where: { id: params.id } })
     if (!existing) return Response.json({ error: "Не найдено" }, { status: 404 })
 
-    if (!canCloseTask(existing, session)) {
+    if (!canManageTask(existing, session)) {
         return Response.json({ error: "Нет прав на удаление этой задачи" }, { status: 403 })
     }
 

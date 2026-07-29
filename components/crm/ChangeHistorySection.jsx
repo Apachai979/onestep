@@ -1,6 +1,7 @@
 "use client"
 import { useCallback, useEffect, useState } from "react"
 import { CHANGE_ACTION_LABELS, ENTITY_LABELS, fieldLabel } from "@/lib/crm/change-log"
+import { crmHm, formatCrmDate, formatCrmDateTime } from "@/lib/crm/datetime"
 
 function safeJson(text) {
     try {
@@ -16,14 +17,19 @@ function fullName(u) {
 }
 
 function fmtDate(d) {
-    return new Date(d).toLocaleString("ru-RU", {
-        dateStyle: "short",
-        timeStyle: "short",
-    })
+    return formatCrmDateTime(d)
 }
+
+const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/
 
 function formatValue(v) {
     if (v === null || v === undefined) return "—"
+    // Даты лежат в истории ISO-строками. Показываем их по-московски, а границы
+    // суток (задача «на весь день») — просто датой, без 00:00 и 23:59.
+    if (typeof v === "string" && ISO_RE.test(v)) {
+        const hm = crmHm(v)
+        return hm === "00:00" || hm === "23:59" ? formatCrmDate(v) : formatCrmDateTime(v)
+    }
     const s = String(v)
     if (s.length > 80) return s.slice(0, 80) + "…"
     return s

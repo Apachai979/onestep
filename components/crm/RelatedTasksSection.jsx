@@ -1,9 +1,12 @@
 "use client"
 import { useCallback, useEffect, useState } from "react"
 import {
+    TASK_DUE_COLORS,
     TASK_STATUS_COLORS,
     TASK_STATUS_LABELS,
-    allDayDateLabel,
+    taskDueRelativeLabel,
+    taskDueState,
+    taskRangeLabel,
 } from "@/lib/crm/task"
 import { TaskTypeBadge } from "./TaskTypeIcon"
 import TaskForm from "./TaskForm"
@@ -23,16 +26,6 @@ function fullName(u) {
     return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
 }
 
-function fmtRange(t) {
-    if (t.allDay) {
-        const s = allDayDateLabel(t.startAt)
-        const e = allDayDateLabel(t.endAt)
-        return s === e ? s : `${s} — ${e}`
-    }
-    const start = new Date(t.startAt)
-    const end = new Date(t.endAt)
-    return `${start.toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" })} — ${end.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}`
-}
 
 export default function RelatedTasksSection({
     relationKind,
@@ -136,8 +129,15 @@ export default function RelatedTasksSection({
                                     <Badge className={TASK_STATUS_COLORS[t.status]}>
                                         {TASK_STATUS_LABELS[t.status]}
                                     </Badge>
-                                    <span className='text-xs text-neutral-500'>
-                                        {fmtRange(t)}
+                                    <span
+                                        className={`text-xs ${TASK_DUE_COLORS[taskDueState(t)]}`}
+                                    >
+                                        {taskRangeLabel(t)}
+                                        {taskDueRelativeLabel(t) && (
+                                            <span className='ml-1 opacity-70'>
+                                                · {taskDueRelativeLabel(t)}
+                                            </span>
+                                        )}
                                     </span>
                                 </div>
                                 <p className='mt-1 font-medium text-neutral-900'>{t.title}</p>

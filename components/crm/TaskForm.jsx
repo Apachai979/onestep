@@ -1,35 +1,17 @@
 "use client"
 import { useEffect, useMemo, useState } from "react"
 import { TASK_RELATION_KINDS, TASK_RELATION_LABELS, TASK_TYPES } from "@/lib/crm/task"
+import { crmToday } from "@/lib/crm/datetime"
 import { notifyTasksChanged } from "@/lib/crm/tasks-events"
 import { dealDisplayTitle } from "@/lib/crm/deal"
 import SearchableSelect from "./SearchableSelect"
 import TaskTypeIcon from "./TaskTypeIcon"
+import TaskScheduleFields, {
+    defaultSchedule,
+    needsAdvanced,
+    scheduleFromTask,
+} from "./TaskScheduleFields"
 import { Button } from "@/components/crm/ui"
-
-const todayIso = () => new Date().toISOString().slice(0, 10)
-const todayDateTime = () => {
-    const d = new Date()
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
-    return d.toISOString().slice(0, 16)
-}
-
-function dateOnly(v) {
-    if (!v) return ""
-    return String(v).slice(0, 10)
-}
-
-function timeOnly(v) {
-    if (!v) return ""
-    const s = String(v)
-    if (s.length >= 16 && s.includes("T")) return s.slice(11, 16)
-    return ""
-}
-
-function composeDateTime(date, time) {
-    if (!date) return ""
-    return `${date}T${time || "00:00"}`
-}
 
 function safeJson(text) {
     try {
@@ -55,55 +37,42 @@ export default function TaskForm({
     const isEdit = !!initial?.id
 
     const [form, setForm] = useState(() => {
-        const base = {
-            title: "",
-            description: "",
-            type: TASK_TYPES[0].key,
-            assigneeId: currentUserId || "",
-            allDay: true,
-            startAt: todayIso(),
-            endAt: todayIso(),
-        }
-        if (defaultStart?.date && !initial) {
-            if (defaultStart.hour !== undefined && defaultStart.hour !== null) {
-                base.allDay = false
-                const startTime = `${defaultStart.date}T${String(defaultStart.hour).padStart(2, "0")}:00`
-                const endHour = Math.min(defaultStart.hour + 1, 23)
-                const endTime = `${defaultStart.date}T${String(endHour).padStart(2, "0")}:00`
-                base.startAt = startTime
-                base.endAt = endTime
-            } else {
-                base.startAt = defaultStart.date
-                base.endAt = defaultStart.date
-            }
-        }
         if (initial) {
-            const startAtIso = initial.startAt
-                ? new Date(initial.startAt).toISOString()
-                : null
-            const endAtIso = initial.endAt
-                ? new Date(initial.endAt).toISOString()
-                : null
             return {
                 title: initial.title ?? "",
                 description: initial.description ?? "",
                 type: initial.type ?? TASK_TYPES[0].key,
                 assigneeId: initial.assigneeId ?? currentUserId ?? "",
-                allDay: initial.allDay ?? true,
-                startAt: initial.allDay
-                    ? startAtIso?.slice(0, 10) || todayIso()
-                    : startAtIso?.slice(0, 16) || todayDateTime(),
-                endAt: initial.allDay
-                    ? endAtIso?.slice(0, 10) || todayIso()
-                    : endAtIso?.slice(0, 16) || todayDateTime(),
+                ...scheduleFromTask(initial),
             }
         }
-        if (fixedRelation?.startAt) {
+        const base = {
+            title: "",
+            description: "",
+            type: TASK_TYPES[0].key,
+            assigneeId: currentUserId || "",
+            ...defaultSchedule(),
+        }
+        // Клик по конкретному часу в календаре — это слот встречи, час длиной.
+        if (defaultStart?.date) {
+            if (defaultStart.hour !== undefined && defaultStart.hour !== null) {
+                const hh = String(defaultStart.hour).padStart(2, "0")
+                const endHour = String(Math.min(defaultStart.hour + 1, 23)).padStart(2, "0")
+                base.allDay = false
+                base.startAt = `${defaultStart.date}T${hh}:00`
+                base.endAt = `${defaultStart.date}T${endHour}:00`
+            } else {
+                base.startAt = defaultStart.date
+                base.endAt = defaultStart.date
+            }
+        } else if (fixedRelation?.startAt) {
             base.startAt = fixedRelation.startAt
             base.endAt = fixedRelation.startAt
         }
         return base
     })
+
+    const [advanced, setAdvanced] = useState(() => needsAdvanced(form))
 
     const [relation, setRelation] = useState(() => {
         if (fixedRelation?.kind) return { kind: fixedRelation.kind, id: fixedRelation.id }
@@ -192,22 +161,6 @@ export default function TaskForm({
         return e => setForm(prev => ({ ...prev, [field]: e.target.value }))
     }
 
-    function onAllDayChange(e) {
-        const allDay = e.target.checked
-        setForm(prev => {
-            const next = { ...prev, allDay }
-            if (allDay) {
-                next.startAt = (prev.startAt || todayIso()).slice(0, 10)
-                next.endAt = (prev.endAt || prev.startAt || todayIso()).slice(0, 10)
-            } else {
-                const t = todayDateTime()
-                next.startAt = (prev.startAt || "").length === 10 ? `${prev.startAt}T09:00` : prev.startAt || t
-                next.endAt = (prev.endAt || "").length === 10 ? `${prev.endAt}T10:00` : prev.endAt || t
-            }
-            return next
-        })
-    }
-
     async function handleSubmit(e) {
         e.preventDefault()
         setError("")
@@ -215,7 +168,7 @@ export default function TaskForm({
 
         const payload = {
             ...form,
-            startAt: form.startAt,
+            startAt: form.startAt || crmToday(),
             endAt: form.endAt || form.startAt,
             dealId: null,
             projectId: null,
@@ -294,122 +247,12 @@ export default function TaskForm({
                 </div>
             </div>
 
-            <div className='space-y-2'>
-                <label className='flex items-center gap-2 text-sm text-neutral-700'>
-                    <input
-                        type='checkbox'
-                        checked={form.allDay}
-                        onChange={onAllDayChange}
-                        className='h-4 w-4 rounded border-line text-brand_main focus:ring-brand_main/30'
-                    />
-                    Весь день
-                </label>
-                {form.allDay ? (
-                    <div className='grid gap-3 sm:grid-cols-2'>
-                        <div>
-                            <label className={labelClass}>Дата начала</label>
-                            <input
-                                type='date'
-                                value={form.startAt}
-                                onChange={update("startAt")}
-                                required
-                                className={fieldClass}
-                            />
-                        </div>
-                        <div>
-                            <label className={labelClass}>Дата окончания</label>
-                            <input
-                                type='date'
-                                value={form.endAt}
-                                onChange={update("endAt")}
-                                required
-                                className={fieldClass}
-                            />
-                        </div>
-                    </div>
-                ) : (
-                    <div className='grid gap-3 sm:grid-cols-4'>
-                        <div>
-                            <label className={labelClass}>Дата начала</label>
-                            <input
-                                type='date'
-                                value={dateOnly(form.startAt)}
-                                onChange={e =>
-                                    setForm(prev => ({
-                                        ...prev,
-                                        startAt: composeDateTime(
-                                            e.target.value,
-                                            timeOnly(prev.startAt) || "09:00",
-                                        ),
-                                        endAt: composeDateTime(
-                                            dateOnly(prev.endAt) < e.target.value
-                                                ? e.target.value
-                                                : dateOnly(prev.endAt),
-                                            timeOnly(prev.endAt) || "10:00",
-                                        ),
-                                    }))
-                                }
-                                required
-                                className={fieldClass}
-                            />
-                        </div>
-                        <div>
-                            <label className={labelClass}>Время начала</label>
-                            <input
-                                type='time'
-                                value={timeOnly(form.startAt)}
-                                onChange={e =>
-                                    setForm(prev => ({
-                                        ...prev,
-                                        startAt: composeDateTime(
-                                            dateOnly(prev.startAt),
-                                            e.target.value,
-                                        ),
-                                    }))
-                                }
-                                required
-                                className={fieldClass}
-                            />
-                        </div>
-                        <div>
-                            <label className={labelClass}>Дата окончания</label>
-                            <input
-                                type='date'
-                                value={dateOnly(form.endAt)}
-                                onChange={e =>
-                                    setForm(prev => ({
-                                        ...prev,
-                                        endAt: composeDateTime(
-                                            e.target.value,
-                                            timeOnly(prev.endAt) || "10:00",
-                                        ),
-                                    }))
-                                }
-                                required
-                                className={fieldClass}
-                            />
-                        </div>
-                        <div>
-                            <label className={labelClass}>Время окончания</label>
-                            <input
-                                type='time'
-                                value={timeOnly(form.endAt)}
-                                onChange={e =>
-                                    setForm(prev => ({
-                                        ...prev,
-                                        endAt: composeDateTime(
-                                            dateOnly(prev.endAt),
-                                            e.target.value,
-                                        ),
-                                    }))
-                                }
-                                required
-                                className={fieldClass}
-                            />
-                        </div>
-                    </div>
-                )}
-            </div>
+            <TaskScheduleFields
+                value={{ allDay: form.allDay, startAt: form.startAt, endAt: form.endAt }}
+                onChange={next => setForm(prev => ({ ...prev, ...next }))}
+                advanced={advanced}
+                onAdvancedChange={setAdvanced}
+            />
 
             {!fixedRelation && (
                 <div className='grid gap-3 sm:grid-cols-2'>

@@ -21,6 +21,13 @@ import {
     dealDisplayTitle,
     dealDiscountedTotal,
 } from "@/lib/crm/deal"
+import {
+    isTaskOverdue,
+    isTaskToday,
+    taskDueRelativeLabel,
+    taskRangeLabel,
+} from "@/lib/crm/task"
+import { crmToday } from "@/lib/crm/datetime"
 import { SHIPMENT_STATUS_LABELS } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
 import { CHANGE_ACTION_LABELS, ENTITY_LABELS } from "@/lib/crm/change-log"
@@ -52,30 +59,14 @@ function fmtRelative(d) {
     return fmtDate(d)
 }
 
-function todayBounds() {
-    const now = new Date()
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const end = new Date(start)
-    end.setDate(end.getDate() + 1)
-    return { start, end, now }
-}
-
-function isOverdueTask(t) {
-    return t.status === "OPEN" && new Date(t.endAt).getTime() < Date.now()
-}
-
-function isTodayTask(t, { start, end }) {
-    const s = new Date(t.startAt).getTime()
-    const e = new Date(t.endAt).getTime()
-    return s < end.getTime() && e >= start.getTime() && !isOverdueTask(t)
-}
 
 export default async function CrmHome() {
     const session = await getServerSession(authOptions)
     const userId = session?.user?.id
     const role = session?.user?.role
     const firstName = session?.user?.name?.split(" ")[0] || session?.user?.email || "коллега"
-    const { start: dayStart, end: dayEnd, now } = todayBounds()
+    const now = new Date()
+    const today = crmToday()
 
     // Ленивая архивация старых CLOSED/CANCELLED — до чтения сделок,
     // чтобы дашборд сразу увидел актуальные статусы.
@@ -206,8 +197,10 @@ export default async function CrmHome() {
     ])
 
     // --- Derived data ---
-    const overdueTasks = myOpenTasks.filter(isOverdueTask)
-    const todayTasks = myOpenTasks.filter(t => isTodayTask(t, { start: dayStart, end: dayEnd }))
+    const overdueTasks = myOpenTasks.filter(t => isTaskOverdue(t, now))
+    const todayTasks = myOpenTasks.filter(
+        t => isTaskToday(t, today) && !isTaskOverdue(t, now),
+    )
 
     const dealsListByStatus = {}
     for (const s of DEAL_STATUSES) dealsListByStatus[s] = []
@@ -598,9 +591,12 @@ function TaskGroup({ title, tone, tasks }) {
                                 </p>
                             </div>
                             <div className='shrink-0 text-right text-[11px] text-neutral-500'>
-                                <span className='inline-flex items-center gap-1'>
+                                <span
+                                    className='inline-flex items-center gap-1'
+                                    title={taskRangeLabel(t)}
+                                >
                                     <LuClock className='h-3 w-3' />
-                                    <LocalDateTime value={t.endAt} />
+                                    {taskDueRelativeLabel(t) || taskRangeLabel(t)}
                                 </span>
                             </div>
                         </Link>

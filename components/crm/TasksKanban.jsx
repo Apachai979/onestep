@@ -3,10 +3,13 @@ import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { LuSearch } from "react-icons/lu"
 import {
+    TASK_DUE_COLORS,
     TASK_STATUSES,
     TASK_STATUS_COLORS,
     TASK_STATUS_LABELS,
-    allDayDateLabel,
+    taskDueRelativeLabel,
+    taskDueState,
+    taskRangeLabel,
 } from "@/lib/crm/task"
 import { notifyTasksChanged, onTasksChanged } from "@/lib/crm/tasks-events"
 import { dealDisplayTitle } from "@/lib/crm/deal"
@@ -40,16 +43,6 @@ function fullName(u) {
     return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
 }
 
-function fmtRange(t) {
-    if (t.allDay) {
-        const s = allDayDateLabel(t.startAt)
-        const e = allDayDateLabel(t.endAt)
-        return s === e ? s : `${s} — ${e}`
-    }
-    const start = new Date(t.startAt)
-    const end = new Date(t.endAt)
-    return `${start.toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" })} — ${end.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}`
-}
 
 function relationLink(t) {
     if (t.deal)
@@ -150,11 +143,6 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
     function canManage(t) {
         if (currentUserRole === "ADMIN") return true
         return t.assigneeId === currentUserId || t.createdById === currentUserId
-    }
-
-    function isOverdue(t) {
-        if (t.status !== "OPEN") return false
-        return new Date(t.endAt) < new Date()
     }
 
     async function request(url, options, fallbackError) {
@@ -335,7 +323,6 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
                                         <TaskCard
                                             key={t.id}
                                             task={t}
-                                            overdue={isOverdue(t)}
                                             dragging={draggingId === t.id}
                                             draggable={canManage(t)}
                                             onDragStart={onDragStart(t.id)}
@@ -380,8 +367,9 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
     )
 }
 
-function TaskCard({ task, overdue, dragging, draggable, onDragStart, onDragEnd, onClick }) {
+function TaskCard({ task, dragging, draggable, onDragStart, onDragEnd, onClick }) {
     const rel = relationLink(task)
+    const dueHint = taskDueRelativeLabel(task)
     return (
         <div
             role='button'
@@ -408,8 +396,9 @@ function TaskCard({ task, overdue, dragging, draggable, onDragStart, onDragEnd, 
             )}
             <div className='mt-2 flex flex-wrap items-center gap-2 text-xs'>
                 <TaskTypeBadge type={task.type} />
-                <span className={overdue ? "text-red-600" : "text-neutral-500"}>
-                    {fmtRange(task)}
+                <span className={TASK_DUE_COLORS[taskDueState(task)]}>
+                    {taskRangeLabel(task)}
+                    {dueHint && <span className='ml-1 opacity-70'>· {dueHint}</span>}
                 </span>
             </div>
             <div className='mt-2 flex items-center justify-between gap-2 text-xs'>

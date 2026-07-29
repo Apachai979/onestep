@@ -1,6 +1,18 @@
 "use client"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { TASK_TYPE_MAP } from "@/lib/crm/task"
+import { TASK_TYPE_MAP, taskDueYmd, taskStartYmd } from "@/lib/crm/task"
+import {
+    addDaysYmd,
+    crmDayEnd,
+    crmDayStart,
+    crmHm,
+    crmParseDateTime,
+    crmMinutesOfDay,
+    crmToday,
+    crmYmd,
+    daysBetweenYmd,
+    formatCrmTime,
+} from "@/lib/crm/datetime"
 import { notifyTasksChanged, onTasksChanged } from "@/lib/crm/tasks-events"
 import TaskTypeIcon from "./TaskTypeIcon"
 import TaskCloseModal from "./TaskCloseModal"
@@ -41,11 +53,19 @@ function addDays(d, n) {
     return x
 }
 
+// Ячейки календаря — это календарные даты, а не моменты. Держим их как
+// локальные Date без времени, а с задачами сопоставляем по строке "YYYY-MM-DD"
+// в московской зоне: иначе сетка у менеджера в другом поясе разъезжается.
 function ymd(d) {
     const y = d.getFullYear()
     const m = String(d.getMonth() + 1).padStart(2, "0")
     const day = String(d.getDate()).padStart(2, "0")
     return `${y}-${m}-${day}`
+}
+
+function dayFromYmd(value) {
+    const [y, m, d] = value.split("-").map(Number)
+    return new Date(y, m - 1, d)
 }
 
 const MONTHS = [
@@ -59,14 +79,6 @@ const HOUR_START = 7
 const HOUR_END = 22
 const HOUR_HEIGHT = 48
 
-function isSameDay(a, b) {
-    return (
-        a.getFullYear() === b.getFullYear() &&
-        a.getMonth() === b.getMonth() &&
-        a.getDate() === b.getDate()
-    )
-}
-
 function fullName(u) {
     if (!u) return ""
     return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
@@ -74,11 +86,7 @@ function fullName(u) {
 
 export default function TaskCalendar({ currentUserId, currentUserRole, onCreateAt }) {
     const [view, setView] = useState("month")
-    const [cursor, setCursor] = useState(() => {
-        const d = new Date()
-        d.setHours(0, 0, 0, 0)
-        return d
-    })
+    const [cursor, setCursor] = useState(() => dayFromYmd(crmToday()))
     const toast = useToast()
     const [items, setItems] = useState([])
     const [error, setError] = useState("")
@@ -125,18 +133,8 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
     const tasksByDay = useMemo(() => {
         const map = new Map()
         for (const t of items) {
-            const s = new Date(t.startAt)
-            const e = new Date(t.endAt)
-            let start, end
-            if (t.allDay) {
-                start = new Date(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate())
-                end = new Date(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate())
-            } else {
-                start = new Date(s.getFullYear(), s.getMonth(), s.getDate())
-                end = new Date(e.getFullYear(), e.getMonth(), e.getDate())
-            }
-            for (let d = new Date(start); d <= end; d = addDays(d, 1)) {
-                const key = ymd(d)
+            const end = taskDueYmd(t)
+            for (let key = taskStartYmd(t); key <= end; key = addDaysYmd(key, 1)) {
                 if (!map.has(key)) map.set(key, [])
                 map.get(key).push(t)
             }
@@ -155,9 +153,7 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
     }
 
     function goToday() {
-        const d = new Date()
-        d.setHours(0, 0, 0, 0)
-        setCursor(d)
+        setCursor(dayFromYmd(crmToday()))
     }
 
     function canClose(t) {
@@ -171,31 +167,31 @@ export default function TaskCalendar({ currentUserId, currentUserRole, onCreateA
         const task = items.find(t => t.id === taskId)
         if (!task || task.status !== "OPEN") return
 
+        const targetKey = ymd(day)
         let payload
         let optimistic
         if (task.allDay) {
             const { start, end } = taskDayRange(task)
-            const delta = daysBetween(start, startOfDay(day))
+            const delta = daysBetweenYmd(start, targetKey)
             if (delta === 0) return
-            const newStart = addDays(start, delta)
-            const newEnd = addDays(end, delta)
-            payload = { startAt: ymd(newStart), endAt: ymd(newEnd), allDay: true }
+            const newEnd = addDaysYmd(end, delta)
+            payload = { startAt: targetKey, endAt: newEnd, allDay: true }
             optimistic = {
-                startAt: `${ymd(newStart)}T00:00:00.000Z`,
-                endAt: `${ymd(newEnd)}T23:59:59.999Z`,
+                startAt: crmDayStart(targetKey).toISOString(),
+                endAt: crmDayEnd(newEnd).toISOString(),
             }
         } else {
             const s = new Date(task.startAt)
-            const e = new Date(task.endAt)
-            const duration = e.getTime() - s.getTime()
-            const delta = daysBetween(startOfDay(s), startOfDay(day))
-            const newStart = addDays(s, delta)
-            if (hour != null) newStart.setHours(hour, s.getMinutes(), 0, 0)
-            const newEnd =
+            const duration = new Date(task.endAt).getTime() - s.getTime()
+            // Часовая сетка нарисована по московскому времени — час из неё
+            // московский, минуты сохраняем от исходного времени задачи.
+            const time =
                 hour != null
-                    ? new Date(newStart.getTime() + duration)
-                    : addDays(e, delta)
-            if (newStart.getTime() === s.getTime()) return
+                    ? `${String(hour).padStart(2, "0")}:${crmHm(s).slice(3)}`
+                    : crmHm(s)
+            const newStart = crmParseDateTime(`${targetKey}T${time}`)
+            if (!newStart || newStart.getTime() === s.getTime()) return
+            const newEnd = new Date(newStart.getTime() + duration)
             payload = {
                 startAt: newStart.toISOString(),
                 endAt: newEnd.toISOString(),
@@ -397,33 +393,19 @@ const MIN_LANES_AREA = 1
 const MONTH_HEADER_H = 28
 
 function taskDayRange(t) {
-    const s = new Date(t.startAt)
-    const e = new Date(t.endAt)
-    if (t.allDay) {
-        return {
-            start: new Date(s.getUTCFullYear(), s.getUTCMonth(), s.getUTCDate()),
-            end: new Date(e.getUTCFullYear(), e.getUTCMonth(), e.getUTCDate()),
-        }
-    }
-    return {
-        start: new Date(s.getFullYear(), s.getMonth(), s.getDate()),
-        end: new Date(e.getFullYear(), e.getMonth(), e.getDate()),
-    }
-}
-
-function daysBetween(a, b) {
-    return Math.round((b.getTime() - a.getTime()) / 86_400_000)
+    return { start: taskStartYmd(t), end: taskDueYmd(t) }
 }
 
 function layoutSegments(items, rangeStart, colCount, predicate = null) {
-    const rangeEnd = addDays(rangeStart, colCount - 1)
+    const startKey = ymd(rangeStart)
+    const endKey = addDaysYmd(startKey, colCount - 1)
     const segments = []
     for (const t of items) {
         if (predicate && !predicate(t)) continue
         const { start, end } = taskDayRange(t)
-        if (end < rangeStart || start > rangeEnd) continue
-        const startCol = Math.max(0, daysBetween(rangeStart, start))
-        const endCol = Math.min(colCount - 1, daysBetween(rangeStart, end))
+        if (end < startKey || start > endKey) continue
+        const startCol = Math.max(0, daysBetweenYmd(startKey, start))
+        const endCol = Math.min(colCount - 1, daysBetweenYmd(startKey, end))
         segments.push({ task: t, startCol, endCol, lane: -1 })
     }
     segments.sort(
@@ -448,8 +430,7 @@ function layoutSegments(items, rangeStart, colCount, predicate = null) {
 }
 
 function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt, dnd }) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const todayKey = crmToday()
 
     const weeks = []
     for (let w = 0; w < 6; w++) {
@@ -486,7 +467,7 @@ function MonthGrid({ range, cursor, items, onPick, canClose, onCreateAt, dnd }) 
                         <div className='grid grid-cols-7'>
                             {days.map((d, di) => {
                                 const inMonth = d.getMonth() === cursor.getMonth()
-                                const isToday = isSameDay(d, today)
+                                const isToday = ymd(d) === todayKey
                                 const dropKey = `m:${ymd(d)}`
                                 return (
                                     <div
@@ -584,23 +565,24 @@ function SpanningTask({ seg, colCount, onClick, dnd }) {
 function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt, dnd }) {
     const hours = []
     for (let h = HOUR_START; h <= HOUR_END; h++) hours.push(h)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const todayKey = crmToday()
     const totalHeight = (HOUR_END - HOUR_START + 1) * HOUR_HEIGHT
 
+    // Линия «сейчас» — тоже по московскому времени, как и вся сетка.
     const [now, setNow] = useState(null)
     useEffect(() => {
         setNow(new Date())
         const id = setInterval(() => setNow(new Date()), 60_000)
         return () => clearInterval(id)
     }, [])
-    const nowHour = now?.getHours()
-    const nowMinute = now?.getMinutes()
+    const nowMinutes = now != null ? crmMinutesOfDay(now) : null
+    const nowKey = now != null ? crmYmd(now) : null
     const nowOffset =
-        now != null
-            ? (nowHour - HOUR_START) * HOUR_HEIGHT + (nowMinute / 60) * HOUR_HEIGHT
-            : null
-    const nowInRange = now != null && nowHour >= HOUR_START && nowHour <= HOUR_END
+        nowMinutes != null ? ((nowMinutes - HOUR_START * 60) / 60) * HOUR_HEIGHT : null
+    const nowInRange =
+        nowMinutes != null &&
+        nowMinutes >= HOUR_START * 60 &&
+        nowMinutes <= (HOUR_END + 1) * 60
 
     const allDaySegments = layoutSegments(items || [], days[0], days.length, t => t.allDay)
     const allDayLanes = allDaySegments.reduce((m, s) => Math.max(m, s.lane + 1), 0)
@@ -617,7 +599,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt, dnd 
                 >
                     <div className='bg-surface_muted' />
                     {days.map((d, i) => {
-                        const isToday = isSameDay(d, today)
+                        const isToday = ymd(d) === todayKey
                         return (
                             <div
                                 key={i}
@@ -734,7 +716,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt, dnd 
                                     )
                                 })}
                                 {list.map(t => {
-                                    const pos = positionTimed(t, d)
+                                    const pos = positionTimed(t, ymd(d))
                                     if (!pos) return null
                                     return (
                                         <TimedTask
@@ -749,7 +731,7 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt, dnd 
                                         />
                                     )
                                 })}
-                                {now && nowInRange && isSameDay(d, now) && (
+                                {nowInRange && ymd(d) === nowKey && (
                                     <div
                                         className='pointer-events-none absolute left-0 right-0 z-10 flex items-center'
                                         style={{ top: nowOffset }}
@@ -767,18 +749,16 @@ function HoursGrid({ days, items, tasksByDay, onPick, canClose, onCreateAt, dnd 
     )
 }
 
-function positionTimed(task, day) {
-    const dayStart = startOfDay(day).getTime()
-    const dayEnd = addDays(day, 1).getTime() - 1
-    const taskStart = new Date(task.startAt).getTime()
-    const taskEnd = new Date(task.endAt).getTime()
+function positionTimed(task, dayKey) {
+    const firstKey = taskStartYmd(task)
+    const lastKey = taskDueYmd(task)
+    if (dayKey < firstKey || dayKey > lastKey) return null
 
-    const visibleStart = Math.max(taskStart, dayStart)
-    const visibleEnd = Math.min(taskEnd, dayEnd)
-    if (visibleEnd < visibleStart) return null
-
-    const startMinutes = (visibleStart - dayStart) / 60_000 - HOUR_START * 60
-    const endMinutes = (visibleEnd - dayStart) / 60_000 - HOUR_START * 60
+    // Минуты от начала московских суток; у многодневной задачи края обрезаем.
+    const startMinutes =
+        (dayKey === firstKey ? crmMinutesOfDay(task.startAt) : 0) - HOUR_START * 60
+    const endMinutes =
+        (dayKey === lastKey ? crmMinutesOfDay(task.endAt) : 24 * 60) - HOUR_START * 60
     const maxMinutes = (HOUR_END - HOUR_START + 1) * 60
 
     const clampedStart = Math.max(0, startMinutes)
@@ -793,9 +773,7 @@ function positionTimed(task, day) {
 function TimedTask({ task, pos, onClick, dnd }) {
     const meta = TASK_TYPE_MAP[task.type]
     const closed = task.status !== "OPEN"
-    const start = new Date(task.startAt)
-    const end = new Date(task.endAt)
-    const timeStr = `${start.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}–${end.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}`
+    const timeStr = `${formatCrmTime(task.startAt)}–${formatCrmTime(task.endAt)}`
     const draggable = !!dnd && dnd.canDrag(task)
     return (
         <button
@@ -823,8 +801,7 @@ function TimedTask({ task, pos, onClick, dnd }) {
 }
 
 function WeekAgenda({ days, tasksByDay, onPick, onCreateAt }) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const todayKey = crmToday()
     return (
         <div className='overflow-hidden rounded-xl border border-line bg-white'>
             {days.map((d, i) => {
@@ -833,7 +810,7 @@ function WeekAgenda({ days, tasksByDay, onPick, onCreateAt }) {
                         (b.allDay ? 1 : 0) - (a.allDay ? 1 : 0) ||
                         new Date(a.startAt) - new Date(b.startAt),
                 )
-                const isToday = isSameDay(d, today)
+                const isToday = ymd(d) === todayKey
                 return (
                     <div key={i} className='border-b border-line last:border-b-0'>
                         <div
@@ -877,12 +854,7 @@ function WeekAgenda({ days, tasksByDay, onPick, onCreateAt }) {
 
 function TaskChip({ task, onClick, detailed = false }) {
     const meta = TASK_TYPE_MAP[task.type]
-    const time = task.allDay
-        ? "Весь день"
-        : new Date(task.startAt).toLocaleTimeString("ru-RU", {
-              hour: "2-digit",
-              minute: "2-digit",
-          })
+    const time = task.allDay ? "Весь день" : formatCrmTime(task.startAt)
     const closed = task.status !== "OPEN"
     return (
         <button

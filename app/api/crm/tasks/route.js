@@ -7,6 +7,7 @@ import {
     parseTaskPayload,
     taskLogParents,
 } from "@/lib/crm/task"
+import { crmDayEnd, crmDayStart } from "@/lib/crm/datetime"
 import { logChange } from "@/lib/crm/change-log"
 
 const USER_SELECT = { id: true, firstName: true, lastName: true, email: true }
@@ -66,14 +67,20 @@ export async function GET(request) {
         where.OR = [{ distributorId: counterpartyId }, { endCustomerId: counterpartyId }]
     }
 
+    // from/to приходят как календарные даты — границы считаем по московским
+    // суткам, иначе выборка «за сегодня» съезжает на часовой пояс.
     if (dateFrom || dateTo) {
         where.AND = where.AND || []
-        if (dateFrom) {
-            where.AND.push({ endAt: { gte: new Date(`${dateFrom}T00:00:00.000Z`) } })
+        const from = crmDayStart(dateFrom)
+        const to = crmDayEnd(dateTo)
+        if (dateFrom && !from) {
+            return Response.json({ error: "Некорректная дата from" }, { status: 400 })
         }
-        if (dateTo) {
-            where.AND.push({ startAt: { lte: new Date(`${dateTo}T23:59:59.999Z`) } })
+        if (dateTo && !to) {
+            return Response.json({ error: "Некорректная дата to" }, { status: 400 })
         }
+        if (from) where.AND.push({ endAt: { gte: from } })
+        if (to) where.AND.push({ startAt: { lte: to } })
     }
 
     const items = await prisma.task.findMany({

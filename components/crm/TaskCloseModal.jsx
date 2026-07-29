@@ -4,8 +4,15 @@ import { useState } from "react"
 import {
     TASK_STATUS_COLORS,
     TASK_STATUS_LABELS,
-    allDayDateLabel,
+    isTaskOverdue,
+    taskDueRelativeLabel,
+    taskRangeLabel,
 } from "@/lib/crm/task"
+import { formatCrmDateTime } from "@/lib/crm/datetime"
+import TaskScheduleFields, {
+    needsAdvanced,
+    scheduleFromTask,
+} from "./TaskScheduleFields"
 import { notifyTasksChanged } from "@/lib/crm/tasks-events"
 import { dealDisplayTitle } from "@/lib/crm/deal"
 import { TaskTypeBadge } from "./TaskTypeIcon"
@@ -24,17 +31,6 @@ function fullName(u) {
     return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
 }
 
-function fmtRange(t) {
-    if (t.allDay) {
-        const s = allDayDateLabel(t.startAt)
-        const e = allDayDateLabel(t.endAt)
-        return s === e ? s : `${s} — ${e}`
-    }
-    const start = new Date(t.startAt)
-    const end = new Date(t.endAt)
-    return `${start.toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" })} — ${end.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}`
-}
-
 function humanDiff(ms) {
     const abs = Math.abs(ms)
     const days = Math.floor(abs / 86_400_000)
@@ -45,27 +41,36 @@ function humanDiff(ms) {
     return `${mins} мин`
 }
 
+const TONE_OVERDUE = "bg-red-100 text-red-700 border border-red-200"
+const TONE_SOON = "bg-amber-50 text-amber-800 border border-amber-200"
+const TONE_LATER = "bg-blue-50 text-blue-700 border border-blue-100"
+
 function timeStatus(t) {
     const now = Date.now()
     const end = new Date(t.endAt).getTime()
     const start = new Date(t.startAt).getTime()
+    const overdue = isTaskOverdue(t)
 
-    if (end < now) {
+    // У задачи на весь день счёт идёт в днях: «осталось 4 ч» при сроке
+    // «до конца дня» выглядит тревогой на пустом месте.
+    if (t.allDay) {
+        const hint = taskDueRelativeLabel(t)
+        if (!hint) return { label: "Срок истёк", className: TONE_LATER }
+        const label = hint.charAt(0).toUpperCase() + hint.slice(1)
+        if (overdue) return { label, className: TONE_OVERDUE }
         return {
-            label: `Просрочена на ${humanDiff(now - end)}`,
-            className: "bg-red-100 text-red-700 border border-red-200",
+            label: `Срок: ${hint}`,
+            className: hint === "сегодня" ? TONE_SOON : TONE_LATER,
         }
+    }
+
+    if (overdue) {
+        return { label: `Просрочена на ${humanDiff(now - end)}`, className: TONE_OVERDUE }
     }
     if (start > now) {
-        return {
-            label: `Начнётся через ${humanDiff(start - now)}`,
-            className: "bg-blue-50 text-blue-700 border border-blue-100",
-        }
+        return { label: `Начнётся через ${humanDiff(start - now)}`, className: TONE_LATER }
     }
-    return {
-        label: `Осталось ${humanDiff(end - now)}`,
-        className: "bg-amber-50 text-amber-800 border border-amber-200",
-    }
+    return { label: `Осталось ${humanDiff(end - now)}`, className: TONE_SOON }
 }
 
 function relationLink(t) {
@@ -109,9 +114,47 @@ export default function TaskCloseModal({
     const [loading, setLoading] = useState(false)
     const [reopening, setReopening] = useState(false)
 
+    // Правка срока прямо в карточке: перенести задачу — самое частое, что с ней
+    // делают, и ради этого не должно быть нужно пересоздавать её.
+    const [editingDue, setEditingDue] = useState(false)
+    const [schedule, setSchedule] = useState(() => scheduleFromTask(task))
+    const [scheduleAdvanced, setScheduleAdvanced] = useState(() =>
+        needsAdvanced(scheduleFromTask(task)),
+    )
+    const [savingDue, setSavingDue] = useState(false)
+
     const ts = timeStatus(task)
     const rel = relationLink(task)
     const readOnly = !canClose
+    const canEditDue = task.status === "OPEN" && canClose
+
+    function startEditingDue() {
+        setError("")
+        const current = scheduleFromTask(task)
+        setSchedule(current)
+        setScheduleAdvanced(needsAdvanced(current))
+        setEditingDue(true)
+    }
+
+    async function saveDue() {
+        setError("")
+        setSavingDue(true)
+        const res = await fetch(`/api/crm/tasks/${task.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(schedule),
+        })
+        const text = await res.text()
+        const data = text ? safeJson(text) : {}
+        setSavingDue(false)
+        if (!res.ok) {
+            setError(data?.error || "Не удалось изменить срок")
+            return
+        }
+        setEditingDue(false)
+        notifyTasksChanged()
+        if (onClosed) onClosed(data.item)
+    }
 
     async function reopen() {
         setError("")
@@ -174,7 +217,53 @@ export default function TaskCloseModal({
                         <p className='text-sm text-neutral-500'>{task.description}</p>
                     )}
                     <dl className='grid gap-1.5 text-sm sm:grid-cols-2'>
-                        <Row label='Срок' value={fmtRange(task)} />
+                        {!editingDue && (
+                            <div>
+                                <dt className='flex items-center gap-2 text-xs uppercase text-neutral-400'>
+                                    Срок
+                                    {canEditDue && (
+                                        <button
+                                            type='button'
+                                            onClick={startEditingDue}
+                                            className='normal-case text-brand_main hover:underline'
+                                        >
+                                            изменить
+                                        </button>
+                                    )}
+                                </dt>
+                                <dd className='mt-0.5 text-neutral-800'>
+                                    {taskRangeLabel(task)}
+                                </dd>
+                            </div>
+                        )}
+                        {editingDue && (
+                            <div className='rounded-xl border border-line bg-surface_muted p-3 sm:col-span-2'>
+                                <TaskScheduleFields
+                                    value={schedule}
+                                    onChange={setSchedule}
+                                    advanced={scheduleAdvanced}
+                                    onAdvancedChange={setScheduleAdvanced}
+                                />
+                                <div className='mt-3 flex justify-end gap-2'>
+                                    <Button
+                                        type='button'
+                                        variant='secondary'
+                                        size='sm'
+                                        onClick={() => setEditingDue(false)}
+                                    >
+                                        Отмена
+                                    </Button>
+                                    <Button
+                                        type='button'
+                                        size='sm'
+                                        loading={savingDue}
+                                        onClick={saveDue}
+                                    >
+                                        Сохранить срок
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                         <Row label='Ответственный' value={fullName(task.assignee)} />
                         {task.createdBy && (
                             <Row label='Поставил' value={fullName(task.createdBy)} />
@@ -212,11 +301,7 @@ export default function TaskCloseModal({
                             </span>
                             {task.closedAt && (
                                 <span className='text-[11px] text-neutral-400'>
-                                    закрыто{" "}
-                                    {new Date(task.closedAt).toLocaleString("ru-RU", {
-                                        dateStyle: "short",
-                                        timeStyle: "short",
-                                    })}
+                                    закрыто {formatCrmDateTime(task.closedAt)}
                                 </span>
                             )}
                         </div>

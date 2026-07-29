@@ -1,6 +1,6 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
-import { canCloseTask, parseCloseTaskPayload, taskLogParents } from "@/lib/crm/task"
+import { canManageTask, parseCloseTaskPayload, taskLogParents } from "@/lib/crm/task"
 import { logChange } from "@/lib/crm/change-log"
 
 export async function POST(request, { params }) {
@@ -10,7 +10,7 @@ export async function POST(request, { params }) {
     const existing = await prisma.task.findUnique({ where: { id: params.id } })
     if (!existing) return Response.json({ error: "Не найдено" }, { status: 404 })
 
-    if (!canCloseTask(existing, session)) {
+    if (!canManageTask(existing, session)) {
         return Response.json(
             { error: "Закрыть задачу может ответственный, создатель или администратор" },
             { status: 403 },
@@ -60,7 +60,7 @@ export async function DELETE(_request, { params }) {
 
     const existing = await prisma.task.findUnique({ where: { id: params.id } })
     if (!existing) return Response.json({ error: "Не найдено" }, { status: 404 })
-    if (!canCloseTask(existing, session)) {
+    if (!canManageTask(existing, session)) {
         return Response.json({ error: "Нет прав" }, { status: 403 })
     }
     if (existing.status === "OPEN") {

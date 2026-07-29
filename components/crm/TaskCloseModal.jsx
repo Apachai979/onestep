@@ -243,6 +243,7 @@ export default function TaskCloseModal({
                                     onChange={setSchedule}
                                     advanced={scheduleAdvanced}
                                     onAdvancedChange={setScheduleAdvanced}
+                                    dense
                                 />
                                 <div className='mt-3 flex justify-end gap-2'>
                                     <Button

@@ -130,8 +130,13 @@ export default function TaskScheduleFields({
     onChange,
     advanced,
     onAdvancedChange,
+    // Брейкпоинты Tailwind смотрят на ширину экрана, а не контейнера, поэтому
+    // в узких местах (карточка задачи, форма в боковой панели) две колонки
+    // раскладываем вертикально явным флагом.
+    dense = false,
 }) {
     const dueDate = dateOnly(value.endAt)
+    const groupsClass = dense ? "grid gap-3" : "grid gap-3 sm:grid-cols-2"
 
     function setDue(date) {
         if (!date) return
@@ -209,7 +214,7 @@ export default function TaskScheduleFields({
                         Весь день
                     </label>
                     {value.allDay ? (
-                        <div className='grid gap-3 sm:grid-cols-2'>
+                        <div className={groupsClass}>
                             <div>
                                 <label className={LABEL_CLASS}>Дата начала</label>
                                 <input
@@ -234,78 +239,76 @@ export default function TaskScheduleFields({
                             </div>
                         </div>
                     ) : (
-                        <div className='grid gap-3 sm:grid-cols-4'>
+                        <div className={groupsClass}>
                             <div>
-                                <label className={LABEL_CLASS}>Дата начала</label>
-                                <input
-                                    type='date'
-                                    value={dateOnly(value.startAt)}
-                                    onChange={e =>
-                                        setTimedStart(
-                                            composeDateTime(
-                                                e.target.value,
-                                                timeOnly(value.startAt) ||
-                                                    DEFAULT_START_TIME,
-                                            ),
-                                        )
-                                    }
-                                    required
-                                    className={FIELD_CLASS}
-                                />
+                                <label className={LABEL_CLASS}>Начало</label>
+                                <div className='grid grid-cols-[minmax(0,1fr)_7.5rem] gap-2'>
+                                    <input
+                                        type='date'
+                                        value={dateOnly(value.startAt)}
+                                        onChange={e =>
+                                            setTimedStart(
+                                                composeDateTime(
+                                                    e.target.value,
+                                                    timeOnly(value.startAt) ||
+                                                        DEFAULT_START_TIME,
+                                                ),
+                                            )
+                                        }
+                                        required
+                                        className={`${FIELD_CLASS} min-w-0`}
+                                    />
+                                    <input
+                                        type='time'
+                                        value={timeOnly(value.startAt)}
+                                        onChange={e =>
+                                            setTimedStart(
+                                                composeDateTime(
+                                                    dateOnly(value.startAt),
+                                                    e.target.value,
+                                                ),
+                                            )
+                                        }
+                                        required
+                                        className={`${FIELD_CLASS} min-w-0`}
+                                    />
+                                </div>
                             </div>
                             <div>
-                                <label className={LABEL_CLASS}>Время начала</label>
-                                <input
-                                    type='time'
-                                    value={timeOnly(value.startAt)}
-                                    onChange={e =>
-                                        setTimedStart(
-                                            composeDateTime(
-                                                dateOnly(value.startAt),
-                                                e.target.value,
-                                            ),
-                                        )
-                                    }
-                                    required
-                                    className={FIELD_CLASS}
-                                />
-                            </div>
-                            <div>
-                                <label className={LABEL_CLASS}>Дата окончания</label>
-                                <input
-                                    type='date'
-                                    value={dueDate}
-                                    onChange={e =>
-                                        onChange({
-                                            ...value,
-                                            endAt: composeDateTime(
-                                                e.target.value,
-                                                timeOnly(value.endAt) ||
-                                                    DEFAULT_START_TIME,
-                                            ),
-                                        })
-                                    }
-                                    required
-                                    className={FIELD_CLASS}
-                                />
-                            </div>
-                            <div>
-                                <label className={LABEL_CLASS}>Время окончания</label>
-                                <input
-                                    type='time'
-                                    value={timeOnly(value.endAt)}
-                                    onChange={e =>
-                                        onChange({
-                                            ...value,
-                                            endAt: composeDateTime(
-                                                dueDate,
-                                                e.target.value,
-                                            ),
-                                        })
-                                    }
-                                    required
-                                    className={FIELD_CLASS}
-                                />
+                                <label className={LABEL_CLASS}>Окончание</label>
+                                <div className='grid grid-cols-[minmax(0,1fr)_7.5rem] gap-2'>
+                                    <input
+                                        type='date'
+                                        value={dueDate}
+                                        onChange={e =>
+                                            onChange({
+                                                ...value,
+                                                endAt: composeDateTime(
+                                                    e.target.value,
+                                                    timeOnly(value.endAt) ||
+                                                        DEFAULT_START_TIME,
+                                                ),
+                                            })
+                                        }
+                                        required
+                                        className={`${FIELD_CLASS} min-w-0`}
+                                    />
+                                    <input
+                                        type='time'
+                                        value={timeOnly(value.endAt)}
+                                        onChange={e =>
+                                            onChange({
+                                                ...value,
+                                                endAt: composeDateTime(
+                                                    dueDate,
+                                                    e.target.value,
+                                                ),
+                                            })
+                                        }
+                                        required
+                                        className={`${FIELD_CLASS} min-w-0`}
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}

@@ -252,6 +252,7 @@ export default function TaskForm({
                 onChange={next => setForm(prev => ({ ...prev, ...next }))}
                 advanced={advanced}
                 onAdvancedChange={setAdvanced}
+                dense={compact}
             />
 
             {!fixedRelation && (

@@ -6,6 +6,7 @@ import {
     PROJECT_STATUS_LABELS,
     buildInternalName,
     isAutoInternalName,
+    projectManagerLabel as managerLabel,
 } from "@/lib/crm/project"
 import ProjectContactsPicker from "./ProjectContactsPicker"
 import SearchableSelect from "./SearchableSelect"
@@ -217,7 +218,10 @@ export default function ProjectForm({
 
         if (res.status === 409) {
             const data = await res.json().catch(() => ({}))
-            setDuplicate(data.duplicate)
+            setDuplicate({
+                items: data.duplicates || [],
+                requiresComment: data.requiresComment === true,
+            })
             return { dup: true }
         }
 
@@ -259,7 +263,8 @@ export default function ProjectForm({
     }
 
     async function handleForceCreate() {
-        if (!form.duplicateComment.trim()) {
+        // Комментарий обязателен только для «чужого» дистрибьютора.
+        if (duplicate?.requiresComment && !form.duplicateComment.trim()) {
             setError("Укажите комментарий о дубликате")
             return
         }
@@ -399,44 +404,52 @@ export default function ProjectForm({
 
             {duplicate && (
                 <div className='rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm'>
-                    <p className='font-semibold text-yellow-900'>Обнаружен дубль</p>
-                    <p className='mt-1 text-yellow-800'>
-                        Этот конечный потребитель уже в работе у дистрибьютора{" "}
-                        <strong>{duplicate.distributor?.name}</strong>, менеджер:{" "}
-                        <strong>
-                            {duplicate.manager
-                                ? `${duplicate.manager.firstName ?? ""} ${duplicate.manager.lastName ?? ""}`.trim() ||
-                                  duplicate.manager.email
-                                : "—"}
-                        </strong>
-                        .{" "}
-                        <a
-                            href={`/crm/projects/${duplicate.id}`}
-                            className='underline'
-                            target='_blank'
-                            rel='noopener noreferrer'
-                        >
-                            Открыть проект
-                        </a>
+                    <p className='font-semibold text-yellow-900'>
+                        {duplicate.requiresComment
+                            ? "Обнаружен дубль"
+                            : "Похожий проект уже в работе"}
                     </p>
-                    <div className='mt-3'>
-                        <label className='mb-1 block text-sm text-yellow-900'>
-                            Комментарий о дубликате *
-                        </label>
-                        <textarea
-                            rows={2}
-                            value={form.duplicateComment}
-                            onChange={update("duplicateComment")}
-                            className='w-full rounded-lg border border-yellow-400 px-3 py-2 text-sm shadow-sm focus:border-yellow-600 focus:outline-none'
-                        />
-                    </div>
+                    <p className='mt-1 text-yellow-800'>
+                        {duplicate.requiresComment
+                            ? "Этот конечный потребитель уже в работе у другого дистрибьютора:"
+                            : "У этого дистрибьютора уже есть проект в работе с этим конечным потребителем:"}
+                    </p>
+                    <ul className='mt-2 space-y-1.5'>
+                        {duplicate.items.map(p => (
+                            <li key={p.id} className='text-yellow-800'>
+                                <a
+                                    href={`/crm/projects/${p.id}`}
+                                    className='font-medium underline'
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                >
+                                    {p.internalName || "Без названия"}
+                                </a>{" "}
+                                — дистрибьютор <strong>{p.distributor?.name ?? "—"}</strong>,
+                                менеджер <strong>{managerLabel(p.manager)}</strong>
+                            </li>
+                        ))}
+                    </ul>
+                    {duplicate.requiresComment && (
+                        <div className='mt-3'>
+                            <label className='mb-1 block text-sm text-yellow-900'>
+                                Комментарий о дубликате *
+                            </label>
+                            <textarea
+                                rows={2}
+                                value={form.duplicateComment}
+                                onChange={update("duplicateComment")}
+                                className='w-full rounded-lg border border-yellow-400 px-3 py-2 text-sm shadow-sm focus:border-yellow-600 focus:outline-none'
+                            />
+                        </div>
+                    )}
                     <Button
                         type='button'
                         onClick={handleForceCreate}
                         loading={loading}
                         className='mt-3'
                     >
-                        Всё равно создать
+                        {mode === "create" ? "Всё равно создать" : "Всё равно сохранить"}
                     </Button>
                 </div>
             )}

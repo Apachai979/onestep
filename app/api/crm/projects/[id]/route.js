@@ -3,6 +3,8 @@ import { requireCrmSession } from "@/lib/crm/session"
 import {
     PROJECT_TRACKED_FIELDS,
     buildInternalName,
+    duplicateProjectMessage,
+    findProjectDuplicates,
     isAutoInternalName,
     parseProjectPayload,
 } from "@/lib/crm/project"
@@ -114,6 +116,43 @@ export async function PATCH(request, { params }) {
         })
         if (!m || m.status !== "ACTIVE") {
             return Response.json({ error: "Менеджер не найден" }, { status: 400 })
+        }
+    }
+
+    // Дубль проверяем и при редактировании: стороны можно поменять уже после
+    // создания, а в «в работе» проект попадает из черновика/апробации — оба
+    // пути раньше проходили мимо проверки. Блокируем только чужого
+    // дистрибьютора: своему же второй проект на того же потребителя разрешён.
+    const nextStatus = data.status ?? existing.status
+    const nextDistributorId = data.distributorId ?? existing.distributorId
+    const nextEndCustomerId = data.endCustomerId ?? existing.endCustomerId
+    const enteringProgress = nextStatus === "IN_PROGRESS" && existing.status !== "IN_PROGRESS"
+
+    if (nextStatus === "IN_PROGRESS" && (partiesChanged || enteringProgress)) {
+        const { items: duplicates, hasOtherDistributor } = await findProjectDuplicates(prisma, {
+            endCustomerId: nextEndCustomerId,
+            distributorId: nextDistributorId,
+            excludeId: params.id,
+        })
+
+        if (hasOtherDistributor) {
+            const other = duplicates.find(p => !p.sameDistributor)
+            if (body.forceCreate !== true) {
+                return Response.json(
+                    {
+                        error: duplicateProjectMessage(other),
+                        requiresComment: true,
+                        duplicates,
+                    },
+                    { status: 409 },
+                )
+            }
+            if (!(data.duplicateComment ?? existing.duplicateComment)) {
+                return Response.json(
+                    { error: "Укажите комментарий о дубликате" },
+                    { status: 400 },
+                )
+            }
         }
     }
 

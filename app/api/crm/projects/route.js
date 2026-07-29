@@ -4,6 +4,7 @@ import {
     PROJECT_STATUSES,
     PROJECT_TRACKED_FIELDS,
     buildInternalName,
+    findProjectDuplicates,
     parseProjectPayload,
 } from "@/lib/crm/project"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
@@ -133,35 +134,25 @@ export async function POST(request) {
     const status = data.status || "IN_PROGRESS"
 
     if (status === "IN_PROGRESS") {
-        // Дубль: этот конечный потребитель уже в работе у другого дистрибьютора.
-        const duplicate = await prisma.project.findFirst({
-            where: {
-                status: "IN_PROGRESS",
-                endCustomerId: data.endCustomerId,
-            },
-            include: {
-                distributor: { select: { id: true, name: true } },
-                manager: { select: { firstName: true, lastName: true, email: true } },
-            },
+        // Предупреждаем о любом проекте «в работе» на того же потребителя.
+        // Комментарий обязателен, только если его ведёт другой дистрибьютор.
+        const { items: duplicates, hasOtherDistributor } = await findProjectDuplicates(prisma, {
+            endCustomerId: data.endCustomerId,
+            distributorId: data.distributorId,
         })
 
-        if (duplicate && duplicate.distributorId !== data.distributorId) {
-            const force = body.forceCreate === true
-            if (!force) {
+        if (duplicates.length > 0) {
+            if (body.forceCreate !== true) {
                 return Response.json(
                     {
                         error: "duplicate",
-                        duplicate: {
-                            id: duplicate.id,
-                            internalName: duplicate.internalName,
-                            distributor: duplicate.distributor,
-                            manager: duplicate.manager,
-                        },
+                        requiresComment: hasOtherDistributor,
+                        duplicates,
                     },
                     { status: 409 },
                 )
             }
-            if (!data.duplicateComment) {
+            if (hasOtherDistributor && !data.duplicateComment) {
                 return Response.json(
                     { error: "Укажите комментарий о дубликате" },
                     { status: 400 },

@@ -69,9 +69,10 @@ export default async function DealPage({ params }) {
     // Завершённая сделка: менеджеру остаётся только панель активности.
     const locked = isDealLocked(item.status, session)
 
-    // Удаление — право администратора. Отдельно предупреждаем про отгрузки:
-    // они уедут каскадом вместе со сделкой, включая проведённые.
-    const canDelete = canDeleteDeal(session)
+    // Удаление — право администратора и только в «Не реализована»/«Архив».
+    // Отдельно предупреждаем про отгрузки: они уедут каскадом вместе со
+    // сделкой, включая проведённые.
+    const canDelete = canDeleteDeal(item.status, session)
     const shippedCount = item.shipments.filter(s => s.status === "SHIPPED").length
 
     // В клиентский компонент отдаём только реквизиты: Decimal-поля карточки

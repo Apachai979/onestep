@@ -4,6 +4,8 @@ import { requireAdmin } from "@/lib/crm/admin"
 import { DEAL_TRACKED_FIELDS, parseDealPayload } from "@/lib/crm/deal"
 import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
 import {
+    DEAL_DELETABLE_STATUSES,
+    DEAL_DELETE_STATUS_ERROR,
     DEAL_DISCOUNT_SHIPPED_ERROR,
     DEAL_PARTIES_LOCKED_ERROR,
     dealItemShipmentUsage,
@@ -281,6 +283,10 @@ export async function DELETE(_request, { params }) {
 
     const existing = await prisma.deal.findUnique({ where: { id: params.id } })
     if (!existing) return Response.json({ error: "Не найдено" }, { status: 404 })
+
+    if (!DEAL_DELETABLE_STATUSES.includes(existing.status)) {
+        return Response.json({ error: DEAL_DELETE_STATUS_ERROR }, { status: 400 })
+    }
 
     // Отгрузки уедут каскадом вместе со сделкой, но их заметки и файлы
     // привязаны полиморфно — снимаем их отдельно, пока отгрузки ещё есть.

@@ -10,6 +10,12 @@ import {
     dealLockResponse,
     dealProjectPartiesError,
 } from "@/lib/crm/access"
+import {
+    deleteEntityTail,
+    deleteEntityTails,
+    deleteOrphanTasks,
+    removeStoredFiles,
+} from "@/lib/crm/cascade"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 // Плательщика показывают вместе с реквизитами — их переносят в счёт (счета
@@ -276,7 +282,17 @@ export async function DELETE(_request, { params }) {
     const existing = await prisma.deal.findUnique({ where: { id: params.id } })
     if (!existing) return Response.json({ error: "Не найдено" }, { status: 404 })
 
-    await prisma.$transaction(async tx => {
+    // Отгрузки уедут каскадом вместе со сделкой, но их заметки и файлы
+    // привязаны полиморфно — снимаем их отдельно, пока отгрузки ещё есть.
+    const shipments = await prisma.shipment.findMany({
+        where: { dealId: params.id },
+        select: { id: true },
+    })
+
+    const storageKeys = await prisma.$transaction(async tx => {
+        const keys = await deleteEntityTail(tx, "Deal", existing.id)
+        keys.push(...(await deleteEntityTails(tx, "Shipment", shipments.map(s => s.id))))
+        await deleteOrphanTasks(tx, { dealId: existing.id })
         await tx.deal.delete({ where: { id: params.id } })
         await logChange(tx, {
             entityType: "Deal",
@@ -285,6 +301,9 @@ export async function DELETE(_request, { params }) {
             payload: snapshotEntity(existing, DEAL_TRACKED_FIELDS),
             authorId: session.user.id,
         })
+        return keys
     })
+
+    await removeStoredFiles(storageKeys)
     return Response.json({ ok: true })
 }

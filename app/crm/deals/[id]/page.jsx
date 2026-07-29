@@ -5,13 +5,14 @@ import { LuPencil, LuFileText, LuExternalLink } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_LOSS_REASON_LABELS, dealOwnTitle } from "@/lib/crm/deal"
-import { dealItemShipmentUsage, isDealLocked } from "@/lib/crm/access"
+import { canDeleteDeal, dealItemShipmentUsage, isDealLocked } from "@/lib/crm/access"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import DealItemsSection from "@/components/crm/DealItemsSection"
 import DealParamsTabs from "@/components/crm/DealParamsTabs"
 import DealPayerCard from "@/components/crm/DealPayerCard"
 import DealStatusControl from "@/components/crm/DealStatusControl"
+import DeleteEntityButton from "@/components/crm/DeleteEntityButton"
 import DealShipmentsSection from "@/components/crm/DealShipmentsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import ContactMeta from "@/components/crm/ContactMeta"
@@ -67,6 +68,11 @@ export default async function DealPage({ params }) {
 
     // Завершённая сделка: менеджеру остаётся только панель активности.
     const locked = isDealLocked(item.status, session)
+
+    // Удаление — право администратора. Отдельно предупреждаем про отгрузки:
+    // они уедут каскадом вместе со сделкой, включая проведённые.
+    const canDelete = canDeleteDeal(session)
+    const shippedCount = item.shipments.filter(s => s.status === "SHIPPED").length
 
     // В клиентский компонент отдаём только реквизиты: Decimal-поля карточки
     // контрагента не сериализуются.
@@ -176,15 +182,32 @@ export default async function DealPage({ params }) {
                             </p>
                         )}
                     </EntityHeading>
-                    {!locked && (
-                        <Link
-                            href={`/crm/deals/${item.id}/edit`}
-                            className='inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-surface_muted'
-                        >
-                            <LuPencil className='h-3.5 w-3.5' />
-                            Редактировать
-                        </Link>
-                    )}
+                    <div className='flex shrink-0 items-center gap-2'>
+                        {!locked && (
+                            <Link
+                                href={`/crm/deals/${item.id}/edit`}
+                                className='inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-surface_muted'
+                            >
+                                <LuPencil className='h-3.5 w-3.5' />
+                                Редактировать
+                            </Link>
+                        )}
+                        {canDelete && (
+                            <DeleteEntityButton
+                                url={`/api/crm/deals/${item.id}`}
+                                redirectTo='/crm/deals'
+                                title='Удалить сделку?'
+                                name={dealOwnTitle(item, item.counterparty?.name)}
+                                consequences={[
+                                    "Вместе со сделкой удалятся её позиции, отгрузки, заметки, файлы и задачи.",
+                                    shippedCount > 0
+                                        ? `Внимание: по сделке есть проведённые отгрузки (${shippedCount}) — они будут удалены вместе с ней.`
+                                        : null,
+                                ].filter(Boolean)}
+                                successText='Сделка удалена'
+                            />
+                        )}
+                    </div>
                 </div>
                 <div className='flex flex-wrap items-end justify-between gap-2'>
                     <DealStatusControl

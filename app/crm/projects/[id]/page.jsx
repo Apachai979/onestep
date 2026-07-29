@@ -6,7 +6,8 @@ import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_STATUS_COLORS, DEAL_STATUS_LABELS, dealDiscountedTotal } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
-import { isProjectLocked } from "@/lib/crm/access"
+import { canDeleteProject, isProjectLocked } from "@/lib/crm/access"
+import DeleteEntityButton from "@/components/crm/DeleteEntityButton"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import ContactMeta from "@/components/crm/ContactMeta"
@@ -47,8 +48,10 @@ export default async function ProjectPage({ params }) {
     })
     if (!item) notFound()
 
-    // «Проработано, нет потребности»: менеджеру карточка только для чтения.
+    // «Проработано, нет потребности»: менеджеру карточка только для чтения,
+    // а администратору в этом статусе доступно удаление.
     const locked = isProjectLocked(item.status, session)
+    const canDelete = canDeleteProject(item.status, session)
 
     // Сумма проекта — производная: сумма всех сделок, привязанных к проекту,
     // по финальной цене (со скидкой).
@@ -82,15 +85,29 @@ export default async function ProjectPage({ params }) {
                         label='Проект'
                         title={item.internalName}
                     />
-                    {!locked && (
-                        <Link
-                            href={`/crm/projects/${item.id}/edit`}
-                            className='inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-surface_muted'
-                        >
-                            <LuPencil className='h-3.5 w-3.5' />
-                            Редактировать
-                        </Link>
-                    )}
+                    <div className='flex shrink-0 items-center gap-2'>
+                        {!locked && (
+                            <Link
+                                href={`/crm/projects/${item.id}/edit`}
+                                className='inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-surface_muted'
+                            >
+                                <LuPencil className='h-3.5 w-3.5' />
+                                Редактировать
+                            </Link>
+                        )}
+                        {canDelete && (
+                            <DeleteEntityButton
+                                url={`/api/crm/projects/${item.id}`}
+                                redirectTo='/crm/projects'
+                                title='Удалить проект?'
+                                name={item.internalName}
+                                consequences={[
+                                    "Вместе с проектом удалятся его позиции, заметки, файлы и задачи.",
+                                ]}
+                                successText='Проект удалён'
+                            />
+                        )}
+                    </div>
                 </div>
                 <div className='flex flex-wrap items-end justify-between gap-2'>
                     <ProjectStatusControl

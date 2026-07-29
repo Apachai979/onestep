@@ -8,8 +8,16 @@ import {
     isAutoInternalName,
     parseProjectPayload,
 } from "@/lib/crm/project"
-import { diffEntities, logChange } from "@/lib/crm/change-log"
-import { PROJECT_PARTIES_LOCKED_ERROR, projectLockResponse } from "@/lib/crm/access"
+import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
+import {
+    PROJECT_DELETABLE_STATUSES,
+    PROJECT_DELETE_HAS_DEALS_ERROR,
+    PROJECT_DELETE_STATUS_ERROR,
+    PROJECT_PARTIES_LOCKED_ERROR,
+    projectLockResponse,
+} from "@/lib/crm/access"
+import { deleteEntityTail, deleteOrphanTasks, removeStoredFiles } from "@/lib/crm/cascade"
+import { requireAdmin } from "@/lib/crm/admin"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
@@ -245,4 +253,40 @@ export async function PATCH(request, { params }) {
         return project
     })
     return Response.json({ item: updated })
+}
+
+export async function DELETE(_request, { params }) {
+    const { session, response } = await requireAdmin()
+    if (!session) return response
+
+    const existing = await prisma.project.findUnique({ where: { id: params.id } })
+    if (!existing) return Response.json({ error: "Не найдено" }, { status: 404 })
+
+    if (!PROJECT_DELETABLE_STATUSES.includes(existing.status)) {
+        return Response.json({ error: PROJECT_DELETE_STATUS_ERROR }, { status: 400 })
+    }
+
+    const dealsCount = await prisma.deal.count({ where: { sourceProjectId: params.id } })
+    if (dealsCount > 0) {
+        return Response.json({ error: PROJECT_DELETE_HAS_DEALS_ERROR }, { status: 409 })
+    }
+
+    const storageKeys = await prisma.$transaction(async tx => {
+        const keys = await deleteEntityTail(tx, "Project", existing.id)
+        await deleteOrphanTasks(tx, { projectId: existing.id })
+        // Позиции проекта уедут каскадом, контакты — связь m2m, сам контакт
+        // живёт у контрагента и остаётся.
+        await tx.project.delete({ where: { id: params.id } })
+        await logChange(tx, {
+            entityType: "Project",
+            entityId: existing.id,
+            action: "DELETE",
+            payload: snapshotEntity(existing, PROJECT_TRACKED_FIELDS),
+            authorId: session.user.id,
+        })
+        return keys
+    })
+
+    await removeStoredFiles(storageKeys)
+    return Response.json({ ok: true })
 }

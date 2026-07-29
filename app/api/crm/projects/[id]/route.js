@@ -25,6 +25,7 @@ export async function GET(_request, { params }) {
             endCustomer: { select: COUNTERPARTY_SELECT },
             manager: { select: MANAGER_SELECT },
             updatedBy: { select: MANAGER_SELECT },
+            duplicateOf: { select: { id: true, internalName: true } },
             items: { orderBy: { createdAt: "asc" } },
             contacts: { orderBy: [{ lastName: "asc" }, { firstName: "asc" }] },
             deals: {
@@ -153,6 +154,7 @@ export async function PATCH(request, { params }) {
                     { status: 400 },
                 )
             }
+            data.duplicateOfId = other.id
         }
     }
 

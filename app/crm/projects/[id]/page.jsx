@@ -31,6 +31,7 @@ export default async function ProjectPage({ params }) {
             endCustomer: true,
             manager: true,
             updatedBy: true,
+            duplicateOf: { select: { id: true, internalName: true } },
             contacts: { orderBy: [{ lastName: "asc" }, { firstName: "asc" }] },
             deals: {
                 // «Не реализована» (CANCELLED) не показываем в карточке проекта
@@ -100,13 +101,23 @@ export default async function ProjectPage({ params }) {
                 </div>
             </div>
 
-            {item.duplicateComment && (
-                <div className='rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-sm'>
-                    <p className='font-semibold text-yellow-900'>
-                        Создан как дубль действующего проекта
-                    </p>
-                    <p className='mt-1 text-yellow-800'>{item.duplicateComment}</p>
-                </div>
+            {(item.duplicateComment || item.duplicateOf) && (
+                <p className='rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2 text-xs text-yellow-800'>
+                    <span className='font-semibold text-yellow-900'>
+                        Создан как дубль{" "}
+                        {item.duplicateOf ? (
+                            <Link
+                                href={`/crm/projects/${item.duplicateOf.id}`}
+                                className='underline underline-offset-2 hover:text-yellow-950'
+                            >
+                                {item.duplicateOf.internalName}
+                            </Link>
+                        ) : (
+                            "действующего проекта"
+                        )}
+                    </span>
+                    {item.duplicateComment ? ` — ${item.duplicateComment}` : ""}
+                </p>
             )}
 
             {item.status === "NO_NEED" && item.lossComment && (

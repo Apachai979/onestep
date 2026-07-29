@@ -161,6 +161,9 @@ model Project {
   totalAmount       Decimal       @default(0)
   auctionDate       DateTime?
   duplicateComment  String?
+  duplicateOfId     String?
+  duplicateOf       Project?      @relation("ProjectDuplicate", fields: [duplicateOfId], references: [id], onDelete: SetNull)
+  duplicates        Project[]     @relation("ProjectDuplicate")
   lossReason        String?
   lossComment       String?
 

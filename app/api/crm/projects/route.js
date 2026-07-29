@@ -133,6 +133,10 @@ export async function POST(request) {
 
     const status = data.status || "IN_PROGRESS"
 
+    // Проект, дублем которого создаётся этот: запоминаем, чтобы в карточке
+    // можно было перейти к исходному.
+    let duplicateOfId = null
+
     if (status === "IN_PROGRESS") {
         // Предупреждаем о любом проекте «в работе» на того же потребителя.
         // Комментарий обязателен, только если его ведёт другой дистрибьютор.
@@ -152,11 +156,14 @@ export async function POST(request) {
                     { status: 409 },
                 )
             }
-            if (hasOtherDistributor && !data.duplicateComment) {
-                return Response.json(
-                    { error: "Укажите комментарий о дубликате" },
-                    { status: 400 },
-                )
+            if (hasOtherDistributor) {
+                if (!data.duplicateComment) {
+                    return Response.json(
+                        { error: "Укажите комментарий о дубликате" },
+                        { status: 400 },
+                    )
+                }
+                duplicateOfId = duplicates.find(p => !p.sameDistributor).id
             }
         }
     }
@@ -181,7 +188,9 @@ export async function POST(request) {
             data: {
                 internalName,
                 status,
-                duplicateComment: data.duplicateComment ?? null,
+                // Комментарий имеет смысл только вместе с исходным проектом.
+                duplicateComment: duplicateOfId ? (data.duplicateComment ?? null) : null,
+                duplicateOfId,
                 distributorId: data.distributorId,
                 endCustomerId: data.endCustomerId,
                 managerId: data.managerId,

@@ -81,6 +81,12 @@ export default function ProjectForm({
     const [duplicate, setDuplicate] = useState(null)
     const [loading, setLoading] = useState(false)
 
+    // Все найденные проекты уже закрыты как «нет потребности» — это не дубль,
+    // а просто напоминание об истории работы с потребителем.
+    const allDuplicatesClosed = Boolean(
+        duplicate?.items?.length && duplicate.items.every(p => p.status === "NO_NEED"),
+    )
+
     useEffect(() => {
         Promise.all([
             fetch("/api/crm/counterparties?type=DISTRIBUTOR").then(r => r.json()),
@@ -407,12 +413,14 @@ export default function ProjectForm({
                     <p className='font-semibold text-yellow-900'>
                         {duplicate.requiresComment
                             ? "Обнаружен дубль"
-                            : "Похожий проект уже в работе"}
+                            : "По этому конечному потребителю уже есть проекты"}
                     </p>
                     <p className='mt-1 text-yellow-800'>
                         {duplicate.requiresComment
                             ? "Этот конечный потребитель уже в работе у другого дистрибьютора:"
-                            : "У этого дистрибьютора уже есть проект в работе с этим конечным потребителем:"}
+                            : allDuplicatesClosed
+                              ? "Потребность по ним закрыта — создать новый проект можно, но сначала проверьте:"
+                              : "Проверьте, не дублирует ли новый проект существующие:"}
                     </p>
                     <ul className='mt-2 space-y-1.5'>
                         {duplicate.items.map(p => (
@@ -426,7 +434,10 @@ export default function ProjectForm({
                                     {p.internalName || "Без названия"}
                                 </a>{" "}
                                 — дистрибьютор <strong>{p.distributor?.name ?? "—"}</strong>,
-                                менеджер <strong>{managerLabel(p.manager)}</strong>
+                                менеджер <strong>{managerLabel(p.manager)}</strong>, статус{" "}
+                                <strong>
+                                    {PROJECT_STATUS_LABELS[p.status] ?? p.status ?? "—"}
+                                </strong>
                             </li>
                         ))}
                     </ul>
@@ -449,7 +460,13 @@ export default function ProjectForm({
                         loading={loading}
                         className='mt-3'
                     >
-                        {mode === "create" ? "Всё равно создать" : "Всё равно сохранить"}
+                        {allDuplicatesClosed
+                            ? mode === "create"
+                                ? "Создать проект"
+                                : "Сохранить"
+                            : mode === "create"
+                              ? "Всё равно создать"
+                              : "Всё равно сохранить"}
                     </Button>
                 </div>
             )}

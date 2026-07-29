@@ -5,6 +5,7 @@ import {
     PROJECT_TRACKED_FIELDS,
     buildInternalName,
     findProjectDuplicates,
+    isBlockingDuplicate,
     parseProjectPayload,
 } from "@/lib/crm/project"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
@@ -138,8 +139,9 @@ export async function POST(request) {
     let duplicateOfId = null
 
     if (status === "IN_PROGRESS") {
-        // Предупреждаем о любом проекте «в работе» на того же потребителя.
-        // Комментарий обязателен, только если его ведёт другой дистрибьютор.
+        // Предупреждаем о любом проекте на того же потребителя — включая
+        // закрытые «Проработано, нет потребности». Комментарий обязателен,
+        // только если потребителя прямо сейчас ведёт другой дистрибьютор.
         const { items: duplicates, hasOtherDistributor } = await findProjectDuplicates(prisma, {
             endCustomerId: data.endCustomerId,
             distributorId: data.distributorId,
@@ -163,7 +165,7 @@ export async function POST(request) {
                         { status: 400 },
                     )
                 }
-                duplicateOfId = duplicates.find(p => !p.sameDistributor).id
+                duplicateOfId = duplicates.find(isBlockingDuplicate).id
             }
         }
     }

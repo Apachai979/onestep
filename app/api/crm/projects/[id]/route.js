@@ -6,6 +6,7 @@ import {
     duplicateProjectMessage,
     findProjectDuplicates,
     isAutoInternalName,
+    isBlockingDuplicate,
     parseProjectPayload,
 } from "@/lib/crm/project"
 import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
@@ -145,7 +146,7 @@ export async function PATCH(request, { params }) {
         })
 
         if (hasOtherDistributor) {
-            const other = duplicates.find(p => !p.sameDistributor)
+            const other = duplicates.find(isBlockingDuplicate)
             if (body.forceCreate !== true) {
                 return Response.json(
                     {

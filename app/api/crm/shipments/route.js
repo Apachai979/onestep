@@ -14,6 +14,7 @@ const DEAL_SELECT = {
     title: true,
     status: true,
     counterparty: { select: { id: true, name: true, type: true } },
+    sourceProject: { select: { internalName: true } },
     manager: { select: { id: true, firstName: true, lastName: true, email: true } },
 }
 

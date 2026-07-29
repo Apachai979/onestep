@@ -13,6 +13,7 @@ import {
     isShipmentOverdue,
 } from "@/lib/crm/shipment"
 import ActivityPanel from "@/components/crm/ActivityPanel"
+import { dealDisplayTitle } from "@/lib/crm/deal"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import LocalDateTime from "@/components/crm/LocalDateTime"
 import ShipmentRecipient from "@/components/crm/ShipmentRecipient"
@@ -49,6 +50,7 @@ export default async function ShipmentPage({ params }) {
                     title: true,
                     status: true,
                     counterparty: { select: { id: true, name: true, type: true } },
+                    sourceProject: { select: { internalName: true } },
                     manager: { select: { firstName: true, lastName: true, email: true } },
                 },
             },
@@ -111,7 +113,7 @@ export default async function ShipmentPage({ params }) {
                             href={`/crm/deals/${item.deal.id}`}
                             className='underline hover:text-brand_main'
                         >
-                            {item.deal.title || `Сделка #${item.deal.id.slice(-6)}`}
+                            {dealDisplayTitle(item.deal, item.deal.counterparty?.name)}
                         </Link>{" "}
                         <span className='text-neutral-400'>·</span>{" "}
                         Клиент:{" "}

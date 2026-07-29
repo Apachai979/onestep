@@ -3,6 +3,7 @@ import { requireCrmSession } from "@/lib/crm/session"
 import {
     PROJECT_TRACKED_FIELDS,
     buildInternalName,
+    isAutoInternalName,
     parseProjectPayload,
 } from "@/lib/crm/project"
 import { diffEntities, logChange } from "@/lib/crm/change-log"
@@ -115,20 +116,45 @@ export async function PATCH(request, { params }) {
         }
     }
 
-    if (data.internalName === null || data.internalName === "") {
-        const distributorId = data.distributorId ?? existing.distributorId
-        const endCustomerId = data.endCustomerId ?? existing.endCustomerId
-        const [d, c] = await Promise.all([
-            prisma.counterparty.findUnique({
-                where: { id: distributorId },
-                select: { name: true },
-            }),
-            prisma.counterparty.findUnique({
-                where: { id: endCustomerId },
-                select: { name: true },
-            }),
-        ])
-        data.internalName = buildInternalName(d?.name, c?.name)
+    // Название: пустое собираем из сторон; авто-название при смене стороны
+    // пересобираем, чтобы в карточке не остался прежний контрагент. Название,
+    // заданное менеджером вручную, не трогаем.
+    const nameCleared = data.internalName === null || data.internalName === ""
+    const nameKept =
+        data.internalName === undefined || data.internalName === existing.internalName
+
+    if (nameCleared || (partiesChanged && nameKept)) {
+        const nextDistributorId = data.distributorId ?? existing.distributorId
+        const nextEndCustomerId = data.endCustomerId ?? existing.endCustomerId
+        const ids = Array.from(
+            new Set([
+                nextDistributorId,
+                nextEndCustomerId,
+                existing.distributorId,
+                existing.endCustomerId,
+            ]),
+        )
+        const parties = await prisma.counterparty.findMany({
+            where: { id: { in: ids } },
+            select: { id: true, name: true },
+        })
+        const nameById = new Map(parties.map(p => [p.id, p.name]))
+        const autoName = buildInternalName(
+            nameById.get(nextDistributorId),
+            nameById.get(nextEndCustomerId),
+        )
+
+        if (nameCleared) {
+            data.internalName = autoName
+        } else if (
+            isAutoInternalName(
+                existing.internalName,
+                nameById.get(existing.distributorId),
+                nameById.get(existing.endCustomerId),
+            )
+        ) {
+            data.internalName = autoName
+        }
     }
 
     const { contactIds, ...scalar } = data

@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth"
 import { LuPencil, LuFileText, LuExternalLink } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
-import { DEAL_LOSS_REASON_LABELS, dealDisplayTitle } from "@/lib/crm/deal"
+import { DEAL_LOSS_REASON_LABELS, dealOwnTitle } from "@/lib/crm/deal"
 import { dealItemShipmentUsage, isDealLocked } from "@/lib/crm/access"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import CrmBackLink from "@/components/crm/CrmBackLink"
@@ -162,7 +162,7 @@ export default async function DealPage({ params }) {
                                 ? `№ ${item.purchaseNumber}`
                                 : null
                         }
-                        title={dealDisplayTitle(item, item.counterparty?.name)}
+                        title={dealOwnTitle(item, item.counterparty?.name)}
                     >
                         {item.sourceProject && (
                             <p className='mt-1 text-sm text-blue-700'>

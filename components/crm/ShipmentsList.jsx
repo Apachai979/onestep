@@ -3,6 +3,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { LuSearch, LuTruck } from "react-icons/lu"
+import { dealDisplayTitle } from "@/lib/crm/deal"
 import {
     SHIPMENT_STATUSES,
     SHIPMENT_STATUS_COLORS,
@@ -137,7 +138,7 @@ export default function ShipmentsList() {
                         onClick={e => e.stopPropagation()}
                         className='text-neutral-900 hover:text-brand_main'
                     >
-                        {sh.deal.title || `Сделка #${sh.deal.id.slice(-6)}`}
+                        {dealDisplayTitle(sh.deal, sh.deal.counterparty?.name)}
                     </Link>
                 ),
             },
@@ -275,7 +276,7 @@ export default function ShipmentsList() {
                                         onClick={e => e.stopPropagation()}
                                         className='text-neutral-900 underline hover:text-brand_main'
                                     >
-                                        {sh.deal.title || `Сделка #${sh.deal.id.slice(-6)}`}
+                                        {dealDisplayTitle(sh.deal, sh.deal.counterparty?.name)}
                                     </Link>
                                 </CardRow>
                                 <CardRow label='Клиент'>{sh.deal.counterparty?.name || "—"}</CardRow>

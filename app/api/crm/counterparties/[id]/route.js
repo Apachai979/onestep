@@ -2,6 +2,7 @@ import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { parseCounterpartyPayload } from "@/lib/crm/counterparty"
 import { effectiveDiscount } from "@/lib/crm/counterparty-group"
+import { syncProjectNamesAfterRename } from "@/lib/crm/project"
 import { diffEntities, logChange } from "@/lib/crm/change-log"
 
 const COUNTERPARTY_TRACKED_FIELDS = [
@@ -129,6 +130,11 @@ export async function PATCH(request, { params }) {
                     updatedById: session.user.id ?? null,
                 },
             })
+            // Проекты, названные по сторонам, следуют за переименованием —
+            // иначе в карточке проекта и в сделках по нему остаётся старое имя.
+            if (data.name && data.name !== existing.name) {
+                await syncProjectNamesAfterRename(tx, cp.id, existing.name)
+            }
             const changes = diffEntities(existing, cp, COUNTERPARTY_TRACKED_FIELDS)
             if (Object.keys(changes).length > 0) {
                 await logChange(tx, {

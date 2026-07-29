@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { TASK_RELATION_KINDS, TASK_RELATION_LABELS, TASK_TYPES } from "@/lib/crm/task"
 import { notifyTasksChanged } from "@/lib/crm/tasks-events"
+import { dealDisplayTitle } from "@/lib/crm/deal"
 import SearchableSelect from "./SearchableSelect"
 import TaskTypeIcon from "./TaskTypeIcon"
 import { Button } from "@/components/crm/ui"
@@ -150,9 +151,9 @@ export default function TaskForm({
         if (relation.kind === "deal") {
             return refs.deals.map(d => ({
                 id: d.id,
-                label: d.title || `Сделка с ${d.counterparty?.name || "клиентом"}`,
+                label: dealDisplayTitle(d, d.counterparty?.name),
                 sublabel: d.counterparty?.name,
-                search: `${d.title ?? ""} ${d.counterparty?.name ?? ""}`,
+                search: `${dealDisplayTitle(d, d.counterparty?.name)} ${d.counterparty?.name ?? ""}`,
             }))
         }
         if (relation.kind === "project") {

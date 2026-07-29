@@ -1,7 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { DEAL_STATUSES, DEAL_STATUS_LABELS } from "@/lib/crm/deal"
+import { DEAL_STATUSES, DEAL_STATUS_LABELS, dealDisplayTitle } from "@/lib/crm/deal"
 import SearchableSelect from "./SearchableSelect"
 import {
     Button,
@@ -102,7 +102,9 @@ export default function DealForm({
                 isAuction: defaultIsAuction,
             }
             if (fromProject) {
-                base.title = `По проекту: ${fromProject.internalName}`
+                // Название не копируем: пустое поле title означает «по проекту»,
+                // и сделка всегда показывает актуальное имя проекта
+                // (см. dealDisplayTitle).
                 base.counterpartyId = fromProject.distributorId
                 base.managerId = fromProject.managerId || currentUserId || ""
                 base.sourceProjectId = fromProject.id
@@ -159,6 +161,13 @@ export default function DealForm({
     }
 
     const sourceProject = projectById(form.sourceProjectId)
+
+    // Как сделка будет называться с пустым полем «Название» — то же правило, что
+    // и при выводе карточки.
+    const autoDealTitle = dealDisplayTitle(
+        { sourceProject },
+        counterparties.find(c => c.id === form.counterpartyId)?.name,
+    )
 
     // Проект-источник задаёт стороны сделки: пока он выбран, клиент и заказчик
     // берутся из него и не редактируются.
@@ -336,12 +345,20 @@ export default function DealForm({
                     }
                 >
                     <div className='grid gap-4 sm:grid-cols-2'>
-                        <Input
-                            label='Название сделки (опц.)'
-                            containerClassName='sm:col-span-2'
-                            value={form.title}
-                            onChange={update("title")}
-                        />
+                        <div className='sm:col-span-2'>
+                            <Input
+                                label='Название сделки (опц.)'
+                                value={form.title}
+                                onChange={update("title")}
+                                placeholder={autoDealTitle}
+                            />
+                            {sourceProject && !form.title.trim() && (
+                                <p className='mt-1.5 text-xs text-neutral-500'>
+                                    Пока поле пустое, сделка называется по проекту и следует за его
+                                    переименованиями.
+                                </p>
+                            )}
+                        </div>
                         <Field label='Клиент' required className='sm:col-span-2'>
                             <SearchableSelect
                                 value={form.counterpartyId}

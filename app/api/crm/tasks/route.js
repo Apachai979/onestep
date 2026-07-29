@@ -15,7 +15,15 @@ const CP_SELECT = { id: true, name: true, type: true }
 const INCLUDE = {
     assignee: { select: USER_SELECT },
     createdBy: { select: USER_SELECT },
-    deal: { select: { id: true, title: true, counterparty: { select: CP_SELECT } } },
+    deal: {
+        select: {
+            id: true,
+            title: true,
+            counterparty: { select: CP_SELECT },
+            // Название сделки из проекта берётся из проекта — dealDisplayTitle.
+            sourceProject: { select: { internalName: true } },
+        },
+    },
     project: { select: { id: true, internalName: true } },
     distributor: { select: CP_SELECT },
     endCustomer: { select: CP_SELECT },

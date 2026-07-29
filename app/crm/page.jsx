@@ -94,6 +94,7 @@ export default async function CrmHome() {
                                   id: true,
                                   title: true,
                                   counterparty: { select: { name: true } },
+                                  sourceProject: { select: { internalName: true } },
                               },
                           },
                           project: { select: { id: true, internalName: true } },
@@ -121,6 +122,7 @@ export default async function CrmHome() {
                           status: true,
                           totalAmount: true,
                           counterparty: { select: { name: true } },
+                          sourceProject: { select: { internalName: true } },
                       },
                   })
                 : [],
@@ -138,6 +140,7 @@ export default async function CrmHome() {
                             title: true,
                             managerId: true,
                             counterparty: { select: { id: true, name: true } },
+                            sourceProject: { select: { internalName: true } },
                         },
                     },
                 },
@@ -177,6 +180,7 @@ export default async function CrmHome() {
                           id: true,
                           title: true,
                           counterparty: { select: { name: true } },
+                          sourceProject: { select: { internalName: true } },
                       },
                   })
                   .then(arr => new Map(arr.map(d => [d.id, d])))
@@ -500,7 +504,7 @@ function describeChange(c, { dealMap, projectMap, counterpartyMap }) {
     if (parent === "Deal" && parentId) {
         const d = dealMap.get(parentId)
         if (d) {
-            targetText = d.title || `Сделка с ${d.counterparty?.name || "клиентом"}`
+            targetText = dealDisplayTitle(d, d.counterparty?.name)
             targetHref = `/crm/deals/${parentId}`
         }
     } else if (parent === "Project" && parentId) {
@@ -605,7 +609,7 @@ function TaskGroup({ title, tone, tasks }) {
 }
 
 function relationLabel(t) {
-    if (t.deal) return `Сделка: ${t.deal.title || t.deal.counterparty?.name || "—"}`
+    if (t.deal) return `Сделка: ${dealDisplayTitle(t.deal, t.deal.counterparty?.name)}`
     if (t.project) return `Проект: ${t.project.internalName}`
     if (t.distributor) return `Дистрибьютор: ${t.distributor.name}`
     if (t.endCustomer) return `Клиент: ${t.endCustomer.name}`

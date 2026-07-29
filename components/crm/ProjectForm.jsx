@@ -1,7 +1,12 @@
 "use client"
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
-import { PROJECT_STATUSES, PROJECT_STATUS_LABELS, buildInternalName } from "@/lib/crm/project"
+import { useEffect, useMemo, useRef, useState } from "react"
+import {
+    PROJECT_STATUSES,
+    PROJECT_STATUS_LABELS,
+    buildInternalName,
+    isAutoInternalName,
+} from "@/lib/crm/project"
 import ProjectContactsPicker from "./ProjectContactsPicker"
 import SearchableSelect from "./SearchableSelect"
 import {
@@ -98,11 +103,61 @@ export default function ProjectForm({
         [refs.customers, initial?.endCustomer],
     )
 
+    // Стороны выбраны и уже найдены в подгруженных справочниках — только тогда
+    // авто-название собрано из настоящих имён, а не из прочерков.
+    const autoNameReady = useMemo(
+        () =>
+            Boolean(
+                form.distributorId &&
+                    form.endCustomerId &&
+                    distributors.some(x => x.id === form.distributorId) &&
+                    customers.some(x => x.id === form.endCustomerId),
+            ),
+        [distributors, customers, form.distributorId, form.endCustomerId],
+    )
+
     const autoInternalName = useMemo(() => {
         const d = distributors.find(x => x.id === form.distributorId)
         const c = customers.find(x => x.id === form.endCustomerId)
         return buildInternalName(d?.name, c?.name)
     }, [distributors, customers, form.distributorId, form.endCustomerId])
+
+    // Название, заданное менеджером вручную, автоподстановка не перезаписывает.
+    // У существующего проекта таким считаем название, не совпадающее с
+    // авто-именем его текущих сторон.
+    const nameTouchedRef = useRef(
+        Boolean(
+            initial?.internalName &&
+                !isAutoInternalName(
+                    initial.internalName,
+                    initial.distributor?.name,
+                    initial.endCustomer?.name,
+                ),
+        ),
+    )
+
+    // Смена стороны тянет за собой авто-название — иначе в карточке остаётся
+    // имя с прежним контрагентом, а сделки по проекту ссылаются на него же.
+    useEffect(() => {
+        if (nameTouchedRef.current || !autoNameReady) return
+        setForm(prev =>
+            prev.internalName === autoInternalName
+                ? prev
+                : { ...prev, internalName: autoInternalName },
+        )
+    }, [autoNameReady, autoInternalName])
+
+    const nameIsCustom =
+        autoNameReady &&
+        Boolean(form.internalName.trim()) &&
+        form.internalName.trim() !== autoInternalName
+
+    const nameWillChange =
+        mode === "edit" &&
+        !nameTouchedRef.current &&
+        autoNameReady &&
+        Boolean(initial?.internalName) &&
+        initial.internalName !== autoInternalName
 
     const distributorOptions = useMemo(
         () =>
@@ -142,6 +197,12 @@ export default function ProjectForm({
 
     function update(field) {
         return e => setForm(prev => ({ ...prev, [field]: e.target.value }))
+    }
+
+    function updateInternalName(e) {
+        nameTouchedRef.current = true
+        const { value } = e.target
+        setForm(prev => ({ ...prev, internalName: value }))
     }
 
     async function send(payload) {
@@ -297,13 +358,34 @@ export default function ProjectForm({
             <Card>
                 <FormSection title='Название и статус'>
                     <div className='grid gap-4 sm:grid-cols-2'>
-                        <Input
-                            label='Внутреннее название'
-                            containerClassName='sm:col-span-2'
-                            value={form.internalName}
-                            onChange={update("internalName")}
-                            placeholder={autoInternalName}
-                        />
+                        <div className='sm:col-span-2'>
+                            <Input
+                                label='Внутреннее название'
+                                value={form.internalName}
+                                onChange={updateInternalName}
+                                placeholder={autoInternalName}
+                            />
+                            {nameWillChange ? (
+                                <p className='mt-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900'>
+                                    Стороны проекта изменились — название будет обновлено:{" "}
+                                    <span className='line-through'>{initial.internalName}</span> →{" "}
+                                    <strong>{autoInternalName}</strong>. Сделки по проекту
+                                    подхватят новое название. Чтобы оставить прежнее, отредактируйте
+                                    поле вручную.
+                                </p>
+                            ) : nameIsCustom ? (
+                                <p className='mt-1.5 text-xs text-neutral-500'>
+                                    Название задано вручную — при смене сторон проекта оно
+                                    останется прежним.
+                                </p>
+                            ) : (
+                                <p className='mt-1.5 text-xs text-neutral-500'>
+                                    Собирается автоматически из дистрибьютора и конечного
+                                    потребителя и меняется вместе с ними. Отредактируйте поле,
+                                    чтобы задать своё название.
+                                </p>
+                            )}
+                        </div>
                         <Select label='Статус' value={form.status} onChange={update("status")}>
                             {PROJECT_STATUSES.map(s => (
                                 <option key={s} value={s}>

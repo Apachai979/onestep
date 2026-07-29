@@ -50,6 +50,8 @@ export async function GET(request) {
                 status: true,
                 totalAmount: true,
                 counterparty: { select: { name: true } },
+                // Сделке из проекта название даёт проект — см. dealDisplayTitle.
+                sourceProject: { select: { internalName: true } },
             },
         }),
         prisma.project.findMany({
@@ -102,7 +104,9 @@ export async function GET(request) {
                 href: `/crm/counterparties/${c.counterpartyId}`,
             })),
         deals: deals
-            .filter(d => has(d.title, d.counterparty?.name))
+            .filter(d =>
+                has(d.title, d.counterparty?.name, d.sourceProject?.internalName),
+            )
             .slice(0, LIMIT)
             .map(d => ({
                 id: d.id,

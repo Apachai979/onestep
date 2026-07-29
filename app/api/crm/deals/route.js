@@ -4,6 +4,7 @@ import {
     DEAL_STATUSES,
     DEAL_TRACKED_FIELDS,
     autoArchiveStaleFinalDeals,
+    dealDisplayTitle,
     parseDealPayload,
 } from "@/lib/crm/deal"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
@@ -53,6 +54,8 @@ export async function GET(request) {
         include: {
             counterparty: { select: COUNTERPARTY_SELECT },
             payer: { select: { id: true, name: true, inn: true } },
+            // Сделка из проекта берёт название из него же — см. dealDisplayTitle.
+            sourceProject: { select: { id: true, internalName: true } },
             manager: { select: MANAGER_SELECT },
             createdBy: { select: MANAGER_SELECT },
             contact: { select: CONTACT_SELECT },
@@ -71,7 +74,7 @@ export async function GET(request) {
     const filtered = q
         ? items.filter(d => {
               const ql = q.toLowerCase()
-              const title = (d.title || "").toLowerCase()
+              const title = dealDisplayTitle(d, d.counterparty?.name).toLowerCase()
               const cp = (d.counterparty?.name || "").toLowerCase()
               // Клиент присылает реквизиты плательщика — по ним тоже ищем.
               const payer = (d.payer?.name || "").toLowerCase()

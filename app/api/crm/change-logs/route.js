@@ -1,6 +1,7 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { ENTITY_LABELS, enumValueLabel } from "@/lib/crm/change-log"
+import { dealDisplayTitle } from "@/lib/crm/deal"
 
 const RELATION_FIELDS = {
     Counterparty: {
@@ -55,7 +56,7 @@ function contactName(c) {
 
 function dealTitle(d) {
     if (!d) return null
-    return d.title || (d.counterparty?.name ? `Сделка с ${d.counterparty.name}` : null)
+    return dealDisplayTitle(d, d.counterparty?.name)
 }
 
 function projectTitle(p) {
@@ -123,7 +124,12 @@ async function resolveRelations(items) {
         ids.deal.size
             ? prisma.deal.findMany({
                   where: { id: { in: Array.from(ids.deal) } },
-                  select: { id: true, title: true, counterparty: { select: { name: true } } },
+                  select: {
+                      id: true,
+                      title: true,
+                      counterparty: { select: { name: true } },
+                      sourceProject: { select: { internalName: true } },
+                  },
               })
             : [],
         ids.project.size

@@ -1,5 +1,6 @@
 "use client"
 import Link from "next/link"
+import { dealDisplayTitle } from "@/lib/crm/deal"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { LuListTodo } from "react-icons/lu"
 import {
@@ -53,7 +54,7 @@ function relationLink(t) {
     if (t.deal)
         return {
             href: `/crm/deals/${t.deal.id}`,
-            label: t.deal.title || `Сделка с ${t.deal.counterparty?.name || "клиентом"}`,
+            label: dealDisplayTitle(t.deal, t.deal.counterparty?.name),
         }
     if (t.project)
         return { href: `/crm/projects/${t.project.id}`, label: t.project.internalName }

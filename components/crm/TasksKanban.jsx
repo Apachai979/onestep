@@ -9,6 +9,7 @@ import {
     allDayDateLabel,
 } from "@/lib/crm/task"
 import { notifyTasksChanged, onTasksChanged } from "@/lib/crm/tasks-events"
+import { dealDisplayTitle } from "@/lib/crm/deal"
 import { TaskTypeBadge } from "./TaskTypeIcon"
 import TaskCloseModal from "./TaskCloseModal"
 import SearchableSelect from "./SearchableSelect"
@@ -54,7 +55,7 @@ function relationLink(t) {
     if (t.deal)
         return {
             href: `/crm/deals/${t.deal.id}`,
-            label: t.deal.title || `Сделка с ${t.deal.counterparty?.name || "клиентом"}`,
+            label: dealDisplayTitle(t.deal, t.deal.counterparty?.name),
         }
     if (t.project)
         return { href: `/crm/projects/${t.project.id}`, label: t.project.internalName }

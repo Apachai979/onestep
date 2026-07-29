@@ -19,7 +19,7 @@ export default function EntityHeading({ label, tone = "brand", title, meta, chil
                 </span>
                 {meta && <span className='text-xs text-neutral-500'>{meta}</span>}
             </div>
-            <h1 className='mt-1 break-words text-xl font-semibold text-neutral-900 sm:text-2xl'>
+            <h1 className='mt-1 break-words text-lg font-semibold text-neutral-900 sm:text-xl'>
                 {title}
             </h1>
             {children}

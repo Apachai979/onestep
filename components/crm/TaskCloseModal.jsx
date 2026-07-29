@@ -7,6 +7,7 @@ import {
     allDayDateLabel,
 } from "@/lib/crm/task"
 import { notifyTasksChanged } from "@/lib/crm/tasks-events"
+import { dealDisplayTitle } from "@/lib/crm/deal"
 import { TaskTypeBadge } from "./TaskTypeIcon"
 import { Badge, Button } from "@/components/crm/ui"
 
@@ -71,7 +72,7 @@ function relationLink(t) {
     if (t.deal)
         return {
             href: `/crm/deals/${t.deal.id}`,
-            label: t.deal.title || `Сделка с ${t.deal.counterparty?.name || "клиентом"}`,
+            label: dealDisplayTitle(t.deal, t.deal.counterparty?.name),
             kind: "Сделка",
         }
     if (t.project)

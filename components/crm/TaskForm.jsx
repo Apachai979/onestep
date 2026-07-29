@@ -163,8 +163,10 @@ export default function TaskForm({
             }))
         }
         if (relation.kind === "distributor") {
+            // Уже выбранного контрагента показываем всегда: он мог сменить тип
+            // после того, как задачу создали.
             return refs.counterparties
-                .filter(c => c.type === "DISTRIBUTOR")
+                .filter(c => c.type === "DISTRIBUTOR" || c.id === relation.id)
                 .map(c => ({
                     id: c.id,
                     label: c.name,
@@ -174,7 +176,7 @@ export default function TaskForm({
         }
         if (relation.kind === "endCustomer") {
             return refs.counterparties
-                .filter(c => c.type === "END_CUSTOMER")
+                .filter(c => c.type === "END_CUSTOMER" || c.id === relation.id)
                 .map(c => ({
                     id: c.id,
                     label: c.name,
@@ -183,7 +185,7 @@ export default function TaskForm({
                 }))
         }
         return []
-    }, [relation.kind, refs])
+    }, [relation.kind, relation.id, refs])
 
     function update(field) {
         return e => setForm(prev => ({ ...prev, [field]: e.target.value }))

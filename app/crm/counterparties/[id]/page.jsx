@@ -14,6 +14,7 @@ import {
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import ContactsSection from "@/components/crm/ContactsSection"
+import CounterpartyTypeSwitch from "@/components/crm/CounterpartyTypeSwitch"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import LocalDateTime from "@/components/crm/LocalDateTime"
@@ -34,12 +35,10 @@ export default async function CounterpartyPage({ params }) {
     })
     if (!item) notFound()
 
-    const projectsRelation =
-        item.type === "DISTRIBUTOR"
-            ? { distributorId: item.id }
-            : { endCustomerId: item.id }
+    // Контрагент мог сменить тип (конечный потребитель ↔ дистрибьютор), поэтому
+    // берём проекты по обеим ролям — иначе прошлые связи пропали бы из карточки.
     const projects = await prisma.project.findMany({
-        where: projectsRelation,
+        where: { OR: [{ distributorId: item.id }, { endCustomerId: item.id }] },
         orderBy: { createdAt: "desc" },
         include: {
             distributor: { select: { id: true, name: true } },
@@ -133,6 +132,12 @@ export default async function CounterpartyPage({ params }) {
                         </Link>
                     </div>
                 </div>
+
+                {/* Смена роли — в правом верхнем углу страницы, на одной линии
+                    с заголовком (на узких экранах уезжает под него). */}
+                <div className='flex justify-end'>
+                    <CounterpartyTypeSwitch id={item.id} name={item.name} type={item.type} />
+                </div>
             </div>
 
             <div className='grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(360px,1fr)]'>
@@ -225,7 +230,7 @@ export default async function CounterpartyPage({ params }) {
                                               p.manager.email
                                             : "—"
                                         const counter =
-                                            item.type === "DISTRIBUTOR"
+                                            p.distributorId === item.id
                                                 ? p.endCustomer
                                                 : p.distributor
                                         return (

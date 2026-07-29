@@ -29,6 +29,14 @@ function toFormValue(v) {
     return String(v)
 }
 
+// Стороны проекта грузятся списками по типу контрагента. Если сторона проекта
+// успела сменить тип (конечный потребитель ↔ дистрибьютор), её не будет в
+// списке — подмешиваем её вручную, чтобы поле не выглядело пустым.
+function withCurrentParty(list, party) {
+    if (!party || list.some(x => x.id === party.id)) return list
+    return [party, ...list]
+}
+
 function isoDate(d) {
     if (!d) return ""
     const x = new Date(d)
@@ -81,15 +89,24 @@ export default function ProjectForm({
         )
     }, [])
 
+    const distributors = useMemo(
+        () => withCurrentParty(refs.distributors, initial?.distributor),
+        [refs.distributors, initial?.distributor],
+    )
+    const customers = useMemo(
+        () => withCurrentParty(refs.customers, initial?.endCustomer),
+        [refs.customers, initial?.endCustomer],
+    )
+
     const autoInternalName = useMemo(() => {
-        const d = refs.distributors.find(x => x.id === form.distributorId)
-        const c = refs.customers.find(x => x.id === form.endCustomerId)
+        const d = distributors.find(x => x.id === form.distributorId)
+        const c = customers.find(x => x.id === form.endCustomerId)
         return buildInternalName(d?.name, c?.name)
-    }, [refs, form.distributorId, form.endCustomerId])
+    }, [distributors, customers, form.distributorId, form.endCustomerId])
 
     const distributorOptions = useMemo(
         () =>
-            refs.distributors.map(c => ({
+            distributors.map(c => ({
                 id: c.id,
                 label: c.name,
                 sublabel: `${c.inn ? `ИНН ${c.inn}` : ""}${
@@ -97,12 +114,12 @@ export default function ProjectForm({
                 }${c.region ?? ""}`,
                 search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
             })),
-        [refs.distributors],
+        [distributors],
     )
 
     const customerOptions = useMemo(
         () =>
-            refs.customers.map(c => ({
+            customers.map(c => ({
                 id: c.id,
                 label: c.name,
                 sublabel: `${c.inn ? `ИНН ${c.inn}` : ""}${
@@ -110,7 +127,7 @@ export default function ProjectForm({
                 }${c.region ?? ""}`,
                 search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
             })),
-        [refs.customers],
+        [customers],
     )
 
     const managerOptions = useMemo(
@@ -258,7 +275,7 @@ export default function ProjectForm({
                         <ProjectContactsPicker
                             counterpartyId={form.endCustomerId}
                             counterpartyName={
-                                refs.customers.find(c => c.id === form.endCustomerId)?.name ||
+                                customers.find(c => c.id === form.endCustomerId)?.name ||
                                 "Конечный потребитель"
                             }
                             selectedIds={contactIds}
@@ -267,7 +284,7 @@ export default function ProjectForm({
                         <ProjectContactsPicker
                             counterpartyId={form.distributorId}
                             counterpartyName={
-                                refs.distributors.find(d => d.id === form.distributorId)?.name ||
+                                distributors.find(d => d.id === form.distributorId)?.name ||
                                 "Дистрибьютор"
                             }
                             selectedIds={contactIds}

@@ -84,7 +84,10 @@ export async function PATCH(request, { params }) {
         }
     }
 
-    if (data.distributorId) {
+    // Тип сверяем только у новых сторон: контрагент мог сменить роль
+    // (конечный потребитель ↔ дистрибьютор) уже после создания проекта, и это
+    // не должно блокировать редактирование остальных полей.
+    if (data.distributorId && data.distributorId !== existing.distributorId) {
         const d = await prisma.counterparty.findUnique({
             where: { id: data.distributorId },
             select: { type: true },
@@ -93,7 +96,7 @@ export async function PATCH(request, { params }) {
             return Response.json({ error: "Дистрибьютор не найден" }, { status: 400 })
         }
     }
-    if (data.endCustomerId) {
+    if (data.endCustomerId && data.endCustomerId !== existing.endCustomerId) {
         const c = await prisma.counterparty.findUnique({
             where: { id: data.endCustomerId },
             select: { type: true },

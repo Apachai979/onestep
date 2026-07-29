@@ -11,7 +11,13 @@ export const metadata = { title: "Редактирование проекта | 
 export default async function EditProjectPage({ params }) {
     const item = await prisma.project.findUnique({
         where: { id: params.id },
-        include: { contacts: { select: { id: true } } },
+        include: {
+            contacts: { select: { id: true } },
+            // Стороны нужны форме на случай, если контрагент сменил тип и уже
+            // не попадает в список своей прежней роли.
+            distributor: { select: { id: true, name: true, inn: true, region: true } },
+            endCustomer: { select: { id: true, name: true, inn: true, region: true } },
+        },
     })
     if (!item) notFound()
 

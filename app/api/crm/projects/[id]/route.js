@@ -32,6 +32,7 @@ export async function GET(_request, { params }) {
                     title: true,
                     status: true,
                     totalAmount: true,
+                    discount: true,
                     counterparty: { select: { id: true, name: true } },
                 },
             },

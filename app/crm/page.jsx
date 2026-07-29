@@ -19,6 +19,7 @@ import {
     DEAL_STATUS_LABELS,
     autoArchiveStaleFinalDeals,
     dealDisplayTitle,
+    dealDiscountedTotal,
 } from "@/lib/crm/deal"
 import { SHIPMENT_STATUS_LABELS } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
@@ -81,7 +82,7 @@ export default async function CrmHome() {
     await autoArchiveStaleFinalDeals(prisma)
 
     // --- Parallel data load ---
-    const [myOpenTasks, myDealsGrouped, myDealsList, overdueShipments, recentChanges] =
+    const [myOpenTasks, myDealsForStats, myDealsList, overdueShipments, recentChanges] =
         await Promise.all([
             userId
                 ? prisma.task.findMany({
@@ -103,12 +104,12 @@ export default async function CrmHome() {
                       },
                   })
                 : [],
+            // Суммы по статусам считаем в JS: итог сделки — сумма со скидкой,
+            // которую _sum по totalAmount не даёт.
             userId
-                ? prisma.deal.groupBy({
-                      by: ["status"],
+                ? prisma.deal.findMany({
                       where: { managerId: userId },
-                      _count: { _all: true },
-                      _sum: { totalAmount: true },
+                      select: { status: true, totalAmount: true, discount: true },
                   })
                 : [],
             userId
@@ -121,6 +122,7 @@ export default async function CrmHome() {
                           title: true,
                           status: true,
                           totalAmount: true,
+                          discount: true,
                           counterparty: { select: { name: true } },
                           sourceProject: { select: { internalName: true } },
                       },
@@ -214,10 +216,11 @@ export default async function CrmHome() {
     }
     const dealStatusStats = {}
     for (const s of DEAL_STATUSES) dealStatusStats[s] = { count: 0, sum: 0 }
-    for (const g of myDealsGrouped) {
-        if (!dealStatusStats[g.status]) continue
-        dealStatusStats[g.status].count = g._count?._all || 0
-        dealStatusStats[g.status].sum = Number(g._sum?.totalAmount || 0)
+    for (const d of myDealsForStats) {
+        const stat = dealStatusStats[d.status]
+        if (!stat) continue
+        stat.count += 1
+        stat.sum += dealDiscountedTotal(d)
     }
 
     const activeDeals = DEAL_STATUSES.filter(s => s !== "ARCHIVED" && s !== "CANCELLED").reduce(

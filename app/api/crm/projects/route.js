@@ -7,6 +7,7 @@ import {
     parseProjectPayload,
 } from "@/lib/crm/project"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
+import { dealDiscountedTotal } from "@/lib/crm/deal"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
@@ -64,15 +65,19 @@ export async function GET(request) {
     })
 
     // Сумма проекта — производная: сумма всех сделок, привязанных к проекту.
+    // Считаем по суммам со скидкой — это финальная цена сделки, поэтому
+    // groupBy/_sum не подходит, складываем вручную.
     const ids = filtered.map(p => p.id)
-    const sums = ids.length
-        ? await prisma.deal.groupBy({
-              by: ["sourceProjectId"],
+    const projectDeals = ids.length
+        ? await prisma.deal.findMany({
               where: { sourceProjectId: { in: ids } },
-              _sum: { totalAmount: true },
+              select: { sourceProjectId: true, totalAmount: true, discount: true },
           })
         : []
-    const sumMap = new Map(sums.map(s => [s.sourceProjectId, Number(s._sum.totalAmount || 0)]))
+    const sumMap = new Map()
+    for (const d of projectDeals) {
+        sumMap.set(d.sourceProjectId, (sumMap.get(d.sourceProjectId) || 0) + dealDiscountedTotal(d))
+    }
 
     return Response.json({
         items: filtered.map(p => ({

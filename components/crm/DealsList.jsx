@@ -8,6 +8,7 @@ import {
     DEAL_STATUS_COLORS,
     DEAL_STATUS_LABELS,
     dealDisplayTitle,
+    dealDiscountedTotal,
 } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
 import SearchableSelect from "./SearchableSelect"
@@ -126,7 +127,8 @@ export default function DealsList({ currentUserId }) {
         [managers, currentUserId],
     )
 
-    const total = items?.reduce((s, d) => s + Number(d.totalAmount || 0), 0) ?? 0
+    // Итог считаем по финальным суммам сделок — со скидкой.
+    const total = items?.reduce((s, d) => s + dealDiscountedTotal(d), 0) ?? 0
 
     const columns = useMemo(
         () => [
@@ -197,10 +199,17 @@ export default function DealsList({ currentUserId }) {
                 header: "Сумма",
                 align: "right",
                 sortable: true,
-                sortValue: d => Number(d.totalAmount || 0),
+                sortValue: d => dealDiscountedTotal(d),
                 render: d => (
-                    <span className='font-medium text-neutral-900'>
-                        {formatMoney(d.totalAmount)}
+                    <span
+                        className='font-medium text-neutral-900'
+                        title={
+                            Number(d.discount) > 0
+                                ? `Сумма со скидкой ${Number(d.discount)}% (без скидки ${formatMoney(d.totalAmount)})`
+                                : undefined
+                        }
+                    >
+                        {formatMoney(dealDiscountedTotal(d))}
                     </span>
                 ),
             },
@@ -321,7 +330,7 @@ export default function DealsList({ currentUserId }) {
                             <CardRow label='Создана'>{fmtDate(d.createdAt)}</CardRow>
                             <CardRow label='Сумма'>
                                 <span className='font-medium text-neutral-900'>
-                                    {formatMoney(d.totalAmount)}
+                                    {formatMoney(dealDiscountedTotal(d))}
                                 </span>
                             </CardRow>
                         </div>

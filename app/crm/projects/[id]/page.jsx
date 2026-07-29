@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth"
 import { LuBuilding2, LuPencil, LuPlus, LuUser } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
-import { DEAL_STATUS_COLORS, DEAL_STATUS_LABELS } from "@/lib/crm/deal"
+import { DEAL_STATUS_COLORS, DEAL_STATUS_LABELS, dealDiscountedTotal } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
 import { isProjectLocked } from "@/lib/crm/access"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
@@ -49,8 +49,9 @@ export default async function ProjectPage({ params }) {
     // «Проработано, нет потребности»: менеджеру карточка только для чтения.
     const locked = isProjectLocked(item.status, session)
 
-    // Сумма проекта — производная: сумма всех сделок, привязанных к проекту.
-    const dealsSum = item.deals.reduce((s, d) => s + Number(d.totalAmount || 0), 0)
+    // Сумма проекта — производная: сумма всех сделок, привязанных к проекту,
+    // по финальной цене (со скидкой).
+    const dealsSum = item.deals.reduce((s, d) => s + dealDiscountedTotal(d), 0)
     const dealsCount = item.deals.length
 
     const contactsByCounterparty = {
@@ -220,8 +221,15 @@ export default async function ProjectPage({ params }) {
                                                     >
                                                         {DEAL_STATUS_LABELS[d.status] || d.status}
                                                     </span>
-                                                    <span className='text-sm font-semibold text-neutral-900'>
-                                                        {formatMoney(d.totalAmount)}
+                                                    <span
+                                                        className='text-sm font-semibold text-neutral-900'
+                                                        title={
+                                                            Number(d.discount) > 0
+                                                                ? `Сумма со скидкой ${Number(d.discount)}% (без скидки ${formatMoney(d.totalAmount)})`
+                                                                : undefined
+                                                        }
+                                                    >
+                                                        {formatMoney(dealDiscountedTotal(d))}
                                                     </span>
                                                 </div>
                                             </div>

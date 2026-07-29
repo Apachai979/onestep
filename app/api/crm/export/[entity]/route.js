@@ -1,7 +1,11 @@
 import ExcelJS from "exceljs"
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
-import { DEAL_LOSS_REASON_LABELS, DEAL_STATUS_LABELS } from "@/lib/crm/deal"
+import {
+    DEAL_LOSS_REASON_LABELS,
+    DEAL_STATUS_LABELS,
+    dealDiscountedTotal,
+} from "@/lib/crm/deal"
 import {
     ACTIVITY_AREA_LABELS,
     COMPANY_KIND_LABELS,
@@ -156,6 +160,7 @@ async function exportDeals(wb) {
         { header: "Статус", key: "status", width: 24 },
         { header: "Сумма", key: "amount", width: 14 },
         { header: "Скидка %", key: "discount", width: 10 },
+        { header: "Сумма со скидкой", key: "discountedAmount", width: 18 },
         { header: "Менеджер (email)", key: "manager", width: 26 },
         { header: "Адрес доставки", key: "delivery", width: 36 },
         { header: "Проект", key: "project", width: 40 },
@@ -200,6 +205,7 @@ async function exportDeals(wb) {
             status: label(DEAL_STATUS_LABELS, d.status),
             amount: num(d.totalAmount),
             discount: num(d.discount),
+            discountedAmount: dealDiscountedTotal(d),
             manager: d.manager?.email || "",
             delivery: d.deliveryAddress || "",
             project: d.sourceProject?.internalName || "",
@@ -246,13 +252,16 @@ async function exportProjects(wb) {
             items: { orderBy: { createdAt: "asc" } },
         },
     })
-    // Справочная колонка: сумма привязанных сделок (при импорте игнорируется).
-    const sums = await prisma.deal.groupBy({
-        by: ["sourceProjectId"],
+    // Справочная колонка: сумма привязанных сделок со скидкой — финальная цена
+    // (при импорте игнорируется).
+    const projectDeals = await prisma.deal.findMany({
         where: { sourceProjectId: { not: null } },
-        _sum: { totalAmount: true },
+        select: { sourceProjectId: true, totalAmount: true, discount: true },
     })
-    const sumMap = new Map(sums.map(s => [s.sourceProjectId, Number(s._sum.totalAmount || 0)]))
+    const sumMap = new Map()
+    for (const d of projectDeals) {
+        sumMap.set(d.sourceProjectId, (sumMap.get(d.sourceProjectId) || 0) + dealDiscountedTotal(d))
+    }
 
     const ws = wb.addWorksheet("Проекты")
     setupSheet(ws, [
@@ -260,7 +269,7 @@ async function exportProjects(wb) {
         { header: "Внутреннее название", key: "title", width: 40 },
         { header: "Статус", key: "status", width: 16 },
         { header: "Сумма проекта", key: "amount", width: 14 },
-        { header: "Сумма связанных сделок", key: "dealsAmount", width: 20 },
+        { header: "Сумма связанных сделок (со скидкой)", key: "dealsAmount", width: 26 },
         { header: "Дистрибьютор", key: "dist", width: 36 },
         { header: "ИНН дистрибьютора", key: "distInn", width: 16 },
         { header: "КПП дистрибьютора", key: "distKpp", width: 16 },

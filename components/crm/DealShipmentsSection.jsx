@@ -310,7 +310,7 @@ export default function DealShipmentsSection({
     return (
         <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
             <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
-                <h2 className='text-sm font-semibold text-neutral-900'>
+                <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
                     Отгрузки
                 </h2>
                 {!readOnly && !showForm && dealItems.length > 0 && (
@@ -682,70 +682,79 @@ export default function DealShipmentsSection({
 }
 
 function ProgressBlock({ progress, dealItems, totalWV }) {
+    const hasAmounts = progress.amountOrderedGross > 0
+    const hasWV = Boolean(totalWV) && (totalWV.weight > 0 || totalWV.volume > 0)
     return (
         <div className='rounded-lg border border-line bg-surface_muted p-3'>
-            <div className='mb-2 flex items-center justify-between text-xs'>
-                <span className='font-medium text-neutral-700'>
-                    Прогресс отгрузки: {progress.percent}%
-                </span>
-                <span className='text-neutral-500'>
-                    Отгружено {fmtQty(progress.totalShipped)} из {fmtQty(progress.totalOrdered)}
-                    {progress.totalRemaining > 0 && (
-                        <> · остаток {fmtQty(progress.totalRemaining)}</>
+            {/* Слева всё про отгружено — процент, штуки, деньги; справа отдельной
+                колонкой характеристики заказа. Процент — единственный крупный
+                элемент блока, он задаёт точку входа. */}
+            <div className='mb-2 flex flex-wrap items-start justify-between gap-x-4 gap-y-1'>
+                <div className='space-y-0.5'>
+                    <div className='text-sm font-semibold text-neutral-900'>
+                        Прогресс отгрузки:{" "}
+                        <span className='tabular-nums'>{progress.percent}%</span>
+                    </div>
+                    <div className='text-xs tabular-nums text-neutral-500'>
+                        Отгружено {fmtQty(progress.totalShipped)} из{" "}
+                        {fmtQty(progress.totalOrdered)}
+                        {progress.totalRemaining > 0 && (
+                            <> · остаток {fmtQty(progress.totalRemaining)}</>
+                        )}
+                    </div>
+                    {hasAmounts && (
+                        <div className='text-xs tabular-nums text-neutral-500'>
+                            Отгружено на{" "}
+                            <span className='font-medium text-neutral-800'>
+                                {formatMoney(progress.amountShipped)}
+                            </span>{" "}
+                            из {formatMoney(progress.amountOrdered)}
+                            {progress.amountRemaining > 0 && (
+                                <>
+                                    {" "}
+                                    · остаток{" "}
+                                    <span className='font-medium text-amber-700'>
+                                        {formatMoney(progress.amountRemaining)}
+                                    </span>
+                                </>
+                            )}
+                            {progress.discountPercent > 0 && (
+                                <span className='ml-1 text-neutral-400'>
+                                    (со скидкой {fmtQty(progress.discountPercent)} %)
+                                </span>
+                            )}
+                        </div>
                     )}
-                </span>
-            </div>
-            {progress.amountOrderedGross > 0 && (
-                <div className='mb-2 text-right text-xs text-neutral-500'>
-                    Отгружено на{" "}
-                    <span className='font-medium text-neutral-800'>
-                        {formatMoney(progress.amountShipped)}
-                    </span>{" "}
-                    из {formatMoney(progress.amountOrdered)}
-                    {progress.amountRemaining > 0 && (
-                        <>
-                            {" "}
-                            · остаток{" "}
-                            <span className='font-medium text-amber-700'>
-                                {formatMoney(progress.amountRemaining)}
+                </div>
+                {hasWV && (
+                    <div className='ml-auto space-y-0.5 text-xs tabular-nums text-neutral-600 sm:text-right'>
+                        <div>
+                            Вес заказа:{" "}
+                            <span className='font-medium text-neutral-800'>
+                                {formatWeightKg(totalWV.weight)}
                             </span>
-                        </>
-                    )}
-                    {progress.discountPercent > 0 && (
-                        <span className='ml-1 text-neutral-400'>
-                            (со скидкой {fmtQty(progress.discountPercent)} %)
-                        </span>
-                    )}
-                </div>
-            )}
-            {totalWV && (totalWV.weight > 0 || totalWV.volume > 0) && (
-                <div className='mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-600'>
-                    <span>
-                        Вес заказа:{" "}
-                        <span className='font-medium text-neutral-800'>
-                            {formatWeightKg(totalWV.weight)}
-                        </span>
-                    </span>
-                    <span>
-                        Объём заказа:{" "}
-                        <span className='font-medium text-neutral-800'>
-                            {formatVolumeM3(totalWV.volume)}
-                        </span>
-                    </span>
-                    {totalWV.incomplete && (
-                        <span className='text-amber-700'>
-                            (не у всех товаров задан вес/объём)
-                        </span>
-                    )}
-                </div>
-            )}
-            <div className='h-2 w-full overflow-hidden rounded-full bg-neutral-200'>
+                        </div>
+                        <div>
+                            Объём заказа:{" "}
+                            <span className='font-medium text-neutral-800'>
+                                {formatVolumeM3(totalWV.volume)}
+                            </span>
+                        </div>
+                        {totalWV.incomplete && (
+                            <div className='text-amber-700'>
+                                (не у всех товаров задан вес/объём)
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+            <div className='h-2.5 w-full overflow-hidden rounded-full bg-neutral-200'>
                 <div
                     className='h-full bg-brand_main transition-all'
                     style={{ width: `${progress.percent}%` }}
                 />
             </div>
-            <div className='mt-3 space-y-1.5'>
+            <div className='mt-3 space-y-2 border-t border-line pt-3'>
                 {dealItems.map(di => {
                     const row = progress.byItem[di.id]
                     if (!row) return null
@@ -756,11 +765,11 @@ function ProgressBlock({ progress, dealItems, totalWV }) {
                     return (
                         <div key={di.id} className='text-xs'>
                             <div className='mb-0.5 flex items-center justify-between gap-2'>
-                                <span className='truncate text-neutral-700'>
+                                <span className='truncate text-neutral-800'>
                                     {di.sku ? `${di.sku} · ` : ""}
                                     {di.name}
                                 </span>
-                                <span className='shrink-0 text-neutral-500'>
+                                <span className='shrink-0 tabular-nums text-neutral-500'>
                                     {fmtQty(row.shipped)} / {fmtQty(row.ordered)}
                                     {row.remaining > 0 && (
                                         <span className='ml-1 text-amber-700'>

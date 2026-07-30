@@ -791,7 +791,7 @@ function ShipmentRow({ shipment, dealItems, readOnly, onEdit, onShip, onReopen, 
     const accent = overdue
         ? "border-red-300 border-l-red-500 bg-red-50/40"
         : shipped
-          ? "border-line border-l-emerald-500 bg-neutral-50 bg-[repeating-linear-gradient(135deg,rgba(100,116,139,0.14)_0px,rgba(100,116,139,0.14)_2px,transparent_2px,transparent_8px)]"
+          ? "border-line border-l-emerald-500 bg-neutral-50 bg-[repeating-linear-gradient(135deg,rgba(100,116,139,0.07)_0px,rgba(100,116,139,0.07)_10px,transparent_10px,transparent_20px)]"
           : "border-line border-l-amber-400"
     // У закрытой отгрузки действия не должны звать: рамка снимается, текст гаснет,
     // полноценный вид возвращается по наведению.

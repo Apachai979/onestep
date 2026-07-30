@@ -297,81 +297,48 @@ export default function DealItemsSection({
             {formOpen && (
                 <form
                     onSubmit={handleSubmit}
-                    className='mb-4 space-y-3 rounded-lg border border-dashed border-brand_main/40 p-4'
+                    className='mb-4 rounded-lg border border-dashed border-brand_main/50 bg-brand_main/[0.03] p-3 shadow-sm'
                 >
-                    <div>
-                        <label className='mb-1 block text-xs text-neutral-500'>
-                            Выбрать из справочника
-                        </label>
-                        <select
-                            value={form.productId}
-                            onChange={e => pickProduct(e.target.value)}
-                            className='w-full rounded-lg border border-line bg-white px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                    <div className='mb-2 flex items-center justify-between gap-2'>
+                        <span className='text-[11px] font-semibold uppercase tracking-wide text-brand_main'>
+                            {editingId ? "Редактирование позиции" : "Новая позиция"}
+                        </span>
+                        <button
+                            type='button'
+                            onClick={cancel}
+                            className='text-xs text-neutral-500 transition hover:text-neutral-800'
                         >
-                            <option value=''>— Свободный ввод —</option>
-                            {products.map(p => {
-                                const stock = Number(p.stockTotal) || 0
-                                const packQtyOpt = Number(p.transportPackQty) || 0
-                                const boxes =
-                                    packQtyOpt > 0 ? Math.floor(stock / packQtyOpt) : null
-                                const packLabel =
-                                    packQtyOpt > 0
-                                        ? ` · в упаковке: ${packQtyOpt.toLocaleString("ru-RU")} шт.`
-                                        : ""
-                                const stockLabel =
-                                    boxes !== null
-                                        ? `остаток: ${stock.toLocaleString("ru-RU")} шт. (≈ ${boxes.toLocaleString("ru-RU")} кор.)`
-                                        : `остаток: ${stock.toLocaleString("ru-RU")} шт.`
-                                return (
-                                    <option key={p.id} value={p.id}>
-                                        {p.sku} · {p.category}{packLabel} · {stockLabel}
-                                    </option>
-                                )
-                            })}
-                        </select>
+                            Отмена
+                        </button>
                     </div>
 
-                    {selectedProduct &&
-                        (Number.isFinite(basePrice) || Number.isFinite(recPrice)) && (
-                            <div>
-                                <label className='mb-1 block text-xs text-neutral-500'>
-                                    Цена из справочника
-                                </label>
-                                <div className='flex flex-wrap gap-2'>
-                                    {Number.isFinite(basePrice) && (
-                                        <button
-                                            type='button'
-                                            onClick={() => applyPrice(selectedProduct.basePrice)}
-                                            className={`rounded-lg border px-3 py-1.5 text-xs transition ${
-                                                isBaseActive
-                                                    ? "border-brand_main bg-brand_main/10 font-semibold text-neutral-900"
-                                                    : "border-line text-neutral-700 hover:bg-surface_muted"
-                                            }`}
-                                        >
-                                            Базовая: {formatMoney(selectedProduct.basePrice)}
-                                        </button>
-                                    )}
-                                    {Number.isFinite(recPrice) && (
-                                        <button
-                                            type='button'
-                                            onClick={() =>
-                                                applyPrice(selectedProduct.recommendedLpuPrice)
-                                            }
-                                            className={`rounded-lg border px-3 py-1.5 text-xs transition ${
-                                                isRecActive
-                                                    ? "border-brand_main bg-brand_main/10 font-semibold text-neutral-900"
-                                                    : "border-line text-neutral-700 hover:bg-surface_muted"
-                                            }`}
-                                        >
-                                            Рекомендованная:{" "}
-                                            {formatMoney(selectedProduct.recommendedLpuPrice)}
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        )}
+                    <select
+                        value={form.productId}
+                        onChange={e => pickProduct(e.target.value)}
+                        className='w-full rounded-md border border-line bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                    >
+                        <option value=''>— Свободный ввод —</option>
+                        {products.map(p => {
+                            const stock = Number(p.stockTotal) || 0
+                            const packQtyOpt = Number(p.transportPackQty) || 0
+                            const boxes = packQtyOpt > 0 ? Math.floor(stock / packQtyOpt) : null
+                            const packLabel =
+                                packQtyOpt > 0
+                                    ? ` · в упаковке: ${packQtyOpt.toLocaleString("ru-RU")} шт.`
+                                    : ""
+                            const stockLabel =
+                                boxes !== null
+                                    ? `остаток: ${stock.toLocaleString("ru-RU")} шт. (≈ ${boxes.toLocaleString("ru-RU")} кор.)`
+                                    : `остаток: ${stock.toLocaleString("ru-RU")} шт.`
+                            return (
+                                <option key={p.id} value={p.id}>
+                                    {p.sku} · {p.category}{packLabel} · {stockLabel}
+                                </option>
+                            )
+                        })}
+                    </select>
 
-                    <div className='grid gap-3 sm:grid-cols-4'>
+                    <div className='mt-2 grid gap-2 sm:grid-cols-12'>
                         <Field
                             label='Артикул'
                             value={form.sku}
@@ -382,14 +349,14 @@ export default function DealItemsSection({
                                     ? "Артикул заполнен из справочника. Выберите «Свободный ввод», чтобы редактировать."
                                     : undefined
                             }
-                            className={form.productId ? "opacity-70" : undefined}
+                            className={`sm:col-span-3${form.productId ? " opacity-70" : ""}`}
                         />
                         <Field
                             label='Наименование *'
                             value={form.name}
                             onChange={update("name")}
                             required
-                            className='sm:col-span-3'
+                            className='sm:col-span-9'
                         />
                         <Field
                             label='Кол-во'
@@ -400,15 +367,17 @@ export default function DealItemsSection({
                             value={form.quantity}
                             onChange={onQuantityChange}
                             hint={packHint}
+                            className='sm:col-span-2'
                         />
                         <Field
-                            label='Цена за единицу, ₽'
+                            label='Цена за ед., ₽'
                             type='number'
                             step='0.01'
                             min='0'
                             inputMode='decimal'
                             value={form.unitPrice}
                             onChange={onUnitPriceChange}
+                            className='sm:col-span-3'
                         />
                         <Field
                             label='Сумма, ₽'
@@ -418,26 +387,62 @@ export default function DealItemsSection({
                             inputMode='decimal'
                             value={form.amount}
                             onChange={onAmountChange}
-                            className='sm:col-span-2'
+                            className='sm:col-span-3'
                         />
                     </div>
-                    {error && <p className='text-sm text-red-600'>{error}</p>}
-                    <div className='flex justify-end gap-2'>
-                        <button
-                            type='button'
-                            onClick={cancel}
-                            className='rounded-lg border border-line px-3 py-1.5 text-sm text-neutral-700 hover:bg-surface_muted'
-                        >
-                            Отмена
-                        </button>
+
+                    <div className='mt-2 flex flex-wrap items-center justify-between gap-2'>
+                        <div className='flex flex-wrap items-center gap-1.5'>
+                            {selectedProduct &&
+                                (Number.isFinite(basePrice) || Number.isFinite(recPrice)) && (
+                                    <>
+                                        <span className='text-[11px] text-neutral-500'>
+                                            Цена из справочника:
+                                        </span>
+                                        {Number.isFinite(basePrice) && (
+                                            <button
+                                                type='button'
+                                                onClick={() =>
+                                                    applyPrice(selectedProduct.basePrice)
+                                                }
+                                                className={`rounded-md border px-2 py-0.5 text-[11px] transition ${
+                                                    isBaseActive
+                                                        ? "border-brand_main bg-brand_main/10 font-semibold text-neutral-900"
+                                                        : "border-line bg-white text-neutral-700 hover:bg-surface_muted"
+                                                }`}
+                                            >
+                                                Базовая: {formatMoney(selectedProduct.basePrice)}
+                                            </button>
+                                        )}
+                                        {Number.isFinite(recPrice) && (
+                                            <button
+                                                type='button'
+                                                onClick={() =>
+                                                    applyPrice(selectedProduct.recommendedLpuPrice)
+                                                }
+                                                className={`rounded-md border px-2 py-0.5 text-[11px] transition ${
+                                                    isRecActive
+                                                        ? "border-brand_main bg-brand_main/10 font-semibold text-neutral-900"
+                                                        : "border-line bg-white text-neutral-700 hover:bg-surface_muted"
+                                                }`}
+                                            >
+                                                Рекомендованная:{" "}
+                                                {formatMoney(selectedProduct.recommendedLpuPrice)}
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+                        </div>
                         <button
                             type='submit'
                             disabled={loading}
-                            className='rounded-lg bg-brand_main px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:opacity-60'
+                            className='ml-auto rounded-md bg-brand_main px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:opacity-60'
                         >
                             {loading ? "Сохраняем..." : editingId ? "Сохранить" : "Добавить"}
                         </button>
                     </div>
+
+                    {error && <p className='mt-2 text-xs text-red-600'>{error}</p>}
                 </form>
             )}
 
@@ -573,12 +578,16 @@ export default function DealItemsSection({
 function Field({ label, className = "", hint, ...props }) {
     return (
         <div className={className}>
-            <label className='mb-1 block text-xs text-neutral-500'>{label}</label>
+            <label className='mb-0.5 block text-[11px] text-neutral-500'>{label}</label>
             <input
                 {...props}
-                className='w-full rounded-lg border border-line px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
+                className='w-full rounded-md border border-line bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-brand_main focus:outline-none'
             />
-            {hint && <p className='mt-1 text-[11px] font-medium text-brand_main'>{hint}</p>}
+            {hint && (
+                <p className='mt-0.5 whitespace-nowrap text-[10px] font-medium text-brand_main'>
+                    {hint}
+                </p>
+            )}
         </div>
     )
 }

@@ -193,12 +193,12 @@ export default function AttachmentsSection({
                     return (
                         <li
                             key={att.id}
-                            className='group flex items-center gap-3 rounded-lg border border-line bg-white p-3 transition hover:border-brand_main/40'
+                            className='group flex items-center gap-2.5 rounded-lg border border-line bg-white p-2.5 transition hover:border-brand_main/40'
                         >
                             <span
-                                className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${tone}`}
+                                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tone}`}
                             >
-                                <Icon className='h-5 w-5' />
+                                <Icon className='h-4 w-4' />
                             </span>
                             <div className='min-w-0 flex-1'>
                                 <a
@@ -206,11 +206,11 @@ export default function AttachmentsSection({
                                     target={inline ? "_blank" : undefined}
                                     rel='noopener noreferrer'
                                     title={att.fileName}
-                                    className='block truncate text-sm font-medium text-neutral-900 hover:text-brand_main'
+                                    className='block text-[13px] font-medium leading-snug text-neutral-900 [overflow-wrap:anywhere] hover:text-brand_main'
                                 >
                                     {att.fileName}
                                 </a>
-                                <p className='truncate text-[11px] text-neutral-400'>
+                                <p className='mt-0.5 truncate text-[10px] text-neutral-400'>
                                     {formatBytes(att.size)} · {fullName(att.uploadedBy)} ·{" "}
                                     {fmtDate(att.createdAt)}
                                 </p>

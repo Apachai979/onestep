@@ -307,7 +307,7 @@ export default function DealItemsSection({
                     className={`mb-4 ${INLINE_FORM_PANEL}`}
                 >
                     <div className='mb-2 flex items-center justify-between gap-2'>
-                        <span className='text-[11px] font-semibold uppercase tracking-wide text-brand_main'>
+                        <span className='text-xs font-semibold uppercase tracking-wide text-brand_main'>
                             {editingId ? "Редактирование позиции" : "Новая позиция"}
                         </span>
                         <button
@@ -403,7 +403,7 @@ export default function DealItemsSection({
                             {selectedProduct &&
                                 (Number.isFinite(basePrice) || Number.isFinite(recPrice)) && (
                                     <>
-                                        <span className='text-[11px] text-neutral-500'>
+                                        <span className='text-xs text-neutral-500'>
                                             Цена из справочника:
                                         </span>
                                         {Number.isFinite(basePrice) && (
@@ -412,7 +412,7 @@ export default function DealItemsSection({
                                                 onClick={() =>
                                                     applyPrice(selectedProduct.basePrice)
                                                 }
-                                                className={`rounded-md border px-2 py-0.5 text-[11px] transition ${
+                                                className={`rounded-md border px-2 py-0.5 text-xs transition ${
                                                     isBaseActive
                                                         ? "border-brand_main bg-brand_main/10 font-semibold text-neutral-900"
                                                         : "border-line bg-white text-neutral-700 hover:bg-surface_muted"
@@ -427,7 +427,7 @@ export default function DealItemsSection({
                                                 onClick={() =>
                                                     applyPrice(selectedProduct.recommendedLpuPrice)
                                                 }
-                                                className={`rounded-md border px-2 py-0.5 text-[11px] transition ${
+                                                className={`rounded-md border px-2 py-0.5 text-xs transition ${
                                                     isRecActive
                                                         ? "border-brand_main bg-brand_main/10 font-semibold text-neutral-900"
                                                         : "border-line bg-white text-neutral-700 hover:bg-surface_muted"
@@ -585,7 +585,7 @@ export default function DealItemsSection({
 function Field({ label, className = "", hint, ...props }) {
     return (
         <div className={className}>
-            <label className='mb-0.5 block text-[11px] text-neutral-500'>{label}</label>
+            <label className='mb-0.5 block text-xs text-neutral-500'>{label}</label>
             <input
                 {...props}
                 className='w-full rounded-md border border-line bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-brand_main focus:outline-none'

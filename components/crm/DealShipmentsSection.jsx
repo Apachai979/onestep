@@ -348,7 +348,7 @@ export default function DealShipmentsSection({
                             className={`mt-4 space-y-2.5 ${INLINE_FORM_PANEL}`}
                         >
                             <div className='flex items-center justify-between gap-2'>
-                                <span className='text-[11px] font-semibold uppercase tracking-wide text-brand_main'>
+                                <span className='text-xs font-semibold uppercase tracking-wide text-brand_main'>
                                     {editingId ? "Изменить отгрузку" : "Новая отгрузка"}
                                 </span>
                                 <button
@@ -392,7 +392,7 @@ export default function DealShipmentsSection({
 
                             <div className='rounded-lg border border-line bg-white p-2.5'>
                                 <div className='mb-1.5 flex flex-wrap items-center justify-between gap-2'>
-                                    <p className='text-[11px] font-semibold uppercase tracking-wide text-neutral-500'>
+                                    <p className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                                         Получатель
                                     </p>
                                     <div className='inline-flex rounded-md border border-line bg-white p-0.5 text-xs'>
@@ -522,7 +522,7 @@ export default function DealShipmentsSection({
 
                             <div>
                                 <div className='mb-1.5 flex items-center justify-between'>
-                                    <p className='text-[11px] font-semibold uppercase tracking-wide text-neutral-500'>
+                                    <p className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
                                         Позиции отгрузки
                                     </p>
                                     {hasMoreToAdd && (
@@ -559,7 +559,7 @@ export default function DealShipmentsSection({
                                             className='mb-1.5 grid items-end gap-2 rounded-md border border-line bg-white p-2 sm:grid-cols-12'
                                         >
                                             <div className='sm:col-span-6'>
-                                                <label className='mb-1 block text-[10px] uppercase text-neutral-500'>
+                                                <label className='mb-1 block text-[11px] uppercase text-neutral-500'>
                                                     Позиция сделки
                                                 </label>
                                                 <select
@@ -586,10 +586,10 @@ export default function DealShipmentsSection({
                                             </div>
                                             <div className='sm:col-span-2'>
                                                 <div className='mb-1 flex items-baseline justify-between gap-1'>
-                                                    <label className='block text-[10px] uppercase text-neutral-500'>
+                                                    <label className='block text-[11px] uppercase text-neutral-500'>
                                                         Кол-во
                                                     </label>
-                                                    <span className='text-[10px] text-neutral-500'>
+                                                    <span className='text-[11px] text-neutral-500'>
                                                         ост. {fmtQty(max)}
                                                     </span>
                                                 </div>
@@ -606,7 +606,7 @@ export default function DealShipmentsSection({
                                                 />
                                             </div>
                                             <div className='sm:col-span-3'>
-                                                <label className='mb-1 block text-[10px] uppercase text-neutral-500'>
+                                                <label className='mb-1 block text-[11px] uppercase text-neutral-500'>
                                                     Комментарий
                                                 </label>
                                                 <input
@@ -926,7 +926,7 @@ function ShipmentRow({ shipment, dealItems, readOnly, onEdit, onShip, onReopen, 
 function Field({ label, children }) {
     return (
         <div>
-            <label className='mb-0.5 block text-[11px] text-neutral-500'>{label}</label>
+            <label className='mb-0.5 block text-xs text-neutral-500'>{label}</label>
             {children}
         </div>
     )

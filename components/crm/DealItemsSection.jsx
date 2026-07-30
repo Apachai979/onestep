@@ -289,140 +289,15 @@ export default function DealItemsSection({
                         onClick={startAdd}
                         className='rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
                     >
-                        Добавить позицию
+                        + Добавить позицию
                     </button>
                 )}
-            </div>
-
-            {/* Мобильные карточки */}
-            <div className='space-y-3 md:hidden'>
-                {items.length === 0 && (
-                    <p className='rounded-lg border border-line px-3 py-4 text-center text-sm text-neutral-400'>
-                        Позиций пока нет
-                    </p>
-                )}
-                {items.map(it => (
-                    <MobileCard key={it.id}>
-                        <div className='flex items-start justify-between gap-2'>
-                            <span className='font-medium text-neutral-900'>
-                                {it.sku || "—"}
-                            </span>
-                            {it.productId && (
-                                <span className='shrink-0 rounded-full bg-brand_main/10 px-2 py-0.5 text-[10px] font-medium text-neutral-900'>
-                                    из справочника
-                                </span>
-                            )}
-                        </div>
-                        <p className='mt-1 text-sm text-neutral-800'>{it.name}</p>
-                        <div className='mt-2 space-y-1'>
-                            <CardRow label='Кол-во'>{toFormValue(it.quantity)}</CardRow>
-                            <CardRow label='Сумма'>{formatMoney(it.amount)}</CardRow>
-                        </div>
-                        {it.isShipped && (
-                            <p className='mt-2 text-[11px] text-emerald-700'>{shippedNote(it)}</p>
-                        )}
-                        {!readOnly && !it.isShipped && (
-                            <div className='mt-3 flex justify-end gap-2'>
-                                <button
-                                    type='button'
-                                    onClick={() => startEdit(it)}
-                                    className='rounded-md border border-line px-3 py-1.5 text-xs text-neutral-700 hover:bg-surface_muted'
-                                >
-                                    Изменить
-                                </button>
-                                <button
-                                    type='button'
-                                    onClick={() => handleDelete(it.id)}
-                                    className='rounded-md border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50'
-                                >
-                                    Удалить
-                                </button>
-                            </div>
-                        )}
-                    </MobileCard>
-                ))}
-            </div>
-
-            <div className='hidden overflow-x-auto rounded-lg border border-line md:block'>
-                <table className='w-full text-sm'>
-                    <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
-                        <tr>
-                            <th className='px-3 py-2'>Артикул</th>
-                            <th className='px-3 py-2'>Наименование</th>
-                            <th className='px-3 py-2 text-right'>Кол-во</th>
-                            <th className='px-3 py-2 text-right'>Сумма</th>
-                            <th className='px-3 py-2'></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items.length === 0 && (
-                            <tr>
-                                <td colSpan={5} className='px-3 py-4 text-center text-neutral-400'>
-                                    Позиций пока нет
-                                </td>
-                            </tr>
-                        )}
-                        {items.map(it => (
-                            <tr key={it.id} className='border-t border-line'>
-                                <td className='px-3 py-2 text-neutral-700'>
-                                    {it.sku || "—"}
-                                    {it.productId && (
-                                        <span className='ml-2 rounded-full bg-brand_main/10 px-2 py-0.5 text-[10px] font-medium text-neutral-900'>
-                                            из справочника
-                                        </span>
-                                    )}
-                                </td>
-                                <td className='px-3 py-2 text-neutral-800'>{it.name}</td>
-                                <td className='px-3 py-2 text-right text-neutral-700'>
-                                    {toFormValue(it.quantity)}
-                                </td>
-                                <td className='px-3 py-2 text-right text-neutral-700'>
-                                    {formatMoney(it.amount)}
-                                </td>
-                                <td className='px-3 py-2 text-right'>
-                                    {it.isShipped ? (
-                                        <span
-                                            title={shippedNote(it)}
-                                            className='inline-flex flex-col items-center gap-0.5 whitespace-nowrap'
-                                        >
-                                            <Badge tone='success'>Отгружена</Badge>
-                                            {isPartiallyShipped(it) && (
-                                                <span className='text-[10px] leading-none text-neutral-400'>
-                                                    (частично)
-                                                </span>
-                                            )}
-                                        </span>
-                                    ) : (
-                                        !readOnly && (
-                                            <div className='flex justify-end gap-2'>
-                                                <button
-                                                    type='button'
-                                                    onClick={() => startEdit(it)}
-                                                    className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
-                                                >
-                                                    Изменить
-                                                </button>
-                                                <button
-                                                    type='button'
-                                                    onClick={() => handleDelete(it.id)}
-                                                    className='rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50'
-                                                >
-                                                    Удалить
-                                                </button>
-                                            </div>
-                                        )
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
             </div>
 
             {formOpen && (
                 <form
                     onSubmit={handleSubmit}
-                    className='mt-4 space-y-3 rounded-lg border border-dashed border-brand_main/40 p-4'
+                    className='mb-4 space-y-3 rounded-lg border border-dashed border-brand_main/40 p-4'
                 >
                     <div>
                         <label className='mb-1 block text-xs text-neutral-500'>
@@ -565,6 +440,132 @@ export default function DealItemsSection({
                     </div>
                 </form>
             )}
+
+            {/* Мобильные карточки */}
+            <div className='space-y-3 md:hidden'>
+                {items.length === 0 && (
+                    <p className='rounded-lg border border-line px-3 py-4 text-center text-sm text-neutral-400'>
+                        Позиций пока нет
+                    </p>
+                )}
+                {items.map(it => (
+                    <MobileCard key={it.id}>
+                        <div className='flex items-start justify-between gap-2'>
+                            <span className='font-medium text-neutral-900'>
+                                {it.sku || "—"}
+                            </span>
+                            {it.productId && (
+                                <span className='shrink-0 rounded-full bg-brand_main/10 px-2 py-0.5 text-[10px] font-medium text-neutral-900'>
+                                    из справочника
+                                </span>
+                            )}
+                        </div>
+                        <p className='mt-1 text-sm text-neutral-800'>{it.name}</p>
+                        <div className='mt-2 space-y-1'>
+                            <CardRow label='Кол-во'>{toFormValue(it.quantity)}</CardRow>
+                            <CardRow label='Сумма'>{formatMoney(it.amount)}</CardRow>
+                        </div>
+                        {it.isShipped && (
+                            <p className='mt-2 text-[11px] text-emerald-700'>{shippedNote(it)}</p>
+                        )}
+                        {!readOnly && !it.isShipped && (
+                            <div className='mt-3 flex justify-end gap-2'>
+                                <button
+                                    type='button'
+                                    onClick={() => startEdit(it)}
+                                    className='rounded-md border border-line px-3 py-1.5 text-xs text-neutral-700 hover:bg-surface_muted'
+                                >
+                                    Изменить
+                                </button>
+                                <button
+                                    type='button'
+                                    onClick={() => handleDelete(it.id)}
+                                    className='rounded-md border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50'
+                                >
+                                    Удалить
+                                </button>
+                            </div>
+                        )}
+                    </MobileCard>
+                ))}
+            </div>
+
+            <div className='hidden overflow-x-auto rounded-lg border border-line md:block'>
+                <table className='w-full text-sm'>
+                    <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
+                        <tr>
+                            <th className='px-3 py-2'>Артикул</th>
+                            <th className='px-3 py-2'>Наименование</th>
+                            <th className='px-3 py-2 text-right'>Кол-во</th>
+                            <th className='px-3 py-2 text-right'>Сумма</th>
+                            <th className='px-3 py-2'></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {items.length === 0 && (
+                            <tr>
+                                <td colSpan={5} className='px-3 py-4 text-center text-neutral-400'>
+                                    Позиций пока нет
+                                </td>
+                            </tr>
+                        )}
+                        {items.map(it => (
+                            <tr key={it.id} className='border-t border-line'>
+                                <td className='px-3 py-2 text-neutral-700'>
+                                    {it.sku || "—"}
+                                    {it.productId && (
+                                        <span className='ml-2 rounded-full bg-brand_main/10 px-2 py-0.5 text-[10px] font-medium text-neutral-900'>
+                                            из справочника
+                                        </span>
+                                    )}
+                                </td>
+                                <td className='px-3 py-2 text-neutral-800'>{it.name}</td>
+                                <td className='px-3 py-2 text-right text-neutral-700'>
+                                    {toFormValue(it.quantity)}
+                                </td>
+                                <td className='px-3 py-2 text-right text-neutral-700'>
+                                    {formatMoney(it.amount)}
+                                </td>
+                                <td className='px-3 py-2 text-right'>
+                                    {it.isShipped ? (
+                                        <span
+                                            title={shippedNote(it)}
+                                            className='inline-flex flex-col items-center gap-0.5 whitespace-nowrap'
+                                        >
+                                            <Badge tone='success'>Отгружена</Badge>
+                                            {isPartiallyShipped(it) && (
+                                                <span className='text-[10px] leading-none text-neutral-400'>
+                                                    (частично)
+                                                </span>
+                                            )}
+                                        </span>
+                                    ) : (
+                                        !readOnly && (
+                                            <div className='flex justify-end gap-2'>
+                                                <button
+                                                    type='button'
+                                                    onClick={() => startEdit(it)}
+                                                    className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
+                                                >
+                                                    Изменить
+                                                </button>
+                                                <button
+                                                    type='button'
+                                                    onClick={() => handleDelete(it.id)}
+                                                    className='rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50'
+                                                >
+                                                    Удалить
+                                                </button>
+                                            </div>
+                                        )
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
         </section>
     )
 }

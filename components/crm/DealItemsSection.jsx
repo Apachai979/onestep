@@ -591,7 +591,7 @@ function Field({ label, className = "", hint, ...props }) {
                 className='w-full rounded-md border border-line bg-white px-2.5 py-1.5 text-sm shadow-sm focus:border-brand_main focus:outline-none'
             />
             {hint && (
-                <p className='mt-0.5 whitespace-nowrap text-[10px] font-medium text-brand_main'>
+                <p className='mt-0.5 whitespace-nowrap text-[12px] font-medium text-brand_main'>
                     {hint}
                 </p>
             )}

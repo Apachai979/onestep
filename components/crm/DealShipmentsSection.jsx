@@ -649,9 +649,15 @@ export default function DealShipmentsSection({
                         </form>
                     )}
 
-                    <div className='mt-5 space-y-3'>
+                    {/* Черта отбивает сводку по заказу от списка самих отгрузок */}
+                    <div className='mt-5 space-y-3 border-t border-neutral-300 pt-5'>
                         {loading && (
                             <p className='text-sm text-neutral-400'>Загрузка отгрузок...</p>
+                        )}
+                        {!loading && shipments.length > 0 && (
+                            <p className='text-[11px] font-semibold uppercase tracking-wide text-neutral-500'>
+                                Документы отгрузки · {shipments.length}
+                            </p>
                         )}
                         {!loading && shipments.length === 0 && (
                             <p className='text-sm text-neutral-400'>Отгрузок ещё нет.</p>

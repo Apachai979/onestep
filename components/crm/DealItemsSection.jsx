@@ -297,7 +297,7 @@ export default function DealItemsSection({
             {formOpen && (
                 <form
                     onSubmit={handleSubmit}
-                    className='mb-4 rounded-lg border border-dashed border-brand_main/50 bg-brand_main/[0.03] p-3 shadow-sm'
+                    className='mb-4 rounded-lg border border-dashed border-brand_main/50 bg-brand_main/[0.06] p-3 shadow-sm'
                 >
                     <div className='mb-2 flex items-center justify-between gap-2'>
                         <span className='text-[11px] font-semibold uppercase tracking-wide text-brand_main'>

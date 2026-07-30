@@ -345,7 +345,7 @@ export default function DealShipmentsSection({
                     {showForm && !readOnly && (
                         <form
                             onSubmit={handleSubmit}
-                            className='mt-4 space-y-2.5 rounded-lg border border-dashed border-brand_main/50 bg-brand_main/[0.03] p-3 shadow-sm'
+                            className='mt-4 space-y-2.5 rounded-lg border border-dashed border-brand_main/50 bg-brand_main/[0.06] p-3 shadow-sm'
                         >
                             <div className='flex items-center justify-between gap-2'>
                                 <span className='text-[11px] font-semibold uppercase tracking-wide text-brand_main'>

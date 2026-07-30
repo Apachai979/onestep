@@ -2,7 +2,14 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { formatMoney } from "@/lib/crm/format"
-import { Badge, CardRow, MobileCard, useConfirm, useToast } from "@/components/crm/ui"
+import {
+    Badge,
+    CardRow,
+    INLINE_FORM_PANEL,
+    MobileCard,
+    useConfirm,
+    useToast,
+} from "@/components/crm/ui"
 
 const EMPTY = { sku: "", name: "", quantity: "1", unitPrice: "", amount: "0", productId: "" }
 
@@ -297,7 +304,7 @@ export default function DealItemsSection({
             {formOpen && (
                 <form
                     onSubmit={handleSubmit}
-                    className='mb-4 rounded-lg border border-dashed border-brand_main/50 bg-brand_main/[0.06] p-3 shadow-sm'
+                    className={`mb-4 ${INLINE_FORM_PANEL}`}
                 >
                     <div className='mb-2 flex items-center justify-between gap-2'>
                         <span className='text-[11px] font-semibold uppercase tracking-wide text-brand_main'>

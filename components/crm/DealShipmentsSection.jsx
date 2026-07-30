@@ -14,7 +14,7 @@ import {
     isShipmentOverdue,
 } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
-import { useConfirm, useToast } from "@/components/crm/ui"
+import { INLINE_FORM_PANEL, useConfirm, useToast } from "@/components/crm/ui"
 import PhoneLink from "@/components/crm/PhoneLink"
 import ShipmentRecipient from "@/components/crm/ShipmentRecipient"
 
@@ -345,7 +345,7 @@ export default function DealShipmentsSection({
                     {showForm && !readOnly && (
                         <form
                             onSubmit={handleSubmit}
-                            className='mt-4 space-y-2.5 rounded-lg border border-dashed border-brand_main/50 bg-brand_main/[0.06] p-3 shadow-sm'
+                            className={`mt-4 space-y-2.5 ${INLINE_FORM_PANEL}`}
                         >
                             <div className='flex items-center justify-between gap-2'>
                                 <span className='text-[11px] font-semibold uppercase tracking-wide text-brand_main'>
@@ -390,7 +390,7 @@ export default function DealShipmentsSection({
                                 />
                             </Field>
 
-                            <div className='rounded-lg border border-line bg-white/70 p-2.5'>
+                            <div className='rounded-lg border border-line bg-white p-2.5'>
                                 <div className='mb-1.5 flex flex-wrap items-center justify-between gap-2'>
                                     <p className='text-[11px] font-semibold uppercase tracking-wide text-neutral-500'>
                                         Получатель
@@ -529,7 +529,7 @@ export default function DealShipmentsSection({
                                         <button
                                             type='button'
                                             onClick={addItemRow}
-                                            className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
+                                            className='rounded-md border border-line bg-white px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
                                         >
                                             + Добавить позицию
                                         </button>
@@ -556,7 +556,7 @@ export default function DealShipmentsSection({
                                     return (
                                         <div
                                             key={idx}
-                                            className='mb-1.5 grid items-end gap-2 rounded-md border border-line bg-white/70 p-2 sm:grid-cols-12'
+                                            className='mb-1.5 grid items-end gap-2 rounded-md border border-line bg-white p-2 sm:grid-cols-12'
                                         >
                                             <div className='sm:col-span-6'>
                                                 <label className='mb-1 block text-[10px] uppercase text-neutral-500'>
@@ -781,22 +781,41 @@ function ProgressBlock({ progress, dealItems, totalWV }) {
 
 function ShipmentRow({ shipment, dealItems, readOnly, onEdit, onShip, onReopen, onDelete }) {
     const overdue = isShipmentOverdue(shipment)
+    const shipped = shipment.status === "SHIPPED"
     const itemsById = new Map(dealItems.map(di => [di.id, di]))
     const wv = calculateShipmentWeightVolume(shipment)
+    // Цветная полоса слева — статус отгрузки читается по столбику карточек, не
+    // перекрывая текст. Отгруженная поверх «зашрихована» серым: серый штрих читается
+    // как «закрыто / неактивно» (зелёный выглядел просто фоном). Кнопки и блок
+    // позиций внутри — на белой подложке, чтобы оставаться кликабельно-читаемыми.
+    const accent = overdue
+        ? "border-red-300 border-l-red-500 bg-red-50/40"
+        : shipped
+          ? "border-line border-l-emerald-500 bg-neutral-50 bg-[repeating-linear-gradient(135deg,rgba(100,116,139,0.14)_0px,rgba(100,116,139,0.14)_2px,transparent_2px,transparent_8px)]"
+          : "border-line border-l-amber-400"
+    // У закрытой отгрузки действия не должны звать: рамка снимается, текст гаснет,
+    // полноценный вид возвращается по наведению.
+    const btnCls = shipped
+        ? "rounded-md border border-transparent bg-white/80 px-2 py-1 text-xs text-neutral-500 transition hover:border-line hover:bg-white hover:text-neutral-800"
+        : "rounded-md border border-line bg-white px-2 py-1 text-xs text-neutral-700 transition hover:bg-surface_muted"
+    const dangerBtnCls = shipped
+        ? "rounded-md border border-transparent bg-white/80 px-2 py-1 text-xs text-neutral-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+        : "rounded-md border border-red-200 bg-white px-2 py-1 text-xs text-red-600 transition hover:bg-red-50"
     return (
-        <div
-            className={`rounded-lg border p-3 ${
-                overdue ? "border-red-300 bg-red-50/40" : "border-line"
-            }`}
-        >
+        <div className={`rounded-lg border border-l-[3px] p-3 ${accent}`}>
             <div className='flex flex-wrap items-center justify-between gap-2'>
                 <div className='flex flex-wrap items-center gap-2'>
-                    <span className='font-mono text-sm font-semibold text-neutral-900'>
+                    <span
+                        className={`font-mono text-sm font-semibold ${
+                            shipped ? "text-neutral-600" : "text-neutral-900"
+                        }`}
+                    >
                         {shipment.number}
                     </span>
                     <span
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${SHIPMENT_STATUS_COLORS[shipment.status]}`}
                     >
+                        {shipped && "✓ "}
                         {SHIPMENT_STATUS_LABELS[shipment.status]}
                     </span>
                     {overdue && (
@@ -806,19 +825,12 @@ function ShipmentRow({ shipment, dealItems, readOnly, onEdit, onShip, onReopen, 
                     )}
                 </div>
                 <div className='flex flex-wrap gap-1.5'>
-                    <Link
-                        href={`/crm/shipments/${shipment.id}`}
-                        className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
-                    >
+                    <Link href={`/crm/shipments/${shipment.id}`} className={btnCls}>
                         Открыть
                     </Link>
                     {!readOnly && (
                         <>
-                            <button
-                                type='button'
-                                onClick={onEdit}
-                                className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
-                            >
+                            <button type='button' onClick={onEdit} className={btnCls}>
                                 Изменить
                             </button>
                             {shipment.status === "DRAFT" && (
@@ -830,20 +842,12 @@ function ShipmentRow({ shipment, dealItems, readOnly, onEdit, onShip, onReopen, 
                                     Отгрузить
                                 </button>
                             )}
-                            {shipment.status === "SHIPPED" && (
-                                <button
-                                    type='button'
-                                    onClick={onReopen}
-                                    className='rounded-md border border-line px-2 py-1 text-xs text-neutral-700 hover:bg-surface_muted'
-                                >
+                            {shipped && (
+                                <button type='button' onClick={onReopen} className={btnCls}>
                                     В черновик
                                 </button>
                             )}
-                            <button
-                                type='button'
-                                onClick={onDelete}
-                                className='rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50'
-                            >
+                            <button type='button' onClick={onDelete} className={dangerBtnCls}>
                                 Удалить
                             </button>
                         </>

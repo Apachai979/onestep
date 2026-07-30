@@ -22,6 +22,7 @@ import {
     Field,
     Input,
     MobileCard,
+    MultiSelect,
     Select,
 } from "@/components/crm/ui"
 
@@ -56,7 +57,7 @@ export default function DealsList({ currentUserId }) {
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
     const [filters, setFilters] = useState({
-        status: "",
+        status: [],
         counterpartyId: "",
         managerId: "",
         isAuction: "",
@@ -82,7 +83,7 @@ export default function DealsList({ currentUserId }) {
     async function load() {
         setError("")
         const params = new URLSearchParams()
-        if (filters.status) params.set("status", filters.status)
+        if (filters.status.length) params.set("status", filters.status.join(","))
         if (filters.counterpartyId) params.set("counterpartyId", filters.counterpartyId)
         if (filters.managerId) params.set("managerId", filters.managerId)
         if (filters.isAuction) params.set("isAuction", filters.isAuction)
@@ -98,10 +99,18 @@ export default function DealsList({ currentUserId }) {
         setItems(data.items || [])
     }
 
+    // Статус — массив, сравниваем по строковому ключу, а не по ссылке.
+    const statusKey = filters.status.join(",")
+
     useEffect(() => {
         load()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filters.status, filters.counterpartyId, filters.managerId, filters.isAuction])
+    }, [statusKey, filters.counterpartyId, filters.managerId, filters.isAuction])
+
+    const statusOptions = useMemo(
+        () => DEAL_STATUSES.map(s => ({ value: s, label: DEAL_STATUS_LABELS[s] })),
+        [],
+    )
 
     const counterpartyOptions = useMemo(
         () =>
@@ -232,18 +241,12 @@ export default function DealsList({ currentUserId }) {
                         />
                     </Field>
                 </div>
-                <Select
+                <MultiSelect
                     label='Статус'
                     value={filters.status}
-                    onChange={e => setFilters(p => ({ ...p, status: e.target.value }))}
-                >
-                    <option value=''>Все</option>
-                    {DEAL_STATUSES.map(s => (
-                        <option key={s} value={s}>
-                            {DEAL_STATUS_LABELS[s]}
-                        </option>
-                    ))}
-                </Select>
+                    onChange={status => setFilters(p => ({ ...p, status }))}
+                    options={statusOptions}
+                />
                 <Select
                     label='Тип'
                     value={filters.isAuction}

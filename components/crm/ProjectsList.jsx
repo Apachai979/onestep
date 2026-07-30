@@ -20,7 +20,7 @@ import {
     Field,
     Input,
     MobileCard,
-    Select,
+    MultiSelect,
 } from "@/components/crm/ui"
 
 const STATUS_CLASS = PROJECT_STATUS_COLORS
@@ -41,7 +41,7 @@ export default function ProjectsList() {
     const [error, setError] = useState("")
     const [filters, setFilters] = useState({
         q: "",
-        status: "",
+        status: [],
         region: "",
         distributorId: "",
         customerId: "",
@@ -67,7 +67,12 @@ export default function ProjectsList() {
         const controller = new AbortController()
         const params = new URLSearchParams()
         for (const [k, v] of Object.entries(filters)) {
-            if (v) params.set(k, v)
+            // status — массив выбранных статусов, остальные фильтры строковые.
+            if (Array.isArray(v)) {
+                if (v.length) params.set(k, v.join(","))
+            } else if (v) {
+                params.set(k, v)
+            }
         }
 
         setError("")
@@ -93,6 +98,11 @@ export default function ProjectsList() {
     function setId(field) {
         return id => setFilters(prev => ({ ...prev, [field]: id }))
     }
+
+    const statusOptions = useMemo(
+        () => PROJECT_STATUSES.map(s => ({ value: s, label: PROJECT_STATUS_LABELS[s] })),
+        [],
+    )
 
     const distributorOptions = useMemo(
         () =>
@@ -211,16 +221,12 @@ export default function ProjectsList() {
                 <Field label='Поиск'>
                     <Input value={filters.q} onChange={set("q")} placeholder='Название, клиент' />
                 </Field>
-                <Field label='Статус'>
-                    <Select value={filters.status} onChange={set("status")}>
-                        <option value=''>Все</option>
-                        {PROJECT_STATUSES.map(s => (
-                            <option key={s} value={s}>
-                                {PROJECT_STATUS_LABELS[s]}
-                            </option>
-                        ))}
-                    </Select>
-                </Field>
+                <MultiSelect
+                    label='Статус'
+                    value={filters.status}
+                    onChange={status => setFilters(prev => ({ ...prev, status }))}
+                    options={statusOptions}
+                />
                 <Field label='Регион'>
                     <Input value={filters.region} onChange={set("region")} />
                 </Field>

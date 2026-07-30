@@ -33,11 +33,18 @@ export async function GET(request) {
     const q = searchParams.get("q")?.trim()
 
     const where = {}
-    if (status) {
-        if (!DEAL_STATUSES.includes(status)) {
+    // Статус может прийти списком через запятую — фильтр в UI с множественным выбором.
+    const statuses = status
+        ? status
+              .split(",")
+              .map(s => s.trim())
+              .filter(Boolean)
+        : []
+    if (statuses.length) {
+        if (statuses.some(s => !DEAL_STATUSES.includes(s))) {
             return Response.json({ error: "Некорректный статус" }, { status: 400 })
         }
-        where.status = status
+        where.status = statuses.length === 1 ? statuses[0] : { in: statuses }
     }
     if (counterpartyId) where.counterpartyId = counterpartyId
     if (managerId) where.managerId = managerId

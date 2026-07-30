@@ -18,6 +18,10 @@ import { useConfirm, useToast } from "@/components/crm/ui"
 import PhoneLink from "@/components/crm/PhoneLink"
 import ShipmentRecipient from "@/components/crm/ShipmentRecipient"
 
+// Компактный инпут формы отгрузки — один класс на все поля блока.
+const INPUT_CLS =
+    "w-full rounded-md border border-line bg-white px-2.5 py-1.5 text-sm text-neutral-900 shadow-sm transition placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20"
+
 function num(v) {
     if (v === null || v === undefined || v === "") return 0
     const s = typeof v === "object" && v.toString ? v.toString() : String(v)
@@ -341,18 +345,27 @@ export default function DealShipmentsSection({
                     {showForm && !readOnly && (
                         <form
                             onSubmit={handleSubmit}
-                            className='mt-4 space-y-4 rounded-lg border border-dashed border-brand_main/40 bg-surface_muted p-4'
+                            className='mt-4 space-y-2.5 rounded-lg border border-dashed border-brand_main/50 bg-brand_main/[0.03] p-3 shadow-sm'
                         >
-                            <h3 className='text-sm font-semibold text-neutral-900'>
-                                {editingId ? "Изменить отгрузку" : "Новая отгрузка"}
-                            </h3>
+                            <div className='flex items-center justify-between gap-2'>
+                                <span className='text-[11px] font-semibold uppercase tracking-wide text-brand_main'>
+                                    {editingId ? "Изменить отгрузку" : "Новая отгрузка"}
+                                </span>
+                                <button
+                                    type='button'
+                                    onClick={cancel}
+                                    className='text-xs text-neutral-500 transition hover:text-neutral-800'
+                                >
+                                    Отмена
+                                </button>
+                            </div>
 
-                            <div className='grid gap-3 sm:grid-cols-2'>
+                            <div className='grid gap-2 sm:grid-cols-2'>
                                 <Field label='Статус'>
                                     <select
                                         value={form.status}
                                         onChange={updateField("status")}
-                                        className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                                        className={INPUT_CLS}
                                     >
                                         <option value='DRAFT'>Черновик</option>
                                         <option value='SHIPPED'>Отгружена</option>
@@ -363,7 +376,7 @@ export default function DealShipmentsSection({
                                         type='date'
                                         value={form.plannedDate}
                                         onChange={updateField("plannedDate")}
-                                        className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                                        className={INPUT_CLS}
                                     />
                                 </Field>
                             </div>
@@ -373,13 +386,13 @@ export default function DealShipmentsSection({
                                     value={form.deliveryAddress}
                                     onChange={updateField("deliveryAddress")}
                                     placeholder='По умолчанию — адрес из сделки или контрагента'
-                                    className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                                    className={INPUT_CLS}
                                 />
                             </Field>
 
-                            <div className='rounded-lg border border-line bg-surface_muted p-3'>
-                                <div className='mb-2 flex flex-wrap items-center justify-between gap-2'>
-                                    <p className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
+                            <div className='rounded-lg border border-line bg-white/70 p-2.5'>
+                                <div className='mb-1.5 flex flex-wrap items-center justify-between gap-2'>
+                                    <p className='text-[11px] font-semibold uppercase tracking-wide text-neutral-500'>
                                         Получатель
                                     </p>
                                     <div className='inline-flex rounded-md border border-line bg-white p-0.5 text-xs'>
@@ -423,7 +436,7 @@ export default function DealShipmentsSection({
                                         <select
                                             value={form.recipientContactId}
                                             onChange={updateField("recipientContactId")}
-                                            className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                                            className={INPUT_CLS}
                                         >
                                             <option value=''>— Не выбран —</option>
                                             {contacts.map(c => (
@@ -456,44 +469,44 @@ export default function DealShipmentsSection({
                                             value={form.recipientName}
                                             onChange={updateField("recipientName")}
                                             placeholder='Имя'
-                                            className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                                            className={INPUT_CLS}
                                         />
                                         <input
                                             value={form.recipientPhone}
                                             onChange={updateField("recipientPhone")}
                                             placeholder='Телефон'
-                                            className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                                            className={INPUT_CLS}
                                         />
                                         <input
                                             value={form.recipientEmail}
                                             onChange={updateField("recipientEmail")}
                                             placeholder='Email'
-                                            className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                                            className={INPUT_CLS}
                                         />
                                     </div>
                                 )}
                             </div>
 
-                            <div className='grid gap-3 sm:grid-cols-3'>
+                            <div className='grid gap-2 sm:grid-cols-3'>
                                 <Field label='Перевозчик'>
                                     <input
                                         value={form.carrier}
                                         onChange={updateField("carrier")}
-                                        className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                                        className={INPUT_CLS}
                                     />
                                 </Field>
                                 <Field label='Трек-номер'>
                                     <input
                                         value={form.trackingNumber}
                                         onChange={updateField("trackingNumber")}
-                                        className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                                        className={INPUT_CLS}
                                     />
                                 </Field>
                                 <Field label='№ ТТН / документа'>
                                     <input
                                         value={form.docNumber}
                                         onChange={updateField("docNumber")}
-                                        className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                                        className={INPUT_CLS}
                                     />
                                 </Field>
                             </div>
@@ -503,13 +516,13 @@ export default function DealShipmentsSection({
                                     rows={2}
                                     value={form.note}
                                     onChange={updateField("note")}
-                                    className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                                    className={INPUT_CLS}
                                 />
                             </Field>
 
                             <div>
-                                <div className='mb-2 flex items-center justify-between'>
-                                    <p className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
+                                <div className='mb-1.5 flex items-center justify-between'>
+                                    <p className='text-[11px] font-semibold uppercase tracking-wide text-neutral-500'>
                                         Позиции отгрузки
                                     </p>
                                     {hasMoreToAdd && (
@@ -543,7 +556,7 @@ export default function DealShipmentsSection({
                                     return (
                                         <div
                                             key={idx}
-                                            className='mb-2 grid items-end gap-2 rounded-md border border-line p-2 sm:grid-cols-12'
+                                            className='mb-1.5 grid items-end gap-2 rounded-md border border-line bg-white/70 p-2 sm:grid-cols-12'
                                         >
                                             <div className='sm:col-span-6'>
                                                 <label className='mb-1 block text-[10px] uppercase text-neutral-500'>
@@ -618,20 +631,13 @@ export default function DealShipmentsSection({
                                 })}
                             </div>
 
-                            {error && <p className='text-sm text-red-600'>{error}</p>}
+                            {error && <p className='text-xs text-red-600'>{error}</p>}
 
-                            <div className='flex justify-end gap-2'>
-                                <button
-                                    type='button'
-                                    onClick={cancel}
-                                    className='rounded-lg border border-line px-3 py-1.5 text-sm text-neutral-700 hover:bg-surface_muted'
-                                >
-                                    Отмена
-                                </button>
+                            <div className='flex justify-end'>
                                 <button
                                     type='submit'
                                     disabled={saving}
-                                    className='rounded-lg bg-brand_main px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:opacity-60'
+                                    className='rounded-md bg-brand_main px-4 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:opacity-60'
                                 >
                                     {saving
                                         ? "Сохраняем..."
@@ -910,7 +916,7 @@ function ShipmentRow({ shipment, dealItems, readOnly, onEdit, onShip, onReopen, 
 function Field({ label, children }) {
     return (
         <div>
-            <label className='mb-1 block text-xs text-neutral-500'>{label}</label>
+            <label className='mb-0.5 block text-[11px] text-neutral-500'>{label}</label>
             {children}
         </div>
     )

@@ -10,6 +10,7 @@ import {
 } from "@/lib/crm/project"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
 import { dealDiscountedTotal } from "@/lib/crm/deal"
+import { counterpartyDiscountInfo } from "@/lib/crm/discount"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
@@ -114,7 +115,15 @@ export async function POST(request) {
     const [distributor, endCustomer, manager] = await Promise.all([
         prisma.counterparty.findUnique({
             where: { id: data.distributorId },
-            select: { id: true, name: true, type: true },
+            select: {
+                id: true,
+                name: true,
+                type: true,
+                // Скидка дистрибьютора (или его группы) достаётся проекту, если
+                // менеджер не задал свою.
+                discount: true,
+                group: { select: { name: true, discount: true } },
+            },
         }),
         prisma.counterparty.findUnique({
             where: { id: data.endCustomerId },
@@ -180,6 +189,13 @@ export async function POST(request) {
     const internalName =
         data.internalName?.trim() || buildInternalName(distributor.name, endCustomer.name)
 
+    // Скидка: если форма её не прислала, наследуем от дистрибьютора (или его
+    // группы) — снимок на момент создания, дальше проект живёт со своей.
+    const discount =
+        data.discount !== undefined
+            ? data.discount
+            : counterpartyDiscountInfo(distributor).value
+
     let contactsToConnect = []
     if (data.contactIds?.length) {
         const valid = await prisma.contact.findMany({
@@ -197,6 +213,7 @@ export async function POST(request) {
             data: {
                 internalName,
                 status,
+                discount,
                 // Комментарий имеет смысл только вместе с исходным проектом.
                 duplicateComment: duplicateOfId ? (data.duplicateComment ?? null) : null,
                 duplicateOfId,

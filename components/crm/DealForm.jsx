@@ -1,7 +1,11 @@
 "use client"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { LuLock } from "react-icons/lu"
 import { DEAL_STATUSES, DEAL_STATUS_LABELS, dealDisplayTitle } from "@/lib/crm/deal"
+import { discountSourceLabel, formatDiscount, inheritedDealDiscount } from "@/lib/crm/discount"
+import { formatMoney } from "@/lib/crm/format"
 import SearchableSelect from "./SearchableSelect"
 import {
     Button,
@@ -81,6 +85,13 @@ function toFormValue(v) {
 // замораживает стороны сделки (см. DEAL_PARTIES_LOCKED_ERROR в lib/crm/access).
 // discountLocked — по сделке есть проведённая отгрузка, скидка участвует в её
 // суммах (DEAL_DISCOUNT_SHIPPED_ERROR) и дальше не меняется.
+//
+// Форма разделена по принципу «сначала то, что уже известно, потом то, что
+// нужно заполнить»: сделку почти всегда заводят из карточки проекта, и стороны,
+// проект и скидка на этом шаге не редактируются — они показаны сводкой, а не
+// заблокированными полями. Скидку и адрес доставки при создании не спрашиваем:
+// скидка наследуется по цепочке (см. lib/crm/discount.js), адрес нужен только к
+// моменту отгрузки. И то, и другое правится в карточке созданной сделки.
 export default function DealForm({
     initial,
     mode = "create",
@@ -92,6 +103,7 @@ export default function DealForm({
     discountLocked = false,
 }) {
     const router = useRouter()
+    const isCreate = mode === "create"
 
     const [form, setForm] = useState(() => {
         if (!initial) {
@@ -108,8 +120,10 @@ export default function DealForm({
                 base.counterpartyId = fromProject.distributorId
                 base.managerId = fromProject.managerId || currentUserId || ""
                 base.sourceProjectId = fromProject.id
-                // Аукцион: заказчик = конечный потребитель проекта.
-                if (defaultIsAuction) base.auctionCustomerId = fromProject.endCustomerId || ""
+                // Заказчик аукциона = конечный потребитель проекта. Ставим его
+                // сразу, даже если галочка «аукцион» ещё не включена, — при
+                // включении поле уже заполнено.
+                base.auctionCustomerId = fromProject.endCustomerId || ""
             }
             return base
         }
@@ -144,12 +158,17 @@ export default function DealForm({
     const [counterparties, setCounterparties] = useState([])
     const [managers, setManagers] = useState([])
     const [contacts, setContacts] = useState([])
-    // Группа компаний клиента — её юрлица предлагаются как плательщики первыми.
-    const [clientGroup, setClientGroup] = useState(null)
+    // Карточка клиента целиком: из неё берём контакты, группу компаний
+    // (её юрлица предлагаются как плательщики первыми) и скидку.
+    const [client, setClient] = useState(null)
     const [customerContacts, setCustomerContacts] = useState([])
     const [projects, setProjects] = useState([])
+    // Плательщика раскрываем по требованию — он нужен в единицах случаев.
+    const [payerOpen, setPayerOpen] = useState(Boolean(initial?.payerId))
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
+
+    const clientGroup = client?.group ?? null
 
     // fromProject/linkedProject известны сразу, список projects догружается —
     // ищем по всем трём источникам.
@@ -170,8 +189,7 @@ export default function DealForm({
     )
 
     // Проект-источник задаёт стороны сделки: пока он выбран, клиент и заказчик
-    // берутся из него и не редактируются.
-    const partiesLocked = Boolean(form.sourceProjectId)
+    // берутся из него и показаны сводкой, а не полями.
     // Саму привязку к проекту у созданной сделки тоже не меняют — иначе запрет
     // на смену сторон обходится отвязкой и повторной привязкой.
     const projectLocked = mode === "edit" && Boolean(initial?.sourceProjectId)
@@ -205,34 +223,41 @@ export default function DealForm({
     useEffect(() => {
         if (!form.counterpartyId) {
             setContacts([])
-            setClientGroup(null)
+            setClient(null)
             return
         }
+        let cancelled = false
         fetch(`/api/crm/counterparties/${form.counterpartyId}`)
             .then(r => r.json())
             .then(d => {
+                if (cancelled) return
                 setContacts(d.item?.contacts || [])
-                setClientGroup(d.item?.group || null)
-                // Скидку берём из карточки клиента, только если менеджер не задал её
-                // вручную. Иначе (ручное значение) — не трогаем. Зафиксированную
-                // отгрузкой скидку не перебиваем тем более: сервер такое отклонит.
-                if (discountTouchedRef.current || discountLocked) return
-                // effectiveDiscount учитывает скидку группы компаний: она
-                // перекрывает личную скидку юрлица.
-                const cpDiscount = d.item?.effectiveDiscount ?? d.item?.discount
-                setForm(prev => ({
-                    ...prev,
-                    discount:
-                        cpDiscount === null || cpDiscount === undefined
-                            ? ""
-                            : String(cpDiscount),
-                }))
+                setClient(d.item || null)
             })
             .catch(() => {
+                if (cancelled) return
                 setContacts([])
-                setClientGroup(null)
+                setClient(null)
             })
-    }, [form.counterpartyId, discountLocked])
+        return () => {
+            cancelled = true
+        }
+    }, [form.counterpartyId])
+
+    // Скидка, которую унаследует сделка: своя скидка проекта, иначе — скидка
+    // клиента (или его группы компаний).
+    const inherited = useMemo(
+        () => inheritedDealDiscount(sourceProject, client),
+        [sourceProject, client],
+    )
+
+    // При создании скидку не спрашиваем — её ставит сервер по той же цепочке.
+    // В режиме редактирования поле есть, и смена клиента подставляет в него
+    // новое значение, пока менеджер не задал скидку вручную.
+    useEffect(() => {
+        if (isCreate || discountLocked || discountTouchedRef.current) return
+        setForm(prev => ({ ...prev, discount: inherited.value ?? "" }))
+    }, [isCreate, discountLocked, inherited])
 
     // Контакты заказчика аукциона.
     useEffect(() => {
@@ -286,6 +311,57 @@ export default function DealForm({
         return [...inGroup, ...rest]
     }, [counterpartyOptions, clientGroup, form.counterpartyId])
 
+    const projectOptions = useMemo(
+        () =>
+            projects.map(p => ({
+                id: p.id,
+                label: p.internalName,
+                sublabel: [p.distributor?.name, p.endCustomer?.name]
+                    .filter(Boolean)
+                    .join(" – "),
+                search: `${p.internalName} ${p.distributor?.name ?? ""} ${p.endCustomer?.name ?? ""}`,
+            })),
+        [projects],
+    )
+
+    // Имя стороны для сводки. Справочник контрагентов догружается, поэтому
+    // сначала пробуем имена сторон проекта — они пришли с сервера сразу.
+    function partyName(id) {
+        if (!id) return null
+        if (sourceProject?.distributorId === id && sourceProject.distributor?.name) {
+            return sourceProject.distributor.name
+        }
+        if (sourceProject?.endCustomerId === id && sourceProject.endCustomer?.name) {
+            return sourceProject.endCustomer.name
+        }
+        return counterparties.find(c => c.id === id)?.name || null
+    }
+
+    // Заказчик: у обычной сделки поле не сохраняется, но конечный потребитель
+    // проекта в сводке всё равно полезен — показываем его.
+    const customerId = form.auctionCustomerId || sourceProject?.endCustomerId || ""
+
+    function selectProject(id) {
+        const p = projectById(id)
+        setForm(prev => ({
+            ...prev,
+            sourceProjectId: id,
+            // Стороны подтягиваются из проекта; контакты сбрасываем, они
+            // принадлежали другой компании.
+            ...(p
+                ? {
+                      counterpartyId: p.distributorId,
+                      contactId: p.distributorId === prev.counterpartyId ? prev.contactId : "",
+                      auctionCustomerId: p.endCustomerId || "",
+                      auctionCustomerContactId:
+                          p.endCustomerId === prev.auctionCustomerId
+                              ? prev.auctionCustomerContactId
+                              : "",
+                  }
+                : {}),
+        }))
+    }
+
     async function handleSubmit(e) {
         e.preventDefault()
         setError("")
@@ -304,6 +380,16 @@ export default function DealForm({
             auctionCustomerContactId: form.isAuction
                 ? form.auctionCustomerContactId || null
                 : null,
+        }
+        if (isCreate) {
+            // Скидку ставит сервер по цепочке проект → клиент/группа, адрес
+            // доставки на этом шаге не спрашиваем, итоги аукциона появятся
+            // только после торгов.
+            delete payload.discount
+            delete payload.deliveryAddress
+            delete payload.participantsCount
+            delete payload.bidsCount
+            delete payload.winner
         }
         // У сделки, уже привязанной к проекту, эти поля неизменны — не шлём их
         // вовсе, чтобы не спорить с сервером из-за старых записей, где клиент
@@ -333,17 +419,183 @@ export default function DealForm({
         router.refresh()
     }
 
+    const inheritedLabel = discountSourceLabel(inherited)
+
     return (
         <form onSubmit={handleSubmit} className='space-y-6'>
+            {sourceProject ? (
+                <Card>
+                    <FormSection
+                        title='По проекту'
+                        description={
+                            isCreate && fromProject
+                                ? "Берётся из проекта и на этом шаге не меняется — скидку и адрес доставки поправите в карточке сделки. Если проект не тот, вернитесь в нужный и создайте сделку оттуда."
+                                : "Берётся из проекта и не редактируется."
+                        }
+                    >
+                        <dl className='grid gap-x-6 gap-y-3 sm:grid-cols-2'>
+                            <SummaryRow label='Проект'>
+                                <Link
+                                    href={`/crm/projects/${sourceProject.id}`}
+                                    className='font-medium text-neutral-900 hover:text-brand_main'
+                                >
+                                    {sourceProject.internalName}
+                                </Link>
+                            </SummaryRow>
+                            <SummaryRow label='Клиент (дистрибьютор)'>
+                                <PartyLink
+                                    id={form.counterpartyId}
+                                    name={partyName(form.counterpartyId)}
+                                />
+                            </SummaryRow>
+                            <SummaryRow
+                                label={
+                                    form.isAuction
+                                        ? "Заказчик (конечный потребитель)"
+                                        : "Конечный потребитель"
+                                }
+                            >
+                                <PartyLink id={customerId} name={partyName(customerId)} />
+                            </SummaryRow>
+                            <SummaryRow label='Скидка'>
+                                {inherited.value ? (
+                                    <>
+                                        {formatDiscount(inherited.value)}
+                                        {inheritedLabel && (
+                                            <span className='text-neutral-500'>
+                                                {" "}
+                                                — {inheritedLabel}
+                                            </span>
+                                        )}
+                                    </>
+                                ) : client ? (
+                                    // Карточка клиента загружена, скидки нет ни у неё,
+                                    // ни у проекта — значит её действительно нет.
+                                    <span className='text-neutral-400'>не задана</span>
+                                ) : (
+                                    <span className='text-neutral-400'>…</span>
+                                )}
+                            </SummaryRow>
+                            {sourceProject.itemsCount > 0 && (
+                                <SummaryRow
+                                    label='Позиции проекта'
+                                    className='sm:col-span-2'
+                                >
+                                    {sourceProject.itemsCount} шт. на{" "}
+                                    {formatMoney(sourceProject.itemsTotal)} — перенесутся в
+                                    сделку при создании
+                                </SummaryRow>
+                            )}
+                        </dl>
+                        {!projectLocked && !fromProject && (
+                            <button
+                                type='button'
+                                onClick={() => selectProject("")}
+                                className='text-xs font-medium text-neutral-500 underline underline-offset-2 hover:text-brand_main'
+                            >
+                                Отвязать проект и выбрать стороны вручную
+                            </button>
+                        )}
+                    </FormSection>
+                </Card>
+            ) : (
+                <Card>
+                    <FormSection
+                        title='Стороны сделки'
+                        description='Сделку обычно заводят из карточки проекта — тогда стороны подставляются сами. Здесь их нужно выбрать.'
+                    >
+                        <div className='grid gap-4 sm:grid-cols-2'>
+                            <Field label='Клиент' required className='sm:col-span-2'>
+                                <SearchableSelect
+                                    value={form.counterpartyId}
+                                    onChange={id =>
+                                        setForm(prev => ({
+                                            ...prev,
+                                            counterpartyId: id,
+                                            contactId: "",
+                                            // Плательщик из прошлой группы к новому
+                                            // клиенту отношения не имеет.
+                                            payerId: id === prev.payerId ? "" : prev.payerId,
+                                        }))
+                                    }
+                                    required
+                                    placeholder='Введите название или ИНН'
+                                    options={counterpartyOptions}
+                                />
+                            </Field>
+                            <Field label='Проект-источник' className='sm:col-span-2'>
+                                <SearchableSelect
+                                    value={form.sourceProjectId}
+                                    onChange={selectProject}
+                                    disabled={projectLocked}
+                                    placeholder='— Без привязки —'
+                                    emptyLabel='Проект не найден'
+                                    options={projectOptions}
+                                />
+                                <p className='mt-1 text-xs text-neutral-500'>
+                                    С проектом сделка получает его позиции, скидку и название.
+                                </p>
+                            </Field>
+                            {form.isAuction && (
+                                <Field
+                                    label='Заказчик (конечный потребитель)'
+                                    className='sm:col-span-2'
+                                >
+                                    <SearchableSelect
+                                        value={form.auctionCustomerId}
+                                        onChange={id =>
+                                            setForm(prev => ({
+                                                ...prev,
+                                                auctionCustomerId: id,
+                                                auctionCustomerContactId: "",
+                                            }))
+                                        }
+                                        placeholder='— Не выбран —'
+                                        options={counterpartyOptions}
+                                    />
+                                </Field>
+                            )}
+                        </div>
+                    </FormSection>
+                </Card>
+            )}
+
             <Card>
                 <FormSection
-                    title='Основное'
-                    description={
-                        partiesLocked
-                            ? "Сделка привязана к проекту — клиент и заказчик берутся из него и не редактируются."
-                            : "Клиент, ответственный менеджер и привязка сделки."
-                    }
+                    title='Сделка'
+                    description='То, что нужно заполнить сейчас.'
                 >
+                    {/* Тип сделки стоит первым: он определяет, появится ли блок
+                        параметров закупки. */}
+                    <label className='flex cursor-pointer items-start gap-2.5 rounded-lg border border-line bg-surface_muted px-3 py-2.5'>
+                        <input
+                            type='checkbox'
+                            checked={form.isAuction}
+                            onChange={e => {
+                                const on = e.target.checked
+                                setForm(prev => ({
+                                    ...prev,
+                                    isAuction: on,
+                                    // При включении у сделки с проектом заказчик —
+                                    // конечный потребитель проекта.
+                                    auctionCustomerId:
+                                        on && !prev.auctionCustomerId && sourceProject
+                                            ? sourceProject.endCustomerId || ""
+                                            : prev.auctionCustomerId,
+                                }))
+                            }}
+                            className='mt-0.5 h-4 w-4 rounded border-line text-brand_main focus:ring-brand_main/30'
+                        />
+                        <span>
+                            <span className='block text-sm font-medium text-neutral-900'>
+                                Это аукцион (госзакупка)
+                            </span>
+                            <span className='block text-xs text-neutral-500'>
+                                Добавит блок с номером закупки, НМЦК и датами торгов.
+                            </span>
+                        </span>
+                    </label>
+
                     <div className='grid gap-4 sm:grid-cols-2'>
                         <div className='sm:col-span-2'>
                             <Input
@@ -359,47 +611,7 @@ export default function DealForm({
                                 </p>
                             )}
                         </div>
-                        <Field label='Клиент' required className='sm:col-span-2'>
-                            <SearchableSelect
-                                value={form.counterpartyId}
-                                onChange={id =>
-                                    setForm(prev => ({
-                                        ...prev,
-                                        counterpartyId: id,
-                                        contactId: "",
-                                        // Плательщик из прошлой группы к новому
-                                        // клиенту отношения не имеет.
-                                        payerId: id === prev.payerId ? "" : prev.payerId,
-                                    }))
-                                }
-                                required
-                                disabled={partiesLocked}
-                                placeholder='Введите название или ИНН'
-                                options={counterpartyOptions}
-                            />
-                        </Field>
-                        <Field
-                            label='Плательщик (на кого документы)'
-                            className='sm:col-span-2'
-                        >
-                            <SearchableSelect
-                                value={form.payerId}
-                                onChange={id => setForm(prev => ({ ...prev, payerId: id }))}
-                                disabled={!form.counterpartyId}
-                                placeholder={
-                                    !form.counterpartyId
-                                        ? "Сначала выберите клиента"
-                                        : "— Тот же, что клиент —"
-                                }
-                                emptyLabel='Юрлицо не найдено'
-                                options={payerOptions}
-                            />
-                            <p className='mt-1 text-xs text-neutral-500'>
-                                Заполните, если договор и счёт клиент просит оформить на другое
-                                своё юрлицо. Скидка и история остаются за клиентом.
-                            </p>
-                        </Field>
-                        <Field label='Контактное лицо'>
+                        <Field label='Контактное лицо клиента'>
                             <SearchableSelect
                                 value={form.contactId}
                                 onChange={id => setForm(prev => ({ ...prev, contactId: id }))}
@@ -430,55 +642,6 @@ export default function DealForm({
                                 }))}
                             />
                         </Field>
-                        <Field label='Проект-источник' className='sm:col-span-2'>
-                            <SearchableSelect
-                                value={form.sourceProjectId}
-                                onChange={id => {
-                                    const p = projectById(id)
-                                    setForm(prev => ({
-                                        ...prev,
-                                        sourceProjectId: id,
-                                        // Стороны подтягиваются из проекта; контакты
-                                        // сбрасываем, они принадлежали другой компании.
-                                        ...(p
-                                            ? {
-                                                  counterpartyId: p.distributorId,
-                                                  contactId:
-                                                      p.distributorId === prev.counterpartyId
-                                                          ? prev.contactId
-                                                          : "",
-                                                  auctionCustomerId: prev.isAuction
-                                                      ? p.endCustomerId
-                                                      : prev.auctionCustomerId,
-                                                  auctionCustomerContactId:
-                                                      prev.isAuction &&
-                                                      p.endCustomerId !== prev.auctionCustomerId
-                                                          ? ""
-                                                          : prev.auctionCustomerContactId,
-                                              }
-                                            : {}),
-                                    }))
-                                }}
-                                disabled={projectLocked}
-                                placeholder='— Без привязки —'
-                                emptyLabel='Проект не найден'
-                                options={projects.map(p => ({
-                                    id: p.id,
-                                    label: p.internalName,
-                                    sublabel: [p.distributor?.name, p.endCustomer?.name]
-                                        .filter(Boolean)
-                                        .join(" – "),
-                                    search: `${p.internalName} ${p.distributor?.name ?? ""} ${p.endCustomer?.name ?? ""}`,
-                                }))}
-                            />
-                        </Field>
-                    </div>
-                </FormSection>
-            </Card>
-
-            <Card>
-                <FormSection title='Статус, доставка, примечание'>
-                    <div className='grid gap-4 sm:grid-cols-2'>
                         <Select label='Статус' value={form.status} onChange={update("status")}>
                             {DEAL_STATUSES.map(s => (
                                 <option key={s} value={s}>
@@ -486,34 +649,40 @@ export default function DealForm({
                                 </option>
                             ))}
                         </Select>
-                        <Field label='Скидка, %'>
-                            <Input
-                                type='number'
-                                min='0'
-                                max='100'
-                                step='0.01'
-                                inputMode='decimal'
-                                value={form.discount}
-                                disabled={discountLocked}
-                                onChange={e => {
-                                    discountTouchedRef.current = true
-                                    setForm(prev => ({ ...prev, discount: e.target.value }))
-                                }}
-                                hint={
-                                    discountLocked
-                                        ? "По сделке есть проведённая отгрузка — скидка зафиксирована: её правка пересчитала бы суммы уже отгруженного."
-                                        : "Используется в КП. Меняйте, если клиенту согласована особая скидка на эту сделку."
-                                }
+                        {!isCreate && (
+                            <Field label='Скидка, %'>
+                                <Input
+                                    type='number'
+                                    min='0'
+                                    max='100'
+                                    step='0.01'
+                                    inputMode='decimal'
+                                    value={form.discount}
+                                    disabled={discountLocked}
+                                    onChange={e => {
+                                        discountTouchedRef.current = true
+                                        setForm(prev => ({ ...prev, discount: e.target.value }))
+                                    }}
+                                    hint={
+                                        discountLocked
+                                            ? "По сделке есть проведённая отгрузка — скидка зафиксирована: её правка пересчитала бы суммы уже отгруженного."
+                                            : inheritedLabel && !discountTouchedRef.current
+                                              ? `Подставлена ${inheritedLabel}. Используется в КП.`
+                                              : "Используется в КП. Меняйте, если клиенту согласована особая скидка на эту сделку."
+                                    }
+                                />
+                            </Field>
+                        )}
+                        {!isCreate && (
+                            <Textarea
+                                label='Адрес доставки'
+                                containerClassName='sm:col-span-2'
+                                rows={2}
+                                value={form.deliveryAddress}
+                                onChange={update("deliveryAddress")}
+                                hint='Подставится в форму новой отгрузки. Уже созданные отгрузки не меняются.'
                             />
-                        </Field>
-                        <Textarea
-                            label='Адрес доставки'
-                            containerClassName='sm:col-span-2'
-                            rows={2}
-                            value={form.deliveryAddress}
-                            onChange={update("deliveryAddress")}
-                            hint='Подставится в форму новой отгрузки. Уже созданные отгрузки не меняются.'
-                        />
+                        )}
                         <Textarea
                             label='Примечание'
                             containerClassName='sm:col-span-2'
@@ -522,38 +691,50 @@ export default function DealForm({
                             onChange={update("note")}
                         />
                     </div>
+
+                    {/* Плательщик — редкий случай, поэтому спрятан за ссылкой и
+                        не мешает основному сценарию. */}
+                    {payerOpen ? (
+                        <Field label='Плательщик (на кого документы)'>
+                            <SearchableSelect
+                                value={form.payerId}
+                                onChange={id => setForm(prev => ({ ...prev, payerId: id }))}
+                                disabled={!form.counterpartyId}
+                                placeholder={
+                                    !form.counterpartyId
+                                        ? "Сначала выберите клиента"
+                                        : "— Тот же, что клиент —"
+                                }
+                                emptyLabel='Юрлицо не найдено'
+                                options={payerOptions}
+                            />
+                            <p className='mt-1 text-xs text-neutral-500'>
+                                Скидка и история остаются за клиентом.
+                            </p>
+                        </Field>
+                    ) : (
+                        <button
+                            type='button'
+                            onClick={() => setPayerOpen(true)}
+                            className='text-xs font-medium text-neutral-500 underline underline-offset-2 hover:text-brand_main'
+                        >
+                            Документы оформляем на другое юрлицо клиента
+                        </button>
+                    )}
                 </FormSection>
             </Card>
 
-            <Card>
-                <FormSection
-                    title='Аукцион (госзакупка)'
-                    description='Включите, если сделка идёт через аукцион. Появятся параметры закупки и заказчик.'
-                >
-                    <label className='flex cursor-pointer items-center gap-2 text-sm text-neutral-800'>
-                        <input
-                            type='checkbox'
-                            checked={form.isAuction}
-                            onChange={e => {
-                                const on = e.target.checked
-                                setForm(prev => ({
-                                    ...prev,
-                                    isAuction: on,
-                                    // При включении у сделки с проектом заказчик —
-                                    // конечный потребитель проекта, поле заблокировано.
-                                    auctionCustomerId:
-                                        on && !prev.auctionCustomerId && sourceProject
-                                            ? sourceProject.endCustomerId || ""
-                                            : prev.auctionCustomerId,
-                                }))
-                            }}
-                            className='h-4 w-4 rounded border-line text-brand_main focus:ring-brand_main/30'
-                        />
-                        Это аукцион
-                    </label>
-
-                    {form.isAuction && (
-                        <div className='mt-4 grid gap-4 sm:grid-cols-2'>
+            {form.isAuction && (
+                <Card>
+                    <FormSection
+                        title='Параметры закупки'
+                        description={
+                            isCreate
+                                ? "Итоги торгов (заявки, участники, победитель) заполняются потом, в карточке сделки."
+                                : undefined
+                        }
+                    >
+                        <div className='grid gap-4 sm:grid-cols-2'>
                             <Input
                                 label='Номер закупки'
                                 value={form.purchaseNumber}
@@ -576,21 +757,6 @@ export default function DealForm({
                                 value={form.nmck}
                                 onChange={update("nmck")}
                             />
-                            <Field label='Заказчик (конечный потребитель)'>
-                                <SearchableSelect
-                                    value={form.auctionCustomerId}
-                                    onChange={id =>
-                                        setForm(prev => ({
-                                            ...prev,
-                                            auctionCustomerId: id,
-                                            auctionCustomerContactId: "",
-                                        }))
-                                    }
-                                    disabled={partiesLocked}
-                                    placeholder='— Не выбран —'
-                                    options={counterpartyOptions}
-                                />
-                            </Field>
                             <Field label='Контакт заказчика'>
                                 <SearchableSelect
                                     value={form.auctionCustomerContactId}
@@ -615,6 +781,9 @@ export default function DealForm({
                                     }))}
                                 />
                             </Field>
+                            {/* Заказчика в сделке без проекта выбирают в первом
+                                блоке — здесь он только у сделки с проектом,
+                                где поле не редактируется. */}
                             <Input
                                 label='Окончание сбора заявок'
                                 type='datetime-local'
@@ -633,33 +802,37 @@ export default function DealForm({
                                 value={form.resultsAt}
                                 onChange={update("resultsAt")}
                             />
-                            <Input
-                                label='Количество заявок'
-                                type='number'
-                                min='0'
-                                step='1'
-                                value={form.bidsCount}
-                                onChange={update("bidsCount")}
-                            />
-                            <Input
-                                label='Количество участников'
-                                type='number'
-                                min='0'
-                                step='1'
-                                value={form.participantsCount}
-                                onChange={update("participantsCount")}
-                            />
-                            <Input
-                                label='Победитель'
-                                containerClassName='sm:col-span-2'
-                                value={form.winner}
-                                onChange={update("winner")}
-                                placeholder='Название организации-победителя'
-                            />
+                            {!isCreate && (
+                                <>
+                                    <Input
+                                        label='Количество заявок'
+                                        type='number'
+                                        min='0'
+                                        step='1'
+                                        value={form.bidsCount}
+                                        onChange={update("bidsCount")}
+                                    />
+                                    <Input
+                                        label='Количество участников'
+                                        type='number'
+                                        min='0'
+                                        step='1'
+                                        value={form.participantsCount}
+                                        onChange={update("participantsCount")}
+                                    />
+                                    <Input
+                                        label='Победитель'
+                                        containerClassName='sm:col-span-2'
+                                        value={form.winner}
+                                        onChange={update("winner")}
+                                        placeholder='Название организации-победителя'
+                                    />
+                                </>
+                            )}
                         </div>
-                    )}
-                </FormSection>
-            </Card>
+                    </FormSection>
+                </Card>
+            )}
 
             {error && (
                 <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
@@ -676,5 +849,35 @@ export default function DealForm({
                 </Button>
             </div>
         </form>
+    )
+}
+
+// Строка сводки «по проекту»: подпись мелкой капителью, как в карточках CRM,
+// значение — обычным текстом. Замок в подписи показывает, что поле не
+// редактируется, — вместо серого disabled-инпута, который читается как поломка.
+function SummaryRow({ label, className = "", children }) {
+    return (
+        <div className={className}>
+            <dt className='flex items-center gap-1 text-[10px] uppercase tracking-wider text-neutral-400'>
+                <LuLock className='h-2.5 w-2.5' />
+                {label}
+            </dt>
+            <dd className='mt-0.5 text-sm text-neutral-900'>{children}</dd>
+        </div>
+    )
+}
+
+// Название стороны ссылкой на её карточку. Справочник контрагентов
+// догружается — пока имени нет, показываем прочерк, а не пустое место.
+function PartyLink({ id, name }) {
+    if (!id) return <span className='text-neutral-400'>—</span>
+    if (!name) return <span className='text-neutral-400'>…</span>
+    return (
+        <Link
+            href={`/crm/counterparties/${id}`}
+            className='font-medium text-neutral-900 hover:text-brand_main'
+        >
+            {name}
+        </Link>
     )
 }

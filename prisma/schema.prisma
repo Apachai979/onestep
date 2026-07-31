@@ -159,6 +159,9 @@ model Project {
   internalName      String
   status            String        @default("IN_PROGRESS")
   totalAmount       Decimal       @default(0)
+  // Скидка проекта, %. Наследуется от контрагента (или его группы) при
+  // создании и дальше уходит в сделки проекта — см. lib/crm/discount.js.
+  discount          Decimal?
   auctionDate       DateTime?
   duplicateComment  String?
   duplicateOfId     String?

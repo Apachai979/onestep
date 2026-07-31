@@ -32,6 +32,7 @@ export default async function EditProjectPage({ params }) {
     const initial = {
         ...item,
         totalAmount: item.totalAmount.toString(),
+        discount: item.discount != null ? item.discount.toString() : null,
         auctionDate: item.auctionDate ? item.auctionDate.toISOString() : null,
         createdAt: item.createdAt.toISOString(),
         updatedAt: item.updatedAt.toISOString(),

@@ -8,6 +8,7 @@ import {
     isAutoInternalName,
     projectManagerLabel as managerLabel,
 } from "@/lib/crm/project"
+import { counterpartyDiscountInfo, discountSourceLabel } from "@/lib/crm/discount"
 import ProjectContactsPicker from "./ProjectContactsPicker"
 import SearchableSelect from "./SearchableSelect"
 import {
@@ -25,6 +26,7 @@ const EMPTY = {
     endCustomerId: "",
     managerId: "",
     status: "IN_PROGRESS",
+    discount: "",
     duplicateComment: "",
 }
 
@@ -69,6 +71,7 @@ export default function ProjectForm({
             endCustomerId: initial.endCustomerId ?? "",
             managerId: initial.managerId ?? "",
             status: initial.status ?? "IN_PROGRESS",
+            discount: toFormValue(initial.discount),
             duplicateComment: initial.duplicateComment ?? "",
         }
     })
@@ -77,6 +80,9 @@ export default function ProjectForm({
         (initial?.contacts || []).map(c => c.id),
     )
     const [refs, setRefs] = useState({ distributors: [], customers: [], managers: [] })
+    // Скидка дистрибьютора (или его группы) — из неё берётся скидка проекта,
+    // пока менеджер не задал свою.
+    const [inherited, setInherited] = useState(null)
     const [error, setError] = useState("")
     const [duplicate, setDuplicate] = useState(null)
     const [loading, setLoading] = useState(false)
@@ -100,6 +106,36 @@ export default function ProjectForm({
             }),
         )
     }, [])
+
+    // Скидку проекта наследуем от дистрибьютора, пока менеджер не задал свою.
+    // У существующего проекта с заполненной скидкой считаем её ручной — иначе
+    // смена дистрибьютора затирала бы согласованное значение.
+    const discountTouchedRef = useRef(
+        Boolean(initial && initial.discount !== null && initial.discount !== undefined),
+    )
+
+    useEffect(() => {
+        if (!form.distributorId) {
+            setInherited(null)
+            return
+        }
+        let cancelled = false
+        fetch(`/api/crm/counterparties/${form.distributorId}`)
+            .then(r => r.json())
+            .then(d => {
+                if (cancelled) return
+                const info = counterpartyDiscountInfo(d.item)
+                setInherited(info)
+                if (discountTouchedRef.current) return
+                setForm(prev => ({ ...prev, discount: info.value ?? "" }))
+            })
+            .catch(() => {
+                if (!cancelled) setInherited(null)
+            })
+        return () => {
+            cancelled = true
+        }
+    }, [form.distributorId])
 
     const distributors = useMemo(
         () => withCurrentParty(refs.distributors, initial?.distributor),
@@ -165,6 +201,11 @@ export default function ProjectForm({
         autoNameReady &&
         Boolean(initial?.internalName) &&
         initial.internalName !== autoInternalName
+
+    // Пока скидку не трогали руками, поле показывает унаследованное значение —
+    // подписываем, откуда оно взялось.
+    const inheritedLabel =
+        !discountTouchedRef.current && inherited?.value ? discountSourceLabel(inherited) : null
 
     const distributorOptions = useMemo(
         () =>
@@ -240,23 +281,33 @@ export default function ProjectForm({
         return { id: data.item?.id || initial?.id }
     }
 
+    function buildPayload(extra) {
+        const payload = {
+            ...form,
+            internalName: form.internalName.trim() || null,
+            contactIds,
+            ...extra,
+        }
+        if (partiesLocked) {
+            delete payload.distributorId
+            delete payload.endCustomerId
+        }
+        // Новый проект с нетронутым пустым полем скидки: справочник контрагента
+        // мог не успеть догрузиться — пусть скидку наследует сервер, а не
+        // уезжает пустая. Осознанно очищенное поле (touched) шлём как есть.
+        if (mode === "create" && !discountTouchedRef.current && payload.discount === "") {
+            delete payload.discount
+        }
+        return payload
+    }
+
     async function handleSubmit(e) {
         e.preventDefault()
         setError("")
         setDuplicate(null)
         setLoading(true)
 
-        const payload = {
-            ...form,
-            internalName: form.internalName.trim() || null,
-            contactIds,
-        }
-        if (partiesLocked) {
-            delete payload.distributorId
-            delete payload.endCustomerId
-        }
-
-        const res = await send(payload)
+        const res = await send(buildPayload())
         setLoading(false)
 
         if (res.dup) return
@@ -276,12 +327,7 @@ export default function ProjectForm({
         }
         setLoading(true)
         setError("")
-        const res = await send({
-            ...form,
-            internalName: form.internalName.trim() || null,
-            contactIds,
-            forceCreate: true,
-        })
+        const res = await send(buildPayload({ forceCreate: true }))
         setLoading(false)
 
         if (res.dup) return
@@ -367,7 +413,7 @@ export default function ProjectForm({
             </Card>
 
             <Card>
-                <FormSection title='Название и статус'>
+                <FormSection title='Название, статус и скидка'>
                     <div className='grid gap-4 sm:grid-cols-2'>
                         <div className='sm:col-span-2'>
                             <Input
@@ -404,6 +450,24 @@ export default function ProjectForm({
                                 </option>
                             ))}
                         </Select>
+                        <Input
+                            label='Скидка, %'
+                            type='number'
+                            min='0'
+                            max='100'
+                            step='0.01'
+                            inputMode='decimal'
+                            value={form.discount}
+                            onChange={e => {
+                                discountTouchedRef.current = true
+                                setForm(prev => ({ ...prev, discount: e.target.value }))
+                            }}
+                            hint={
+                                inheritedLabel
+                                    ? `Подставлена ${inheritedLabel}. Сделки по проекту возьмут скидку отсюда — измените, если по проекту согласованы особые условия.`
+                                    : "Уйдёт в сделки по проекту. Пусто — сделка возьмёт скидку из карточки клиента."
+                            }
+                        />
                     </div>
                 </FormSection>
             </Card>

@@ -270,6 +270,7 @@ async function exportProjects(wb) {
         { header: "Статус", key: "status", width: 16 },
         { header: "Сумма проекта", key: "amount", width: 14 },
         { header: "Сумма связанных сделок (со скидкой)", key: "dealsAmount", width: 26 },
+        { header: "Скидка %", key: "discount", width: 10 },
         { header: "Дистрибьютор", key: "dist", width: 36 },
         { header: "ИНН дистрибьютора", key: "distInn", width: 16 },
         { header: "КПП дистрибьютора", key: "distKpp", width: 16 },
@@ -299,6 +300,9 @@ async function exportProjects(wb) {
             status: label(PROJECT_STATUS_LABELS, p.status),
             amount: num(p.totalAmount),
             dealsAmount: sumMap.get(p.id) || 0,
+            // Пустая скидка — пустая ячейка, а не 0: обратный импорт иначе
+            // создал бы проект со скидкой 0% вместо «не задана».
+            discount: p.discount != null ? num(p.discount) : "",
             dist: p.distributor?.name || "",
             distInn: p.distributor?.inn || "",
             distKpp: p.distributor?.kpp || "",

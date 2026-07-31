@@ -9,6 +9,7 @@ import {
 } from "@/lib/crm/deal"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
 import { dealProjectPartiesError } from "@/lib/crm/access"
+import { inheritedDealDiscount } from "@/lib/crm/discount"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
@@ -130,9 +131,22 @@ export async function POST(request) {
 
     const cp = await prisma.counterparty.findUnique({
         where: { id: data.counterpartyId },
-        select: { id: true, type: true },
+        select: {
+            id: true,
+            type: true,
+            // Нужны для наследования скидки, когда её не задали в проекте.
+            discount: true,
+            group: { select: { name: true, discount: true } },
+        },
     })
     if (!cp) return Response.json({ error: "Клиент не найден" }, { status: 400 })
+
+    // Скидка: форма создания её не присылает — значение наследуется по цепочке
+    // проект → клиент/группа (см. lib/crm/discount.js). Это снимок: дальше
+    // сделка живёт со своей скидкой и за карточкой клиента не следует.
+    if (data.discount === undefined) {
+        data.discount = inheritedDealDiscount(sourceProject, cp).value
+    }
 
     if (data.contactId) {
         const c = await prisma.contact.findUnique({

@@ -6,6 +6,7 @@ import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_STATUS_COLORS, DEAL_STATUS_LABELS, dealDiscountedTotal } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
+import { formatDiscount } from "@/lib/crm/discount"
 import { canDeleteProject, isProjectLocked } from "@/lib/crm/access"
 import DeleteEntityButton from "@/components/crm/DeleteEntityButton"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
@@ -174,6 +175,13 @@ export default async function ProjectPage({ params }) {
                             label={`Сумма сделок по проекту${dealsCount ? ` (${dealsCount})` : ""}`}
                             value={formatMoney(dealsSum)}
                         />
+                        <Row label='Скидка'>
+                            {formatDiscount(item.discount) ?? (
+                                <span className='text-neutral-400'>
+                                    не задана — сделки возьмут из карточки клиента
+                                </span>
+                            )}
+                        </Row>
                     </Section>
 
                     {/* Две самодостаточные карточки сторон: организация + регион + контакты */}

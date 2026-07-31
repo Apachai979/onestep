@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { Suspense } from "react"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/configs/auth"
@@ -22,17 +21,25 @@ export default async function NewDealPage({ searchParams }) {
                 id: true,
                 internalName: true,
                 totalAmount: true,
+                discount: true,
                 distributorId: true,
                 endCustomerId: true,
                 managerId: true,
                 distributor: { select: { id: true, name: true } },
                 endCustomer: { select: { id: true, name: true } },
+                // Позиции проекта переносятся в сделку при создании — форма
+                // показывает, сколько именно и на какую сумму.
+                items: { select: { amount: true } },
             },
         })
         if (p) {
+            const { items, ...rest } = p
             fromProject = {
-                ...p,
+                ...rest,
                 totalAmount: p.totalAmount.toString(),
+                discount: p.discount != null ? p.discount.toString() : null,
+                itemsCount: items.length,
+                itemsTotal: items.reduce((s, it) => s + Number(it.amount), 0),
             }
         }
     }
@@ -51,19 +58,6 @@ export default async function NewDealPage({ searchParams }) {
             <h1 className='text-2xl font-semibold text-neutral-900'>
                 {defaultIsAuction ? "Новая сделка / аукцион" : "Новая сделка"}
             </h1>
-            {fromProject && (
-                <div className='rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900'>
-                    На основании проекта{" "}
-                    <Link
-                        href={`/crm/projects/${fromProject.id}`}
-                        className='font-medium underline'
-                    >
-                        {fromProject.internalName}
-                    </Link>
-                    . Клиент и заказчик берутся из проекта и не редактируются. Если проект
-                    не тот — вернитесь и создайте сделку из нужного.
-                </div>
-            )}
             <Suspense fallback={null}>
                 <DealForm
                     mode='create'

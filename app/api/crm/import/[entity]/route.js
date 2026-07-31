@@ -415,6 +415,7 @@ async function importProjects(tx, wb, report, session) {
                 internalName,
                 status,
                 totalAmount: decStr(row["сумма проекта"]) ?? "0",
+                discount: decStr(row["скидка %"]),
                 externalAuctionId: cellStr(row["№ закупки"]) || null,
                 auctionDate: cellDate(row["дата аукциона"]),
                 lossReason: labelToKey(

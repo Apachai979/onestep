@@ -14,8 +14,17 @@ export default async function EditDealPage({ params }) {
         where: { id: params.id },
         include: {
             counterparty: { select: { name: true } },
+            // Стороны и скидка проекта нужны форме для сводки «По проекту».
             sourceProject: {
-                select: { id: true, internalName: true, distributorId: true, endCustomerId: true },
+                select: {
+                    id: true,
+                    internalName: true,
+                    discount: true,
+                    distributorId: true,
+                    endCustomerId: true,
+                    distributor: { select: { id: true, name: true } },
+                    endCustomer: { select: { id: true, name: true } },
+                },
             },
         },
     })
@@ -54,7 +63,15 @@ export default async function EditDealPage({ params }) {
             <DealForm
                 mode='edit'
                 initial={initial}
-                linkedProject={item.sourceProject}
+                linkedProject={
+                    item.sourceProject && {
+                        ...item.sourceProject,
+                        discount:
+                            item.sourceProject.discount != null
+                                ? item.sourceProject.discount.toString()
+                                : null,
+                    }
+                }
                 discountLocked={shippedCount > 0}
             />
         </div>

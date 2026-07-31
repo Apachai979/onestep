@@ -14,7 +14,10 @@ export default async function ProjectsPage() {
                 title='Проекты'
                 subtitle='Аукционные проекты: связки дистрибьютор — конечный потребитель.'
             />
-            <ProjectsTabs isAdmin={session?.user?.role === "ADMIN"} />
+            <ProjectsTabs
+                currentUserId={session?.user?.id}
+                isAdmin={session?.user?.role === "ADMIN"}
+            />
         </div>
     )
 }

@@ -2,11 +2,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
-import {
-    PROJECT_STATUS_COLORS,
-    PROJECT_STATUS_LABELS,
-    PROJECT_STATUSES,
-} from "@/lib/crm/project"
+import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import { LuTarget } from "react-icons/lu"
 import { formatMoney } from "@/lib/crm/format"
 import {
@@ -15,24 +11,10 @@ import {
     CardRow,
     DataTable,
     EmptyState,
-    FilterBar,
-    FilterMulti,
-    FilterPicker,
-    FilterSearch,
-    FilterText,
     MobileCard,
 } from "@/components/crm/ui"
 
 const STATUS_CLASS = PROJECT_STATUS_COLORS
-
-const EMPTY_FILTERS = {
-    q: "",
-    status: [],
-    region: "",
-    distributorId: "",
-    customerId: "",
-    managerId: "",
-}
 
 function fullName(u) {
     if (!u) return "—"
@@ -44,49 +26,17 @@ function formatDate(d) {
     return new Date(d).toLocaleDateString("ru-RU")
 }
 
-export default function ProjectsList() {
+// Фильтры общие для списка и канбана — они живут в ProjectsTabs и приходят
+// сюда готовой строкой запроса.
+export default function ProjectsList({ query = "" }) {
     const router = useRouter()
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
-    const [filters, setFilters] = useState(EMPTY_FILTERS)
-    const [refs, setRefs] = useState({ distributors: [], customers: [], managers: [] })
-
-    useEffect(() => {
-        Promise.all([
-            fetch("/api/crm/counterparties?type=DISTRIBUTOR").then(r => r.json()),
-            fetch("/api/crm/counterparties?type=END_CUSTOMER").then(r => r.json()),
-            fetch("/api/crm/users").then(r => r.json()),
-        ]).then(([d, c, u]) =>
-            setRefs({
-                distributors: d.items || [],
-                customers: c.items || [],
-                managers: u.items || [],
-            }),
-        )
-    }, [])
-
-    // Запрос идёт не на каждый символ: ждём паузы в наборе.
-    // Идентичный объект React отбрасывает, так что лишнего запроса на монтировании нет.
-    const [applied, setApplied] = useState(filters)
-    useEffect(() => {
-        const t = setTimeout(() => setApplied(filters), 300)
-        return () => clearTimeout(t)
-    }, [filters])
 
     useEffect(() => {
         const controller = new AbortController()
-        const params = new URLSearchParams()
-        for (const [k, v] of Object.entries(applied)) {
-            // status — массив выбранных статусов, остальные фильтры строковые.
-            if (Array.isArray(v)) {
-                if (v.length) params.set(k, v.join(","))
-            } else if (v) {
-                params.set(k, v)
-            }
-        }
-
         setError("")
-        fetch(`/api/crm/projects?${params.toString()}`, { signal: controller.signal })
+        fetch(`/api/crm/projects?${query}`, { signal: controller.signal })
             .then(async r => {
                 if (!r.ok) throw new Error((await r.json()).error || "Ошибка загрузки")
                 return r.json()
@@ -99,57 +49,7 @@ export default function ProjectsList() {
             })
 
         return () => controller.abort()
-    }, [applied])
-
-    function setId(field) {
-        return id => setFilters(prev => ({ ...prev, [field]: id }))
-    }
-
-    // Поиск в счёт не идёт — у поля есть собственный крестик.
-    const activeCount = Object.entries(filters).filter(([k, v]) =>
-        k === "q" ? false : Array.isArray(v) ? v.length : Boolean(v),
-    ).length
-
-    const statusOptions = useMemo(
-        () => PROJECT_STATUSES.map(s => ({ value: s, label: PROJECT_STATUS_LABELS[s] })),
-        [],
-    )
-
-    const distributorOptions = useMemo(
-        () =>
-            refs.distributors.map(c => ({
-                id: c.id,
-                label: c.name,
-                sublabel: `${c.inn ? `ИНН ${c.inn}` : ""}${
-                    c.inn && c.region ? " · " : ""
-                }${c.region ?? ""}`,
-                search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
-            })),
-        [refs.distributors],
-    )
-
-    const customerOptions = useMemo(
-        () =>
-            refs.customers.map(c => ({
-                id: c.id,
-                label: c.name,
-                sublabel: `${c.inn ? `ИНН ${c.inn}` : ""}${
-                    c.inn && c.region ? " · " : ""
-                }${c.region ?? ""}`,
-                search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
-            })),
-        [refs.customers],
-    )
-
-    const managerOptions = useMemo(
-        () =>
-            refs.managers.map(m => ({
-                id: m.id,
-                label: fullName(m),
-                search: `${m.firstName ?? ""} ${m.lastName ?? ""} ${m.email ?? ""}`,
-            })),
-        [refs.managers],
-    )
+    }, [query])
 
     const columns = useMemo(
         () => [
@@ -228,53 +128,6 @@ export default function ProjectsList() {
 
     return (
         <div className='space-y-4'>
-            <FilterBar
-                canReset={activeCount > 0}
-                onReset={() => setFilters(EMPTY_FILTERS)}
-            >
-                <FilterSearch
-                    value={filters.q}
-                    onChange={q => setFilters(prev => ({ ...prev, q }))}
-                    placeholder='Название, клиент'
-                />
-                <FilterMulti
-                    label='Статус'
-                    value={filters.status}
-                    onChange={status => setFilters(prev => ({ ...prev, status }))}
-                    options={statusOptions}
-                />
-                <FilterPicker
-                    label='Потребитель'
-                    value={filters.customerId}
-                    onChange={setId("customerId")}
-                    options={customerOptions}
-                    searchPlaceholder='Название или ИНН'
-                    emptyLabel='Клиент не найден'
-                />
-                <FilterPicker
-                    label='Дистрибьютор'
-                    value={filters.distributorId}
-                    onChange={setId("distributorId")}
-                    options={distributorOptions}
-                    searchPlaceholder='Название или ИНН'
-                    emptyLabel='Дистрибьютор не найден'
-                />
-                <FilterPicker
-                    label='Менеджер'
-                    value={filters.managerId}
-                    onChange={setId("managerId")}
-                    options={managerOptions}
-                    searchPlaceholder='Имя или email'
-                    emptyLabel='Сотрудник не найден'
-                />
-                <FilterText
-                    label='Регион'
-                    value={filters.region}
-                    onChange={region => setFilters(prev => ({ ...prev, region }))}
-                    placeholder='Например, Москва'
-                />
-            </FilterBar>
-
             {error && (
                 <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
                     {error}

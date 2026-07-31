@@ -7,7 +7,7 @@ import {
     PROJECT_STATUS_LABELS,
 } from "@/lib/crm/project"
 import { formatMoney } from "@/lib/crm/format"
-import { Badge, FilterBar, FilterSearch, useToast } from "@/components/crm/ui"
+import { Badge, useToast } from "@/components/crm/ui"
 import { PROJECT_LOCKED_STATUSES } from "@/lib/crm/access"
 import DealLossDialog from "./DealLossDialog"
 
@@ -33,53 +33,41 @@ const COLUMN_ACCENT = {
     NO_NEED: "bg-amber-300/70",
 }
 
-export default function ProjectsKanban({ isAdmin = false }) {
+// Фильтры общие для канбана и списка — они живут в ProjectsTabs и приходят
+// сюда готовой строкой запроса (без статуса: здесь статусы — это колонки).
+export default function ProjectsKanban({ query = "", isAdmin = false }) {
     const toast = useToast()
     const [projects, setProjects] = useState(null)
     const [error, setError] = useState("")
-    const [q, setQ] = useState("")
     const [draggingId, setDraggingId] = useState(null)
     const [dragOver, setDragOver] = useState(null)
     const [noNeedProject, setNoNeedProject] = useState(null)
 
-    async function load() {
-        setError("")
-        try {
-            const r = await fetch("/api/crm/projects")
-            const text = await r.text()
-            const data = text ? safeJson(text) : {}
-            if (!r.ok) throw new Error(data?.error || `Ошибка ${r.status}`)
-            setProjects(data.items || [])
-        } catch (err) {
-            setError(err.message)
-            setProjects([])
-        }
-    }
-
     useEffect(() => {
-        load()
-    }, [])
-
-    const filtered = useMemo(() => {
-        if (!projects) return null
-        if (!q.trim()) return projects
-        const ql = q.toLowerCase()
-        return projects.filter(p => {
-            return (
-                (p.internalName || "").toLowerCase().includes(ql) ||
-                (p.endCustomer?.name || "").toLowerCase().includes(ql) ||
-                (p.distributor?.name || "").toLowerCase().includes(ql)
-            )
-        })
-    }, [projects, q])
+        const controller = new AbortController()
+        setError("")
+        fetch(`/api/crm/projects?${query}`, { signal: controller.signal })
+            .then(async r => {
+                const text = await r.text()
+                const data = text ? safeJson(text) : {}
+                if (!r.ok) throw new Error(data?.error || `Ошибка ${r.status}`)
+                setProjects(data.items || [])
+            })
+            .catch(err => {
+                if (err.name === "AbortError") return
+                setError(err.message)
+                setProjects([])
+            })
+        return () => controller.abort()
+    }, [query])
 
     const byStatus = useMemo(() => {
         const map = Object.fromEntries(PROJECT_STATUSES.map(s => [s, []]))
-        for (const p of filtered || []) {
+        for (const p of projects || []) {
             if (map[p.status]) map[p.status].push(p)
         }
         return map
-    }, [filtered])
+    }, [projects])
 
     // Менеджер не возвращает проект из «Проработано, нет потребности».
     function isLocked(status) {
@@ -151,10 +139,6 @@ export default function ProjectsKanban({ isAdmin = false }) {
 
     return (
         <div className='space-y-4'>
-            <FilterBar>
-                <FilterSearch value={q} onChange={setQ} placeholder='Название, клиент' />
-            </FilterBar>
-
             {error && <p className='text-sm text-red-600'>{error}</p>}
 
             <div className='flex gap-3 overflow-x-auto pb-3'>

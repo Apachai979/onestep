@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { LuBriefcase } from "react-icons/lu"
 import {
-    DEAL_STATUSES,
     DEAL_STATUS_COLORS,
     DEAL_STATUS_LABELS,
     dealDisplayTitle,
@@ -17,22 +16,8 @@ import {
     CardRow,
     DataTable,
     EmptyState,
-    FilterBar,
-    FilterMulti,
-    FilterPicker,
-    FilterSearch,
-    FilterSelect,
-    FilterToggle,
     MobileCard,
 } from "@/components/crm/ui"
-
-const EMPTY_FILTERS = {
-    status: [],
-    counterpartyId: "",
-    managerId: "",
-    isAuction: "",
-    q: "",
-}
 
 function safeJson(text) {
     try {
@@ -60,97 +45,30 @@ function AuctionTag() {
     )
 }
 
-export default function DealsList({ currentUserId }) {
+// Фильтры общие для списка и канбана — они живут в DealsTabs и приходят
+// сюда готовой строкой запроса.
+export default function DealsList({ query = "" }) {
     const router = useRouter()
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
-    const [filters, setFilters] = useState(EMPTY_FILTERS)
-    const [counterparties, setCounterparties] = useState([])
-    const [managers, setManagers] = useState([])
 
     useEffect(() => {
-        Promise.all([
-            fetch("/api/crm/counterparties")
-                .then(r => (r.ok ? r.json() : { items: [] }))
-                .catch(() => ({ items: [] })),
-            fetch("/api/crm/users")
-                .then(r => (r.ok ? r.json() : { items: [] }))
-                .catch(() => ({ items: [] })),
-        ]).then(([c, u]) => {
-            setCounterparties(c.items || [])
-            setManagers(u.items || [])
-        })
-    }, [])
-
-    async function load() {
+        const controller = new AbortController()
         setError("")
-        const params = new URLSearchParams()
-        if (filters.status.length) params.set("status", filters.status.join(","))
-        if (filters.counterpartyId) params.set("counterpartyId", filters.counterpartyId)
-        if (filters.managerId) params.set("managerId", filters.managerId)
-        if (filters.isAuction) params.set("isAuction", filters.isAuction)
-        if (filters.q.trim()) params.set("q", filters.q.trim())
-        const r = await fetch(`/api/crm/deals?${params.toString()}`)
-        const text = await r.text()
-        const data = text ? safeJson(text) : {}
-        if (!r.ok) {
-            setError(data?.error || `Ошибка ${r.status}`)
-            setItems([])
-            return
-        }
-        setItems(data.items || [])
-    }
-
-    // Статус — массив, сравниваем по строковому ключу, а не по ссылке.
-    const statusKey = filters.status.join(",")
-
-    // Строку поиска не дёргаем на каждый символ — ждём паузы в наборе.
-    const [qDebounced, setQDebounced] = useState("")
-    useEffect(() => {
-        const t = setTimeout(() => setQDebounced(filters.q.trim()), 350)
-        return () => clearTimeout(t)
-    }, [filters.q])
-
-    useEffect(() => {
-        load()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [statusKey, filters.counterpartyId, filters.managerId, filters.isAuction, qDebounced])
-
-    // Поиск в счёт не идёт — у поля есть собственный крестик.
-    const activeCount =
-        filters.status.length +
-        (filters.counterpartyId ? 1 : 0) +
-        (filters.managerId ? 1 : 0) +
-        (filters.isAuction ? 1 : 0)
-
-    const statusOptions = useMemo(
-        () => DEAL_STATUSES.map(s => ({ value: s, label: DEAL_STATUS_LABELS[s] })),
-        [],
-    )
-
-    const counterpartyOptions = useMemo(
-        () =>
-            counterparties.map(c => ({
-                id: c.id,
-                label: c.name,
-                sublabel: c.type === "DISTRIBUTOR" ? "Дистрибьютор" : "Конечный потребитель",
-                search: `${c.name} ${c.inn ?? ""} ${c.region ?? ""}`,
-            })),
-        [counterparties],
-    )
-
-    const managerOptions = useMemo(
-        () =>
-            managers.map(u => {
-                const name = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
-                return {
-                    id: u.id,
-                    label: u.id === currentUserId ? `${name} (вы)` : name,
-                    search: `${u.firstName ?? ""} ${u.lastName ?? ""} ${u.email ?? ""}`,
-                }
-            }),
-        [managers, currentUserId],
-    )
+        fetch(`/api/crm/deals?${query}`, { signal: controller.signal })
+            .then(async r => {
+                const text = await r.text()
+                const data = text ? safeJson(text) : {}
+                if (!r.ok) throw new Error(data?.error || `Ошибка ${r.status}`)
+                setItems(data.items || [])
+            })
+            .catch(err => {
+                if (err.name === "AbortError") return
+                setError(err.message)
+                setItems([])
+            })
+        return () => controller.abort()
+    }, [query])
 
     // Итог считаем по финальным суммам сделок — со скидкой.
     const total = items?.reduce((s, d) => s + dealDiscountedTotal(d), 0) ?? 0
@@ -244,58 +162,6 @@ export default function DealsList({ currentUserId }) {
 
     return (
         <div className='space-y-4'>
-            <FilterBar
-                canReset={activeCount > 0}
-                onReset={() => setFilters(EMPTY_FILTERS)}
-            >
-                <FilterSearch
-                    value={filters.q}
-                    onChange={q => setFilters(p => ({ ...p, q }))}
-                    onEnter={load}
-                    placeholder='Название сделки или клиента'
-                />
-                <FilterMulti
-                    label='Статус'
-                    value={filters.status}
-                    onChange={status => setFilters(p => ({ ...p, status }))}
-                    options={statusOptions}
-                />
-                <FilterPicker
-                    label='Клиент'
-                    value={filters.counterpartyId}
-                    onChange={id => setFilters(p => ({ ...p, counterpartyId: id }))}
-                    options={counterpartyOptions}
-                    searchPlaceholder='Название или ИНН'
-                    emptyLabel='Клиент не найден'
-                />
-                <FilterPicker
-                    label='Менеджер'
-                    value={filters.managerId}
-                    onChange={id => setFilters(p => ({ ...p, managerId: id }))}
-                    options={managerOptions}
-                    searchPlaceholder='Имя или email'
-                    emptyLabel='Сотрудник не найден'
-                />
-                <FilterSelect
-                    label='Тип'
-                    value={filters.isAuction}
-                    onChange={v => setFilters(p => ({ ...p, isAuction: v }))}
-                    options={[
-                        { value: "true", label: "Только аукционы" },
-                        { value: "false", label: "Без аукционов" },
-                    ]}
-                />
-                {currentUserId && (
-                    <FilterToggle
-                        label='Только мои'
-                        active={filters.managerId === currentUserId}
-                        onChange={on =>
-                            setFilters(p => ({ ...p, managerId: on ? currentUserId : "" }))
-                        }
-                    />
-                )}
-            </FilterBar>
-
             {error && (
                 <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
                     {error}

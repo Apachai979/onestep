@@ -26,7 +26,7 @@ const COLUMN_ACCENT = {
 }
 import { calculateDealShipmentProgress, isShipmentOverdue } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
-import { FilterBar, FilterSearch, useToast } from "@/components/crm/ui"
+import { useToast } from "@/components/crm/ui"
 import { DEAL_LOCKED_STATUSES } from "@/lib/crm/access"
 import DealLossDialog from "./DealLossDialog"
 
@@ -43,53 +43,41 @@ function managerName(u) {
     return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
 }
 
-export default function DealsKanban({ isAdmin = false }) {
+// Фильтры общие для канбана и списка — они живут в DealsTabs и приходят
+// сюда готовой строкой запроса (без статуса: здесь статусы — это колонки).
+export default function DealsKanban({ query = "", isAdmin = false }) {
     const toast = useToast()
     const [deals, setDeals] = useState(null)
     const [error, setError] = useState("")
-    const [q, setQ] = useState("")
     const [draggingId, setDraggingId] = useState(null)
     const [dragOver, setDragOver] = useState(null)
     const [losingDeal, setLosingDeal] = useState(null)
 
-    async function load() {
-        setError("")
-        try {
-            const r = await fetch("/api/crm/deals")
-            const text = await r.text()
-            const data = text ? safeJson(text) : {}
-            if (!r.ok) throw new Error(data?.error || `Ошибка ${r.status}`)
-            setDeals(data.items || [])
-        } catch (err) {
-            setError(err.message)
-            setDeals([])
-        }
-    }
-
     useEffect(() => {
-        load()
-    }, [])
-
-    const filtered = useMemo(() => {
-        if (!deals) return null
-        if (!q.trim()) return deals
-        const ql = q.toLowerCase()
-        return deals.filter(d => {
-            const title = (
-                dealDisplayTitle(d, d.counterparty?.name) || ""
-            ).toLowerCase()
-            const cp = (d.counterparty?.name || "").toLowerCase()
-            return title.includes(ql) || cp.includes(ql)
-        })
-    }, [deals, q])
+        const controller = new AbortController()
+        setError("")
+        fetch(`/api/crm/deals?${query}`, { signal: controller.signal })
+            .then(async r => {
+                const text = await r.text()
+                const data = text ? safeJson(text) : {}
+                if (!r.ok) throw new Error(data?.error || `Ошибка ${r.status}`)
+                setDeals(data.items || [])
+            })
+            .catch(err => {
+                if (err.name === "AbortError") return
+                setError(err.message)
+                setDeals([])
+            })
+        return () => controller.abort()
+    }, [query])
 
     const byStatus = useMemo(() => {
         const map = Object.fromEntries(DEAL_STATUSES.map(s => [s, []]))
-        for (const d of filtered || []) {
+        for (const d of deals || []) {
             if (map[d.status]) map[d.status].push(d)
         }
         return map
-    }, [filtered])
+    }, [deals])
 
     // Менеджер не вытаскивает сделку из «Закрыто»/«Не реализована»/архива.
     function isLocked(status) {
@@ -159,14 +147,6 @@ export default function DealsKanban({ isAdmin = false }) {
 
     return (
         <div className='space-y-4'>
-            <FilterBar>
-                <FilterSearch
-                    value={q}
-                    onChange={setQ}
-                    placeholder='Название сделки или клиента'
-                />
-            </FilterBar>
-
             {error && <p className='text-sm text-red-600'>{error}</p>}
 
             <div className='flex gap-3 overflow-x-auto pb-3'>

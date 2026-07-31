@@ -38,6 +38,8 @@ export async function GET(request) {
     const type = searchParams.get("type")
     const q = searchParams.get("q")?.trim()
     const region = searchParams.get("region")?.trim()
+    const city = searchParams.get("city")?.trim()
+    const managerId = searchParams.get("managerId")?.trim()
 
     const where = {}
     if (type) {
@@ -46,11 +48,15 @@ export async function GET(request) {
         }
         where.type = type
     }
+    if (managerId) where.managerId = managerId
 
     const items = await prisma.counterparty.findMany({
         where,
         orderBy: { name: "asc" },
         include: {
+            manager: {
+                select: { id: true, firstName: true, lastName: true, email: true },
+            },
             // Все контакты, основной — первым: список показывает contacts[0]
             // как основной, а поиск фильтрует по всем контактам (не только по
             // основному).
@@ -73,6 +79,10 @@ export async function GET(request) {
         if (region) {
             const r = region.toLowerCase()
             if (!(it.region || "").toLowerCase().includes(r)) return false
+        }
+        if (city) {
+            const c = city.toLowerCase()
+            if (!(it.city || "").toLowerCase().includes(c)) return false
         }
         if (q) {
             const ql = q.toLowerCase()

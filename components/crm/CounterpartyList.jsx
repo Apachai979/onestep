@@ -11,6 +11,7 @@ import {
     DataTable,
     EmptyState,
     FilterBar,
+    FilterPicker,
     FilterSearch,
     FilterText,
     MobileCard,
@@ -19,6 +20,11 @@ import PhoneLink from "./PhoneLink"
 
 function counterpartyPhone(item) {
     return item.phone || item.contacts?.[0]?.phone || null
+}
+
+function fullName(u) {
+    if (!u) return "—"
+    return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
 }
 
 function primaryContactName(item) {
@@ -46,25 +52,49 @@ export default function CounterpartyList({ type, newHref }) {
     const [error, setError] = useState("")
     const [q, setQ] = useState("")
     const [region, setRegion] = useState("")
+    const [city, setCity] = useState("")
+    const [managerId, setManagerId] = useState("")
+    const [managers, setManagers] = useState([])
+
+    useEffect(() => {
+        const controller = new AbortController()
+        fetch("/api/crm/users", { signal: controller.signal })
+            .then(r => (r.ok ? r.json() : { items: [] }))
+            .then(d => setManagers(d.items || []))
+            .catch(() => {})
+        return () => controller.abort()
+    }, [])
 
     // Запрос уходит после паузы в наборе, а не на каждый символ.
-    const [applied, setApplied] = useState({ q: "", region: "" })
+    const [applied, setApplied] = useState({ q: "", region: "", city: "", managerId: "" })
     useEffect(() => {
         const t = setTimeout(() => {
-            const next = { q: q.trim(), region: region.trim() }
+            const next = {
+                q: q.trim(),
+                region: region.trim(),
+                city: city.trim(),
+                managerId,
+            }
             // Тот же объект — React не перерисует и лишнего запроса не будет.
             setApplied(prev =>
-                prev.q === next.q && prev.region === next.region ? prev : next,
+                prev.q === next.q &&
+                prev.region === next.region &&
+                prev.city === next.city &&
+                prev.managerId === next.managerId
+                    ? prev
+                    : next,
             )
         }, 300)
         return () => clearTimeout(t)
-    }, [q, region])
+    }, [q, region, city, managerId])
 
     useEffect(() => {
         const controller = new AbortController()
         const params = new URLSearchParams({ type })
         if (applied.q) params.set("q", applied.q)
         if (applied.region) params.set("region", applied.region)
+        if (applied.city) params.set("city", applied.city)
+        if (applied.managerId) params.set("managerId", applied.managerId)
 
         setError("")
         fetch(`/api/crm/counterparties?${params.toString()}`, { signal: controller.signal })
@@ -83,6 +113,16 @@ export default function CounterpartyList({ type, newHref }) {
 
         return () => controller.abort()
     }, [type, applied])
+
+    const managerOptions = useMemo(
+        () =>
+            managers.map(m => ({
+                id: m.id,
+                label: fullName(m),
+                search: `${m.firstName ?? ""} ${m.lastName ?? ""} ${m.email ?? ""}`,
+            })),
+        [managers],
+    )
 
     const columns = useMemo(
         () => [
@@ -129,6 +169,14 @@ export default function CounterpartyList({ type, newHref }) {
                 hideable: true,
             },
             {
+                key: "manager",
+                header: "Ответственный",
+                sortable: true,
+                sortValue: item => (item.manager ? fullName(item.manager) : ""),
+                render: item => fullName(item.manager),
+                hideable: true,
+            },
+            {
                 key: "phone",
                 header: "Телефон",
                 render: item =>
@@ -160,10 +208,12 @@ export default function CounterpartyList({ type, newHref }) {
     return (
         <div className='space-y-4'>
             <FilterBar
-                canReset={Boolean(region)}
+                canReset={Boolean(q || region || city || managerId)}
                 onReset={() => {
                     setQ("")
                     setRegion("")
+                    setCity("")
+                    setManagerId("")
                 }}
                 actions={
                     <Button href={newHref} size='sm'>
@@ -181,7 +231,21 @@ export default function CounterpartyList({ type, newHref }) {
                     label='Регион'
                     value={region}
                     onChange={setRegion}
+                    placeholder='Например, Московская'
+                />
+                <FilterText
+                    label='Город'
+                    value={city}
+                    onChange={setCity}
                     placeholder='Например, Москва'
+                />
+                <FilterPicker
+                    label='Ответственный'
+                    value={managerId}
+                    onChange={setManagerId}
+                    options={managerOptions}
+                    searchPlaceholder='Имя или email'
+                    emptyLabel='Сотрудник не найден'
                 />
             </FilterBar>
 
@@ -216,6 +280,7 @@ export default function CounterpartyList({ type, newHref }) {
                             <CardRow label='Город'>{item.city || "—"}</CardRow>
                             <CardRow label='ИНН'>{item.inn || "—"}</CardRow>
                             <CardRow label='Контакт'>{primaryContactName(item)}</CardRow>
+                            <CardRow label='Ответственный'>{fullName(item.manager)}</CardRow>
                             <CardRow label='Телефон'>
                                 {counterpartyPhone(item) ? (
                                     <PhoneLink phone={counterpartyPhone(item)} />

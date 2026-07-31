@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import {
     SHIPMENT_STATUS_COLORS,
     SHIPMENT_STATUS_LABELS,
+    calculateDealRemainingByItem,
     calculateDealShipmentProgress,
     calculateOrderWeightVolume,
     calculateShipmentWeightVolume,
@@ -128,6 +129,13 @@ export default function DealShipmentsSection({
     )
 
     const progress = useMemo(() => calculateDealShipmentProgress(deal), [deal])
+    // Прогресс выше — про фактически отгруженное (только SHIPPED). Форма же
+    // раскладывает заказ по документам, поэтому её остаток считается от всех
+    // созданных отгрузок сделки, включая черновики — так же, как на сервере.
+    const formRemaining = useMemo(
+        () => calculateDealRemainingByItem(deal, { excludeShipmentId: editingId }),
+        [deal, editingId],
+    )
     const totalWV = useMemo(
         () => calculateOrderWeightVolume(dealItems),
         [dealItems],
@@ -146,18 +154,26 @@ export default function DealShipmentsSection({
     function startAdd() {
         setEditingId(null)
         resetForm()
+        // editingId только что сброшен — считаем без исключений, а не через
+        // formRemaining, который в этом рендере ещё помнит прошлую отгрузку.
+        const remaining = calculateDealRemainingByItem(deal)
         const remainingItems = dealItems
-            .filter(di => {
-                const row = progress.byItem[di.id]
-                return row && row.remaining > 0
-            })
+            .filter(di => (remaining[di.id] ?? 0) > 0)
             .map(di => ({
                 dealItemId: di.id,
-                quantity: String(progress.byItem[di.id]?.remaining ?? 0),
+                quantity: String(remaining[di.id] ?? 0),
                 note: "",
             }))
         setItems(remainingItems)
         setShowForm(true)
+    }
+
+    function explainNothingLeft() {
+        toast.info("Отгружать нечего", {
+            description: progress.isFullyShipped
+                ? "Все позиции сделки уже отгружены."
+                : "Все позиции сделки разложены по созданным отгрузкам. Измените количество в существующей отгрузке или добавьте позиции в сделку.",
+        })
     }
 
     function startEdit(sh) {
@@ -202,9 +218,7 @@ export default function DealShipmentsSection({
         const used = new Set(items.map(i => i.dealItemId))
         const candidate = dealItems.find(di => !used.has(di.id))
         if (!candidate) return
-        const remaining =
-            progress.byItem[candidate.id]?.remaining ??
-            num(candidate.quantity)
+        const remaining = formRemaining[candidate.id] ?? num(candidate.quantity)
         setItems(prev => [
             ...prev,
             {
@@ -306,6 +320,10 @@ export default function DealShipmentsSection({
     const usedDealItemIds = new Set(items.map(i => i.dealItemId))
     const hasMoreToAdd = dealItems.some(di => !usedDealItemIds.has(di.id))
     const fullyShippedBanner = progress.isFullyShipped
+    // Всё разложено по документам — новая отгрузка ничего не сможет вместить,
+    // сервер отклонит любую позицию сверх остатка.
+    const nothingLeftToShip =
+        dealItems.length > 0 && dealItems.every(di => (formRemaining[di.id] ?? 0) <= 0)
 
     return (
         <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
@@ -314,10 +332,22 @@ export default function DealShipmentsSection({
                     Отгрузки
                 </h2>
                 {!readOnly && !showForm && dealItems.length > 0 && (
+                    // Кнопка не disabled, а приглушена: по клику объясняем, почему
+                    // отгружать нечего — молчащая кнопка выглядит как поломка.
                     <button
                         type='button'
-                        onClick={startAdd}
-                        className='rounded-lg bg-brand_main px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
+                        onClick={nothingLeftToShip ? explainNothingLeft : startAdd}
+                        aria-disabled={nothingLeftToShip}
+                        title={
+                            nothingLeftToShip
+                                ? "Все позиции сделки уже разложены по отгрузкам"
+                                : undefined
+                        }
+                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition ${
+                            nothingLeftToShip
+                                ? "cursor-not-allowed border border-line bg-surface_muted text-neutral-400"
+                                : "bg-brand_main text-white hover:bg-brand_main/90"
+                        }`}
                     >
                         + Новая отгрузка
                     </button>
@@ -542,17 +572,10 @@ export default function DealShipmentsSection({
                                 )}
                                 {items.map((row, idx) => {
                                     const di = dealItems.find(d => d.id === row.dealItemId)
-                                    const remainingBase = di
-                                        ? progress.byItem[di.id]?.remaining ?? 0
-                                        : 0
-                                    let max = remainingBase
-                                    if (editingId) {
-                                        const before = (
-                                            shipments.find(s => s.id === editingId)?.items || []
-                                        ).find(i => i.dealItemId === row.dealItemId)
-                                        const prevQty = before ? num(before.quantity) : 0
-                                        max = remainingBase + prevQty
-                                    }
+                                    // formRemaining уже не учитывает редактируемую
+                                    // отгрузку, так что её собственное количество
+                                    // возвращать в максимум не нужно.
+                                    const max = di ? formRemaining[di.id] ?? 0 : 0
                                     return (
                                         <div
                                             key={idx}

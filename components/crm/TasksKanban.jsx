@@ -3,14 +3,18 @@ import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { LuSearch } from "react-icons/lu"
 import {
+    TASK_BUCKETS,
+    TASK_BUCKET_LABELS,
     TASK_DUE_COLORS,
-    TASK_STATUSES,
-    TASK_STATUS_COLORS,
-    TASK_STATUS_LABELS,
+    taskBucket,
+    taskBucketTargetYmd,
     taskDueRelativeLabel,
     taskDueState,
+    taskLaterMinYmd,
     taskRangeLabel,
+    taskRescheduleInput,
 } from "@/lib/crm/task"
+import { crmToday, formatCrmDate } from "@/lib/crm/datetime"
 import { notifyTasksChanged, onTasksChanged } from "@/lib/crm/tasks-events"
 import { dealDisplayTitle } from "@/lib/crm/deal"
 import { TaskTypeBadge } from "./TaskTypeIcon"
@@ -19,15 +23,24 @@ import SearchableSelect from "./SearchableSelect"
 import { Button, Field, Input, Modal, useToast } from "@/components/crm/ui"
 
 const COLUMN_ACCENT = {
-    OPEN: "bg-blue-300/70",
-    DONE: "bg-emerald-300/70",
-    FAILED: "bg-red-300/70",
+    overdue: "bg-red-400/80",
+    today: "bg-amber-300/80",
+    tomorrow: "bg-blue-300/70",
+    later: "bg-neutral-300/70",
+}
+
+const COLUMN_BADGE = {
+    overdue: "bg-red-50 text-red-700",
+    today: "bg-amber-50 text-amber-700",
+    tomorrow: "bg-blue-50 text-blue-700",
+    later: "bg-neutral-100 text-neutral-600",
 }
 
 const COLUMN_HINTS = {
-    OPEN: "Задачи в работе. Перетащите вправо, чтобы закрыть.",
-    DONE: "Закрытые с результатом. Можно вернуть в «Открыта».",
-    FAILED: "Закрытые без результата. Можно вернуть в «Открыта».",
+    overdue: "Срок прошёл. Перетащите вправо, чтобы перенести.",
+    today: "Сделать сегодня. Бросок сюда переносит срок на сегодня.",
+    tomorrow: "Сделать завтра. Бросок сюда переносит срок на завтра.",
+    later: "Всё остальное впереди. При броске спросим дату.",
 }
 
 function safeJson(text) {
@@ -68,18 +81,21 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
     const [users, setUsers] = useState([])
     const [draggingId, setDraggingId] = useState(null)
     const [dragOver, setDragOver] = useState(null)
-    const [failingTask, setFailingTask] = useState(null)
+    const [pendingId, setPendingId] = useState(null)
+    const [laterTask, setLaterTask] = useState(null)
     const [viewing, setViewing] = useState(null)
+    const [today, setToday] = useState(() => crmToday())
 
     const load = useCallback(async () => {
         setError("")
         try {
-            const params = new URLSearchParams()
+            const params = new URLSearchParams({ status: "OPEN" })
             if (assigneeId) params.set("assigneeId", assigneeId)
             const r = await fetch(`/api/crm/tasks?${params.toString()}`)
             const text = await r.text()
             const data = text ? safeJson(text) : {}
             if (!r.ok) throw new Error(data?.error || `Ошибка ${r.status}`)
+            setToday(crmToday())
             setItems(data.items || [])
         } catch (err) {
             setError(err.message)
@@ -94,6 +110,15 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
     useEffect(() => {
         return onTasksChanged(() => load())
     }, [load])
+
+    // Вкладку держат открытой сутками — иначе после полуночи «сегодня» уезжает.
+    useEffect(() => {
+        const id = setInterval(() => {
+            const now = crmToday()
+            setToday(prev => (prev === now ? prev : now))
+        }, 60_000)
+        return () => clearInterval(id)
+    }, [])
 
     useEffect(() => {
         fetch("/api/crm/users")
@@ -126,70 +151,48 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
         )
     }, [items, q])
 
-    const byStatus = useMemo(() => {
-        const map = Object.fromEntries(TASK_STATUSES.map(s => [s, []]))
+    const byBucket = useMemo(() => {
+        const map = Object.fromEntries(TASK_BUCKETS.map(b => [b, []]))
         for (const t of filtered || []) {
-            if (map[t.status]) map[t.status].push(t)
+            const bucket = taskBucket(t, today)
+            if (map[bucket]) map[bucket].push(t)
         }
-        map.OPEN.sort((a, b) => new Date(a.endAt) - new Date(b.endAt))
-        for (const s of ["DONE", "FAILED"]) {
-            map[s].sort(
-                (a, b) => new Date(b.closedAt || b.endAt) - new Date(a.closedAt || a.endAt),
-            )
+        // Просроченные — самые давние сверху, остальные — по ближайшему сроку.
+        map.overdue.sort((a, b) => new Date(a.endAt) - new Date(b.endAt))
+        for (const b of ["today", "tomorrow", "later"]) {
+            map[b].sort((a, b2) => new Date(a.endAt) - new Date(b2.endAt))
         }
         return map
-    }, [filtered])
+    }, [filtered, today])
 
     function canManage(t) {
         if (currentUserRole === "ADMIN") return true
         return t.assigneeId === currentUserId || t.createdById === currentUserId
     }
 
-    async function request(url, options, fallbackError) {
-        const r = await fetch(url, options)
-        if (!r.ok) {
-            const text = await r.text()
-            const d = text ? safeJson(text) : {}
-            throw new Error(d?.error || fallbackError)
-        }
-    }
-
-    async function moveTask(task, newStatus, { result = "" } = {}) {
-        const prev = items
-        setItems(curr =>
-            curr.map(t =>
-                t.id === task.id
-                    ? {
-                          ...t,
-                          status: newStatus,
-                          result: newStatus === "OPEN" ? null : result || null,
-                          closedAt: newStatus === "OPEN" ? null : new Date().toISOString(),
-                      }
-                    : t,
-            ),
-        )
+    async function reschedule(task, targetYmd) {
+        const payload = taskRescheduleInput(task, targetYmd)
+        if (!payload) return
+        setPendingId(task.id)
         try {
-            if (newStatus === "OPEN") {
-                await request(
-                    `/api/crm/tasks/${task.id}/close`,
-                    { method: "DELETE" },
-                    "Не удалось вернуть задачу в работу",
-                )
-            } else {
-                await request(
-                    `/api/crm/tasks/${task.id}/close`,
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ status: newStatus, result }),
-                    },
-                    "Не удалось закрыть задачу",
-                )
-            }
+            const r = await fetch(`/api/crm/tasks/${task.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            })
+            const text = await r.text()
+            const data = text ? safeJson(text) : {}
+            if (!r.ok) throw new Error(data?.error || "Не удалось перенести срок")
+            setItems(curr =>
+                curr.map(t => (t.id === task.id ? data.item ?? t : t)),
+            )
+            toast.success(`Срок перенесён на ${formatCrmDate(data.item?.endAt) || targetYmd}`)
             notifyTasksChanged()
         } catch (err) {
-            setItems(prev)
             toast.error(err.message)
+            load()
+        } finally {
+            setPendingId(null)
         }
     }
 
@@ -206,40 +209,34 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
         setDragOver(null)
     }
 
-    function onDragOver(status) {
+    function onDragOver(bucket) {
         return e => {
+            // «Просроченные» — не цель переноса: назад в прошлое срок не двигаем.
+            if (bucket === "overdue") return
             e.preventDefault()
             e.dataTransfer.dropEffect = "move"
-            if (dragOver !== status) setDragOver(status)
+            if (dragOver !== bucket) setDragOver(bucket)
         }
     }
 
-    function onDrop(status) {
+    function onDrop(bucket) {
         return e => {
             e.preventDefault()
             const id = e.dataTransfer.getData("text/plain") || draggingId
             setDragOver(null)
             setDraggingId(null)
-            if (!id) return
+            if (!id || bucket === "overdue") return
             const task = items?.find(t => t.id === id)
-            if (!task || task.status === status) return
+            if (!task || taskBucket(task, today) === bucket) return
             if (!canManage(task)) {
-                toast.error(
-                    "Менять статус может ответственный, создатель или администратор",
-                )
+                toast.error("Менять срок может ответственный, создатель или администратор")
                 return
             }
-            // Между закрытыми статусами напрямую не переносим — сначала в «Открыта».
-            if (task.status !== "OPEN" && status !== "OPEN") {
-                toast.error("Сначала верните задачу в «Открыта»")
+            if (bucket === "later") {
+                setLaterTask(task)
                 return
             }
-            // Закрытие как «Не выполнена» — только с комментарием.
-            if (status === "FAILED") {
-                setFailingTask(task)
-                return
-            }
-            moveTask(task, status)
+            reschedule(task, taskBucketTargetYmd(bucket, today))
         }
     }
 
@@ -286,34 +283,34 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
             )}
 
             <div className='flex gap-3 overflow-x-auto pb-3'>
-                {TASK_STATUSES.map(status => {
-                    const list = byStatus[status] || []
+                {TASK_BUCKETS.map(bucket => {
+                    const list = byBucket[bucket] || []
                     return (
                         <div
-                            key={status}
-                            onDragOver={onDragOver(status)}
+                            key={bucket}
+                            onDragOver={onDragOver(bucket)}
                             onDragLeave={() => setDragOver(null)}
-                            onDrop={onDrop(status)}
+                            onDrop={onDrop(bucket)}
                             className={`flex w-[290px] shrink-0 flex-col overflow-hidden rounded-2xl border bg-surface_muted transition-shadow ${
-                                dragOver === status
+                                dragOver === bucket
                                     ? "border-brand_main ring-2 ring-brand_main/25"
                                     : "border-line"
                             }`}
                         >
-                            <div className={`h-0.5 w-full ${COLUMN_ACCENT[status]}`} />
+                            <div className={`h-0.5 w-full ${COLUMN_ACCENT[bucket]}`} />
                             <div className='flex flex-1 flex-col p-3'>
                                 <div className='mb-1 flex items-center gap-2'>
                                     <span
-                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${TASK_STATUS_COLORS[status]}`}
+                                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${COLUMN_BADGE[bucket]}`}
                                     >
-                                        {TASK_STATUS_LABELS[status]}
+                                        {TASK_BUCKET_LABELS[bucket]}
                                     </span>
                                     <span className='text-xs text-neutral-400'>
                                         {list.length}
                                     </span>
                                 </div>
                                 <p className='mb-3 text-[10px] leading-tight text-neutral-400'>
-                                    {COLUMN_HINTS[status]}
+                                    {COLUMN_HINTS[bucket]}
                                 </p>
                                 <div className='flex flex-col gap-2'>
                                     {items === null && (
@@ -324,6 +321,7 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
                                             key={t.id}
                                             task={t}
                                             dragging={draggingId === t.id}
+                                            pending={pendingId === t.id}
                                             draggable={canManage(t)}
                                             onDragStart={onDragStart(t.id)}
                                             onDragEnd={onDragEnd}
@@ -340,13 +338,14 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
                 })}
             </div>
 
-            {failingTask && (
-                <TaskFailDialog
-                    task={failingTask}
-                    onCancel={() => setFailingTask(null)}
-                    onConfirm={result => {
-                        moveTask(failingTask, "FAILED", { result })
-                        setFailingTask(null)
+            {laterTask && (
+                <RescheduleDialog
+                    task={laterTask}
+                    today={today}
+                    onCancel={() => setLaterTask(null)}
+                    onConfirm={ymd => {
+                        reschedule(laterTask, ymd)
+                        setLaterTask(null)
                     }}
                 />
             )}
@@ -354,8 +353,8 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
             {viewing && (
                 <TaskCloseModal
                     task={viewing}
-                    canClose={viewing.status === "OPEN" && canManage(viewing)}
-                    canReopen={viewing.status !== "OPEN" && canManage(viewing)}
+                    canClose={canManage(viewing)}
+                    canReopen={false}
                     onClose={() => setViewing(null)}
                     onClosed={() => {
                         setViewing(null)
@@ -367,14 +366,14 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
     )
 }
 
-function TaskCard({ task, dragging, draggable, onDragStart, onDragEnd, onClick }) {
+function TaskCard({ task, dragging, pending, draggable, onDragStart, onDragEnd, onClick }) {
     const rel = relationLink(task)
     const dueHint = taskDueRelativeLabel(task)
     return (
         <div
             role='button'
             tabIndex={0}
-            draggable={draggable}
+            draggable={draggable && !pending}
             onDragStart={draggable ? onDragStart : undefined}
             onDragEnd={draggable ? onDragEnd : undefined}
             onClick={onClick}
@@ -386,7 +385,7 @@ function TaskCard({ task, dragging, draggable, onDragStart, onDragEnd, onClick }
             }}
             className={`block rounded-xl border bg-white p-3 text-sm shadow-sm transition-all duration-200 hover:border-line_strong hover:shadow-md ${
                 draggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
-            } ${dragging ? "opacity-50" : "border-line"}`}
+            } ${dragging || pending ? "opacity-50" : "border-line"}`}
         >
             <p className='font-medium leading-snug text-neutral-900'>{task.title}</p>
             {task.description && (
@@ -417,35 +416,38 @@ function TaskCard({ task, dragging, draggable, onDragStart, onDragEnd, onClick }
     )
 }
 
-function TaskFailDialog({ task, onCancel, onConfirm }) {
-    const [result, setResult] = useState("")
+function RescheduleDialog({ task, today, onCancel, onConfirm }) {
+    const min = taskLaterMinYmd(today)
+    const [ymd, setYmd] = useState(min)
     return (
-        <Modal open onClose={onCancel} title='Задача не выполнена'>
+        <Modal open onClose={onCancel} title='Перенести срок'>
             <form
                 onSubmit={e => {
                     e.preventDefault()
-                    if (!result.trim()) return
-                    onConfirm(result.trim())
+                    if (!ymd || ymd < min) return
+                    onConfirm(ymd)
                 }}
                 className='space-y-4'
             >
                 <p className='text-sm text-neutral-600'>
-                    Чтобы закрыть задачу «{task.title}» как «Не выполнена», укажите причину.
+                    На какую дату перенести задачу «{task.title}»? Задача сдвинется целиком —
+                    длительность и время сохранятся.
                 </p>
-                <textarea
-                    rows={4}
-                    value={result}
-                    onChange={e => setResult(e.target.value)}
-                    required
-                    autoFocus
-                    placeholder='Почему не получилось'
-                    className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
-                />
+                <Field label='Новый срок'>
+                    <Input
+                        type='date'
+                        value={ymd}
+                        min={min}
+                        onChange={e => setYmd(e.target.value)}
+                        required
+                        autoFocus
+                    />
+                </Field>
                 <div className='flex justify-end gap-2'>
                     <Button type='button' variant='secondary' onClick={onCancel}>
                         Отмена
                     </Button>
-                    <Button type='submit'>Закрыть задачу</Button>
+                    <Button type='submit'>Перенести</Button>
                 </div>
             </form>
         </Modal>

@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
-import { LuPlus, LuSearch, LuUsers } from "react-icons/lu"
+import { LuPlus, LuUsers } from "react-icons/lu"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import {
     Button,
@@ -10,8 +10,9 @@ import {
     CardRow,
     DataTable,
     EmptyState,
-    Field,
-    Input,
+    FilterBar,
+    FilterSearch,
+    FilterText,
     MobileCard,
 } from "@/components/crm/ui"
 import PhoneLink from "./PhoneLink"
@@ -46,11 +47,24 @@ export default function CounterpartyList({ type, newHref }) {
     const [q, setQ] = useState("")
     const [region, setRegion] = useState("")
 
+    // Запрос уходит после паузы в наборе, а не на каждый символ.
+    const [applied, setApplied] = useState({ q: "", region: "" })
+    useEffect(() => {
+        const t = setTimeout(() => {
+            const next = { q: q.trim(), region: region.trim() }
+            // Тот же объект — React не перерисует и лишнего запроса не будет.
+            setApplied(prev =>
+                prev.q === next.q && prev.region === next.region ? prev : next,
+            )
+        }, 300)
+        return () => clearTimeout(t)
+    }, [q, region])
+
     useEffect(() => {
         const controller = new AbortController()
         const params = new URLSearchParams({ type })
-        if (q.trim()) params.set("q", q.trim())
-        if (region.trim()) params.set("region", region.trim())
+        if (applied.q) params.set("q", applied.q)
+        if (applied.region) params.set("region", applied.region)
 
         setError("")
         fetch(`/api/crm/counterparties?${params.toString()}`, { signal: controller.signal })
@@ -68,7 +82,7 @@ export default function CounterpartyList({ type, newHref }) {
             })
 
         return () => controller.abort()
-    }, [type, q, region])
+    }, [type, applied])
 
     const columns = useMemo(
         () => [
@@ -145,23 +159,31 @@ export default function CounterpartyList({ type, newHref }) {
 
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm'>
-                <Field label='Поиск' className='flex-1 min-w-[220px]'>
-                    <Input
-                        icon={LuSearch}
-                        value={q}
-                        onChange={e => setQ(e.target.value)}
-                        placeholder='Название, ИНН, контактное лицо'
-                    />
-                </Field>
-                <Field label='Регион' className='min-w-[200px]'>
-                    <Input value={region} onChange={e => setRegion(e.target.value)} />
-                </Field>
-                <Button href={newHref}>
-                    <LuPlus className='h-4 w-4' />
-                    Добавить
-                </Button>
-            </div>
+            <FilterBar
+                canReset={Boolean(region)}
+                onReset={() => {
+                    setQ("")
+                    setRegion("")
+                }}
+                actions={
+                    <Button href={newHref} size='sm'>
+                        <LuPlus className='h-4 w-4' />
+                        Добавить
+                    </Button>
+                }
+            >
+                <FilterSearch
+                    value={q}
+                    onChange={setQ}
+                    placeholder='Название, ИНН, контактное лицо'
+                />
+                <FilterText
+                    label='Регион'
+                    value={region}
+                    onChange={setRegion}
+                    placeholder='Например, Москва'
+                />
+            </FilterBar>
 
             {error && (
                 <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>

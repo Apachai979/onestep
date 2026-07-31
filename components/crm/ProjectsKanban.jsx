@@ -1,14 +1,13 @@
 "use client"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { LuPlus, LuSearch } from "react-icons/lu"
 import {
     PROJECT_STATUSES,
     PROJECT_STATUS_COLORS,
     PROJECT_STATUS_LABELS,
 } from "@/lib/crm/project"
 import { formatMoney } from "@/lib/crm/format"
-import { Badge, Button, Field, Input, useToast } from "@/components/crm/ui"
+import { Badge, FilterBar, FilterSearch, useToast } from "@/components/crm/ui"
 import { PROJECT_LOCKED_STATUSES } from "@/lib/crm/access"
 import DealLossDialog from "./DealLossDialog"
 
@@ -152,20 +151,9 @@ export default function ProjectsKanban({ isAdmin = false }) {
 
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3'>
-                <Field label='Поиск' className='flex-1 min-w-[240px]'>
-                    <Input
-                        icon={LuSearch}
-                        value={q}
-                        onChange={e => setQ(e.target.value)}
-                        placeholder='Название, клиент'
-                    />
-                </Field>
-                <Button href='/crm/projects/new'>
-                    <LuPlus className='h-4 w-4' />
-                    Новый проект
-                </Button>
-            </div>
+            <FilterBar>
+                <FilterSearch value={q} onChange={setQ} placeholder='Название, клиент' />
+            </FilterBar>
 
             {error && <p className='text-sm text-red-600'>{error}</p>}
 

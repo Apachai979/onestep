@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
-import { LuSearch, LuTruck } from "react-icons/lu"
+import { LuTruck } from "react-icons/lu"
 import { dealDisplayTitle } from "@/lib/crm/deal"
 import {
     SHIPMENT_STATUSES,
@@ -19,10 +19,11 @@ import {
     CardRow,
     DataTable,
     EmptyState,
-    Field,
-    Input,
+    FilterBar,
+    FilterSearch,
+    FilterSelect,
+    FilterToggle,
     MobileCard,
-    Select,
 } from "@/components/crm/ui"
 
 function safeJson(text) {
@@ -81,10 +82,17 @@ export default function ShipmentsList() {
         }
     }
 
+    // Поиск отправляем на сервер после паузы в наборе, а не на каждый символ.
+    const [qDebounced, setQDebounced] = useState("")
+    useEffect(() => {
+        const t = setTimeout(() => setQDebounced(q.trim()), 350)
+        return () => clearTimeout(t)
+    }, [q])
+
     useEffect(() => {
         load()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [status])
+    }, [status, qDebounced])
 
     const filtered = useMemo(() => {
         if (!items) return null
@@ -197,40 +205,35 @@ export default function ShipmentsList() {
 
     return (
         <div className='space-y-4'>
-            <div className='grid gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm sm:grid-cols-4'>
-                <div className='sm:col-span-2'>
-                    <Field label='Поиск'>
-                        <Input
-                            icon={LuSearch}
-                            value={q}
-                            onChange={e => setQ(e.target.value)}
-                            onKeyDown={e => e.key === "Enter" && load()}
-                            placeholder='Номер, сделка, клиент, трек'
-                        />
-                    </Field>
-                </div>
-                <Field label='Статус'>
-                    <Select value={status} onChange={e => setStatus(e.target.value)}>
-                        <option value=''>Все</option>
-                        {SHIPMENT_STATUSES.map(s => (
-                            <option key={s} value={s}>
-                                {SHIPMENT_STATUS_LABELS[s]}
-                            </option>
-                        ))}
-                    </Select>
-                </Field>
-                <div className='flex items-end pb-2.5 text-xs'>
-                    <label className='inline-flex items-center gap-2 text-neutral-600'>
-                        <input
-                            type='checkbox'
-                            checked={onlyOverdue}
-                            onChange={e => setOnlyOverdue(e.target.checked)}
-                            className='h-4 w-4 rounded border-line text-brand_main focus:ring-brand_main/30'
-                        />
-                        Только просроченные
-                    </label>
-                </div>
-            </div>
+            <FilterBar
+                canReset={Boolean(status || onlyOverdue)}
+                onReset={() => {
+                    setQ("")
+                    setStatus("")
+                    setOnlyOverdue(false)
+                }}
+            >
+                <FilterSearch
+                    value={q}
+                    onChange={setQ}
+                    onEnter={load}
+                    placeholder='Номер, сделка, клиент, трек'
+                />
+                <FilterSelect
+                    label='Статус'
+                    value={status}
+                    onChange={setStatus}
+                    options={SHIPMENT_STATUSES.map(s => ({
+                        value: s,
+                        label: SHIPMENT_STATUS_LABELS[s],
+                    }))}
+                />
+                <FilterToggle
+                    label='Только просроченные'
+                    active={onlyOverdue}
+                    onChange={setOnlyOverdue}
+                />
+            </FilterBar>
 
             {error && (
                 <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>

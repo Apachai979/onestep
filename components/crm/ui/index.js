@@ -17,6 +17,15 @@ export { default as Input } from "./Input"
 export { default as Textarea } from "./Textarea"
 export { default as Select } from "./Select"
 export { default as MultiSelect } from "./MultiSelect"
+export {
+    default as FilterBar,
+    FilterSearch,
+    FilterSelect,
+    FilterMulti,
+    FilterPicker,
+    FilterText,
+    FilterToggle,
+} from "./FilterBar"
 export { default as FormSection } from "./FormSection"
 export { default as Card, CardHeader } from "./Card"
 export { default as StatCard } from "./StatCard"

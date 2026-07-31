@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
-import { LuPackage, LuPlus, LuRefreshCw, LuSearch } from "react-icons/lu"
+import { LuPackage, LuPlus, LuRefreshCw } from "react-icons/lu"
 import { formatMoney } from "@/lib/crm/format"
 import {
     Button,
@@ -10,10 +10,10 @@ import {
     CardRow,
     DataTable,
     EmptyState,
-    Field,
-    Input,
+    FilterBar,
+    FilterSearch,
+    FilterSelect,
     MobileCard,
-    Select,
     useToast,
 } from "@/components/crm/ui"
 
@@ -36,10 +36,17 @@ export default function ProductsList({ canManage = false }) {
     const [syncing, setSyncing] = useState(false)
     const [refreshTick, setRefreshTick] = useState(0)
 
+    // Запрос уходит после паузы в наборе, а не на каждый символ.
+    const [qApplied, setQApplied] = useState("")
+    useEffect(() => {
+        const t = setTimeout(() => setQApplied(q.trim()), 300)
+        return () => clearTimeout(t)
+    }, [q])
+
     useEffect(() => {
         const controller = new AbortController()
         const params = new URLSearchParams()
-        if (q.trim()) params.set("q", q.trim())
+        if (qApplied) params.set("q", qApplied)
         if (category) params.set("category", category)
 
         setError("")
@@ -59,7 +66,7 @@ export default function ProductsList({ canManage = false }) {
             })
 
         return () => controller.abort()
-    }, [q, category, refreshTick])
+    }, [qApplied, category, refreshTick])
 
     async function syncStock() {
         setSyncing(true)
@@ -157,42 +164,46 @@ export default function ProductsList({ canManage = false }) {
 
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm'>
-                <Field label='Поиск' className='flex-1 min-w-[220px]'>
-                    <Input
-                        icon={LuSearch}
-                        value={q}
-                        onChange={e => setQ(e.target.value)}
-                        placeholder='Артикул, наименование'
-                    />
-                </Field>
-                <Field label='Наименование' className='min-w-[260px]'>
-                    <Select value={category} onChange={e => setCategory(e.target.value)}>
-                        <option value=''>Все</option>
-                        {categories.map(c => (
-                            <option key={c} value={c}>
-                                {c}
-                            </option>
-                        ))}
-                    </Select>
-                </Field>
-                <Button
-                    type='button'
-                    variant='secondary'
-                    onClick={syncStock}
-                    loading={syncing}
-                    title='Загрузить остатки из 1С'
-                >
-                    <LuRefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-                    Обновить остатки
-                </Button>
-                {canManage && (
-                    <Button href='/crm/products/new'>
-                        <LuPlus className='h-4 w-4' />
-                        Добавить
-                    </Button>
-                )}
-            </div>
+            <FilterBar
+                canReset={Boolean(category)}
+                onReset={() => {
+                    setQ("")
+                    setCategory("")
+                }}
+                actions={
+                    <>
+                        <Button
+                            type='button'
+                            size='sm'
+                            variant='secondary'
+                            onClick={syncStock}
+                            loading={syncing}
+                            title='Загрузить остатки из 1С'
+                        >
+                            <LuRefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+                            Обновить остатки
+                        </Button>
+                        {canManage && (
+                            <Button href='/crm/products/new' size='sm'>
+                                <LuPlus className='h-4 w-4' />
+                                Добавить
+                            </Button>
+                        )}
+                    </>
+                }
+            >
+                <FilterSearch
+                    value={q}
+                    onChange={setQ}
+                    placeholder='Артикул, наименование'
+                />
+                <FilterSelect
+                    label='Категория'
+                    value={category}
+                    onChange={setCategory}
+                    options={categories.map(c => ({ value: c, label: c }))}
+                />
+            </FilterBar>
 
             {error && (
                 <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>

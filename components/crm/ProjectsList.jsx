@@ -7,23 +7,32 @@ import {
     PROJECT_STATUS_LABELS,
     PROJECT_STATUSES,
 } from "@/lib/crm/project"
-import { LuTarget, LuPlus } from "react-icons/lu"
+import { LuTarget } from "react-icons/lu"
 import { formatMoney } from "@/lib/crm/format"
-import SearchableSelect from "./SearchableSelect"
 import {
     Badge,
-    Button,
     CardListSkeleton,
     CardRow,
     DataTable,
     EmptyState,
-    Field,
-    Input,
+    FilterBar,
+    FilterMulti,
+    FilterPicker,
+    FilterSearch,
+    FilterText,
     MobileCard,
-    MultiSelect,
 } from "@/components/crm/ui"
 
 const STATUS_CLASS = PROJECT_STATUS_COLORS
+
+const EMPTY_FILTERS = {
+    q: "",
+    status: [],
+    region: "",
+    distributorId: "",
+    customerId: "",
+    managerId: "",
+}
 
 function fullName(u) {
     if (!u) return "—"
@@ -39,14 +48,7 @@ export default function ProjectsList() {
     const router = useRouter()
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
-    const [filters, setFilters] = useState({
-        q: "",
-        status: [],
-        region: "",
-        distributorId: "",
-        customerId: "",
-        managerId: "",
-    })
+    const [filters, setFilters] = useState(EMPTY_FILTERS)
     const [refs, setRefs] = useState({ distributors: [], customers: [], managers: [] })
 
     useEffect(() => {
@@ -63,10 +65,18 @@ export default function ProjectsList() {
         )
     }, [])
 
+    // Запрос идёт не на каждый символ: ждём паузы в наборе.
+    // Идентичный объект React отбрасывает, так что лишнего запроса на монтировании нет.
+    const [applied, setApplied] = useState(filters)
+    useEffect(() => {
+        const t = setTimeout(() => setApplied(filters), 300)
+        return () => clearTimeout(t)
+    }, [filters])
+
     useEffect(() => {
         const controller = new AbortController()
         const params = new URLSearchParams()
-        for (const [k, v] of Object.entries(filters)) {
+        for (const [k, v] of Object.entries(applied)) {
             // status — массив выбранных статусов, остальные фильтры строковые.
             if (Array.isArray(v)) {
                 if (v.length) params.set(k, v.join(","))
@@ -89,15 +99,16 @@ export default function ProjectsList() {
             })
 
         return () => controller.abort()
-    }, [filters])
-
-    function set(field) {
-        return e => setFilters(prev => ({ ...prev, [field]: e.target.value }))
-    }
+    }, [applied])
 
     function setId(field) {
         return id => setFilters(prev => ({ ...prev, [field]: id }))
     }
+
+    // Поиск в счёт не идёт — у поля есть собственный крестик.
+    const activeCount = Object.entries(filters).filter(([k, v]) =>
+        k === "q" ? false : Array.isArray(v) ? v.length : Boolean(v),
+    ).length
 
     const statusOptions = useMemo(
         () => PROJECT_STATUSES.map(s => ({ value: s, label: PROJECT_STATUS_LABELS[s] })),
@@ -217,51 +228,52 @@ export default function ProjectsList() {
 
     return (
         <div className='space-y-4'>
-            <div className='grid gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4'>
-                <Field label='Поиск'>
-                    <Input value={filters.q} onChange={set("q")} placeholder='Название, клиент' />
-                </Field>
-                <MultiSelect
+            <FilterBar
+                canReset={activeCount > 0}
+                onReset={() => setFilters(EMPTY_FILTERS)}
+            >
+                <FilterSearch
+                    value={filters.q}
+                    onChange={q => setFilters(prev => ({ ...prev, q }))}
+                    placeholder='Название, клиент'
+                />
+                <FilterMulti
                     label='Статус'
                     value={filters.status}
                     onChange={status => setFilters(prev => ({ ...prev, status }))}
                     options={statusOptions}
                 />
-                <Field label='Регион'>
-                    <Input value={filters.region} onChange={set("region")} />
-                </Field>
-                <Field label='Менеджер'>
-                    <SearchableSelect
-                        value={filters.managerId}
-                        onChange={setId("managerId")}
-                        options={managerOptions}
-                        placeholder='Все'
-                    />
-                </Field>
-                <Field label='Дистрибьютор'>
-                    <SearchableSelect
-                        value={filters.distributorId}
-                        onChange={setId("distributorId")}
-                        options={distributorOptions}
-                        placeholder='Все'
-                    />
-                </Field>
-                <Field label='Конечный потребитель'>
-                    <SearchableSelect
-                        value={filters.customerId}
-                        onChange={setId("customerId")}
-                        options={customerOptions}
-                        placeholder='Все'
-                    />
-                </Field>
-            </div>
-
-            <div className='flex justify-end'>
-                <Button href='/crm/projects/new'>
-                    <LuPlus className='h-4 w-4' />
-                    Новый проект
-                </Button>
-            </div>
+                <FilterPicker
+                    label='Потребитель'
+                    value={filters.customerId}
+                    onChange={setId("customerId")}
+                    options={customerOptions}
+                    searchPlaceholder='Название или ИНН'
+                    emptyLabel='Клиент не найден'
+                />
+                <FilterPicker
+                    label='Дистрибьютор'
+                    value={filters.distributorId}
+                    onChange={setId("distributorId")}
+                    options={distributorOptions}
+                    searchPlaceholder='Название или ИНН'
+                    emptyLabel='Дистрибьютор не найден'
+                />
+                <FilterPicker
+                    label='Менеджер'
+                    value={filters.managerId}
+                    onChange={setId("managerId")}
+                    options={managerOptions}
+                    searchPlaceholder='Имя или email'
+                    emptyLabel='Сотрудник не найден'
+                />
+                <FilterText
+                    label='Регион'
+                    value={filters.region}
+                    onChange={region => setFilters(prev => ({ ...prev, region }))}
+                    placeholder='Например, Москва'
+                />
+            </FilterBar>
 
             {error && (
                 <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>

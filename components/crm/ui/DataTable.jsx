@@ -163,10 +163,14 @@ export default function DataTable({
                             <button
                                 type='button'
                                 onClick={() => setColMenu(o => !o)}
-                                className='inline-flex h-9 items-center gap-1.5 rounded-xl border border-line bg-white px-3 text-sm text-neutral-600 shadow-sm transition-colors hover:bg-surface_muted'
+                                className={`inline-flex h-8 items-center gap-1 rounded-lg border px-2 text-xs transition-colors ${
+                                    colMenu
+                                        ? "border-neutral-300 bg-surface_muted text-neutral-900"
+                                        : "border-line bg-white text-neutral-500 hover:border-neutral-300 hover:text-neutral-900"
+                                }`}
                                 aria-label='Колонки'
                             >
-                                <LuSettings2 className='h-4 w-4' />
+                                <LuSettings2 className='h-3.5 w-3.5' />
                                 <span className='hidden sm:inline'>Колонки</span>
                             </button>
                             {colMenu && (

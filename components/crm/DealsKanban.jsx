@@ -1,7 +1,6 @@
 "use client"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { LuPlus, LuSearch } from "react-icons/lu"
 import {
     DEAL_STATUSES,
     DEAL_STATUS_COLORS,
@@ -27,7 +26,7 @@ const COLUMN_ACCENT = {
 }
 import { calculateDealShipmentProgress, isShipmentOverdue } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
-import { Button, Field, Input, useToast } from "@/components/crm/ui"
+import { FilterBar, FilterSearch, useToast } from "@/components/crm/ui"
 import { DEAL_LOCKED_STATUSES } from "@/lib/crm/access"
 import DealLossDialog from "./DealLossDialog"
 
@@ -160,20 +159,13 @@ export default function DealsKanban({ isAdmin = false }) {
 
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3'>
-                <Field label='Поиск' className='flex-1 min-w-[240px]'>
-                    <Input
-                        icon={LuSearch}
-                        value={q}
-                        onChange={e => setQ(e.target.value)}
-                        placeholder='Название сделки или клиента'
-                    />
-                </Field>
-                <Button href='/crm/deals/new'>
-                    <LuPlus className='h-4 w-4' />
-                    Новая сделка
-                </Button>
-            </div>
+            <FilterBar>
+                <FilterSearch
+                    value={q}
+                    onChange={setQ}
+                    placeholder='Название сделки или клиента'
+                />
+            </FilterBar>
 
             {error && <p className='text-sm text-red-600'>{error}</p>}
 

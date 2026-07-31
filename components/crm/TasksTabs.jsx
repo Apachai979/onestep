@@ -44,7 +44,7 @@ export default function TasksTabs({ currentUserId, currentUserRole }) {
                         </button>
                     ))}
                 </div>
-                <Button type='button' onClick={() => openCreate(null)}>
+                <Button type='button' size='sm' onClick={() => openCreate(null)}>
                     Новая задача
                 </Button>
             </div>

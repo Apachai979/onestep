@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
-import { LuPlus, LuSearch, LuContact } from "react-icons/lu"
+import { LuPlus, LuContact } from "react-icons/lu"
 import {
     Badge,
     Button,
@@ -10,7 +10,8 @@ import {
     CardRow,
     DataTable,
     EmptyState,
-    Field as UiField,
+    FilterBar,
+    FilterSearch,
     Input,
     MobileCard,
     useToast,
@@ -60,11 +61,18 @@ export default function ContactsDirectory() {
     const [saving, setSaving] = useState(false)
     const [formError, setFormError] = useState("")
 
+    // Запрос уходит после паузы в наборе, а не на каждый символ.
+    const [qApplied, setQApplied] = useState("")
+    useEffect(() => {
+        const t = setTimeout(() => setQApplied(q.trim()), 300)
+        return () => clearTimeout(t)
+    }, [q])
+
     // список контактов + поиск
     useEffect(() => {
         const controller = new AbortController()
         const params = new URLSearchParams()
-        if (q.trim()) params.set("q", q.trim())
+        if (qApplied) params.set("q", qApplied)
         setError("")
         fetch(`/api/crm/contacts?${params.toString()}`, { signal: controller.signal })
             .then(async r => {
@@ -80,7 +88,7 @@ export default function ContactsDirectory() {
                 setItems([])
             })
         return () => controller.abort()
-    }, [q])
+    }, [qApplied])
 
     // контрагенты для привязки
     useEffect(() => {
@@ -224,22 +232,22 @@ export default function ContactsDirectory() {
 
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm'>
-                <UiField label='Поиск' className='min-w-[220px] flex-1'>
-                    <Input
-                        icon={LuSearch}
-                        value={q}
-                        onChange={e => setQ(e.target.value)}
-                        placeholder='Имя, телефон, email, должность, контрагент'
-                    />
-                </UiField>
-                {!showForm && (
-                    <Button type='button' onClick={openForm}>
-                        <LuPlus className='h-4 w-4' />
-                        Добавить контакт
-                    </Button>
-                )}
-            </div>
+            <FilterBar
+                actions={
+                    !showForm && (
+                        <Button type='button' size='sm' onClick={openForm}>
+                            <LuPlus className='h-4 w-4' />
+                            Добавить контакт
+                        </Button>
+                    )
+                }
+            >
+                <FilterSearch
+                    value={q}
+                    onChange={setQ}
+                    placeholder='Имя, телефон, email, должность, контрагент'
+                />
+            </FilterBar>
 
             {showForm && (
                 <form

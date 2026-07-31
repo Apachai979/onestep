@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
-import { LuBriefcase, LuSearch } from "react-icons/lu"
+import { LuBriefcase } from "react-icons/lu"
 import {
     DEAL_STATUSES,
     DEAL_STATUS_COLORS,
@@ -11,20 +11,28 @@ import {
     dealDiscountedTotal,
 } from "@/lib/crm/deal"
 import { formatMoney } from "@/lib/crm/format"
-import SearchableSelect from "./SearchableSelect"
 import {
     Badge,
-    Button,
     CardListSkeleton,
     CardRow,
     DataTable,
     EmptyState,
-    Field,
-    Input,
+    FilterBar,
+    FilterMulti,
+    FilterPicker,
+    FilterSearch,
+    FilterSelect,
+    FilterToggle,
     MobileCard,
-    MultiSelect,
-    Select,
 } from "@/components/crm/ui"
+
+const EMPTY_FILTERS = {
+    status: [],
+    counterpartyId: "",
+    managerId: "",
+    isAuction: "",
+    q: "",
+}
 
 function safeJson(text) {
     try {
@@ -56,13 +64,7 @@ export default function DealsList({ currentUserId }) {
     const router = useRouter()
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
-    const [filters, setFilters] = useState({
-        status: [],
-        counterpartyId: "",
-        managerId: "",
-        isAuction: "",
-        q: "",
-    })
+    const [filters, setFilters] = useState(EMPTY_FILTERS)
     const [counterparties, setCounterparties] = useState([])
     const [managers, setManagers] = useState([])
 
@@ -102,10 +104,24 @@ export default function DealsList({ currentUserId }) {
     // Статус — массив, сравниваем по строковому ключу, а не по ссылке.
     const statusKey = filters.status.join(",")
 
+    // Строку поиска не дёргаем на каждый символ — ждём паузы в наборе.
+    const [qDebounced, setQDebounced] = useState("")
+    useEffect(() => {
+        const t = setTimeout(() => setQDebounced(filters.q.trim()), 350)
+        return () => clearTimeout(t)
+    }, [filters.q])
+
     useEffect(() => {
         load()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [statusKey, filters.counterpartyId, filters.managerId, filters.isAuction])
+    }, [statusKey, filters.counterpartyId, filters.managerId, filters.isAuction, qDebounced])
+
+    // Поиск в счёт не идёт — у поля есть собственный крестик.
+    const activeCount =
+        filters.status.length +
+        (filters.counterpartyId ? 1 : 0) +
+        (filters.managerId ? 1 : 0) +
+        (filters.isAuction ? 1 : 0)
 
     const statusOptions = useMemo(
         () => DEAL_STATUSES.map(s => ({ value: s, label: DEAL_STATUS_LABELS[s] })),
@@ -228,75 +244,57 @@ export default function DealsList({ currentUserId }) {
 
     return (
         <div className='space-y-4'>
-            {/* Фильтры */}
-            <div className='grid gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm sm:grid-cols-4'>
-                <div className='sm:col-span-2'>
-                    <Field label='Поиск'>
-                        <Input
-                            icon={LuSearch}
-                            value={filters.q}
-                            onChange={e => setFilters(p => ({ ...p, q: e.target.value }))}
-                            onKeyDown={e => e.key === "Enter" && load()}
-                            placeholder='Название сделки или клиента'
-                        />
-                    </Field>
-                </div>
-                <MultiSelect
+            <FilterBar
+                canReset={activeCount > 0}
+                onReset={() => setFilters(EMPTY_FILTERS)}
+            >
+                <FilterSearch
+                    value={filters.q}
+                    onChange={q => setFilters(p => ({ ...p, q }))}
+                    onEnter={load}
+                    placeholder='Название сделки или клиента'
+                />
+                <FilterMulti
                     label='Статус'
                     value={filters.status}
                     onChange={status => setFilters(p => ({ ...p, status }))}
                     options={statusOptions}
                 />
-                <Select
+                <FilterPicker
+                    label='Клиент'
+                    value={filters.counterpartyId}
+                    onChange={id => setFilters(p => ({ ...p, counterpartyId: id }))}
+                    options={counterpartyOptions}
+                    searchPlaceholder='Название или ИНН'
+                    emptyLabel='Клиент не найден'
+                />
+                <FilterPicker
+                    label='Менеджер'
+                    value={filters.managerId}
+                    onChange={id => setFilters(p => ({ ...p, managerId: id }))}
+                    options={managerOptions}
+                    searchPlaceholder='Имя или email'
+                    emptyLabel='Сотрудник не найден'
+                />
+                <FilterSelect
                     label='Тип'
                     value={filters.isAuction}
-                    onChange={e => setFilters(p => ({ ...p, isAuction: e.target.value }))}
-                >
-                    <option value=''>Все</option>
-                    <option value='true'>Только аукционы</option>
-                    <option value='false'>Без аукционов</option>
-                </Select>
-                <div className='flex items-end'>
-                    {currentUserId && (
-                        <Button
-                            type='button'
-                            variant={filters.managerId === currentUserId ? "primary" : "secondary"}
-                            className='w-full'
-                            onClick={() =>
-                                setFilters(p => ({
-                                    ...p,
-                                    managerId:
-                                        p.managerId === currentUserId ? "" : currentUserId,
-                                }))
-                            }
-                        >
-                            Только мои
-                        </Button>
-                    )}
-                </div>
-                <div className='sm:col-span-2'>
-                    <Field label='Клиент'>
-                        <SearchableSelect
-                            value={filters.counterpartyId}
-                            onChange={id => setFilters(p => ({ ...p, counterpartyId: id }))}
-                            placeholder='Все'
-                            emptyLabel='Клиент не найден'
-                            options={counterpartyOptions}
-                        />
-                    </Field>
-                </div>
-                <div className='sm:col-span-2'>
-                    <Field label='Менеджер'>
-                        <SearchableSelect
-                            value={filters.managerId}
-                            onChange={id => setFilters(p => ({ ...p, managerId: id }))}
-                            placeholder='Все'
-                            emptyLabel='Сотрудник не найден'
-                            options={managerOptions}
-                        />
-                    </Field>
-                </div>
-            </div>
+                    onChange={v => setFilters(p => ({ ...p, isAuction: v }))}
+                    options={[
+                        { value: "true", label: "Только аукционы" },
+                        { value: "false", label: "Без аукционов" },
+                    ]}
+                />
+                {currentUserId && (
+                    <FilterToggle
+                        label='Только мои'
+                        active={filters.managerId === currentUserId}
+                        onChange={on =>
+                            setFilters(p => ({ ...p, managerId: on ? currentUserId : "" }))
+                        }
+                    />
+                )}
+            </FilterBar>
 
             {error && (
                 <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>

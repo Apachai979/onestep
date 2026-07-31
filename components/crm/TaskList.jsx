@@ -15,20 +15,23 @@ import {
 } from "@/lib/crm/task"
 import { crmToday } from "@/lib/crm/datetime"
 import { onTasksChanged } from "@/lib/crm/tasks-events"
-import SearchableSelect from "./SearchableSelect"
 import { TaskTypeBadge } from "./TaskTypeIcon"
 import TaskCloseModal from "./TaskCloseModal"
 import {
     Badge,
-    Button,
     CardListSkeleton,
     CardRow,
     DataTable,
     EmptyState,
-    Field,
+    FilterBar,
+    FilterPicker,
+    FilterSelect,
+    FilterToggle,
     MobileCard,
-    Select,
 } from "@/components/crm/ui"
+
+// Дефолт списка задач — открытые: сброс возвращает именно его, а не «все».
+const DEFAULT_FILTERS = { status: "OPEN", type: "", assigneeId: "" }
 
 function safeJson(text) {
     try {
@@ -72,11 +75,7 @@ export default function TaskList({ currentUserId, currentUserRole }) {
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
     const [closing, setClosing] = useState(null)
-    const [filters, setFilters] = useState({
-        status: "OPEN",
-        type: "",
-        assigneeId: "",
-    })
+    const [filters, setFilters] = useState(DEFAULT_FILTERS)
     const [todayOnly, setTodayOnly] = useState(false)
     const [users, setUsers] = useState([])
 
@@ -213,75 +212,63 @@ export default function TaskList({ currentUserId, currentUserRole }) {
 
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm'>
-                <Field label='Статус' className='flex-1 min-w-[180px]'>
-                    <Select
-                        value={filters.status}
-                        onChange={e =>
-                            setFilters(prev => ({ ...prev, status: e.target.value }))
-                        }
-                    >
-                        <option value=''>Все</option>
-                        {TASK_STATUSES.map(s => (
-                            <option key={s} value={s}>
-                                {TASK_STATUS_LABELS[s]}
-                            </option>
-                        ))}
-                    </Select>
-                </Field>
-                <Field label='Тип' className='flex-1 min-w-[180px]'>
-                    <Select
-                        value={filters.type}
-                        onChange={e =>
-                            setFilters(prev => ({ ...prev, type: e.target.value }))
-                        }
-                    >
-                        <option value=''>Все</option>
-                        {TASK_TYPES.map(t => (
-                            <option key={t.key} value={t.key}>
-                                {t.label}
-                            </option>
-                        ))}
-                    </Select>
-                </Field>
-                <Field label='Ответственный' className='flex-1 min-w-[220px]'>
-                    <SearchableSelect
-                        value={filters.assigneeId}
-                        onChange={id =>
-                            setFilters(prev => ({ ...prev, assigneeId: id }))
-                        }
-                        options={assigneeOptions}
-                        placeholder='Все'
-                        emptyLabel='Сотрудник не найден'
-                    />
-                </Field>
+            <FilterBar
+                canReset={
+                    filters.status !== DEFAULT_FILTERS.status ||
+                    Boolean(filters.type) ||
+                    Boolean(filters.assigneeId) ||
+                    todayOnly
+                }
+                onReset={() => {
+                    setFilters(DEFAULT_FILTERS)
+                    setTodayOnly(false)
+                }}
+            >
+                <FilterSelect
+                    label='Статус'
+                    value={filters.status}
+                    onChange={status => setFilters(prev => ({ ...prev, status }))}
+                    options={TASK_STATUSES.map(s => ({
+                        value: s,
+                        label: TASK_STATUS_LABELS[s],
+                    }))}
+                />
+                <FilterSelect
+                    label='Тип'
+                    value={filters.type}
+                    onChange={type => setFilters(prev => ({ ...prev, type }))}
+                    options={TASK_TYPES.map(t => ({ value: t.key, label: t.label }))}
+                />
+                <FilterPicker
+                    label='Ответственный'
+                    value={filters.assigneeId}
+                    onChange={id => setFilters(prev => ({ ...prev, assigneeId: id }))}
+                    options={assigneeOptions}
+                    searchPlaceholder='Имя или email'
+                    emptyLabel='Сотрудник не найден'
+                />
                 {currentUserId && (
-                    <Button
-                        type='button'
-                        variant={filters.assigneeId === currentUserId ? "primary" : "secondary"}
+                    <FilterToggle
+                        label='Только мои'
                         title='Показать только мои задачи'
-                        onClick={() =>
+                        active={filters.assigneeId === currentUserId}
+                        onChange={on =>
                             setFilters(prev => ({
                                 ...prev,
-                                assigneeId:
-                                    prev.assigneeId === currentUserId ? "" : currentUserId,
+                                assigneeId: on ? currentUserId : "",
                             }))
                         }
-                    >
-                        Только мои
-                    </Button>
+                    />
                 )}
                 {currentUserId && (
-                    <Button
-                        type='button'
-                        variant={todayOnly ? "primary" : "secondary"}
+                    <FilterToggle
+                        label='На сегодня'
                         title='Мои задачи на сегодня'
-                        onClick={() => setTodayOnly(prev => !prev)}
-                    >
-                        На сегодня
-                    </Button>
+                        active={todayOnly}
+                        onChange={setTodayOnly}
+                    />
                 )}
-            </div>
+            </FilterBar>
 
             {error && (
                 <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>

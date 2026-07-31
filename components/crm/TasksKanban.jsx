@@ -1,7 +1,6 @@
 "use client"
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { LuSearch } from "react-icons/lu"
 import {
     TASK_BUCKETS,
     TASK_BUCKET_LABELS,
@@ -19,8 +18,17 @@ import { notifyTasksChanged, onTasksChanged } from "@/lib/crm/tasks-events"
 import { dealDisplayTitle } from "@/lib/crm/deal"
 import { TaskTypeBadge } from "./TaskTypeIcon"
 import TaskCloseModal from "./TaskCloseModal"
-import SearchableSelect from "./SearchableSelect"
-import { Button, Field, Input, Modal, useToast } from "@/components/crm/ui"
+import {
+    Button,
+    Field,
+    FilterBar,
+    FilterPicker,
+    FilterSearch,
+    FilterToggle,
+    Input,
+    Modal,
+    useToast,
+} from "@/components/crm/ui"
 
 const COLUMN_ACCENT = {
     overdue: "bg-red-400/80",
@@ -242,39 +250,35 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
 
     return (
         <div className='space-y-4'>
-            <div className='flex flex-wrap items-end gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm'>
-                <Field label='Поиск' className='flex-1 min-w-[220px]'>
-                    <Input
-                        icon={LuSearch}
-                        value={q}
-                        onChange={e => setQ(e.target.value)}
-                        placeholder='Заголовок или описание'
-                    />
-                </Field>
-                <Field label='Ответственный' className='flex-1 min-w-[220px]'>
-                    <SearchableSelect
-                        value={assigneeId}
-                        onChange={setAssigneeId}
-                        options={assigneeOptions}
-                        placeholder='Все'
-                        emptyLabel='Сотрудник не найден'
-                    />
-                </Field>
+            <FilterBar
+                canReset={Boolean(assigneeId)}
+                onReset={() => {
+                    setQ("")
+                    setAssigneeId("")
+                }}
+            >
+                <FilterSearch
+                    value={q}
+                    onChange={setQ}
+                    placeholder='Заголовок или описание'
+                />
+                <FilterPicker
+                    label='Ответственный'
+                    value={assigneeId}
+                    onChange={setAssigneeId}
+                    options={assigneeOptions}
+                    searchPlaceholder='Имя или email'
+                    emptyLabel='Сотрудник не найден'
+                />
                 {currentUserId && (
-                    <Button
-                        type='button'
-                        variant={assigneeId === currentUserId ? "primary" : "secondary"}
+                    <FilterToggle
+                        label='Только мои'
                         title='Показать только мои задачи'
-                        onClick={() =>
-                            setAssigneeId(prev =>
-                                prev === currentUserId ? "" : currentUserId,
-                            )
-                        }
-                    >
-                        Только мои
-                    </Button>
+                        active={assigneeId === currentUserId}
+                        onChange={on => setAssigneeId(on ? currentUserId : "")}
+                    />
                 )}
-            </div>
+            </FilterBar>
 
             {error && (
                 <p className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>

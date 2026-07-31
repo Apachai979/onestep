@@ -1,11 +1,7 @@
-import { Inter, Noto_Sans } from "next/font/google"
+import { Noto_Sans } from "next/font/google"
 import "./globals.css"
-import TheHeader from "@/components/TheHeader"
-import TheFooter from "@/components/TheFooter"
 import Providers from "@/components/Providers"
-import HideOnCrm from "@/components/HideOnCrm"
 
-const inter = Inter({ subsets: ["latin"] })
 const notoSans = Noto_Sans({
     subsets: ["cyrillic"],
     weight: ["300", "400", "500", "600", "700", "800"],
@@ -34,23 +30,16 @@ export const viewport = {
     themeColor: "#133531",
 }
 
-export default function Layout({ children, modal }) {
+// Корневой layout держит только общий каркас документа: шрифты, стили, SessionProvider.
+// Разметка сайта живёт в app/(site)/layout.jsx, разметка CRM — в app/crm/layout.jsx.
+export default function Layout({ children }) {
     return (
         <Providers>
-            <html lang='en' className="">
+            <html lang='ru'>
                 <body
                     className={`${notoSans.className} max-w-sm min-h-screen bg-body_bg text-night_green min-w-full antialiased overflow-visible`}
                 >
-                    <HideOnCrm>
-                        <TheHeader />
-                    </HideOnCrm>
-                    <main className='grid grid-cols-1 '>
-                        {children}
-                        {modal}
-                    </main>
-                    <HideOnCrm>
-                        <TheFooter />
-                    </HideOnCrm>
+                    {children}
                 </body>
             </html>
         </Providers>

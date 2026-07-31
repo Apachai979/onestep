@@ -25,11 +25,13 @@ Deployment is PM2-based via [ecosystem.config.js](ecosystem.config.js) (`pm2 dep
 
 ### Routing (App Router)
 
-- [app/layout.js](app/layout.js) wraps everything in `<Providers>` (NextAuth `SessionProvider`) and renders `TheHeader` / `TheFooter`. It accepts both `children` and a `modal` slot.
-- **Parallel route `@modal`** ([app/@modal/](app/@modal/)) is the modal slot. [app/@modal/default.jsx](app/@modal/default.jsx) returns `null` so the slot is empty on most routes.
-- **Intercepting route** [app/@modal/(.)feedbackform/page.jsx](app/@modal/(.)feedbackform/page.jsx) intercepts navigation to `/feedbackform` and renders it as a modal over the current page, while a direct visit to [app/feedbackform/](app/feedbackform/) renders the full page.
+- **Сайт и CRM разделены route group'ами.** Публичный сайт живёт в [app/(site)/](app/%28site%29/), CRM — в [app/crm/](app/crm/). Скобки в имени `(site)` не попадают в URL: `app/(site)/about/page.jsx` — это `/about`. Новый раздел кладите в `(site)` только если ему нужны шапка и подвал сайта.
+- [app/layout.js](app/layout.js) — корневой layout, держит только каркас документа: `<html>`/`<body>`, шрифты, `globals.css` и `<Providers>` (NextAuth `SessionProvider`). Шапки/подвала здесь нет.
+- [app/(site)/layout.jsx](app/%28site%29/layout.jsx) рендерит `TheHeader` / `TheFooter` и принимает `children` + слот `modal`. [app/crm/layout.jsx](app/crm/layout.jsx) проверяет сессию и роль (`MANAGER`/`ADMIN`) и оборачивает всё в `CrmShell`. `/maintenance` лежит вне обеих групп и рендерится без обвязки.
+- **Parallel route `@modal`** ([app/(site)/@modal/](app/%28site%29/@modal/)) — слот модалок сайта, подключён к layout группы `(site)`. [default.jsx](app/%28site%29/@modal/default.jsx) возвращает `null`, поэтому на большинстве роутов слот пуст.
+- **Intercepting route** [app/(site)/@modal/(.)feedbackform/page.jsx](app/%28site%29/@modal/%28.%29feedbackform/page.jsx) перехватывает переход на `/feedbackform` и показывает форму модалкой поверх текущей страницы; прямой заход по URL отдаёт полную страницу из [app/(site)/feedbackform/](app/%28site%29/feedbackform/). Такая же пара есть в [app/(site)/partners/doctors/](app/%28site%29/partners/doctors/). Токен `(.)` резолвится относительно уровня внутри группы — при переносе роутов слот и его цель должны ехать вместе.
 - Catalog detail pages use `generateStaticParams` driven by the local JSON dataset (see below), not the database.
-- **Публичный сайт сейчас скрыт.** [middleware.ts](middleware.ts) редиректит всё, кроме `/crm`, `/authorize`, `/register`, `/api/*` и статики, на заглушку [app/maintenance/page.jsx](app/maintenance/page.jsx). Страницы сайта остаются в коде и билдятся. Чтобы вернуть сайт — задать `SITE_HIDDEN=false` в окружении (или снять флаг в middleware). Шапка и подвал не рендерятся на `/crm` и `/maintenance` — см. [components/HideOnCrm.jsx](components/HideOnCrm.jsx).
+- **Публичный сайт сейчас скрыт.** [middleware.ts](middleware.ts) редиректит всё, кроме `/crm`, `/authorize`, `/register`, `/api/*` и статики, на заглушку [app/maintenance/page.jsx](app/maintenance/page.jsx). Страницы сайта остаются в коде и билдятся. Чтобы вернуть сайт — задать `SITE_HIDDEN=false` в окружении (или снять флаг в middleware).
 
 ### Data layers — two parallel sources
 

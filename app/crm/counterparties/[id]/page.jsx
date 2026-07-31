@@ -271,7 +271,7 @@ export default async function CounterpartyPage({ params }) {
 
                     <section className='rounded-xl border border-line bg-white p-4'>
                         <h2 className='mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-500'>
-                            Связи{projects.length > 0 ? ` · ${projects.length}` : ""}
+                            Проекты{projects.length > 0 ? ` · ${projects.length}` : ""}
                         </h2>
                         {projects.length === 0 ? (
                             <p className='text-sm text-neutral-400'>Проектов пока нет.</p>

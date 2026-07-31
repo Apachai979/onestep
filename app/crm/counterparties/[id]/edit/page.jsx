@@ -10,6 +10,13 @@ export default async function EditCounterpartyPage({ params }) {
     const item = await prisma.counterparty.findUnique({ where: { id: params.id } })
     if (!item) notFound()
 
+    // Decimal не сериализуется в клиентский компонент — приводим к строке.
+    const initial = {
+        ...item,
+        totalRevenue: item.totalRevenue != null ? item.totalRevenue.toString() : "",
+        discount: item.discount != null ? item.discount.toString() : "",
+    }
+
     return (
         <div className='max-w-3xl space-y-4'>
             <CrmBackLink
@@ -25,7 +32,7 @@ export default async function EditCounterpartyPage({ params }) {
                     Редактирование
                 </h1>
             </div>
-            <CounterpartyForm type={item.type} mode='edit' initial={item} />
+            <CounterpartyForm type={item.type} mode='edit' initial={initial} />
         </div>
     )
 }

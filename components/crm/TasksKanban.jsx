@@ -305,7 +305,11 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
                         <div
                             key={bucket}
                             onDragOver={onDragOver(bucket)}
-                            onDragLeave={() => setDragOver(null)}
+                            onDragLeave={e => {
+                                // Переход на дочерний элемент — тоже dragleave, но колонку мы не покинули.
+                                if (e.currentTarget.contains(e.relatedTarget)) return
+                                setDragOver(null)
+                            }}
                             onDrop={onDrop(bucket)}
                             className={`flex w-[290px] shrink-0 flex-col overflow-hidden rounded-2xl border bg-surface_muted transition-shadow ${
                                 dragOver === bucket
@@ -405,6 +409,8 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
     )
 }
 
+// select-none на карточке обязателен: иначе зажатие на тексте (заголовок, описание)
+// уводит браузер в выделение текста и перетаскивание не стартует.
 function TaskCard({ task, dragging, pending, draggable, onDragStart, onDragEnd, onClick }) {
     const rel = relationLink(task)
     const dueHint = taskDueRelativeLabel(task)
@@ -422,7 +428,7 @@ function TaskCard({ task, dragging, pending, draggable, onDragStart, onDragEnd, 
                     onClick()
                 }
             }}
-            className={`block rounded-xl border bg-white p-3 text-sm shadow-sm transition-all duration-200 hover:border-line_strong hover:shadow-md ${
+            className={`block select-none rounded-xl border bg-white p-3 text-sm shadow-sm transition-all duration-200 hover:border-line_strong hover:shadow-md ${
                 draggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
             } ${dragging || pending ? "opacity-50" : "border-line"}`}
         >
@@ -444,6 +450,7 @@ function TaskCard({ task, dragging, pending, draggable, onDragStart, onDragEnd, 
                 {rel && (
                     <Link
                         href={rel.href}
+                        draggable={false}
                         onClick={e => e.stopPropagation()}
                         className='max-w-[45%] truncate text-neutral-700 underline decoration-neutral-300 underline-offset-2 hover:text-brand_main'
                     >

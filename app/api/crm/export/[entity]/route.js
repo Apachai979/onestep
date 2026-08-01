@@ -13,6 +13,7 @@ import {
     COUNTERPARTY_TYPE_LABELS,
 } from "@/lib/crm/counterparty"
 import { PROJECT_LOSS_REASON_LABELS, PROJECT_STATUS_LABELS } from "@/lib/crm/project"
+import { closedRevenueByCounterparty } from "@/lib/crm/revenue"
 import { fmtDate, fmtDateTime, xlsxResponse } from "@/lib/crm/excel"
 
 function num(v) {
@@ -45,6 +46,10 @@ async function exportCounterparties(wb) {
             manager: { select: { email: true } },
         },
     })
+    const revenue = await closedRevenueByCounterparty(
+        prisma,
+        items.map(c => c.id),
+    )
     const ws = wb.addWorksheet("Контрагенты")
     setupSheet(ws, [
         { header: "№", key: "n", width: 6 },
@@ -66,6 +71,7 @@ async function exportCounterparties(wb) {
         { header: "Тип компании", key: "companyKind", width: 28 },
         { header: "Сфера деятельности", key: "activityArea", width: 26 },
         { header: "Бюджет", key: "totalRevenue", width: 14 },
+        { header: "Оборот (закрытые сделки)", key: "closedRevenue", width: 22 },
         { header: "Скидка %", key: "discount", width: 10 },
         { header: "Банк", key: "bankName", width: 30 },
         { header: "Расчётный счёт", key: "bankAccount", width: 24 },
@@ -108,6 +114,7 @@ async function exportCounterparties(wb) {
             companyKind: label(COMPANY_KIND_LABELS, c.companyKind),
             activityArea: label(ACTIVITY_AREA_LABELS, c.activityArea),
             totalRevenue: num(c.totalRevenue),
+            closedRevenue: revenue.get(c.id) || 0,
             discount: num(c.discount),
             bankName: c.bankName || "",
             bankAccount: c.bankAccount || "",

@@ -1,6 +1,7 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { COUNTERPARTY_TYPES, parseCounterpartyPayload } from "@/lib/crm/counterparty"
+import { closedRevenueByCounterparty } from "@/lib/crm/revenue"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
 
 const COUNTERPARTY_TRACKED_FIELDS = [
@@ -101,7 +102,16 @@ export async function GET(request) {
         return true
     })
 
-    return Response.json({ items: filtered })
+    // Оборот по закрытым сделкам — одним запросом на весь отфильтрованный
+    // список, а не по контрагенту.
+    const revenue = await closedRevenueByCounterparty(
+        prisma,
+        filtered.map(it => it.id),
+    )
+
+    return Response.json({
+        items: filtered.map(it => ({ ...it, closedRevenue: revenue.get(it.id) || 0 })),
+    })
 }
 
 export async function POST(request) {

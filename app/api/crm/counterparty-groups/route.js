@@ -1,6 +1,7 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { parseGroupPayload } from "@/lib/crm/counterparty-group"
+import { attachClosedRevenue } from "@/lib/crm/revenue"
 import { logChange } from "@/lib/crm/change-log"
 
 const MEMBER_SELECT = {
@@ -38,6 +39,8 @@ export async function GET(request) {
               )
           })
         : items
+
+    await attachClosedRevenue(prisma, filtered)
 
     return Response.json({ items: filtered })
 }
@@ -108,6 +111,7 @@ export async function POST(request) {
                 include: { members: { select: MEMBER_SELECT, orderBy: { name: "asc" } } },
             })
         })
+        await attachClosedRevenue(prisma, created)
         return Response.json({ item: created }, { status: 201 })
     } catch (err) {
         console.error("[counterparty-groups.POST] error:", err)

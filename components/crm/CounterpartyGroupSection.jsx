@@ -5,7 +5,7 @@ import { useState } from "react"
 import { LuCrown, LuLink2, LuPencil, LuPlus, LuUnlink } from "react-icons/lu"
 import { useConfirm, useToast } from "@/components/crm/ui"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
-import { groupTotalRevenue } from "@/lib/crm/counterparty-group"
+import { groupClosedRevenue, groupTotalRevenue } from "@/lib/crm/counterparty-group"
 import SearchableSelect from "./SearchableSelect"
 
 const INPUT_CLASS =
@@ -190,6 +190,12 @@ export default function CounterpartyGroupSection({
                             <span className='font-medium'>{group.name}</span>
                             <span className='text-xs text-neutral-500'>
                                 Бюджет группы {formatMoney(groupTotalRevenue(members))}
+                            </span>
+                            <span
+                                className='text-xs text-neutral-500'
+                                title='Сумма закрытых сделок всех юрлиц группы'
+                            >
+                                Оборот группы {formatMoney(groupClosedRevenue(members))}
                             </span>
                             {group.discount != null && (
                                 <span className='rounded-full bg-brand_main/10 px-2 py-0.5 text-[11px] font-medium text-brand_main'>
@@ -446,7 +452,8 @@ export default function CounterpartyGroupSection({
                                         {m.inn && <span>ИНН {m.inn}</span>}
                                         {m.kpp && <span>КПП {m.kpp}</span>}
                                         {m.region && <span>{m.region}</span>}
-                                        <span>{formatMoney(m.totalRevenue)}</span>
+                                        <span>Бюджет {formatMoney(m.totalRevenue)}</span>
+                                        <span>Оборот {formatMoney(m.closedRevenue)}</span>
                                     </div>
                                 </div>
                                 <div className='flex shrink-0 gap-1 self-center'>

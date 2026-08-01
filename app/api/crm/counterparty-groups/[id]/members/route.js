@@ -1,5 +1,6 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
+import { attachClosedRevenue } from "@/lib/crm/revenue"
 import { logChange } from "@/lib/crm/change-log"
 
 const MEMBER_SELECT = {
@@ -54,6 +55,7 @@ export async function POST(request, { params }) {
     })
     if (!cp) return Response.json({ error: "Контрагент не найден" }, { status: 404 })
     if (cp.groupId === group.id) {
+        await attachClosedRevenue(prisma, group)
         return Response.json({ item: group })
     }
     if (cp.groupId) {
@@ -93,6 +95,7 @@ export async function POST(request, { params }) {
             })
             return groupWithMembers(tx, group.id)
         })
+        await attachClosedRevenue(prisma, updated)
         return Response.json({ item: updated })
     } catch (err) {
         console.error("[counterparty-groups.members.POST] error:", err)
@@ -142,6 +145,7 @@ export async function PATCH(request, { params }) {
             })
             return groupWithMembers(tx, group.id)
         })
+        await attachClosedRevenue(prisma, updated)
         return Response.json({ item: updated })
     } catch (err) {
         console.error("[counterparty-groups.members.PATCH] error:", err)
@@ -201,6 +205,7 @@ export async function DELETE(request, { params }) {
             }
             return groupWithMembers(tx, group.id)
         })
+        await attachClosedRevenue(prisma, updated)
         return Response.json({ item: updated })
     } catch (err) {
         console.error("[counterparty-groups.members.DELETE] error:", err)

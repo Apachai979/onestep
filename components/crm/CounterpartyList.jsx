@@ -196,6 +196,14 @@ export default function CounterpartyList({ type, newHref }) {
                 render: item => formatMoney(item.totalRevenue),
             },
             {
+                key: "closedRevenue",
+                header: "Оборот",
+                align: "right",
+                sortable: true,
+                sortValue: item => Number(item.closedRevenue || 0),
+                render: item => formatMoney(item.closedRevenue),
+            },
+            {
                 key: "discount",
                 header: "Скидка",
                 align: "right",
@@ -289,6 +297,7 @@ export default function CounterpartyList({ type, newHref }) {
                                 )}
                             </CardRow>
                             <CardRow label='Бюджет'>{formatMoney(item.totalRevenue)}</CardRow>
+                            <CardRow label='Оборот'>{formatMoney(item.closedRevenue)}</CardRow>
                             <CardRow label='Скидка'>{formatPercent(item.discount)}</CardRow>
                         </div>
                     </MobileCard>

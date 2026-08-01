@@ -1,6 +1,7 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { parseGroupPayload } from "@/lib/crm/counterparty-group"
+import { attachClosedRevenue } from "@/lib/crm/revenue"
 import { logChange } from "@/lib/crm/change-log"
 
 const MEMBER_SELECT = {
@@ -23,6 +24,7 @@ export async function GET(_request, { params }) {
         include: { members: { select: MEMBER_SELECT, orderBy: { name: "asc" } } },
     })
     if (!item) return Response.json({ error: "Не найдено" }, { status: 404 })
+    await attachClosedRevenue(prisma, item)
     return Response.json({ item })
 }
 
@@ -49,6 +51,7 @@ export async function PATCH(request, { params }) {
             data,
             include: { members: { select: MEMBER_SELECT, orderBy: { name: "asc" } } },
         })
+        await attachClosedRevenue(prisma, updated)
         return Response.json({ item: updated })
     } catch (err) {
         console.error("[counterparty-groups.PATCH] error:", err)

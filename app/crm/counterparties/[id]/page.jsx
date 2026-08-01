@@ -13,6 +13,7 @@ import {
 } from "@/lib/crm/counterparty"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS } from "@/lib/crm/project"
+import { attachClosedRevenue, closedRevenueFor } from "@/lib/crm/revenue"
 import ContactsSection from "@/components/crm/ContactsSection"
 import CounterpartyGroupSection from "@/components/crm/CounterpartyGroupSection"
 import CounterpartyTypeSwitch from "@/components/crm/CounterpartyTypeSwitch"
@@ -65,6 +66,13 @@ export default async function CounterpartyPage({ params }) {
         },
     })
 
+    // Оборот — факт по закрытым сделкам, считается на лету. Для группы нужен
+    // оборот каждого юрлица, для карточки — только свой.
+    if (item.group) await attachClosedRevenue(prisma, item.group)
+    const closedRevenue = item.group
+        ? (item.group.members.find(m => m.id === item.id)?.closedRevenue ?? 0)
+        : await closedRevenueFor(prisma, item.id)
+
     const contactsForClient = item.contacts.map(c => ({
         ...c,
         birthDate: c.birthDate ? c.birthDate.toISOString() : null,
@@ -93,6 +101,12 @@ export default async function CounterpartyPage({ params }) {
     const groupBudget = item.group
         ? item.group.members.reduce((acc, m) => acc + Number(m.totalRevenue || 0), 0)
         : null
+    const groupRevenue = item.group
+        ? item.group.members.reduce((acc, m) => acc + Number(m.closedRevenue || 0), 0)
+        : null
+    // Подпись «группа ...» под цифрой нужна, только если юрлиц действительно
+    // несколько — иначе она дублирует саму цифру.
+    const showGroupTotals = Boolean(item.group && item.group.members.length > 1)
 
     const backHref = item.type === "DISTRIBUTOR" ? "/crm/distributors" : "/crm/customers"
     const backLabel =
@@ -164,9 +178,29 @@ export default async function CounterpartyPage({ params }) {
                             <p className='mt-0.5 text-lg font-semibold text-brand_main'>
                                 {formatMoney(item.totalRevenue)}
                             </p>
-                            {groupBudget !== null && item.group.members.length > 1 && (
+                            {showGroupTotals && (
                                 <p className='text-[11px] text-neutral-400'>
                                     группа {formatMoney(groupBudget)}
+                                </p>
+                            )}
+                        </div>
+                        <div className='h-9 w-px bg-line' />
+                        {/* Оборот — факт по закрытым сделкам, руками не правится:
+                            рядом с бюджетом (планом) сразу видно, насколько
+                            клиент выбран. */}
+                        <div className='text-right'>
+                            <p className='text-[10px] uppercase tracking-wider text-neutral-400'>
+                                Оборот
+                            </p>
+                            <p
+                                className='mt-0.5 text-lg font-semibold text-neutral-900'
+                                title='Сумма закрытых сделок с учётом скидки'
+                            >
+                                {formatMoney(closedRevenue)}
+                            </p>
+                            {showGroupTotals && (
+                                <p className='text-[11px] text-neutral-400'>
+                                    группа {formatMoney(groupRevenue)}
                                 </p>
                             )}
                         </div>

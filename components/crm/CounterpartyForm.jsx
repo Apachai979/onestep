@@ -363,7 +363,8 @@ export default function CounterpartyForm({ type, initial, mode = "create", attac
                     onChange={update("bankCorrAccount")}
                 />
                 <Field
-                    label='Бюджет (сумма сделок), ₽'
+                    label='Бюджет клиента, ₽'
+                    hint='Оценка потенциала: сколько клиент закупает. Оборот по закрытым сделкам CRM считает сама.'
                     type='number'
                     step='0.01'
                     min='0'
@@ -448,7 +449,7 @@ function Section({ title, children }) {
     )
 }
 
-function Field({ label, className = "", ...props }) {
+function Field({ label, hint, className = "", ...props }) {
     return (
         <div className={className}>
             <label className='mb-1.5 block text-sm text-neutral-600'>{label}</label>
@@ -456,6 +457,7 @@ function Field({ label, className = "", ...props }) {
                 {...props}
                 className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
             />
+            {hint && <p className='mt-1 text-[11px] text-neutral-400'>{hint}</p>}
         </div>
     )
 }

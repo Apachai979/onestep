@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs"
 import prisma from "@/lib/client"
 import { inviteStatus } from "@/lib/crm/invite"
+import { validatePassword } from "@/lib/crm/password"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -53,12 +54,8 @@ export async function POST(request) {
             { status: 400 },
         )
     }
-    if (password.length < 8) {
-        return Response.json(
-            { error: "Пароль должен содержать минимум 8 символов" },
-            { status: 400 },
-        )
-    }
+    const { error: passwordError } = validatePassword(password)
+    if (passwordError) return Response.json({ error: passwordError }, { status: 400 })
 
     const existing = await prisma.user.findUnique({ where: { email } })
     if (existing) {

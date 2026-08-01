@@ -3,8 +3,8 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useSession } from "next-auth/react"
 import { LuBell, LuMail, LuSend } from "react-icons/lu"
-import { USER_ROLE_LABELS, USER_STATUS_LABELS } from "@/lib/crm/invite"
-import { Badge, Button, Field, Input, Section, useToast } from "@/components/crm/ui"
+import AccessSection from "@/components/crm/AccessSection"
+import { Button, Field, Input, Section, useToast } from "@/components/crm/ui"
 
 function safeJson(text) {
     try {
@@ -114,20 +114,7 @@ export default function ProfileForm({ initial }) {
                 </div>
             </Section>
 
-            <Section title='Доступ'>
-                <div className='flex flex-wrap items-center gap-2'>
-                    <Badge tone={initial.role === "ADMIN" ? "warning" : "info"} size='sm'>
-                        {USER_ROLE_LABELS[initial.role] || initial.role}
-                    </Badge>
-                    <Badge tone={initial.status === "ACTIVE" ? "success" : "danger"} size='sm'>
-                        {USER_STATUS_LABELS[initial.status] || initial.status}
-                    </Badge>
-                </div>
-                <p className='mt-2 text-xs text-neutral-500'>
-                    Роль и статус назначает администратор. Если нужно сменить пароль —
-                    обратитесь к нему.
-                </p>
-            </Section>
+            <AccessSection user={initial} />
 
             <Section title='Уведомления' icon={LuBell}>
                 <p className='text-sm text-neutral-500'>

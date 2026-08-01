@@ -108,7 +108,9 @@ export default function TaskCloseModal({
     canClose = true,
     canReopen = false,
 }) {
-    const [status, setStatus] = useState("DONE")
+    // Результат не выбран по умолчанию: «выполнена» не должна проставляться
+    // сама — менеджер обязан отметить исход руками.
+    const [status, setStatus] = useState(null)
     const [result, setResult] = useState("")
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
@@ -174,6 +176,10 @@ export default function TaskCloseModal({
     async function submit(e) {
         e.preventDefault()
         setError("")
+        if (!status) {
+            setError("Отметьте результат: выполнена или не выполнена")
+            return
+        }
         setLoading(true)
         const res = await fetch(`/api/crm/tasks/${task.id}/close`, {
             method: "POST",
@@ -363,7 +369,9 @@ export default function TaskCloseModal({
                                 placeholder={
                                     status === "FAILED"
                                         ? "Почему не получилось"
-                                        : "Что сделали (опц.)"
+                                        : status === "DONE"
+                                          ? "Что сделали (опц.)"
+                                          : "Комментарий (опц.)"
                                 }
                                 className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
                             />
@@ -389,7 +397,16 @@ export default function TaskCloseModal({
                         {readOnly ? "Закрыть" : "Отмена"}
                     </Button>
                     {!readOnly && (
-                        <Button type='submit' loading={loading}>
+                        <Button
+                            type='submit'
+                            loading={loading}
+                            disabled={!status}
+                            title={
+                                status
+                                    ? undefined
+                                    : "Сначала отметьте результат задачи"
+                            }
+                        >
                             Закрыть задачу
                         </Button>
                     )}

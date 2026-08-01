@@ -5,6 +5,7 @@ import {
     TASK_BUCKETS,
     TASK_BUCKET_LABELS,
     TASK_DUE_COLORS,
+    TASK_KANBAN_PER_BUCKET,
     taskBucket,
     taskBucketTargetYmd,
     taskDueRelativeLabel,
@@ -93,6 +94,9 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
     const [laterTask, setLaterTask] = useState(null)
     const [viewing, setViewing] = useState(null)
     const [today, setToday] = useState(() => crmToday())
+    // Сколько карточек раскрыто в колонке: длинная колонка тянет доску вниз,
+    // поэтому показываем первую порцию, остальные — по кнопке.
+    const [limits, setLimits] = useState({})
 
     const load = useCallback(async () => {
         setError("")
@@ -147,6 +151,11 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
             }),
         [users, currentUserId],
     )
+
+    // Новый фильтр — новая выборка: раскрытые колонки схлопываем обратно.
+    useEffect(() => {
+        setLimits({})
+    }, [q, assigneeId])
 
     const filtered = useMemo(() => {
         if (!items) return null
@@ -289,6 +298,9 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
             <div className='flex gap-3 overflow-x-auto pb-3'>
                 {TASK_BUCKETS.map(bucket => {
                     const list = byBucket[bucket] || []
+                    const limit = limits[bucket] || TASK_KANBAN_PER_BUCKET
+                    const visible = list.slice(0, limit)
+                    const hidden = list.length - visible.length
                     return (
                         <div
                             key={bucket}
@@ -309,8 +321,17 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
                                     >
                                         {TASK_BUCKET_LABELS[bucket]}
                                     </span>
-                                    <span className='text-xs text-neutral-400'>
-                                        {list.length}
+                                    <span
+                                        className='text-xs text-neutral-400'
+                                        title={
+                                            hidden > 0
+                                                ? `Показаны ${visible.length} из ${list.length}`
+                                                : undefined
+                                        }
+                                    >
+                                        {hidden > 0
+                                            ? `${visible.length} из ${list.length}`
+                                            : list.length}
                                     </span>
                                 </div>
                                 <p className='mb-3 text-[10px] leading-tight text-neutral-400'>
@@ -320,7 +341,7 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
                                     {items === null && (
                                         <p className='text-xs text-neutral-400'>Загрузка...</p>
                                     )}
-                                    {list.map(t => (
+                                    {visible.map(t => (
                                         <TaskCard
                                             key={t.id}
                                             task={t}
@@ -334,6 +355,20 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
                                     ))}
                                     {items !== null && list.length === 0 && (
                                         <p className='text-xs italic text-neutral-400'>Пусто</p>
+                                    )}
+                                    {hidden > 0 && (
+                                        <button
+                                            type='button'
+                                            onClick={() =>
+                                                setLimits(p => ({
+                                                    ...p,
+                                                    [bucket]: limit + TASK_KANBAN_PER_BUCKET,
+                                                }))
+                                            }
+                                            className='rounded-xl border border-dashed border-line py-2 text-xs font-medium text-neutral-500 transition-colors hover:border-brand_main/40 hover:text-brand_main'
+                                        >
+                                            Показать ещё ({hidden})
+                                        </button>
                                     )}
                                 </div>
                             </div>

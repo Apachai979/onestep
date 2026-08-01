@@ -1,12 +1,16 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import {
+    PROJECT_KANBAN_PER_STATUS,
     PROJECT_STATUSES,
     PROJECT_TRACKED_FIELDS,
     buildInternalName,
     findProjectDuplicates,
     isBlockingDuplicate,
+    matchesProjectRegion,
+    matchesProjectSearch,
     parseProjectPayload,
+    projectKanbanOrderField,
 } from "@/lib/crm/project"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
 import { dealDiscountedTotal } from "@/lib/crm/deal"
@@ -14,6 +18,91 @@ import { counterpartyDiscountInfo } from "@/lib/crm/discount"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
+
+const PROJECT_INCLUDE = {
+    distributor: { select: COUNTERPARTY_SELECT },
+    endCustomer: { select: COUNTERPARTY_SELECT },
+    manager: { select: MANAGER_SELECT },
+}
+
+// Лёгкий срез для подсчёта колонок канбана: только поля, нужные для поиска,
+// фильтра по региону, сортировки и суммы.
+const PROJECT_KANBAN_STATS_SELECT = {
+    id: true,
+    status: true,
+    internalName: true,
+    createdAt: true,
+    updatedAt: true,
+    distributor: { select: { name: true, region: true } },
+    endCustomer: { select: { name: true, region: true } },
+}
+
+// Сумма проекта — производная: сумма всех сделок, привязанных к проекту.
+// Считаем по суммам со скидкой — это финальная цена сделки, поэтому
+// groupBy/_sum не подходит, складываем вручную.
+async function projectDealSums(ids) {
+    const sums = new Map()
+    if (!ids.length) return sums
+    const deals = await prisma.deal.findMany({
+        where: { sourceProjectId: { in: ids } },
+        select: { sourceProjectId: true, totalAmount: true, discount: true },
+    })
+    for (const d of deals) {
+        sums.set(d.sourceProjectId, (sums.get(d.sourceProjectId) || 0) + dealDiscountedTotal(d))
+    }
+    return sums
+}
+
+// Доска отдаётся колонками: items — первая страница карточек, total и sum —
+// по всей колонке. Иначе счётчик показывал бы «сколько загрузили», а «Итого»
+// считалось бы по обрезанному набору.
+async function loadKanbanColumns(where, { q, region, perStatus }) {
+    const rows = await prisma.project.findMany({
+        where,
+        select: PROJECT_KANBAN_STATS_SELECT,
+    })
+    const matched = rows.filter(
+        p => matchesProjectSearch(p, q) && matchesProjectRegion(p, region),
+    )
+    // Суммы считаем по всем подходящим проектам, а не только по странице.
+    const sums = await projectDealSums(matched.map(p => p.id))
+
+    const columns = Object.fromEntries(
+        PROJECT_STATUSES.map(s => [s, { items: [], total: 0, sum: 0 }]),
+    )
+    const grouped = Object.fromEntries(PROJECT_STATUSES.map(s => [s, []]))
+
+    for (const row of matched) {
+        if (!columns[row.status]) continue
+        columns[row.status].total += 1
+        columns[row.status].sum += sums.get(row.id) || 0
+        grouped[row.status].push(row)
+    }
+
+    const pageIds = []
+    const idsByStatus = {}
+    for (const status of PROJECT_STATUSES) {
+        const field = projectKanbanOrderField(status)
+        idsByStatus[status] = grouped[status]
+            .sort((a, b) => b[field] - a[field])
+            .slice(0, perStatus)
+            .map(p => p.id)
+        pageIds.push(...idsByStatus[status])
+    }
+
+    if (pageIds.length) {
+        const full = await prisma.project.findMany({
+            where: { id: { in: pageIds } },
+            include: PROJECT_INCLUDE,
+        })
+        const byId = new Map(full.map(p => [p.id, { ...p, totalAmount: sums.get(p.id) || 0 }]))
+        for (const status of PROJECT_STATUSES) {
+            columns[status].items = idsByStatus[status].map(id => byId.get(id)).filter(Boolean)
+        }
+    }
+
+    return columns
+}
 
 export async function GET(request) {
     const { session, response } = await requireCrmSession()
@@ -26,6 +115,13 @@ export async function GET(request) {
     const distributorId = searchParams.get("distributorId")
     const managerId = searchParams.get("managerId")
     const region = searchParams.get("region")?.trim()
+    // view=kanban — доска: колонки со своей страницей карточек вместо плоского
+    // списка. Список проектов и селекты в формах ходят сюда же и получают items.
+    const kanban = searchParams.get("view") === "kanban"
+    const perStatus = Math.min(
+        100,
+        Math.max(1, Number(searchParams.get("perStatus")) || PROJECT_KANBAN_PER_STATUS),
+    )
 
     const where = {}
     // Статус может прийти списком через запятую — фильтр в UI с множественным выбором.
@@ -45,54 +141,30 @@ export async function GET(request) {
     if (distributorId) where.distributorId = distributorId
     if (managerId) where.managerId = managerId
 
+    if (kanban) {
+        // Фильтр по статусу на доске игнорируется намеренно: статусы здесь —
+        // это сами колонки (см. buildQuery в ProjectsTabs).
+        const { status: _status, ...kanbanWhere } = where
+        const columns = await loadKanbanColumns(kanbanWhere, { q, region, perStatus })
+        return Response.json({ columns, perStatus })
+    }
+
     const items = await prisma.project.findMany({
         where,
         orderBy: { createdAt: "desc" },
-        include: {
-            distributor: { select: COUNTERPARTY_SELECT },
-            endCustomer: { select: COUNTERPARTY_SELECT },
-            manager: { select: MANAGER_SELECT },
-        },
+        include: PROJECT_INCLUDE,
     })
 
-    const filtered = items.filter(p => {
-        if (q) {
-            const ql = q.toLowerCase()
-            const matchQ =
-                (p.internalName || "").toLowerCase().includes(ql) ||
-                (p.distributor?.name || "").toLowerCase().includes(ql) ||
-                (p.endCustomer?.name || "").toLowerCase().includes(ql)
-            if (!matchQ) return false
-        }
-        if (region) {
-            const rl = region.toLowerCase()
-            const matchR =
-                (p.distributor?.region || "").toLowerCase().includes(rl) ||
-                (p.endCustomer?.region || "").toLowerCase().includes(rl)
-            if (!matchR) return false
-        }
-        return true
-    })
+    const filtered = items.filter(
+        p => matchesProjectSearch(p, q) && matchesProjectRegion(p, region),
+    )
 
-    // Сумма проекта — производная: сумма всех сделок, привязанных к проекту.
-    // Считаем по суммам со скидкой — это финальная цена сделки, поэтому
-    // groupBy/_sum не подходит, складываем вручную.
-    const ids = filtered.map(p => p.id)
-    const projectDeals = ids.length
-        ? await prisma.deal.findMany({
-              where: { sourceProjectId: { in: ids } },
-              select: { sourceProjectId: true, totalAmount: true, discount: true },
-          })
-        : []
-    const sumMap = new Map()
-    for (const d of projectDeals) {
-        sumMap.set(d.sourceProjectId, (sumMap.get(d.sourceProjectId) || 0) + dealDiscountedTotal(d))
-    }
+    const sums = await projectDealSums(filtered.map(p => p.id))
 
     return Response.json({
         items: filtered.map(p => ({
             ...p,
-            totalAmount: sumMap.get(p.id) || 0,
+            totalAmount: sums.get(p.id) || 0,
             dealsCount: undefined,
         })),
     })

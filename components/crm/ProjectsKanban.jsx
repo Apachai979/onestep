@@ -1,7 +1,8 @@
 "use client"
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
+    PROJECT_KANBAN_PER_STATUS,
     PROJECT_STATUSES,
     PROJECT_STATUS_COLORS,
     PROJECT_STATUS_LABELS,
@@ -33,41 +34,88 @@ const COLUMN_ACCENT = {
     NO_NEED: "bg-amber-300/70",
 }
 
+const EMPTY_COLUMN = { items: [], total: 0, sum: 0 }
+
+function findProject(columns, projectId) {
+    for (const status of PROJECT_STATUSES) {
+        const project = columns?.[status]?.items.find(p => p.id === projectId)
+        if (project) return project
+    }
+    return null
+}
+
+// Оптимистичный перенос: карточка сразу переезжает в другую колонку, счётчик и
+// сумма обеих колонок пересчитываются на месте. Точные значения (и следующая
+// карточка вместо ушедшей, если колонка обрезана лимитом) придут ответом GET.
+function moveCard(columns, projectId, newStatus) {
+    if (!columns) return columns
+    const from = PROJECT_STATUSES.find(s =>
+        (columns[s]?.items || []).some(p => p.id === projectId),
+    )
+    const target = columns[newStatus]
+    if (!from || from === newStatus || !target) return columns
+
+    const project = columns[from].items.find(p => p.id === projectId)
+    const amount = Number(project.totalAmount || 0)
+    return {
+        ...columns,
+        [from]: {
+            ...columns[from],
+            items: columns[from].items.filter(p => p.id !== projectId),
+            total: Math.max(0, columns[from].total - 1),
+            sum: columns[from].sum - amount,
+        },
+        [newStatus]: {
+            ...target,
+            items: [{ ...project, status: newStatus }, ...target.items],
+            total: target.total + 1,
+            sum: target.sum + amount,
+        },
+    }
+}
+
 // Фильтры общие для канбана и списка — они живут в ProjectsTabs и приходят
 // сюда готовой строкой запроса (без статуса: здесь статусы — это колонки).
-export default function ProjectsKanban({ query = "", isAdmin = false }) {
+export default function ProjectsKanban({ query = "", isAdmin = false, onShowAll }) {
     const toast = useToast()
-    const [projects, setProjects] = useState(null)
+    const [columns, setColumns] = useState(null)
     const [error, setError] = useState("")
     const [draggingId, setDraggingId] = useState(null)
     const [dragOver, setDragOver] = useState(null)
     const [noNeedProject, setNoNeedProject] = useState(null)
 
+    // Доска грузит по PROJECT_KANBAN_PER_STATUS карточек на колонку; полное
+    // количество и сумма приходят отдельными числами в каждой колонке.
+    const url = useMemo(() => {
+        const params = new URLSearchParams(query)
+        params.set("view", "kanban")
+        params.set("perStatus", String(PROJECT_KANBAN_PER_STATUS))
+        return `/api/crm/projects?${params}`
+    }, [query])
+
+    const fetchColumns = useCallback(
+        async signal => {
+            const r = await fetch(url, { signal })
+            const text = await r.text()
+            const data = text ? safeJson(text) : {}
+            if (!r.ok) throw new Error(data?.error || `Ошибка ${r.status}`)
+            return data.columns || {}
+        },
+        [url],
+    )
+
     useEffect(() => {
         const controller = new AbortController()
         setError("")
-        fetch(`/api/crm/projects?${query}`, { signal: controller.signal })
-            .then(async r => {
-                const text = await r.text()
-                const data = text ? safeJson(text) : {}
-                if (!r.ok) throw new Error(data?.error || `Ошибка ${r.status}`)
-                setProjects(data.items || [])
-            })
+        fetchColumns(controller.signal)
+            .then(setColumns)
             .catch(err => {
                 if (err.name === "AbortError") return
                 setError(err.message)
-                setProjects([])
+                setColumns({})
             })
         return () => controller.abort()
-    }, [query])
-
-    const byStatus = useMemo(() => {
-        const map = Object.fromEntries(PROJECT_STATUSES.map(s => [s, []]))
-        for (const p of projects || []) {
-            if (map[p.status]) map[p.status].push(p)
-        }
-        return map
-    }, [projects])
+    }, [fetchColumns])
 
     // Менеджер не возвращает проект из «Проработано, нет потребности».
     function isLocked(status) {
@@ -75,10 +123,8 @@ export default function ProjectsKanban({ query = "", isAdmin = false }) {
     }
 
     async function moveProject(projectId, newStatus, extra = {}) {
-        const prev = projects
-        setProjects(curr =>
-            curr.map(p => (p.id === projectId ? { ...p, status: newStatus } : p)),
-        )
+        const prev = columns
+        setColumns(curr => moveCard(curr, projectId, newStatus))
         try {
             const r = await fetch(`/api/crm/projects/${projectId}`, {
                 method: "PATCH",
@@ -90,8 +136,13 @@ export default function ProjectsKanban({ query = "", isAdmin = false }) {
                 const d = text ? safeJson(text) : {}
                 throw new Error(d?.error || "Не удалось сменить статус")
             }
+            // Перечитываем: колонка могла быть обрезана лимитом, и на месте
+            // ушедшей карточки должна появиться следующая.
+            fetchColumns()
+                .then(setColumns)
+                .catch(() => {})
         } catch (err) {
-            setProjects(prev)
+            setColumns(prev)
             toast.error(err.message)
         }
     }
@@ -124,7 +175,7 @@ export default function ProjectsKanban({ query = "", isAdmin = false }) {
             setDragOver(null)
             setDraggingId(null)
             if (!id) return
-            const project = projects?.find(p => p.id === id)
+            const project = findProject(columns, id)
             if (!project || project.status === status) return
             // Проработанный проект менеджер не двигает — карточка заморожена.
             if (isLocked(project.status)) return
@@ -143,8 +194,11 @@ export default function ProjectsKanban({ query = "", isAdmin = false }) {
 
             <div className='flex gap-3 overflow-x-auto pb-3'>
                 {PROJECT_STATUSES.map(status => {
-                    const list = byStatus[status] || []
-                    const sum = list.reduce((s, p) => s + Number(p.totalAmount || 0), 0)
+                    const column = columns?.[status] || EMPTY_COLUMN
+                    const list = column.items
+                    // Колонка длиннее лимита: показываем «сколько из скольких»,
+                    // чтобы счётчик не врал про объём.
+                    const truncated = column.total > list.length
                     return (
                         <div
                             key={status}
@@ -163,13 +217,25 @@ export default function ProjectsKanban({ query = "", isAdmin = false }) {
                                     <Badge className={PROJECT_STATUS_COLORS[status]}>
                                         {PROJECT_STATUS_LABELS[status]}
                                     </Badge>
-                                    <span className='text-xs text-neutral-400'>{list.length}</span>
+                                    <span
+                                        className='text-xs text-neutral-400'
+                                        title={
+                                            truncated
+                                                ? `Показаны ${list.length} из ${column.total} — остальные в списке`
+                                                : undefined
+                                        }
+                                    >
+                                        {truncated
+                                            ? `${list.length} из ${column.total}`
+                                            : column.total}
+                                    </span>
                                 </div>
+                                {/* Итог считается по всей колонке, а не по загруженным карточкам. */}
                                 <p className='mb-3 text-xs text-neutral-500'>
-                                    Итого: {formatMoney(sum)}
+                                    Итого: {formatMoney(column.sum)}
                                 </p>
                                 <div className='flex flex-col gap-2'>
-                                    {projects === null && (
+                                    {columns === null && (
                                         <p className='text-xs text-neutral-400'>Загрузка...</p>
                                     )}
                                     {list.map(p => (
@@ -182,8 +248,17 @@ export default function ProjectsKanban({ query = "", isAdmin = false }) {
                                             onDragEnd={onDragEnd}
                                         />
                                     ))}
-                                    {projects !== null && list.length === 0 && (
+                                    {columns !== null && list.length === 0 && (
                                         <p className='text-xs italic text-neutral-400'>Пусто</p>
+                                    )}
+                                    {truncated && (
+                                        <button
+                                            type='button'
+                                            onClick={() => onShowAll?.(status)}
+                                            className='rounded-xl border border-dashed border-line py-2 text-xs font-medium text-neutral-500 transition-colors hover:border-brand_main/40 hover:text-brand_main'
+                                        >
+                                            Показать все ({column.total}) →
+                                        </button>
                                     )}
                                 </div>
                             </div>

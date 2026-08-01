@@ -83,6 +83,16 @@ export default function ProjectsTabs({ currentUserId, isAdmin = false }) {
         [applied, view],
     )
 
+    // «Показать все» из обрезанной колонки канбана: открываем список,
+    // отфильтрованный по этому статусу — длинную колонку удобнее смотреть
+    // таблицей. Фильтр применяем сразу, без debounce.
+    function showAllInList(status) {
+        const next = { ...filters, status: [status] }
+        setFilters(next)
+        setApplied(next)
+        setView("list")
+    }
+
     // Поиск в счёт не идёт — у поля есть собственный крестик.
     const activeCount =
         (view === "list" ? filters.status.length : 0) +
@@ -214,7 +224,7 @@ export default function ProjectsTabs({ currentUserId, isAdmin = false }) {
             </FilterBar>
 
             {view === "kanban" ? (
-                <ProjectsKanban query={query} isAdmin={isAdmin} />
+                <ProjectsKanban query={query} isAdmin={isAdmin} onShowAll={showAllInList} />
             ) : (
                 <ProjectsList query={query} />
             )}

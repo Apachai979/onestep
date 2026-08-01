@@ -17,7 +17,7 @@ import {
     DEAL_STATUSES,
     DEAL_STATUS_COLORS,
     DEAL_STATUS_LABELS,
-    autoArchiveStaleFinalDeals,
+    autoArchiveStaleCancelledDeals,
     dealDisplayTitle,
     dealDiscountedTotal,
 } from "@/lib/crm/deal"
@@ -68,9 +68,9 @@ export default async function CrmHome() {
     const now = new Date()
     const today = crmToday()
 
-    // Ленивая архивация старых CLOSED/CANCELLED — до чтения сделок,
+    // Ленивая архивация старых CANCELLED — до чтения сделок,
     // чтобы дашборд сразу увидел актуальные статусы.
-    await autoArchiveStaleFinalDeals(prisma)
+    await autoArchiveStaleCancelledDeals(prisma)
 
     // --- Parallel data load ---
     const [myOpenTasks, myDealsForStats, myDealsList, overdueShipments, recentChanges] =

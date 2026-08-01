@@ -1,8 +1,9 @@
 "use client"
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
-    DEAL_STATUSES,
+    DEAL_KANBAN_PER_STATUS,
+    DEAL_KANBAN_STATUSES,
     DEAL_STATUS_COLORS,
     DEAL_STATUS_HINTS,
     DEAL_STATUS_LABELS,
@@ -10,9 +11,7 @@ import {
     dealDisplayTitle,
 } from "@/lib/crm/deal"
 
-// Kanban показывает шесть активных колонок; ARCHIVED — свалка старых
-// CLOSED/CANCELLED (заполняется автоархиватором), из доски скрыт.
-const KANBAN_STATUSES = DEAL_STATUSES.filter(s => s !== "ARCHIVED")
+const EMPTY_COLUMN = { items: [], total: 0, sum: 0 }
 
 // Сдержанное оформление в стиле канбана проектов: нейтральные колонки,
 // тонкая приглушённая акцентная полоска сверху для быстрой ориентации.
@@ -43,41 +42,86 @@ function managerName(u) {
     return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email
 }
 
+function findDeal(columns, dealId) {
+    for (const status of DEAL_KANBAN_STATUSES) {
+        const deal = columns?.[status]?.items.find(d => d.id === dealId)
+        if (deal) return deal
+    }
+    return null
+}
+
+// Оптимистичный перенос: карточка сразу переезжает в другую колонку, счётчик и
+// сумма обеих колонок пересчитываются на месте. Точные значения (и следующая
+// карточка вместо ушедшей, если колонка обрезана лимитом) придут ответом GET.
+function moveCard(columns, dealId, newStatus) {
+    if (!columns) return columns
+    const from = DEAL_KANBAN_STATUSES.find(s =>
+        (columns[s]?.items || []).some(d => d.id === dealId),
+    )
+    const target = columns[newStatus]
+    if (!from || from === newStatus || !target) return columns
+
+    const deal = columns[from].items.find(d => d.id === dealId)
+    const amount = dealDiscountedTotal(deal)
+    return {
+        ...columns,
+        [from]: {
+            ...columns[from],
+            items: columns[from].items.filter(d => d.id !== dealId),
+            total: Math.max(0, columns[from].total - 1),
+            sum: columns[from].sum - amount,
+        },
+        [newStatus]: {
+            ...target,
+            items: [{ ...deal, status: newStatus }, ...target.items],
+            total: target.total + 1,
+            sum: target.sum + amount,
+        },
+    }
+}
+
 // Фильтры общие для канбана и списка — они живут в DealsTabs и приходят
 // сюда готовой строкой запроса (без статуса: здесь статусы — это колонки).
-export default function DealsKanban({ query = "", isAdmin = false }) {
+export default function DealsKanban({ query = "", isAdmin = false, onShowAll }) {
     const toast = useToast()
-    const [deals, setDeals] = useState(null)
+    const [columns, setColumns] = useState(null)
     const [error, setError] = useState("")
     const [draggingId, setDraggingId] = useState(null)
     const [dragOver, setDragOver] = useState(null)
     const [losingDeal, setLosingDeal] = useState(null)
 
+    // Доска грузит по DEAL_KANBAN_PER_STATUS карточек на колонку; полное
+    // количество и сумма приходят отдельными числами в каждой колонке.
+    const url = useMemo(() => {
+        const params = new URLSearchParams(query)
+        params.set("view", "kanban")
+        params.set("perStatus", String(DEAL_KANBAN_PER_STATUS))
+        return `/api/crm/deals?${params}`
+    }, [query])
+
+    const fetchColumns = useCallback(
+        async signal => {
+            const r = await fetch(url, { signal })
+            const text = await r.text()
+            const data = text ? safeJson(text) : {}
+            if (!r.ok) throw new Error(data?.error || `Ошибка ${r.status}`)
+            return data.columns || {}
+        },
+        [url],
+    )
+
     useEffect(() => {
         const controller = new AbortController()
         setError("")
-        fetch(`/api/crm/deals?${query}`, { signal: controller.signal })
-            .then(async r => {
-                const text = await r.text()
-                const data = text ? safeJson(text) : {}
-                if (!r.ok) throw new Error(data?.error || `Ошибка ${r.status}`)
-                setDeals(data.items || [])
-            })
+        fetchColumns(controller.signal)
+            .then(setColumns)
             .catch(err => {
                 if (err.name === "AbortError") return
                 setError(err.message)
-                setDeals([])
+                setColumns({})
             })
         return () => controller.abort()
-    }, [query])
-
-    const byStatus = useMemo(() => {
-        const map = Object.fromEntries(DEAL_STATUSES.map(s => [s, []]))
-        for (const d of deals || []) {
-            if (map[d.status]) map[d.status].push(d)
-        }
-        return map
-    }, [deals])
+    }, [fetchColumns])
 
     // Менеджер не вытаскивает сделку из «Закрыто»/«Не реализована»/архива.
     function isLocked(status) {
@@ -85,8 +129,8 @@ export default function DealsKanban({ query = "", isAdmin = false }) {
     }
 
     async function moveDeal(dealId, newStatus, extra = {}) {
-        const prev = deals
-        setDeals(curr => curr.map(d => (d.id === dealId ? { ...d, status: newStatus } : d)))
+        const prev = columns
+        setColumns(curr => moveCard(curr, dealId, newStatus))
         try {
             const r = await fetch(`/api/crm/deals/${dealId}`, {
                 method: "PATCH",
@@ -98,8 +142,13 @@ export default function DealsKanban({ query = "", isAdmin = false }) {
                 const d = text ? safeJson(text) : {}
                 throw new Error(d?.error || "Не удалось сменить статус")
             }
+            // Перечитываем: колонка могла быть обрезана лимитом, и на месте
+            // ушедшей карточки должна появиться следующая.
+            fetchColumns()
+                .then(setColumns)
+                .catch(() => {})
         } catch (err) {
-            setDeals(prev)
+            setColumns(prev)
             toast.error(err.message)
         }
     }
@@ -132,7 +181,7 @@ export default function DealsKanban({ query = "", isAdmin = false }) {
             setDragOver(null)
             setDraggingId(null)
             if (!id) return
-            const deal = deals?.find(d => d.id === id)
+            const deal = findDeal(columns, id)
             if (!deal || deal.status === status) return
             // Завершённую сделку менеджер не двигает — карточка заморожена.
             if (isLocked(deal.status)) return
@@ -150,9 +199,12 @@ export default function DealsKanban({ query = "", isAdmin = false }) {
             {error && <p className='text-sm text-red-600'>{error}</p>}
 
             <div className='flex gap-3 overflow-x-auto pb-3'>
-                {KANBAN_STATUSES.map(status => {
-                    const list = byStatus[status] || []
-                    const sum = list.reduce((s, d) => s + dealDiscountedTotal(d), 0)
+                {DEAL_KANBAN_STATUSES.map(status => {
+                    const column = columns?.[status] || EMPTY_COLUMN
+                    const list = column.items
+                    // Колонка длиннее лимита: показываем «сколько из скольких»,
+                    // чтобы счётчик не врал про объём.
+                    const truncated = column.total > list.length
                     return (
                         <div
                             key={status}
@@ -174,7 +226,18 @@ export default function DealsKanban({ query = "", isAdmin = false }) {
                                         >
                                             {DEAL_STATUS_LABELS[status]}
                                         </span>
-                                        <span className='text-xs text-neutral-400'>{list.length}</span>
+                                        <span
+                                            className='text-xs text-neutral-400'
+                                            title={
+                                                truncated
+                                                    ? `Показаны ${list.length} из ${column.total} — остальные в списке`
+                                                    : undefined
+                                            }
+                                        >
+                                            {truncated
+                                                ? `${list.length} из ${column.total}`
+                                                : column.total}
+                                        </span>
                                     </div>
                                     {(status === "NEGOTIATION" || status === "CONTRACT") && (
                                         <Link
@@ -191,11 +254,12 @@ export default function DealsKanban({ query = "", isAdmin = false }) {
                                         {DEAL_STATUS_HINTS[status]}
                                     </p>
                                 )}
+                                {/* Итог считается по всей колонке, а не по загруженным карточкам. */}
                                 <p className='mb-3 text-xs text-neutral-500'>
-                                    Итого: {formatMoney(sum)}
+                                    Итого: {formatMoney(column.sum)}
                                 </p>
                                 <div className='flex flex-col gap-2'>
-                                    {deals === null && (
+                                    {columns === null && (
                                         <p className='text-xs text-neutral-400'>Загрузка...</p>
                                     )}
                                     {list.map(d => (
@@ -208,8 +272,17 @@ export default function DealsKanban({ query = "", isAdmin = false }) {
                                             onDragEnd={onDragEnd}
                                         />
                                     ))}
-                                    {deals !== null && list.length === 0 && (
+                                    {columns !== null && list.length === 0 && (
                                         <p className='text-xs italic text-neutral-400'>Пусто</p>
+                                    )}
+                                    {truncated && (
+                                        <button
+                                            type='button'
+                                            onClick={() => onShowAll?.(status)}
+                                            className='rounded-xl border border-dashed border-line py-2 text-xs font-medium text-neutral-500 transition-colors hover:border-brand_main/40 hover:text-brand_main'
+                                        >
+                                            Показать все ({column.total}) →
+                                        </button>
                                     )}
                                 </div>
                             </div>

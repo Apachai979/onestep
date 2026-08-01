@@ -72,6 +72,16 @@ export default function DealsTabs({ currentUserId, isAdmin = false }) {
         [applied, tab],
     )
 
+    // «Показать все» из обрезанной колонки канбана: открываем список,
+    // отфильтрованный по этому статусу — длинную колонку удобнее смотреть
+    // таблицей. Фильтр применяем сразу, без debounce.
+    function showAllInList(status) {
+        const next = { ...filters, status: [status] }
+        setFilters(next)
+        setApplied(next)
+        setTab("list")
+    }
+
     // Поиск в счёт не идёт — у поля есть собственный крестик.
     const activeCount =
         (tab === "list" ? filters.status.length : 0) +
@@ -191,7 +201,7 @@ export default function DealsTabs({ currentUserId, isAdmin = false }) {
             </FilterBar>
 
             {tab === "kanban" ? (
-                <DealsKanban query={query} isAdmin={isAdmin} />
+                <DealsKanban query={query} isAdmin={isAdmin} onShowAll={showAllInList} />
             ) : (
                 <DealsList query={query} />
             )}

@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getServerSession } from "next-auth"
-import { LuBuilding2, LuPencil, LuUser } from "react-icons/lu"
+import { LuBuilding2, LuChevronDown, LuPencil, LuUser } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import {
@@ -11,6 +11,13 @@ import {
     COUNTERPARTY_TYPE_LABELS,
     websiteHref,
 } from "@/lib/crm/counterparty"
+import {
+    DEAL_STATUS_COLORS,
+    DEAL_STATUS_LABELS,
+    dealDiscountedTotal,
+    dealDisplayTitle,
+    dealOwnTitle,
+} from "@/lib/crm/deal"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import { attachClosedRevenue, closedRevenueFor } from "@/lib/crm/revenue"
@@ -23,6 +30,9 @@ import LocalDateTime from "@/components/crm/LocalDateTime"
 import PhoneLink from "@/components/crm/PhoneLink"
 
 export const metadata = { title: "Контрагент | CRM" }
+
+// Сколько строк (проекты + сделки) дерево показывает развёрнутым по умолчанию.
+const TREE_OPEN_LIMIT = 8
 
 export default async function CounterpartyPage({ params }) {
     const session = await getServerSession(authOptions)
@@ -65,6 +75,39 @@ export default async function CounterpartyPage({ params }) {
             manager: { select: { firstName: true, lastName: true, email: true } },
         },
     })
+
+    // Сделки контрагента — там, где он клиент или плательщик (документы
+    // оформлены на него, а покупает другое юрлицо группы). Роль заказчика
+    // аукциона сюда намеренно не входит: сделку ведут с поставщиком.
+    const deals = await prisma.deal.findMany({
+        where: { OR: [{ counterpartyId: item.id }, { payerId: item.id }] },
+        orderBy: { createdAt: "desc" },
+        include: {
+            counterparty: { select: { id: true, name: true } },
+            manager: { select: { firstName: true, lastName: true, email: true } },
+            sourceProject: { select: { id: true, internalName: true } },
+        },
+    })
+
+    // Сделки вешаем ветками под их проект. Проект сделки может не быть проектом
+    // этого контрагента (например, он в ней только плательщик) — такие сделки
+    // уходят в общую группу внизу, название проекта показываем в подписи.
+    const projectIds = new Set(projects.map(p => p.id))
+    const dealsByProject = new Map()
+    const looseDeals = []
+    for (const d of deals) {
+        if (d.sourceProjectId && projectIds.has(d.sourceProjectId)) {
+            const list = dealsByProject.get(d.sourceProjectId) || []
+            list.push(d)
+            dealsByProject.set(d.sourceProjectId, list)
+        } else {
+            looseDeals.push(d)
+        }
+    }
+
+    // Короткое дерево показываем сразу — сворачивать там нечего; длинное
+    // открывается по клику, чтобы карточка не начиналась с двух экранов истории.
+    const treeOpenByDefault = projects.length + deals.length <= TREE_OPEN_LIMIT
 
     // Оборот — факт по закрытым сделкам, считается на лету. Для группы нужен
     // оборот каждого юрлица, для карточки — только свой.
@@ -303,12 +346,33 @@ export default async function CounterpartyPage({ params }) {
                         )}
                     </Section>
 
-                    <section className='rounded-xl border border-line bg-white p-4'>
-                        <h2 className='mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-500'>
-                            Проекты{projects.length > 0 ? ` · ${projects.length}` : ""}
-                        </h2>
-                        {projects.length === 0 ? (
-                            <p className='text-sm text-neutral-400'>Проектов пока нет.</p>
+                    {/* Сворачивается нативным <details>: у давнего клиента дерево
+                        разрастается на несколько экранов и отодвигает контакты
+                        с реквизитами. Клиентский компонент ради этого не нужен —
+                        состояние держит браузер. */}
+                    <details
+                        open={treeOpenByDefault}
+                        className='group rounded-xl border border-line bg-white p-4'
+                    >
+                        <summary className='flex cursor-pointer list-none flex-wrap items-center justify-between gap-x-3 gap-y-1 [&::-webkit-details-marker]:hidden'>
+                            <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
+                                Проекты и сделки
+                            </h2>
+                            <span className='flex items-center gap-1.5 text-[11px] text-neutral-400'>
+                                {(projects.length > 0 || deals.length > 0) && (
+                                    <span>
+                                        {pluralProjects(projects.length)} ·{" "}
+                                        {pluralDeals(deals.length)}
+                                    </span>
+                                )}
+                                <LuChevronDown className='h-4 w-4 transition group-open:rotate-180' />
+                            </span>
+                        </summary>
+                        <div className='mt-3'>
+                        {projects.length === 0 && deals.length === 0 ? (
+                            <p className='text-sm text-neutral-400'>
+                                Проектов и сделок пока нет.
+                            </p>
                         ) : (
                             <div>
                                 {/* Узел-контрагент */}
@@ -371,13 +435,44 @@ export default async function CounterpartyPage({ params }) {
                                                         </span>
                                                     </div>
                                                 </Link>
+                                                {(dealsByProject.get(p.id) || []).length > 0 && (
+                                                    <ul className='ml-3 border-l border-line'>
+                                                        {dealsByProject.get(p.id).map(d => (
+                                                            <DealBranch
+                                                                key={d.id}
+                                                                deal={d}
+                                                                counterpartyId={item.id}
+                                                            />
+                                                        ))}
+                                                    </ul>
+                                                )}
                                             </li>
                                         )
                                     })}
+
+                                    {looseDeals.length > 0 && (
+                                        <li className='relative pl-6 pt-3'>
+                                            <span className='absolute left-0 top-5 h-px w-6 bg-line' />
+                                            <p className='text-[11px] uppercase tracking-wider text-neutral-400'>
+                                                Без проекта
+                                            </p>
+                                            <ul className='ml-3 border-l border-line'>
+                                                {looseDeals.map(d => (
+                                                    <DealBranch
+                                                        key={d.id}
+                                                        deal={d}
+                                                        counterpartyId={item.id}
+                                                        showProject
+                                                    />
+                                                ))}
+                                            </ul>
+                                        </li>
+                                    )}
                                 </ul>
                             </div>
                         )}
-                    </section>
+                        </div>
+                    </details>
 
                     <ContactsSection
                         counterpartyId={item.id}
@@ -424,6 +519,98 @@ export default async function CounterpartyPage({ params }) {
             </div>
         </div>
     )
+}
+
+// Ветка-сделка в дереве проектов. Под проектом название собираем без подстановки
+// проекта (dealOwnTitle) — иначе каждая ветка повторяла бы имя родителя.
+function DealBranch({ deal, counterpartyId, showProject = false }) {
+    const managerName = deal.manager
+        ? `${deal.manager.firstName ?? ""} ${deal.manager.lastName ?? ""}`.trim() ||
+          deal.manager.email
+        : "—"
+    // Контрагент не клиент сделки — значит попал сюда как плательщик.
+    const asPayer = deal.counterpartyId !== counterpartyId
+    const title = showProject
+        ? dealDisplayTitle(deal, deal.counterparty?.name)
+        : dealOwnTitle(deal, deal.counterparty?.name)
+
+    return (
+        <li className='relative pl-5 pt-2'>
+            <span className='absolute left-0 top-[22px] h-px w-5 bg-line' />
+            <Link
+                href={`/crm/deals/${deal.id}`}
+                className='block rounded-lg border border-line px-2.5 py-2 transition hover:border-brand_main/40 hover:bg-surface_muted'
+            >
+                <div className='flex items-start justify-between gap-3'>
+                    <div className='min-w-0'>
+                        <div className='flex flex-wrap items-center gap-1.5'>
+                            <span
+                                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                                    DEAL_STATUS_COLORS[deal.status] ||
+                                    "bg-neutral-100 text-neutral-500"
+                                }`}
+                            >
+                                <span className='h-1.5 w-1.5 rounded-full bg-current' />
+                                {DEAL_STATUS_LABELS[deal.status] || deal.status}
+                            </span>
+                            {deal.isAuction && (
+                                <span className='shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700'>
+                                    Аукцион
+                                </span>
+                            )}
+                            {asPayer && (
+                                <span
+                                    className='shrink-0 rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-500'
+                                    title='Документы оформлены на этого контрагента'
+                                >
+                                    Плательщик
+                                </span>
+                            )}
+                            <p className='truncate text-sm text-neutral-900'>{title}</p>
+                        </div>
+                        <div className='mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-neutral-500'>
+                            <span className='inline-flex min-w-0 items-center gap-1'>
+                                <LuUser className='h-3 w-3 shrink-0' />
+                                <span className='truncate'>{managerName}</span>
+                            </span>
+                            {asPayer && deal.counterparty && (
+                                <span className='inline-flex min-w-0 items-center gap-1'>
+                                    <LuBuilding2 className='h-3 w-3 shrink-0' />
+                                    <span className='truncate'>{deal.counterparty.name}</span>
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                    <span
+                        className='shrink-0 text-sm font-medium text-neutral-900'
+                        title={
+                            Number(deal.discount) > 0
+                                ? `Сумма со скидкой ${Number(deal.discount)}% (без скидки ${formatMoney(deal.totalAmount)})`
+                                : undefined
+                        }
+                    >
+                        {formatMoney(dealDiscountedTotal(deal))}
+                    </span>
+                </div>
+            </Link>
+        </li>
+    )
+}
+
+function pluralProjects(n) {
+    const mod10 = n % 10
+    const mod100 = n % 100
+    if (mod10 === 1 && mod100 !== 11) return `${n} проект`
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} проекта`
+    return `${n} проектов`
+}
+
+function pluralDeals(n) {
+    const mod10 = n % 10
+    const mod100 = n % 100
+    if (mod10 === 1 && mod100 !== 11) return `${n} сделка`
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} сделки`
+    return `${n} сделок`
 }
 
 function pluralEntities(n) {

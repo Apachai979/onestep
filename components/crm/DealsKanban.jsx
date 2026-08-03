@@ -29,6 +29,7 @@ import { calculateDealShipmentProgress, isShipmentOverdue } from "@/lib/crm/ship
 import { formatMoney } from "@/lib/crm/format"
 import { useToast } from "@/components/crm/ui"
 import { DEAL_LOCKED_STATUSES } from "@/lib/crm/access"
+import { LuGavel } from "react-icons/lu"
 import DealLossDialog from "./DealLossDialog"
 
 function safeJson(text) {
@@ -328,13 +329,17 @@ function DealCard({ deal, locked, dragging, onDragStart, onDragEnd }) {
                 dragging ? "opacity-50" : "border-line"
             }`}
         >
-            <p className='flex items-start gap-1.5 font-medium leading-snug text-neutral-900'>
+            {/* Аукцион помечаем иконкой в строке названия: текстовый бейдж
+                отжимал заголовок в узкую колонку и растил карточку в высоту. */}
+            <p className='font-medium leading-snug text-neutral-900'>
                 {deal.isAuction && (
-                    <span className='mt-0.5 shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700'>
-                        Аукцион
-                    </span>
+                    <LuGavel
+                        size={13}
+                        title='Аукцион'
+                        className='mr-1 inline align-[-0.15em] text-amber-600'
+                    />
                 )}
-                <span className='min-w-0'>{title}</span>
+                {title}
             </p>
             <div className='mt-1 flex items-center justify-between gap-2'>
                 <p className='min-w-0 truncate text-xs text-neutral-500'>

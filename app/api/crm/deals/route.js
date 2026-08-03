@@ -6,6 +6,7 @@ import {
     DEAL_STATUSES,
     DEAL_TRACKED_FIELDS,
     autoArchiveStaleCancelledDeals,
+    dealAuctionCustomerError,
     dealDiscountedTotal,
     dealKanbanOrderField,
     matchesDealSearch,
@@ -251,6 +252,11 @@ export async function POST(request) {
     })
     if (!manager || manager.status !== "ACTIVE") {
         return Response.json({ error: "Менеджер не найден" }, { status: 400 })
+    }
+
+    const auctionCustomerError = dealAuctionCustomerError(data)
+    if (auctionCustomerError) {
+        return Response.json({ error: auctionCustomerError }, { status: 400 })
     }
 
     if (data.auctionCustomerId) {

@@ -3,6 +3,7 @@ import { requireCrmSession } from "@/lib/crm/session"
 import { requireAdmin } from "@/lib/crm/admin"
 import {
     DEAL_TRACKED_FIELDS,
+    dealAuctionCustomerError,
     parseDealPayload,
 } from "@/lib/crm/deal"
 import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
@@ -226,6 +227,10 @@ export async function PATCH(request, { params }) {
         if (!m || m.status !== "ACTIVE") {
             return Response.json({ error: "Менеджер не найден" }, { status: 400 })
         }
+    }
+    const auctionCustomerError = dealAuctionCustomerError(data, existing)
+    if (auctionCustomerError) {
+        return Response.json({ error: auctionCustomerError }, { status: 400 })
     }
     if (data.auctionCustomerId) {
         const cust = await prisma.counterparty.findUnique({

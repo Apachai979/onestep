@@ -292,6 +292,19 @@ async function importDeals(tx, wb, report, session) {
                   cellStr(row["заказчик"]),
               )
             : null
+        // Аукцион без заказчика — незаполненная сделка: строку пропускаем, а не
+        // создаём половинчатую запись (то же правило, что в POST /api/crm/deals).
+        if (isAuction && !customerId) {
+            const raw = cellStr(row["заказчик"]) || cellStr(row["инн заказчика"])
+            report.errors.push({
+                row: row.__row,
+                sheet: "Сделки",
+                message: raw
+                    ? `Заказчик аукциона не найден: «${raw}» — сначала импортируйте контрагентов`
+                    : "Аукцион без заказчика — заполните колонку «Заказчик»",
+            })
+            continue
+        }
         const createdAt = cellDate(row["создана"])
         const created = await tx.deal.create({
             data: {
@@ -334,13 +347,6 @@ async function importDeals(tx, wb, report, session) {
             },
         })
         report.created += 1
-        if (isAuction && !customerId && cellStr(row["заказчик"])) {
-            report.errors.push({
-                row: row.__row,
-                sheet: "Сделки",
-                message: `Заказчик аукциона не найден: «${cellStr(row["заказчик"])}» — сделка создана без него`,
-            })
-        }
         const n = cellStr(row["№"])
         if (n) byN.set(n, created.id)
     }

@@ -3,7 +3,12 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { LuLock } from "react-icons/lu"
-import { DEAL_STATUSES, DEAL_STATUS_LABELS, dealDisplayTitle } from "@/lib/crm/deal"
+import {
+    DEAL_AUCTION_CUSTOMER_REQUIRED_ERROR,
+    DEAL_STATUSES,
+    DEAL_STATUS_LABELS,
+    dealDisplayTitle,
+} from "@/lib/crm/deal"
 import { discountSourceLabel, formatDiscount, inheritedDealDiscount } from "@/lib/crm/discount"
 import { formatMoney } from "@/lib/crm/format"
 import SearchableSelect from "./SearchableSelect"
@@ -166,6 +171,9 @@ export default function DealForm({
     // Плательщика раскрываем по требованию — он нужен в единицах случаев.
     const [payerOpen, setPayerOpen] = useState(Boolean(initial?.payerId))
     const [error, setError] = useState("")
+    // Заказчик обязателен только у аукциона — держим ошибку отдельно, чтобы
+    // подсветить само поле, а не только общую плашку внизу формы.
+    const [customerError, setCustomerError] = useState("")
     const [loading, setLoading] = useState(false)
 
     const clientGroup = client?.group ?? null
@@ -365,6 +373,16 @@ export default function DealForm({
     async function handleSubmit(e) {
         e.preventDefault()
         setError("")
+        setCustomerError("")
+
+        // Селект заказчика — не нативный input, браузерная проверка required
+        // до него не достаёт.
+        if (form.isAuction && !form.auctionCustomerId) {
+            setCustomerError(DEAL_AUCTION_CUSTOMER_REQUIRED_ERROR)
+            setError(DEAL_AUCTION_CUSTOMER_REQUIRED_ERROR)
+            return
+        }
+
         setLoading(true)
 
         const payload = {
@@ -570,17 +588,20 @@ export default function DealForm({
                                 <Field
                                     label='Заказчик (конечный потребитель)'
                                     className='sm:col-span-2'
+                                    required
+                                    error={customerError}
                                 >
                                     <SearchableSelect
                                         value={form.auctionCustomerId}
-                                        onChange={id =>
+                                        onChange={id => {
+                                            setCustomerError("")
                                             setForm(prev => ({
                                                 ...prev,
                                                 auctionCustomerId: id,
                                                 auctionCustomerContactId: "",
                                             }))
-                                        }
-                                        placeholder='— Не выбран —'
+                                        }}
+                                        placeholder='— Выберите заказчика —'
                                         options={counterpartyOptions}
                                     />
                                 </Field>
@@ -603,6 +624,7 @@ export default function DealForm({
                             checked={form.isAuction}
                             onChange={e => {
                                 const on = e.target.checked
+                                if (!on) setCustomerError("")
                                 setForm(prev => ({
                                     ...prev,
                                     isAuction: on,

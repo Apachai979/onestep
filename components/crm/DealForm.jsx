@@ -421,6 +421,34 @@ export default function DealForm({
 
     const inheritedLabel = discountSourceLabel(inherited)
 
+    // Плательщик — редкий случай, поэтому спрятан за ссылкой и не мешает
+    // основному сценарию. Место ему рядом с клиентом: это юрлицо его группы.
+    const payerBlock = payerOpen ? (
+        <Field label='Плательщик (на кого документы)'>
+            <SearchableSelect
+                value={form.payerId}
+                onChange={id => setForm(prev => ({ ...prev, payerId: id }))}
+                disabled={!form.counterpartyId}
+                placeholder={
+                    !form.counterpartyId ? "Сначала выберите клиента" : "— Тот же, что клиент —"
+                }
+                emptyLabel='Юрлицо не найдено'
+                options={payerOptions}
+            />
+            <p className='mt-1 text-xs text-neutral-500'>
+                Скидка и история остаются за клиентом.
+            </p>
+        </Field>
+    ) : (
+        <button
+            type='button'
+            onClick={() => setPayerOpen(true)}
+            className='text-xs font-medium text-neutral-500 underline underline-offset-2 hover:text-brand_main'
+        >
+            Документы оформляем на другое юрлицо клиента
+        </button>
+    )
+
     return (
         <form onSubmit={handleSubmit} className='space-y-6'>
             {sourceProject ? (
@@ -487,6 +515,7 @@ export default function DealForm({
                                 </SummaryRow>
                             )}
                         </dl>
+                        {payerBlock}
                         {!projectLocked && !fromProject && (
                             <button
                                 type='button'
@@ -523,6 +552,7 @@ export default function DealForm({
                                     options={counterpartyOptions}
                                 />
                             </Field>
+                            <div className='sm:col-span-2'>{payerBlock}</div>
                             <Field label='Проект-источник' className='sm:col-span-2'>
                                 <SearchableSelect
                                     value={form.sourceProjectId}
@@ -691,36 +721,6 @@ export default function DealForm({
                             onChange={update("note")}
                         />
                     </div>
-
-                    {/* Плательщик — редкий случай, поэтому спрятан за ссылкой и
-                        не мешает основному сценарию. */}
-                    {payerOpen ? (
-                        <Field label='Плательщик (на кого документы)'>
-                            <SearchableSelect
-                                value={form.payerId}
-                                onChange={id => setForm(prev => ({ ...prev, payerId: id }))}
-                                disabled={!form.counterpartyId}
-                                placeholder={
-                                    !form.counterpartyId
-                                        ? "Сначала выберите клиента"
-                                        : "— Тот же, что клиент —"
-                                }
-                                emptyLabel='Юрлицо не найдено'
-                                options={payerOptions}
-                            />
-                            <p className='mt-1 text-xs text-neutral-500'>
-                                Скидка и история остаются за клиентом.
-                            </p>
-                        </Field>
-                    ) : (
-                        <button
-                            type='button'
-                            onClick={() => setPayerOpen(true)}
-                            className='text-xs font-medium text-neutral-500 underline underline-offset-2 hover:text-brand_main'
-                        >
-                            Документы оформляем на другое юрлицо клиента
-                        </button>
-                    )}
                 </FormSection>
             </Card>
 

@@ -4,12 +4,10 @@ import {
     DEAL_KANBAN_PER_STATUS,
     DEAL_KANBAN_STATUSES,
     DEAL_STATUSES,
-    DEAL_STATUS_NEEDS_ITEMS_ERROR,
     DEAL_TRACKED_FIELDS,
     autoArchiveStaleCancelledDeals,
     dealDiscountedTotal,
     dealKanbanOrderField,
-    dealStatusRequiresItems,
     matchesDealSearch,
     parseDealPayload,
 } from "@/lib/crm/deal"
@@ -280,12 +278,6 @@ export async function POST(request) {
     }
 
     const sourceItems = sourceProject?.items ?? []
-
-    // Новая сделка получает позиции только из проекта-источника, поэтому создать
-    // её сразу в «Согласовано / Позиции» можно лишь по проекту с позициями.
-    if (dealStatusRequiresItems(data.status) && sourceItems.length === 0) {
-        return Response.json({ error: DEAL_STATUS_NEEDS_ITEMS_ERROR }, { status: 400 })
-    }
 
     const created = await prisma.$transaction(async tx => {
         const deal = await tx.deal.create({

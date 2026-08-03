@@ -7,8 +7,6 @@ import {
     DEAL_STATUS_COLORS,
     DEAL_STATUS_HINTS,
     DEAL_STATUS_LABELS,
-    DEAL_STATUS_NEEDS_ITEMS_ERROR,
-    dealStatusRequiresItems,
     dealDiscountedTotal,
     dealDisplayTitle,
     isDealAbandoned,
@@ -189,12 +187,6 @@ export default function DealsKanban({ query = "", isAdmin = false, onShowAll }) 
             if (!deal || deal.status === status) return
             // Завершённую сделку менеджер не двигает — карточка заморожена.
             if (isLocked(deal.status)) return
-            // Критерий входа в «Согласовано / Позиции» проверяет и сервер;
-            // здесь — чтобы карточка не дёргалась туда-обратно на отказе.
-            if (dealStatusRequiresItems(status) && !(deal.items?.length > 0)) {
-                toast.error(DEAL_STATUS_NEEDS_ITEMS_ERROR)
-                return
-            }
             // Перенос в «Не реализована» — только с причиной.
             if (status === "CANCELLED") {
                 setLosingDeal(deal)

@@ -329,7 +329,7 @@ export default async function CrmHome() {
                         hint='Создайте новую сделку — она появится здесь.'
                     />
                 ) : (
-                    <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6'>
+                    <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4'>
                         {DEAL_STATUSES.map(s => {
                             const stat = dealStatusStats[s] || { count: 0, sum: 0 }
                             const recent = (dealsListByStatus[s] || []).slice(0, 2)

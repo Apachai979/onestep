@@ -7,8 +7,11 @@ import {
     DEAL_STATUS_COLORS,
     DEAL_STATUS_HINTS,
     DEAL_STATUS_LABELS,
+    DEAL_STATUS_NEEDS_ITEMS_ERROR,
+    dealStatusRequiresItems,
     dealDiscountedTotal,
     dealDisplayTitle,
+    isDealAbandoned,
 } from "@/lib/crm/deal"
 
 const EMPTY_COLUMN = { items: [], total: 0, sum: 0 }
@@ -17,6 +20,7 @@ const EMPTY_COLUMN = { items: [], total: 0, sum: 0 }
 // тонкая приглушённая акцентная полоска сверху для быстрой ориентации.
 const COLUMN_ACCENT = {
     NEGOTIATION: "bg-blue-300/70",
+    CONFIRMED: "bg-indigo-300/70",
     CONTRACT: "bg-violet-300/70",
     EXECUTION: "bg-amber-300/70",
     AWAITING: "bg-teal-300/70",
@@ -185,6 +189,12 @@ export default function DealsKanban({ query = "", isAdmin = false, onShowAll }) 
             if (!deal || deal.status === status) return
             // Завершённую сделку менеджер не двигает — карточка заморожена.
             if (isLocked(deal.status)) return
+            // Критерий входа в «Согласовано / Позиции» проверяет и сервер;
+            // здесь — чтобы карточка не дёргалась туда-обратно на отказе.
+            if (dealStatusRequiresItems(status) && !(deal.items?.length > 0)) {
+                toast.error(DEAL_STATUS_NEEDS_ITEMS_ERROR)
+                return
+            }
             // Перенос в «Не реализована» — только с причиной.
             if (status === "CANCELLED") {
                 setLosingDeal(deal)
@@ -314,6 +324,7 @@ function DealCard({ deal, locked, dragging, onDragStart, onDragEnd }) {
     // На карточке показываем сумму со скидкой — это то, что реально получим.
     const discountPct = deal.discount != null ? Number(deal.discount) : 0
     const amount = dealDiscountedTotal(deal)
+    const abandoned = isDealAbandoned(deal)
 
     return (
         <Link
@@ -333,9 +344,19 @@ function DealCard({ deal, locked, dragging, onDragStart, onDragEnd }) {
                 )}
                 <span className='min-w-0'>{title}</span>
             </p>
-            <p className='mt-1 truncate text-xs text-neutral-500'>
-                {deal.counterparty?.name || "Без клиента"}
-            </p>
+            <div className='mt-1 flex items-center justify-between gap-2'>
+                <p className='min-w-0 truncate text-xs text-neutral-500'>
+                    {deal.counterparty?.name || "Без клиента"}
+                </p>
+                {abandoned && (
+                    <span
+                        className='shrink-0 rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold text-amber-700'
+                        title='По сделке нет ни одной открытой задачи — следующий шаг не запланирован'
+                    >
+                        Без задач
+                    </span>
+                )}
+            </div>
             <div className='mt-2 flex items-center justify-between gap-2 text-xs'>
                 <span className='truncate text-neutral-500'>{managerName(deal.manager)}</span>
                 <span

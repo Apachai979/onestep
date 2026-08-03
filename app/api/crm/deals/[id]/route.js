@@ -1,7 +1,12 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { requireAdmin } from "@/lib/crm/admin"
-import { DEAL_TRACKED_FIELDS, parseDealPayload } from "@/lib/crm/deal"
+import {
+    DEAL_STATUS_NEEDS_ITEMS_ERROR,
+    DEAL_TRACKED_FIELDS,
+    dealStatusRequiresItems,
+    parseDealPayload,
+} from "@/lib/crm/deal"
 import { diffEntities, logChange, snapshotEntity } from "@/lib/crm/change-log"
 import {
     DEAL_DELETABLE_STATUSES,
@@ -128,6 +133,16 @@ export async function PATCH(request, { params }) {
     if (data.status && data.status !== "CANCELLED" && data.status !== "ARCHIVED") {
         if (existing.lossReason && data.lossReason === undefined) data.lossReason = null
         if (existing.lossComment && data.lossComment === undefined) data.lossComment = null
+    }
+
+    // Вход в «Согласовано / Позиции» — только с заполненным составом
+    // позиций (см. dealStatusRequiresItems). Проверяем именно переход: сделку,
+    // которая уже в статусе, правка других полей блокировать не должна.
+    if (data.status && data.status !== existing.status && dealStatusRequiresItems(data.status)) {
+        const itemsCount = await prisma.dealItem.count({ where: { dealId: params.id } })
+        if (itemsCount === 0) {
+            return Response.json({ error: DEAL_STATUS_NEEDS_ITEMS_ERROR }, { status: 400 })
+        }
     }
 
     // Скидка входит в расчёт сумм отгрузки (priceFactor в

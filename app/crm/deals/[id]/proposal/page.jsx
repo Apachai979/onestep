@@ -14,6 +14,15 @@ function toNum(v) {
     return Number.isFinite(n) ? n : 0
 }
 
+// В КП покупателя и конечного потребителя подписываем ИНН — по нему заказчик
+// сверяет, на кого оформлять документы. Строка попадает в редактируемое поле
+// формы, так что менеджер может её поправить.
+function withInn(counterparty) {
+    if (!counterparty?.name) return ""
+    const inn = counterparty.inn?.trim()
+    return inn ? `${counterparty.name} (ИНН ${inn})` : counterparty.name
+}
+
 export default async function ProposalPage({ params }) {
     const session = await getServerSession(authOptions)
 
@@ -23,13 +32,15 @@ export default async function ProposalPage({ params }) {
             counterparty: true,
             // Если документы оформляются на другое юрлицо клиента, покупателем
             // в КП должно быть именно оно.
-            payer: { select: { name: true, email: true } },
+            payer: { select: { name: true, email: true, inn: true } },
             contact: true,
             manager: true,
             // Конечный потребитель для КП берётся из проекта-источника,
             // а для сделок-аукционов — это заказчик аукциона.
-            sourceProject: { include: { endCustomer: { select: { name: true } } } },
-            auctionCustomer: { select: { name: true } },
+            sourceProject: {
+                include: { endCustomer: { select: { name: true, inn: true } } },
+            },
+            auctionCustomer: { select: { name: true, inn: true } },
         },
     })
     if (!deal) notFound()
@@ -113,14 +124,14 @@ export default async function ProposalPage({ params }) {
         : ""
 
     const endCustomer =
-        deal.auctionCustomer?.name ||
-        deal.sourceProject?.endCustomer?.name ||
+        withInn(deal.auctionCustomer) ||
+        withInn(deal.sourceProject?.endCustomer) ||
         ""
 
     return (
         <ProposalView
             dealId={deal.id}
-            buyer={deal.payer?.name || deal.counterparty.name}
+            buyer={withInn(deal.payer) || withInn(deal.counterparty)}
             endCustomer={endCustomer}
             contactName={contactName}
             contactEmail={deal.contact?.email || deal.counterparty?.email || ""}

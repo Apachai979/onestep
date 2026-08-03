@@ -15,6 +15,7 @@ import {
     LuStethoscope,
     LuContact,
     LuPackage,
+    LuWarehouse,
     LuSearch,
     LuSettings,
     LuUsers,
@@ -121,6 +122,7 @@ export default function CrmShell({ user, role, children }) {
             { href: "/crm/customers", label: "Конечные потребители", icon: LuStethoscope },
             { href: "/crm/contacts", label: "Контакты", icon: LuContact },
             { href: "/crm/products", label: "Товары", icon: LuPackage },
+            { href: "/crm/supply", label: "Обеспечение", icon: LuWarehouse },
             {
                 href: "/crm/users",
                 label: role === "ADMIN" ? "Пользователи" : "Сотрудники",

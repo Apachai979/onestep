@@ -32,3 +32,30 @@ cd /var/www/onestep && ./restore.sh
 
 sqlite3 /var/www/onestep/prisma/dev.db ".backup '/var/www/onestep/backups/dev.db.manual-$(date +%Y%m%d-%H%M%S)'"
 Скрипты лежат рядом с проектом и не в git (untracked) — обновлениям через git pull не мешают.
+
+Как забрать боевую базу к себе на локальную машину
+Скрипт scripts/pull-prod-db.sh (он в git, приезжает вместе с кодом).
+
+⚠️ Запускать ТОЛЬКО со своей машины, не с сервера. Скрипт сам подключается на прод по SSH. Если запустить его на сервере, он подменит боевую базу её же снимком и удалит журнал у живой базы. На такой случай в скрипте стоит предохранитель: увидев локальный каталог /var/www/onestep, он откажется работать.
+
+Из Git Bash в корне проекта:
+
+cd /c/Users/vitalii/Documents/Projects/onestep
+bash scripts/pull-prod-db.sh                 # только база
+bash scripts/pull-prod-db.sh --with-uploads  # база + вложения CRM
+
+Другой адрес сервера — через переменную: SERVER=root@1.2.3.4 bash scripts/pull-prod-db.sh
+
+Что он делает по шагам:
+1. На сервере снимает консистентный снимок через sqlite3 .backup во временный /tmp (простой cp/scp с живой базы может приехать битым — снимок обязателен) и после скачивания удаляет его.
+2. Качает снимок в prisma/dev.db.prod-<время> — промежуточный файл, чтобы оборванная закачка не убила рабочую базу.
+3. Текущую локальную базу откладывает в prisma/dev.db.bak-local-<время> — это откат: скопировать файл обратно в prisma/dev.db.
+4. Кладёт скачанное в prisma/dev.db и чистит хвосты журнала (-wal, -shm, -journal) от прежней локальной базы.
+5. С флагом --with-uploads тянет rsync-ом /var/www/onestep/uploads/ в локальный uploads/ (если rsync в Git Bash нет — scp -r root@83.217.202.170:/var/www/onestep/uploads/. uploads/).
+6. Показывает npx prisma migrate status.
+
+Вложения живут отдельно от базы, в /var/www/onestep/uploads/ — в базе хранятся только ключи файлов. Без папки uploads вложения в локальной CRM будут отдавать 404.
+
+Локальный .env не трогается — NEXTAUTH_URL остаётся localhost. Но вместе с базой приедут боевые пользователи и их пароли: логиниться локально придётся боевой учёткой, локальный BOOTSTRAP_ADMIN больше не подойдёт.
+
+Если migrate status покажет непримененные миграции — значит в git есть миграции новее прода. Накатите локально: npx prisma migrate deploy

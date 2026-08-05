@@ -6,6 +6,7 @@ import {
     PROJECT_STATUSES,
     PROJECT_STATUS_COLORS,
     PROJECT_STATUS_LABELS,
+    openDealsListText,
 } from "@/lib/crm/project"
 import { formatMoney } from "@/lib/crm/format"
 import { Badge, useToast } from "@/components/crm/ui"
@@ -134,7 +135,11 @@ export default function ProjectsKanban({ query = "", isAdmin = false, onShowAll 
             if (!r.ok) {
                 const text = await r.text()
                 const d = text ? safeJson(text) : {}
-                throw new Error(d?.error || "Не удалось сменить статус")
+                const err = new Error(d?.error || "Не удалось сменить статус")
+                // Незакрытые сделки, из-за которых проект нельзя закрыть, —
+                // показываем списком под текстом ошибки.
+                err.openDeals = d?.openDeals
+                throw err
             }
             // Перечитываем: колонка могла быть обрезана лимитом, и на месте
             // ушедшей карточки должна появиться следующая.
@@ -143,7 +148,14 @@ export default function ProjectsKanban({ query = "", isAdmin = false, onShowAll 
                 .catch(() => {})
         } catch (err) {
             setColumns(prev)
-            toast.error(err.message)
+            if (err.openDeals?.length) {
+                toast.error(openDealsListText(err.openDeals), {
+                    title: err.message,
+                    duration: 12000,
+                })
+            } else {
+                toast.error(err.message)
+            }
         }
     }
 

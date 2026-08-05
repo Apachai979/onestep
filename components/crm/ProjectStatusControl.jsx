@@ -5,6 +5,7 @@ import {
     PROJECT_STATUSES,
     PROJECT_STATUS_COLORS,
     PROJECT_STATUS_LABELS,
+    openDealsListText,
 } from "@/lib/crm/project"
 import { useToast } from "@/components/crm/ui"
 import DealLossDialog from "./DealLossDialog"
@@ -31,7 +32,17 @@ export default function ProjectStatusControl({ projectId, currentStatus, readOnl
             router.refresh()
         } else {
             const d = await res.json().catch(() => ({}))
-            toast.error(d.error || "Не удалось сменить статус")
+            // Незакрытые сделки перечисляем в тосте: без имён менеджеру
+            // непонятно, что именно мешает закрыть проект.
+            if (d.openDeals?.length) {
+                setAskReason(false)
+                toast.error(openDealsListText(d.openDeals), {
+                    title: d.error,
+                    duration: 12000,
+                })
+            } else {
+                toast.error(d.error || "Не удалось сменить статус")
+            }
         }
         setLoading(false)
     }

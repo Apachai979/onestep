@@ -12,6 +12,7 @@ import {
     DEAL_DELETE_STATUS_ERROR,
     DEAL_DISCOUNT_SHIPPED_ERROR,
     DEAL_PARTIES_LOCKED_ERROR,
+    DEAL_PROJECT_NO_NEED_ERROR,
     dealItemShipmentUsage,
     dealLockResponse,
     dealProjectPartiesError,
@@ -164,6 +165,22 @@ export async function PATCH(request, { params }) {
     const linkingProject =
         data.sourceProjectId !== undefined && data.sourceProjectId !== existing.sourceProjectId
     const projectId = linkingProject ? data.sourceProjectId : existing.sourceProjectId
+
+    // Привязка к закрытому проекту — обход запрета создавать в нём сделки:
+    // сделку заводят без проекта, а потом подшивают к нему.
+    if (linkingProject && data.sourceProjectId) {
+        const target = await prisma.project.findUnique({
+            where: { id: data.sourceProjectId },
+            select: { status: true },
+        })
+        if (!target) {
+            return Response.json({ error: "Проект-источник не найден" }, { status: 400 })
+        }
+        if (target.status === "NO_NEED") {
+            return Response.json({ error: DEAL_PROJECT_NO_NEED_ERROR }, { status: 400 })
+        }
+    }
+
     if (projectId) {
         // При новой привязке проверяем итоговые стороны сделки, при обычном
         // редактировании — только те, что реально меняются.

@@ -13,6 +13,14 @@ set -euo pipefail
 SERVER="${SERVER:-root@83.217.202.170}"
 REMOTE_DIR="${REMOTE_DIR:-/var/www/onestep}"
 
+# Скрипт запускается ТОЛЬКО с локальной машины — он сам ходит на прод по SSH.
+# Запуск на сервере подменил бы боевую базу её же снимком и снёс журнал у живой базы.
+if [ -d "$REMOTE_DIR" ]; then
+  echo "ОТКАЗ: похоже, это сам сервер ($REMOTE_DIR существует локально)." >&2
+  echo "Скрипт нужно запускать со своей машины — он подключится сюда сам." >&2
+  exit 1
+fi
+
 cd "$(dirname "$0")/.."
 STAMP="$(date +%Y%m%d-%H%M%S)"
 REMOTE_SNAPSHOT="/tmp/onestep-pull-${STAMP}.db"

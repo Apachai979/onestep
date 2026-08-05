@@ -1,6 +1,8 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import {
+    DEAL_CREATE_STATUSES,
+    DEAL_CREATE_STATUS_ERROR,
     DEAL_KANBAN_PER_STATUS,
     DEAL_KANBAN_STATUSES,
     DEAL_STATUSES,
@@ -13,7 +15,7 @@ import {
     parseDealPayload,
 } from "@/lib/crm/deal"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
-import { dealProjectPartiesError } from "@/lib/crm/access"
+import { DEAL_PROJECT_NO_NEED_ERROR, dealProjectPartiesError } from "@/lib/crm/access"
 import { inheritedDealDiscount } from "@/lib/crm/discount"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
@@ -186,6 +188,10 @@ export async function POST(request) {
     const { data, error } = parseDealPayload(body)
     if (error) return Response.json({ error }, { status: 400 })
 
+    if (data.status && !DEAL_CREATE_STATUSES.includes(data.status)) {
+        return Response.json({ error: DEAL_CREATE_STATUS_ERROR }, { status: 400 })
+    }
+
     // Позиции переносятся из проекта-источника, а стороны сделки должны ему
     // соответствовать — проверяем до валидации контактов, чтобы дальше по коду
     // клиент и заказчик были уже окончательными.
@@ -197,6 +203,11 @@ export async function POST(request) {
         })
         if (!sourceProject) {
             return Response.json({ error: "Проект-источник не найден" }, { status: 400 })
+        }
+        // Кнопка «Создать сделку» на карточке закрытого проекта скрыта, но по
+        // прямой ссылке сюда прийти можно — правило держим на сервере.
+        if (sourceProject.status === "NO_NEED") {
+            return Response.json({ error: DEAL_PROJECT_NO_NEED_ERROR }, { status: 400 })
         }
         const partiesError = dealProjectPartiesError(sourceProject, data)
         if (partiesError) return Response.json({ error: partiesError }, { status: 400 })

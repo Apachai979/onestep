@@ -4,6 +4,7 @@ import {
     PROJECT_TRACKED_FIELDS,
     buildInternalName,
     duplicateProjectMessage,
+    findOpenProjectDeals,
     findProjectDuplicates,
     isAutoInternalName,
     isBlockingDuplicate,
@@ -14,6 +15,7 @@ import {
     PROJECT_DELETABLE_STATUSES,
     PROJECT_DELETE_HAS_DEALS_ERROR,
     PROJECT_DELETE_STATUS_ERROR,
+    PROJECT_NO_NEED_HAS_OPEN_DEALS_ERROR,
     PROJECT_PARTIES_LOCKED_ERROR,
     projectLockResponse,
 } from "@/lib/crm/access"
@@ -85,6 +87,18 @@ export async function PATCH(request, { params }) {
     if (data.status && data.status !== "NO_NEED") {
         if (existing.lossComment && data.lossComment === undefined) data.lossComment = null
         if (existing.lossReason && data.lossReason === undefined) data.lossReason = null
+    }
+
+    // Незакрытые сделки не дают закрыть проект. Проверяем только сам переход:
+    // проекты, закрытые до появления правила, редактировать это не мешает.
+    if (data.status === "NO_NEED" && existing.status !== "NO_NEED") {
+        const openDeals = await findOpenProjectDeals(prisma, params.id)
+        if (openDeals.length > 0) {
+            return Response.json(
+                { error: PROJECT_NO_NEED_HAS_OPEN_DEALS_ERROR, openDeals },
+                { status: 409 },
+            )
+        }
     }
 
     // Стороны проекта фиксируются, как только по нему появилась сделка.

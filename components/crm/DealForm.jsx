@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { LuLock } from "react-icons/lu"
 import {
     DEAL_AUCTION_CUSTOMER_REQUIRED_ERROR,
+    DEAL_CREATE_STATUSES,
     DEAL_STATUSES,
     DEAL_STATUS_LABELS,
     dealDisplayTitle,
@@ -319,16 +320,22 @@ export default function DealForm({
         return [...inGroup, ...rest]
     }, [counterpartyOptions, clientGroup, form.counterpartyId])
 
+    // Проекты «Проработано, нет потребности» в выборе не показываем: сервер
+    // всё равно откажет в привязке (DEAL_PROJECT_NO_NEED_ERROR). Уже
+    // привязанный проект приходит отдельно — linkedProject, — и от фильтра
+    // здесь не зависит.
     const projectOptions = useMemo(
         () =>
-            projects.map(p => ({
-                id: p.id,
-                label: p.internalName,
-                sublabel: [p.distributor?.name, p.endCustomer?.name]
-                    .filter(Boolean)
-                    .join(" – "),
-                search: `${p.internalName} ${p.distributor?.name ?? ""} ${p.endCustomer?.name ?? ""}`,
-            })),
+            projects
+                .filter(p => p.status !== "NO_NEED")
+                .map(p => ({
+                    id: p.id,
+                    label: p.internalName,
+                    sublabel: [p.distributor?.name, p.endCustomer?.name]
+                        .filter(Boolean)
+                        .join(" – "),
+                    search: `${p.internalName} ${p.distributor?.name ?? ""} ${p.endCustomer?.name ?? ""}`,
+                })),
         [projects],
     )
 
@@ -695,7 +702,9 @@ export default function DealForm({
                             />
                         </Field>
                         <Select label='Статус' value={form.status} onChange={update("status")}>
-                            {DEAL_STATUSES.map(s => (
+                            {/* Новую сделку заводят только в начале воронки —
+                                дальше статус меняют в карточке. */}
+                            {(isCreate ? DEAL_CREATE_STATUSES : DEAL_STATUSES).map(s => (
                                 <option key={s} value={s}>
                                     {DEAL_STATUS_LABELS[s]}
                                 </option>

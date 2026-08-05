@@ -40,7 +40,9 @@ export default function RelatedTasksSection({
     const [items, setItems] = useState(null)
     const [creating, setCreating] = useState(false)
     const [closing, setClosing] = useState(null)
-    const [showDone, setShowDone] = useState(false)
+    // Развёрнуто по умолчанию: результат работы по карточке нужен сразу, а не
+    // по клику. Свернуть можно — состояние живёт до перезагрузки страницы.
+    const [showDone, setShowDone] = useState(true)
     const [error, setError] = useState("")
 
     const load = useCallback(async () => {

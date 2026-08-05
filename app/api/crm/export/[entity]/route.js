@@ -12,7 +12,11 @@ import {
     COUNTERPARTY_SOURCE_LABELS,
     COUNTERPARTY_TYPE_LABELS,
 } from "@/lib/crm/counterparty"
-import { PROJECT_LOSS_REASON_LABELS, PROJECT_STATUS_LABELS } from "@/lib/crm/project"
+import {
+    PROJECT_LOSS_REASON_LABELS,
+    PROJECT_STATUS_LABELS,
+    projectDealSums,
+} from "@/lib/crm/project"
 import { closedRevenueByCounterparty } from "@/lib/crm/revenue"
 import { fmtDate, fmtDateTime, xlsxResponse } from "@/lib/crm/excel"
 
@@ -261,14 +265,7 @@ async function exportProjects(wb) {
     })
     // Справочная колонка: сумма привязанных сделок со скидкой — финальная цена
     // (при импорте игнорируется).
-    const projectDeals = await prisma.deal.findMany({
-        where: { sourceProjectId: { not: null } },
-        select: { sourceProjectId: true, totalAmount: true, discount: true },
-    })
-    const sumMap = new Map()
-    for (const d of projectDeals) {
-        sumMap.set(d.sourceProjectId, (sumMap.get(d.sourceProjectId) || 0) + dealDiscountedTotal(d))
-    }
+    const sumMap = await projectDealSums(prisma, items.map(p => p.id))
 
     const ws = wb.addWorksheet("Проекты")
     setupSheet(ws, [

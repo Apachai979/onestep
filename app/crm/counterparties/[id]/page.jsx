@@ -19,7 +19,11 @@ import {
     dealOwnTitle,
 } from "@/lib/crm/deal"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
-import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS } from "@/lib/crm/project"
+import {
+    PROJECT_STATUS_COLORS,
+    PROJECT_STATUS_LABELS,
+    projectDealSums,
+} from "@/lib/crm/project"
 import { attachClosedRevenue, closedRevenueFor } from "@/lib/crm/revenue"
 import ContactsSection from "@/components/crm/ContactsSection"
 import CounterpartyGroupSection from "@/components/crm/CounterpartyGroupSection"
@@ -75,6 +79,11 @@ export default async function CounterpartyPage({ params }) {
             manager: { select: { firstName: true, lastName: true, email: true } },
         },
     })
+
+    // Сумма проекта — сумма всех его сделок, а не поле в базе. Считаем отдельным
+    // запросом: у проекта могут быть сделки, где этот контрагент ни клиент, ни
+    // плательщик, и по выборке ниже сумма вышла бы заниженной.
+    const projectSums = await projectDealSums(prisma, projects.map(p => p.id))
 
     // Сделки контрагента — там, где он клиент или плательщик (документы
     // оформлены на него, а покупает другое юрлицо группы). Роль заказчика
@@ -431,7 +440,7 @@ export default async function CounterpartyPage({ params }) {
                                                             </div>
                                                         </div>
                                                         <span className='shrink-0 text-sm font-semibold text-neutral-900'>
-                                                            {formatMoney(p.totalAmount)}
+                                                            {formatMoney(projectSums.get(p.id) || 0)}
                                                         </span>
                                                     </div>
                                                 </Link>

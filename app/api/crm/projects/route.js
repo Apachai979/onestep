@@ -10,10 +10,10 @@ import {
     matchesProjectRegion,
     matchesProjectSearch,
     parseProjectPayload,
+    projectDealSums,
     projectKanbanOrderField,
 } from "@/lib/crm/project"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
-import { dealDiscountedTotal } from "@/lib/crm/deal"
 import { counterpartyDiscountInfo } from "@/lib/crm/discount"
 
 const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
@@ -37,22 +37,6 @@ const PROJECT_KANBAN_STATS_SELECT = {
     endCustomer: { select: { name: true, region: true } },
 }
 
-// Сумма проекта — производная: сумма всех сделок, привязанных к проекту.
-// Считаем по суммам со скидкой — это финальная цена сделки, поэтому
-// groupBy/_sum не подходит, складываем вручную.
-async function projectDealSums(ids) {
-    const sums = new Map()
-    if (!ids.length) return sums
-    const deals = await prisma.deal.findMany({
-        where: { sourceProjectId: { in: ids } },
-        select: { sourceProjectId: true, totalAmount: true, discount: true },
-    })
-    for (const d of deals) {
-        sums.set(d.sourceProjectId, (sums.get(d.sourceProjectId) || 0) + dealDiscountedTotal(d))
-    }
-    return sums
-}
-
 // Доска отдаётся колонками: items — первая страница карточек, total и sum —
 // по всей колонке. Иначе счётчик показывал бы «сколько загрузили», а «Итого»
 // считалось бы по обрезанному набору.
@@ -65,7 +49,7 @@ async function loadKanbanColumns(where, { q, region, perStatus }) {
         p => matchesProjectSearch(p, q) && matchesProjectRegion(p, region),
     )
     // Суммы считаем по всем подходящим проектам, а не только по странице.
-    const sums = await projectDealSums(matched.map(p => p.id))
+    const sums = await projectDealSums(prisma, matched.map(p => p.id))
 
     const columns = Object.fromEntries(
         PROJECT_STATUSES.map(s => [s, { items: [], total: 0, sum: 0 }]),
@@ -159,7 +143,7 @@ export async function GET(request) {
         p => matchesProjectSearch(p, q) && matchesProjectRegion(p, region),
     )
 
-    const sums = await projectDealSums(filtered.map(p => p.id))
+    const sums = await projectDealSums(prisma, filtered.map(p => p.id))
 
     return Response.json({
         items: filtered.map(p => ({

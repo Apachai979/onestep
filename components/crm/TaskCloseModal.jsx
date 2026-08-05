@@ -1,6 +1,7 @@
 "use client"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { LuPencil } from "react-icons/lu"
 import {
     TASK_STATUS_COLORS,
     TASK_STATUS_LABELS,
@@ -125,10 +126,31 @@ export default function TaskCloseModal({
     )
     const [savingDue, setSavingDue] = useState(false)
 
+    // Комментарий о результате остаётся редактируемым и после закрытия: дописать
+    // забытую деталь не должно стоить возврата задачи в работу — он стирает
+    // результат. Права те же, что на возврат.
+    const [editingResult, setEditingResult] = useState(false)
+    const [resultDraft, setResultDraft] = useState("")
+    const [savingResult, setSavingResult] = useState(false)
+    const resultRef = useRef(null)
+
+    // Курсор — в конец текста: комментарий чаще дописывают, а не переписывают,
+    // и autoFocus сам по себе ставит каретку в начало.
+    useEffect(() => {
+        if (!editingResult) return
+        const el = resultRef.current
+        if (!el) return
+        el.focus()
+        const end = el.value.length
+        el.setSelectionRange(end, end)
+        el.scrollTop = el.scrollHeight
+    }, [editingResult])
+
     const ts = timeStatus(task)
     const rel = relationLink(task)
     const readOnly = !canClose
     const canEditDue = task.status === "OPEN" && canClose
+    const canEditResult = task.status !== "OPEN" && canReopen
 
     function startEditingDue() {
         setError("")
@@ -154,6 +176,36 @@ export default function TaskCloseModal({
             return
         }
         setEditingDue(false)
+        notifyTasksChanged()
+        if (onClosed) onClosed(data.item)
+    }
+
+    function startEditingResult() {
+        setError("")
+        setResultDraft(task.result || "")
+        setEditingResult(true)
+    }
+
+    async function saveResult() {
+        setError("")
+        if (task.status === "FAILED" && !resultDraft.trim()) {
+            setError("У невыполненной задачи комментарий обязателен")
+            return
+        }
+        setSavingResult(true)
+        const res = await fetch(`/api/crm/tasks/${task.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ result: resultDraft }),
+        })
+        const text = await res.text()
+        const data = text ? safeJson(text) : {}
+        setSavingResult(false)
+        if (!res.ok) {
+            setError(data?.error || "Не удалось сохранить комментарий")
+            return
+        }
+        setEditingResult(false)
         notifyTasksChanged()
         if (onClosed) onClosed(data.item)
     }
@@ -312,13 +364,61 @@ export default function TaskCloseModal({
                                 </span>
                             )}
                         </div>
-                        <p className='mt-1 whitespace-pre-wrap text-neutral-700'>
-                            {task.result || (
-                                <span className='italic text-neutral-400'>
-                                    Комментарий не оставлен
-                                </span>
-                            )}
-                        </p>
+                        {editingResult ? (
+                            <div className='mt-2'>
+                                <textarea
+                                    ref={resultRef}
+                                    rows={4}
+                                    value={resultDraft}
+                                    onChange={e => setResultDraft(e.target.value)}
+                                    className='w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-neutral-900 shadow-sm transition-all duration-200 placeholder:text-neutral-400 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                                />
+                                <div className='mt-2 flex justify-end gap-2'>
+                                    <Button
+                                        type='button'
+                                        variant='secondary'
+                                        size='sm'
+                                        onClick={() => setEditingResult(false)}
+                                    >
+                                        Отмена
+                                    </Button>
+                                    <Button
+                                        type='button'
+                                        size='sm'
+                                        loading={savingResult}
+                                        onClick={saveResult}
+                                    >
+                                        Сохранить комментарий
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <p className='mt-1 whitespace-pre-wrap text-neutral-700'>
+                                    {task.result || (
+                                        <span className='italic text-neutral-400'>
+                                            Комментарий не оставлен
+                                        </span>
+                                    )}
+                                </p>
+                                {canEditResult && (
+                                    <div className='mt-1 flex justify-end'>
+                                        <button
+                                            type='button'
+                                            onClick={startEditingResult}
+                                            title={
+                                                task.result
+                                                    ? "Изменить комментарий"
+                                                    : "Добавить комментарий"
+                                            }
+                                            className='inline-flex h-6 w-6 items-center justify-center rounded text-neutral-400 transition-colors hover:bg-white hover:text-neutral-900'
+                                        >
+                                            <LuPencil className='h-3.5 w-3.5' />
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
                 )}
 
@@ -388,6 +488,7 @@ export default function TaskCloseModal({
                             variant='secondary'
                             loading={reopening}
                             onClick={reopen}
+                            title='Комментарий о результате будет очищен'
                             className='mr-auto'
                         >
                             Вернуть в работу

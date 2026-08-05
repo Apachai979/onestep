@@ -1,6 +1,11 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
-import { canManageTask, parseTaskPayload, taskLogParents } from "@/lib/crm/task"
+import {
+    canManageTask,
+    parseTaskPayload,
+    parseTaskResultPayload,
+    taskLogParents,
+} from "@/lib/crm/task"
 import { diffEntities, logChange } from "@/lib/crm/change-log"
 
 const TASK_LOG_FIELDS = ["title", "type", "status", "result", "assigneeId", "startAt", "endAt"]
@@ -50,13 +55,6 @@ export async function PATCH(request, { params }) {
         )
     }
 
-    if (existing.status !== "OPEN") {
-        return Response.json(
-            { error: "Закрытую задачу нельзя редактировать. Создайте новую." },
-            { status: 400 },
-        )
-    }
-
     let body
     try {
         body = await request.json()
@@ -64,9 +62,15 @@ export async function PATCH(request, { params }) {
         return Response.json({ error: "Некорректный JSON" }, { status: 400 })
     }
 
-    // existing нужен парсеру: без него PATCH с одним только сроком не знает
-    // ни даты начала, ни того, задача «на весь день» или со временем.
-    const { data, error } = parseTaskPayload(body, { partial: true, current: existing })
+    // У закрытой задачи правится только комментарий о результате — срок,
+    // ответственного и тип менять поздно, для этого заводят новую задачу.
+    const parsed =
+        existing.status === "OPEN"
+            ? // existing нужен парсеру: без него PATCH с одним только сроком не знает
+              // ни даты начала, ни того, задача «на весь день» или со временем.
+              parseTaskPayload(body, { partial: true, current: existing })
+            : parseTaskResultPayload(body, existing)
+    const { data, error } = parsed
     if (error) return Response.json({ error }, { status: 400 })
 
     const updated = await prisma.task.update({

@@ -3,9 +3,14 @@ import { requireCrmSession } from "@/lib/crm/session"
 import { buildProposalDoc } from "@/lib/crm/proposal-doc"
 import { renderProposalPdf } from "@/lib/crm/proposal-pdf"
 import { isMailConfigured, sendMail } from "@/lib/crm/mailer"
-import { saveFile } from "@/lib/crm/storage/local"
+import { readFile, saveFile } from "@/lib/crm/storage/local"
 import { logChange } from "@/lib/crm/change-log"
 import { dealLockResponse } from "@/lib/crm/access"
+import {
+    MAX_MAIL_ATTACHMENTS_SIZE,
+    formatBytes,
+    validateUpload,
+} from "@/lib/crm/attachment"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -31,11 +36,29 @@ export async function POST(request, { params }) {
         )
     }
 
+    // Письмо приходит либо чистым JSON, либо multipart — когда менеджер
+    // приложил файлы со своего компьютера прямо в модалке отправки.
     let body
-    try {
-        body = await request.json()
-    } catch {
-        return Response.json({ error: "Некорректный JSON" }, { status: 400 })
+    let uploadedFiles = []
+    if ((request.headers.get("content-type") || "").includes("multipart/form-data")) {
+        let fd
+        try {
+            fd = await request.formData()
+        } catch {
+            return Response.json({ error: "Некорректная форма" }, { status: 400 })
+        }
+        try {
+            body = JSON.parse(fd.get("payload") || "{}")
+        } catch {
+            return Response.json({ error: "Некорректный JSON в payload" }, { status: 400 })
+        }
+        uploadedFiles = fd.getAll("file").filter(f => f && typeof f !== "string")
+    } else {
+        try {
+            body = await request.json()
+        } catch {
+            return Response.json({ error: "Некорректный JSON" }, { status: 400 })
+        }
     }
 
     const to = String(body.to || "").trim()
@@ -62,6 +85,75 @@ export async function POST(request, { params }) {
         return Response.json({ error: `Ошибка PDF: ${err.message}` }, { status: 500 })
     }
 
+    // Само КП идёт первым вложением, дальше — то, что менеджер добавил вручную:
+    // документы сделки и файлы, выбранные с компьютера.
+    const attachments = [
+        {
+            filename: built.fileName,
+            content: buffer,
+            contentType: "application/pdf",
+        },
+    ]
+    let totalSize = buffer.length
+
+    const attachmentIds = Array.isArray(body.attachmentIds)
+        ? body.attachmentIds.map(String).filter(Boolean).slice(0, 20)
+        : []
+    if (attachmentIds.length) {
+        const docs = await prisma.attachment.findMany({
+            where: { id: { in: attachmentIds }, entityType: "Deal", entityId: params.id },
+            select: { id: true, fileName: true, mimeType: true, size: true, storageKey: true },
+        })
+        if (docs.length !== new Set(attachmentIds).size) {
+            return Response.json(
+                { error: "Часть выбранных документов не найдена в сделке" },
+                { status: 400 },
+            )
+        }
+        for (const doc of docs) {
+            let content
+            try {
+                content = await readFile(doc.storageKey)
+            } catch (err) {
+                console.error("[proposal/send] attachment read error:", err)
+                return Response.json(
+                    { error: `Файл «${doc.fileName}» не читается на сервере` },
+                    { status: 500 },
+                )
+            }
+            totalSize += content.length
+            attachments.push({
+                filename: doc.fileName,
+                content,
+                contentType: doc.mimeType || "application/octet-stream",
+            })
+        }
+    }
+
+    for (const file of uploadedFiles) {
+        const mimeType = file.type || "application/octet-stream"
+        const validationErr = validateUpload({ size: file.size, mimeType })
+        if (validationErr) {
+            return Response.json({ error: `${file.name}: ${validationErr}` }, { status: 400 })
+        }
+        const content = Buffer.from(await file.arrayBuffer())
+        totalSize += content.length
+        attachments.push({
+            filename: file.name || "file",
+            content,
+            contentType: mimeType,
+        })
+    }
+
+    if (totalSize > MAX_MAIL_ATTACHMENTS_SIZE) {
+        return Response.json(
+            {
+                error: `Суммарный размер вложений — ${formatBytes(totalSize)}, максимум ${formatBytes(MAX_MAIL_ATTACHMENTS_SIZE)}. Уберите лишние файлы или отправьте их ссылкой.`,
+            },
+            { status: 413 },
+        )
+    }
+
     // Ответ клиента должен уходить менеджеру, а не на общий ящик.
     const replyTo =
         built.docData.senderEmail || session.user.email || undefined
@@ -73,13 +165,7 @@ export async function POST(request, { params }) {
             replyTo,
             subject,
             text: message,
-            attachments: [
-                {
-                    filename: built.fileName,
-                    content: buffer,
-                    contentType: "application/pdf",
-                },
-            ],
+            attachments,
         })
     } catch (err) {
         console.error("[proposal/send] smtp error:", err)
@@ -90,7 +176,10 @@ export async function POST(request, { params }) {
     }
 
     // След в сделке: событие в истории + заметка + (опционально) копия PDF.
-    const noteBody = `КП № ${built.number} от ${built.dateText} отправлено на ${to}\nТема: ${subject}`
+    const attachmentNames = attachments.map(a => a.filename)
+    const noteBody =
+        `КП № ${built.number} от ${built.dateText} отправлено на ${to}\nТема: ${subject}` +
+        (attachmentNames.length > 1 ? `\nВложения: ${attachmentNames.join(", ")}` : "")
     try {
         await logChange(prisma, {
             entityType: "Email",
@@ -98,7 +187,7 @@ export async function POST(request, { params }) {
             parentEntityType: "Deal",
             parentEntityId: params.id,
             action: "CREATE",
-            payload: { number: built.number, to, subject },
+            payload: { number: built.number, to, subject, attachments: attachmentNames },
             authorId: session.user.id,
         })
         await prisma.note.create({

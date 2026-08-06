@@ -2,9 +2,18 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { LuChevronDown, LuFileSpreadsheet, LuMail, LuPrinter, LuSave } from "react-icons/lu"
+import {
+    LuChevronDown,
+    LuFileSpreadsheet,
+    LuMail,
+    LuPaperclip,
+    LuPrinter,
+    LuSave,
+    LuX,
+} from "react-icons/lu"
 import { rublesToWords } from "@/lib/crm/number-to-words"
 import { fillTemplate } from "@/lib/crm/template"
+import { MAX_MAIL_ATTACHMENTS_SIZE, formatBytes } from "@/lib/crm/attachment"
 import { useToast } from "@/components/crm/ui"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 
@@ -635,6 +644,11 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
     const [loading, setLoading] = useState(true)
     const [sending, setSending] = useState(false)
     const [error, setError] = useState("")
+    // Дополнительные вложения: галочками из документов сделки и файлами с компьютера.
+    const [dealFiles, setDealFiles] = useState([])
+    const [selectedIds, setSelectedIds] = useState([])
+    const [extraFiles, setExtraFiles] = useState([])
+    const fileInputRef = useRef(null)
 
     useEffect(() => {
         const vars = {
@@ -654,18 +668,46 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
             })
             .catch(() => setError("Не удалось загрузить шаблон письма"))
             .finally(() => setLoading(false))
+
+        fetch(`/api/crm/attachments?entityType=Deal&entityId=${dealId}`)
+            .then(r => r.json())
+            .then(d => setDealFiles(d.items || []))
+            .catch(() => setDealFiles([]))
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    function toggleDealFile(id) {
+        setSelectedIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]))
+    }
+
+    function onFilesPicked(e) {
+        const picked = Array.from(e.target.files || [])
+        e.target.value = ""
+        if (!picked.length) return
+        setExtraFiles(prev => [
+            ...prev,
+            // Один и тот же файл дважды в письмо не кладём.
+            ...picked.filter(f => !prev.some(p => p.name === f.name && p.size === f.size)),
+        ])
+    }
+
+    const extrasSize =
+        dealFiles.reduce((s, f) => (selectedIds.includes(f.id) ? s + (f.size || 0) : s), 0) +
+        extraFiles.reduce((s, f) => s + f.size, 0)
+    const overLimit = extrasSize > MAX_MAIL_ATTACHMENTS_SIZE
 
     async function handleSend(e) {
         e.preventDefault()
         setError("")
         setSending(true)
         try {
+            const payload = { to, subject, message, saveCopy, form, attachmentIds: selectedIds }
+            const fd = new FormData()
+            fd.append("payload", JSON.stringify(payload))
+            for (const f of extraFiles) fd.append("file", f)
             const res = await fetch(`/api/crm/deals/${dealId}/proposal/send`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ to, subject, message, saveCopy, form }),
+                body: fd,
             })
             const data = await res.json().catch(() => ({}))
             if (!res.ok) {
@@ -696,7 +738,11 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
                 <h2 className='mb-1 text-lg font-semibold text-neutral-900'>
                     Отправить КП на email
                 </h2>
-                <p className='mb-4 text-sm text-neutral-500'>Вложение: {fileName}</p>
+                <p className='mb-4 text-sm text-neutral-500'>
+                    Вложение: {fileName}
+                    {selectedIds.length + extraFiles.length > 0 &&
+                        ` + ещё ${selectedIds.length + extraFiles.length}`}
+                </p>
 
                 {loading ? (
                     <p className='py-6 text-sm text-neutral-400'>Загрузка шаблона...</p>
@@ -734,6 +780,100 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
                                 className='w-full rounded-lg border border-line px-3 py-2 text-sm shadow-sm focus:border-brand_main focus:outline-none'
                             />
                         </div>
+                        <div className='rounded-lg border border-line p-3'>
+                            <div className='mb-2 flex items-center justify-between gap-2'>
+                                <p className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
+                                    Дополнительные вложения
+                                </p>
+                                <button
+                                    type='button'
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className='inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1 text-xs text-neutral-700 transition hover:bg-surface_muted'
+                                >
+                                    <LuPaperclip className='h-3.5 w-3.5' />
+                                    Загрузить файл
+                                </button>
+                                <input
+                                    type='file'
+                                    ref={fileInputRef}
+                                    onChange={onFilesPicked}
+                                    multiple
+                                    className='hidden'
+                                />
+                            </div>
+
+                            {dealFiles.length > 0 && (
+                                <ul className='max-h-40 space-y-1 overflow-auto'>
+                                    {dealFiles.map(att => (
+                                        <li key={att.id}>
+                                            <label className='flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-[13px] text-neutral-700 hover:bg-surface_muted'>
+                                                <input
+                                                    type='checkbox'
+                                                    checked={selectedIds.includes(att.id)}
+                                                    onChange={() => toggleDealFile(att.id)}
+                                                    className='shrink-0 rounded accent-brand_main'
+                                                />
+                                                <span className='min-w-0 flex-1 truncate' title={att.fileName}>
+                                                    {att.fileName}
+                                                </span>
+                                                <span className='shrink-0 text-[11px] text-neutral-400'>
+                                                    {formatBytes(att.size)}
+                                                </span>
+                                            </label>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                            {dealFiles.length === 0 && (
+                                <p className='text-[13px] text-neutral-400'>
+                                    В документах сделки пока пусто — файлы можно загрузить с
+                                    компьютера.
+                                </p>
+                            )}
+
+                            {extraFiles.length > 0 && (
+                                <ul className='mt-2 space-y-1 border-t border-line pt-2'>
+                                    {extraFiles.map((f, i) => (
+                                        <li
+                                            key={`${f.name}-${f.size}-${i}`}
+                                            className='flex items-center gap-2 text-[13px] text-neutral-700'
+                                        >
+                                            <LuPaperclip className='h-3.5 w-3.5 shrink-0 text-neutral-400' />
+                                            <span className='min-w-0 flex-1 truncate' title={f.name}>
+                                                {f.name}
+                                            </span>
+                                            <span className='shrink-0 text-[11px] text-neutral-400'>
+                                                {formatBytes(f.size)}
+                                            </span>
+                                            <button
+                                                type='button'
+                                                onClick={() =>
+                                                    setExtraFiles(prev =>
+                                                        prev.filter((_, idx) => idx !== i),
+                                                    )
+                                                }
+                                                className='inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-neutral-400 transition hover:bg-red-50 hover:text-red-600'
+                                                title='Убрать из письма'
+                                            >
+                                                <LuX className='h-3.5 w-3.5' />
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+
+                            <p
+                                className={`mt-2 text-[11px] ${
+                                    overLimit ? "text-red-600" : "text-neutral-400"
+                                }`}
+                            >
+                                {extrasSize > 0
+                                    ? `Выбрано ${formatBytes(extrasSize)} сверх PDF с КП. `
+                                    : ""}
+                                Лимит на письмо — {formatBytes(MAX_MAIL_ATTACHMENTS_SIZE)}.
+                            </p>
+                        </div>
+
                         <label className='inline-flex items-center gap-2 text-sm text-neutral-700'>
                             <input
                                 type='checkbox'
@@ -756,7 +896,7 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
                             </button>
                             <button
                                 type='submit'
-                                disabled={sending}
+                                disabled={sending || overLimit}
                                 className='inline-flex items-center gap-1.5 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:opacity-60'
                             >
                                 <LuMail className='h-4 w-4' />

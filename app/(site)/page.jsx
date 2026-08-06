@@ -3,7 +3,6 @@ import Image from "next/image"
 import Carousel from "@/components/Carousel"
 import WeWorkFor from "@/components/WeWorkFor"
 import ConnectWithUs from "@/components/ConnectWithUs"
-import AuthComponent from "@/components/AuthComponent"
 
 export const metadata = {
     title: "Компания OneStep",
@@ -66,8 +65,6 @@ const features = [
 export default function Home() {
     return (
         <>
-            {/* <AuthComponent /> */}
-
             <Carousel />
 
             {/* nextblock */}

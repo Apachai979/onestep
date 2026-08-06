@@ -73,13 +73,6 @@
                         "image": "/academy/image_topics/procedure_room.webp",
                         "alt": "onestep",
                         "href": "/academy/treatment_room"
-                    },
-                    {
-                        "title": "Видео-обзор оснащения процедурного кабинета в московской клинике: разбор и рекомендации.",
-                        "hidden": true,
-                        "image": "/academy/image_topics/video_view.jpg",
-                        "alt": "onestep",
-                        "href": "/academy/video-obzor_protsedurnogo_kabineta"
                     }
                 ]
             },
@@ -111,13 +104,6 @@
                 "name": "Переливание крови: что вас ждёт на этой процедуре?",
                 "href": "perelivaniye_krovi",
                 "topics": [
-                    {
-                        "title": "Видео \"Переливание крови\"",
-                        "hidden": true,
-                        "image": "/academy/image_topics/pereliv_krovi.jpg",
-                        "alt": "Onestep",
-                        "href": "/academy/video_perelivanie_krovi"
-                    },
                     {
                         "title": "Как проходит процедура переливания крови?",
                         "hidden": true,

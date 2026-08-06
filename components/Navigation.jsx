@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import clsx from "clsx"
 import AnimationMenuButton from "./buttons/AnimationMenuButton"
-import AuthComponent from "./AuthComponent"
 
 const navItems = [
     // { label: "Каталог", href: "/catalogs" },
@@ -75,14 +74,8 @@ export default function Navigation() {
                     </li>
                 ))}
                 <PhoneInfo className='block text-center sm920:hidden' />
-                <li className='mt-6 flex justify-center sm920:hidden'>
-                    <AuthComponent />
-                </li>
             </ul>
             <PhoneInfo className='hidden sm920:block' />
-            <div className='hidden sm920:absolute sm920:right-4 sm920:top-1/2 sm920:block sm920:-translate-y-1/2'>
-                <AuthComponent />
-            </div>
             <button
                 onClick={() => setIsActive(prev => !prev)}
                 className='group relative block h-[40px] w-[44px] cursor-pointer sm920:hidden'

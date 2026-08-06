@@ -1,4 +1,5 @@
 import prisma from "@/lib/client"
+import { CONSENT_TEXT } from "@/lib/consent"
 
 const MAX_FIELD = 500
 const MAX_MESSAGE = 5000
@@ -31,6 +32,14 @@ export async function POST(request) {
             { status: 400 },
         )
     }
+    // Проверяем согласие на сервере, а не только галочкой в форме: без него
+    // обрабатывать данные нельзя, а запрос может прийти в обход интерфейса.
+    if (body.consent !== true) {
+        return Response.json(
+            { error: "Необходимо согласие на обработку персональных данных" },
+            { status: 400 },
+        )
+    }
 
     const lead = await prisma.lead.create({
         data: {
@@ -40,6 +49,8 @@ export async function POST(request) {
             phone,
             company: clean(body.company),
             message: clean(body.message, MAX_MESSAGE),
+            consentAt: new Date(),
+            consentText: CONSENT_TEXT,
         },
     })
 

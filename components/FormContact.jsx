@@ -1,7 +1,9 @@
 'use client'
 import { useState } from "react";
+import Link from "next/link";
 import { FaPhone, FaCircleCheck } from "react-icons/fa6";
 import { ImSpinner2 } from "react-icons/im";
+import { CONSENT_TEXT } from "@/lib/consent";
 
 export default function FormContact({ titleForForm }) {
 
@@ -9,6 +11,9 @@ export default function FormContact({ titleForForm }) {
     const [spinner, setSpinner] = useState(false);
     const [success, setSuccess] = useState(false)
     const [submitError, setSubmitError] = useState('');
+    // Согласие на обработку ПД: снято по умолчанию и обязательно для отправки.
+    // Заранее проставленная галочка согласием не считается.
+    const [consent, setConsent] = useState(false);
     const [hasErrorEmail, sethasErrorEmail] = useState(true);
     const [hasErrorName, setHasErrorName] = useState(true);
     const [hasErrorTel, setHasErrorTel] = useState(true);
@@ -82,6 +87,7 @@ export default function FormContact({ titleForForm }) {
                     phone: formData.PHONE,
                     company: formData.COMPANY_TITLE,
                     message: formData.TITLE,
+                    consent,
                 }),
             });
             if (response.ok) {
@@ -147,9 +153,28 @@ export default function FormContact({ titleForForm }) {
                     </div>
 
 
+                    <label className="flex items-start gap-2.5 text-xs leading-snug text-gray-500">
+                        <input
+                            type="checkbox"
+                            checked={consent}
+                            onChange={e => setConsent(e.target.checked)}
+                            className="mt-0.5 h-4 w-4 shrink-0 accent-primary_green"
+                        />
+                        <span>
+                            {CONSENT_TEXT}{" "}
+                            <Link
+                                href="/privacy"
+                                target="_blank"
+                                className="text-primary_green underline underline-offset-2 hover:text-contrast_green"
+                            >
+                                Читать политику
+                            </Link>
+                        </span>
+                    </label>
+
                     <button
                         type="submit"
-                        disabled={spinner}
+                        disabled={spinner || !consent}
                         className="w-full cursor-pointer rounded-full bg-primary_green py-3 text-lg font-semibold text-white shadow-md transition duration-300 hover:bg-contrast_green active:scale-95 active:shadow-inner active:shadow-dark_green disabled:cursor-not-allowed disabled:opacity-70"
                     >
                         {spinner
@@ -166,10 +191,6 @@ export default function FormContact({ titleForForm }) {
                     {submitError && (
                         <p className="text-center text-sm text-red-500">{submitError}</p>
                     )}
-
-                    <p className="text-center text-xs leading-snug text-gray-400">
-                        Нажимая «Отправить», вы соглашаетесь на обработку персональных данных.
-                    </p>
                 </form>
             </section>
     )

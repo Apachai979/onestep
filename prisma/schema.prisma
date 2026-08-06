@@ -469,6 +469,12 @@ model Lead {
   status      String    @default("NEW")
   processedAt DateTime?
   createdAt   DateTime  @default(now())
+  // Отметка о согласии на обработку ПД: бремя доказывания согласия лежит на
+  // операторе (ч. 3 ст. 9 152-ФЗ), поэтому фиксируем момент и текст, под
+  // которым пользователь поставил галочку. У заявок, принятых до появления
+  // чекбокса, поля пустые.
+  consentAt   DateTime?
+  consentText String?
 
   @@index([status])
   @@index([createdAt])

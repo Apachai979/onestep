@@ -1,5 +1,5 @@
 import prisma from "@/lib/client"
-import { CONSENT_TEXT } from "@/lib/consent"
+import { CONSENT_TEXT, MARKETING_CONSENT_TEXT } from "@/lib/consent"
 
 const MAX_FIELD = 500
 const MAX_MESSAGE = 5000
@@ -51,6 +51,11 @@ export async function POST(request) {
             message: clean(body.message, MAX_MESSAGE),
             consentAt: new Date(),
             consentText: CONSENT_TEXT,
+            // Согласие на рассылку необязательное: если галочки не было,
+            // поля остаются пустыми и рекламу этому человеку слать нельзя.
+            marketingConsentAt: body.marketingConsent === true ? new Date() : null,
+            marketingConsentText:
+                body.marketingConsent === true ? MARKETING_CONSENT_TEXT : null,
         },
     })
 

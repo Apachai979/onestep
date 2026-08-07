@@ -475,6 +475,11 @@ model Lead {
   // чекбокса, поля пустые.
   consentAt   DateTime?
   consentText String?
+  // Отдельное согласие на рекламные и информационные рассылки (ст. 18 ФЗ
+  // «О рекламе»). Необязательное: пустое поле значит, что писать этому
+  // человеку можно только по его обращению, но не с новостями и акциями.
+  marketingConsentAt   DateTime?
+  marketingConsentText String?
 
   @@index([status])
   @@index([createdAt])

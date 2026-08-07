@@ -5,6 +5,7 @@ import { LuBuilding2, LuPencil, LuPlus, LuUser } from "react-icons/lu"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_STATUS_COLORS, DEAL_STATUS_LABELS, dealDiscountedTotal } from "@/lib/crm/deal"
+import { PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import { formatMoney } from "@/lib/crm/format"
 import { formatDiscount } from "@/lib/crm/discount"
 import { canDeleteProject, isProjectLocked } from "@/lib/crm/access"
@@ -33,7 +34,7 @@ export default async function ProjectPage({ params }) {
             endCustomer: true,
             manager: true,
             updatedBy: true,
-            duplicateOf: { select: { id: true, internalName: true } },
+            duplicateOf: { select: { id: true, internalName: true, status: true } },
             contacts: { orderBy: [{ lastName: "asc" }, { firstName: "asc" }] },
             deals: {
                 // «Не реализована» (CANCELLED) не показываем в карточке проекта
@@ -58,6 +59,13 @@ export default async function ProjectPage({ params }) {
     // по финальной цене (со скидкой).
     const dealsSum = item.deals.reduce((s, d) => s + dealDiscountedTotal(d), 0)
     const dealsCount = item.deals.length
+
+    // Пометка о дубле — снимок на момент создания, она остаётся в карточке
+    // навсегда. Но конфликт живой только пока исходный проект «в работе»:
+    // если его закрыли («нет потребности») или удалили (duplicateOfId
+    // обнуляется по FK), гасим жёлтый до нейтрального, чтобы плашка не
+    // читалась как действующее предупреждение.
+    const duplicateStale = !item.duplicateOf || item.duplicateOf.status === "NO_NEED"
 
     const contactsByCounterparty = {
         [item.distributorId]: [],
@@ -120,18 +128,40 @@ export default async function ProjectPage({ params }) {
             </div>
 
             {(item.duplicateComment || item.duplicateOf) && (
-                <p className='rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2 text-xs text-yellow-800'>
-                    <span className='font-semibold text-yellow-900'>
+                <p
+                    className={`rounded-lg border px-3 py-2 text-xs ${
+                        duplicateStale
+                            ? "border-line bg-surface_muted text-neutral-500"
+                            : "border-yellow-300 bg-yellow-50 text-yellow-800"
+                    }`}
+                >
+                    <span
+                        className={`font-semibold ${
+                            duplicateStale ? "text-neutral-600" : "text-yellow-900"
+                        }`}
+                    >
                         Создан как дубль{" "}
                         {item.duplicateOf ? (
-                            <Link
-                                href={`/crm/projects/${item.duplicateOf.id}`}
-                                className='underline underline-offset-2 hover:text-yellow-950'
-                            >
-                                {item.duplicateOf.internalName}
-                            </Link>
+                            <>
+                                <Link
+                                    href={`/crm/projects/${item.duplicateOf.id}`}
+                                    className={`underline underline-offset-2 ${
+                                        duplicateStale
+                                            ? "hover:text-neutral-800"
+                                            : "hover:text-yellow-950"
+                                    }`}
+                                >
+                                    {item.duplicateOf.internalName}
+                                </Link>
+                                {" ("}
+                                {(
+                                    PROJECT_STATUS_LABELS[item.duplicateOf.status] ??
+                                    item.duplicateOf.status
+                                ).toLowerCase()}
+                                {")"}
+                            </>
                         ) : (
-                            "действующего проекта"
+                            "проекта, который уже удалён"
                         )}
                     </span>
                     {item.duplicateComment ? ` — ${item.duplicateComment}` : ""}

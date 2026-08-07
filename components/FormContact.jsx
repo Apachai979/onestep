@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { FaPhone, FaCircleCheck } from "react-icons/fa6";
 import { ImSpinner2 } from "react-icons/im";
-import { CONSENT_TEXT } from "@/lib/consent";
+import { CONSENT_TEXT, MARKETING_CONSENT_TEXT } from "@/lib/consent";
 
 export default function FormContact({ titleForForm }) {
 
@@ -14,6 +14,9 @@ export default function FormContact({ titleForForm }) {
     // Согласие на обработку ПД: снято по умолчанию и обязательно для отправки.
     // Заранее проставленная галочка согласием не считается.
     const [consent, setConsent] = useState(false);
+    // Согласие на рассылку — отдельное и необязательное: отправку формы оно не
+    // блокирует, иначе это уже не свободно данное согласие.
+    const [marketingConsent, setMarketingConsent] = useState(false);
     const [hasErrorEmail, sethasErrorEmail] = useState(true);
     const [hasErrorName, setHasErrorName] = useState(true);
     const [hasErrorTel, setHasErrorTel] = useState(true);
@@ -88,6 +91,7 @@ export default function FormContact({ titleForForm }) {
                     company: formData.COMPANY_TITLE,
                     message: formData.TITLE,
                     consent,
+                    marketingConsent,
                 }),
             });
             if (response.ok) {
@@ -170,6 +174,16 @@ export default function FormContact({ titleForForm }) {
                                 Читать политику
                             </Link>
                         </span>
+                    </label>
+
+                    <label className="flex items-start gap-2.5 text-xs leading-snug text-gray-500">
+                        <input
+                            type="checkbox"
+                            checked={marketingConsent}
+                            onChange={e => setMarketingConsent(e.target.checked)}
+                            className="mt-0.5 h-4 w-4 shrink-0 accent-primary_green"
+                        />
+                        <span>{MARKETING_CONSENT_TEXT}</span>
                     </label>
 
                     <button

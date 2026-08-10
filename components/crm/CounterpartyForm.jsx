@@ -10,6 +10,8 @@ import {
     ACTIVITY_AREA_LABELS,
     COMPANY_KINDS,
     COMPANY_KIND_LABELS,
+    COUNTERPARTY_PRIORITIES,
+    COUNTERPARTY_PRIORITY_LABELS,
     COUNTERPARTY_SOURCES,
     COUNTERPARTY_SOURCE_LABELS,
     guessCompanyKind,
@@ -52,6 +54,7 @@ const EMPTY = {
     source: "",
     companyKind: "",
     activityArea: "",
+    priority: "",
     note: "",
     managerId: "",
 }
@@ -313,6 +316,26 @@ export default function CounterpartyForm({ type, initial, mode = "create", attac
                                     </option>
                                 ))}
                             </select>
+                        </div>
+                        <div>
+                            <label className='mb-1.5 block text-sm text-neutral-600'>
+                                Приоритет
+                            </label>
+                            <select
+                                value={form.priority}
+                                onChange={update("priority")}
+                                className='h-10 w-full rounded-xl border border-line bg-white px-3 text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'
+                            >
+                                <option value=''>— не указан —</option>
+                                {COUNTERPARTY_PRIORITIES.map(v => (
+                                    <option key={v} value={v}>
+                                        {COUNTERPARTY_PRIORITY_LABELS[v]}
+                                    </option>
+                                ))}
+                            </select>
+                            <p className='mt-1 text-[11px] text-neutral-400'>
+                                Важность клиента: 1 — самый важный.
+                            </p>
                         </div>
                     </>
                 )}

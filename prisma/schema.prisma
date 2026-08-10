@@ -123,6 +123,8 @@ model Counterparty {
   source          String?
   companyKind     String?
   activityArea    String?
+  // Только для END_CUSTOMER: важность клиента, 1 (высокий) … 3 (низкий).
+  priority        Int?
   note            String?
   contacts        Contact[]
   // Группа компаний: одно из юрлиц помечается головным (isGroupPrimary).

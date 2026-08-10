@@ -28,6 +28,7 @@ const COUNTERPARTY_TRACKED_FIELDS = [
     "source",
     "companyKind",
     "activityArea",
+    "priority",
     "note",
     "managerId",
 ]

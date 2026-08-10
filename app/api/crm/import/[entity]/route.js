@@ -5,6 +5,7 @@ import { DEAL_LOSS_REASON_LABELS, DEAL_STATUS_LABELS, DEAL_STATUSES } from "@/li
 import {
     ACTIVITY_AREA_LABELS,
     COMPANY_KIND_LABELS,
+    COUNTERPARTY_PRIORITIES,
     COUNTERPARTY_SOURCE_LABELS,
     COUNTERPARTY_TYPE_LABELS,
 } from "@/lib/crm/counterparty"
@@ -32,6 +33,14 @@ const PROJECT_STATUS_KEYS = Object.keys(PROJECT_STATUS_LABELS)
 function decStr(v) {
     const n = cellNum(v)
     return n === null ? null : String(n)
+}
+
+// Приоритет экспортируется цифрой, но в присланном файле колонка может быть
+// заполнена подписью («1 — высокий») — берём первую цифру. Всё, что вне 1..3,
+// считаем незаполненным.
+function priorityInt(v) {
+    const n = Number(cellStr(v).charAt(0))
+    return COUNTERPARTY_PRIORITIES.includes(n) ? n : null
 }
 
 // Индексы существующих контрагентов для поиска по ИНН/КПП/названию.
@@ -193,6 +202,7 @@ async function importCounterparties(tx, wb, report, session) {
                     ACTIVITY_AREA_LABELS,
                     cellStr(row["сфера деятельности"]),
                 ),
+                priority: priorityInt(row["приоритет"]),
                 totalRevenue: decStr(row["бюджет"]) ?? "0",
                 discount: decStr(row["скидка %"]),
                 bankName: cellStr(row["банк"]) || null,

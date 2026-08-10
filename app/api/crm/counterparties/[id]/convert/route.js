@@ -53,6 +53,7 @@ export async function GET(_request, { params }) {
             type: true,
             companyKind: true,
             activityArea: true,
+            priority: true,
         },
     })
     if (!item) return Response.json({ error: "Не найдено" }, { status: 404 })

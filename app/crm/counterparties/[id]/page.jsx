@@ -9,6 +9,7 @@ import {
     COMPANY_KIND_LABELS,
     COUNTERPARTY_SOURCE_LABELS,
     COUNTERPARTY_TYPE_LABELS,
+    priorityLabel,
     websiteHref,
 } from "@/lib/crm/counterparty"
 import {
@@ -351,6 +352,7 @@ export default async function CounterpartyPage({ params }) {
                                     label='Сфера деятельности'
                                     value={ACTIVITY_AREA_LABELS[item.activityArea] || null}
                                 />
+                                <Row label='Приоритет' value={priorityLabel(item.priority)} />
                             </>
                         )}
                     </Section>

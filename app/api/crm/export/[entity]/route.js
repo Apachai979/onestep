@@ -74,6 +74,7 @@ async function exportCounterparties(wb) {
         { header: "Источник", key: "source", width: 24 },
         { header: "Тип компании", key: "companyKind", width: 28 },
         { header: "Сфера деятельности", key: "activityArea", width: 26 },
+        { header: "Приоритет", key: "priority", width: 12 },
         { header: "Бюджет", key: "totalRevenue", width: 14 },
         { header: "Оборот (закрытые сделки)", key: "closedRevenue", width: 22 },
         { header: "Скидка %", key: "discount", width: 10 },
@@ -117,6 +118,9 @@ async function exportCounterparties(wb) {
             source: label(COUNTERPARTY_SOURCE_LABELS, c.source),
             companyKind: label(COMPANY_KIND_LABELS, c.companyKind),
             activityArea: label(ACTIVITY_AREA_LABELS, c.activityArea),
+            // Голая цифра, а не подпись: так столбец остаётся числовым для
+            // сортировки в Excel, а при импорте читается без разбора текста.
+            priority: c.priority ?? "",
             totalRevenue: num(c.totalRevenue),
             closedRevenue: revenue.get(c.id) || 0,
             discount: num(c.discount),

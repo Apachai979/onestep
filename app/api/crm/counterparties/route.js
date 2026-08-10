@@ -1,6 +1,10 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
-import { COUNTERPARTY_TYPES, parseCounterpartyPayload } from "@/lib/crm/counterparty"
+import {
+    COUNTERPARTY_PRIORITIES,
+    COUNTERPARTY_TYPES,
+    parseCounterpartyPayload,
+} from "@/lib/crm/counterparty"
 import { closedRevenueByCounterparty } from "@/lib/crm/revenue"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
 
@@ -27,6 +31,7 @@ const COUNTERPARTY_TRACKED_FIELDS = [
     "source",
     "companyKind",
     "activityArea",
+    "priority",
     "note",
     "managerId",
 ]
@@ -41,6 +46,7 @@ export async function GET(request) {
     const region = searchParams.get("region")?.trim()
     const city = searchParams.get("city")?.trim()
     const managerId = searchParams.get("managerId")?.trim()
+    const priority = searchParams.get("priority")?.trim()
 
     const where = {}
     if (type) {
@@ -50,6 +56,13 @@ export async function GET(request) {
         where.type = type
     }
     if (managerId) where.managerId = managerId
+    // «none» — карточки без проставленного приоритета.
+    if (priority) {
+        if (priority === "none") where.priority = null
+        else if (COUNTERPARTY_PRIORITIES.includes(Number(priority)))
+            where.priority = Number(priority)
+        else return Response.json({ error: "Некорректный приоритет" }, { status: 400 })
+    }
 
     const items = await prisma.counterparty.findMany({
         where,

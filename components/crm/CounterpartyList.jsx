@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { LuPlus, LuUsers } from "react-icons/lu"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
+import { COUNTERPARTY_PRIORITIES, COUNTERPARTY_PRIORITY_LABELS } from "@/lib/crm/counterparty"
 import {
+    Badge,
     Button,
     CardListSkeleton,
     CardRow,
@@ -13,6 +15,7 @@ import {
     FilterBar,
     FilterPicker,
     FilterSearch,
+    FilterSelect,
     FilterText,
     MobileCard,
 } from "@/components/crm/ui"
@@ -46,14 +49,32 @@ function safeJson(text) {
     }
 }
 
+// 1 — самый важный клиент, поэтому и цвет самый заметный.
+const PRIORITY_TONES = { 1: "danger", 2: "warning", 3: "neutral" }
+
+function PriorityBadge({ value }) {
+    return <Badge tone={PRIORITY_TONES[value] || "neutral"}>{value}</Badge>
+}
+
+const PRIORITY_FILTER_OPTIONS = [
+    ...COUNTERPARTY_PRIORITIES.map(v => ({
+        value: String(v),
+        label: COUNTERPARTY_PRIORITY_LABELS[v],
+    })),
+    { value: "none", label: "Не указан" },
+]
+
 export default function CounterpartyList({ type, newHref }) {
     const router = useRouter()
+    // Приоритет — поле только конечных потребителей (см. TYPE_ONLY_FIELDS).
+    const isEndCustomer = type === "END_CUSTOMER"
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
     const [q, setQ] = useState("")
     const [region, setRegion] = useState("")
     const [city, setCity] = useState("")
     const [managerId, setManagerId] = useState("")
+    const [priority, setPriority] = useState("")
     const [managers, setManagers] = useState([])
 
     useEffect(() => {
@@ -66,7 +87,13 @@ export default function CounterpartyList({ type, newHref }) {
     }, [])
 
     // Запрос уходит после паузы в наборе, а не на каждый символ.
-    const [applied, setApplied] = useState({ q: "", region: "", city: "", managerId: "" })
+    const [applied, setApplied] = useState({
+        q: "",
+        region: "",
+        city: "",
+        managerId: "",
+        priority: "",
+    })
     useEffect(() => {
         const t = setTimeout(() => {
             const next = {
@@ -74,19 +101,21 @@ export default function CounterpartyList({ type, newHref }) {
                 region: region.trim(),
                 city: city.trim(),
                 managerId,
+                priority,
             }
             // Тот же объект — React не перерисует и лишнего запроса не будет.
             setApplied(prev =>
                 prev.q === next.q &&
                 prev.region === next.region &&
                 prev.city === next.city &&
-                prev.managerId === next.managerId
+                prev.managerId === next.managerId &&
+                prev.priority === next.priority
                     ? prev
                     : next,
             )
         }, 300)
         return () => clearTimeout(t)
-    }, [q, region, city, managerId])
+    }, [q, region, city, managerId, priority])
 
     useEffect(() => {
         const controller = new AbortController()
@@ -95,6 +124,7 @@ export default function CounterpartyList({ type, newHref }) {
         if (applied.region) params.set("region", applied.region)
         if (applied.city) params.set("city", applied.city)
         if (applied.managerId) params.set("managerId", applied.managerId)
+        if (applied.priority) params.set("priority", applied.priority)
 
         setError("")
         fetch(`/api/crm/counterparties?${params.toString()}`, { signal: controller.signal })
@@ -168,6 +198,25 @@ export default function CounterpartyList({ type, newHref }) {
                 render: item => primaryContactName(item),
                 hideable: true,
             },
+            ...(isEndCustomer
+                ? [
+                      {
+                          key: "priority",
+                          header: "Приоритет",
+                          align: "center",
+                          sortable: true,
+                          // Карточки без приоритета — в конец при сортировке
+                          // по возрастанию, чтобы важные оказались наверху.
+                          sortValue: item => item.priority ?? Number.MAX_SAFE_INTEGER,
+                          render: item =>
+                              item.priority ? (
+                                  <PriorityBadge value={item.priority} />
+                              ) : (
+                                  "—"
+                              ),
+                      },
+                  ]
+                : []),
             {
                 key: "manager",
                 header: "Ответственный",
@@ -210,18 +259,19 @@ export default function CounterpartyList({ type, newHref }) {
                 render: item => formatPercent(item.discount),
             },
         ],
-        [],
+        [isEndCustomer],
     )
 
     return (
         <div className='space-y-4'>
             <FilterBar
-                canReset={Boolean(q || region || city || managerId)}
+                canReset={Boolean(q || region || city || managerId || priority)}
                 onReset={() => {
                     setQ("")
                     setRegion("")
                     setCity("")
                     setManagerId("")
+                    setPriority("")
                 }}
                 actions={
                     <Button href={newHref} size='sm'>
@@ -247,6 +297,14 @@ export default function CounterpartyList({ type, newHref }) {
                     onChange={setCity}
                     placeholder='Например, Москва'
                 />
+                {isEndCustomer && (
+                    <FilterSelect
+                        label='Приоритет'
+                        value={priority}
+                        onChange={setPriority}
+                        options={PRIORITY_FILTER_OPTIONS}
+                    />
+                )}
                 <FilterPicker
                     label='Ответственный'
                     value={managerId}
@@ -287,6 +345,15 @@ export default function CounterpartyList({ type, newHref }) {
                         <div className='mt-2 space-y-1'>
                             <CardRow label='Город'>{item.city || "—"}</CardRow>
                             <CardRow label='ИНН'>{item.inn || "—"}</CardRow>
+                            {isEndCustomer && (
+                                <CardRow label='Приоритет'>
+                                    {item.priority ? (
+                                        <PriorityBadge value={item.priority} />
+                                    ) : (
+                                        "—"
+                                    )}
+                                </CardRow>
+                            )}
                             <CardRow label='Контакт'>{primaryContactName(item)}</CardRow>
                             <CardRow label='Ответственный'>{fullName(item.manager)}</CardRow>
                             <CardRow label='Телефон'>

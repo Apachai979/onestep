@@ -19,7 +19,7 @@ import CrmBackLink from "@/components/crm/CrmBackLink"
 
 const SELLER = {
     name: "ООО «НЕОМЕД»",
-    address: "634015, Томская область, г. Томск, ул. Циолковского, 19/1, пом. 24",
+    address: "634021, Томская обл, Томск г, Фрунзе пр, дом 115",
     phones: "+7 (495) 231-01-11 · +7 (985) 231-01-11",
     email: "info@onestep.su",
     site: "www.onestep.su",
@@ -344,9 +344,7 @@ export default function ProposalView({
                             action={
                                 <label
                                     className={`inline-flex items-center gap-1 text-[11px] ${
-                                        showEndCustomerRow
-                                            ? "text-neutral-500"
-                                            : "text-neutral-300"
+                                        showEndCustomerRow ? "text-neutral-500" : "text-neutral-300"
                                     }`}
                                     title={
                                         form.endCustomer.trim()
@@ -813,7 +811,10 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
                                                     onChange={() => toggleDealFile(att.id)}
                                                     className='shrink-0 rounded accent-brand_main'
                                                 />
-                                                <span className='min-w-0 flex-1 truncate' title={att.fileName}>
+                                                <span
+                                                    className='min-w-0 flex-1 truncate'
+                                                    title={att.fileName}
+                                                >
                                                     {att.fileName}
                                                 </span>
                                                 <span className='shrink-0 text-[11px] text-neutral-400'>
@@ -839,7 +840,10 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
                                             className='flex items-center gap-2 text-[13px] text-neutral-700'
                                         >
                                             <LuPaperclip className='h-3.5 w-3.5 shrink-0 text-neutral-400' />
-                                            <span className='min-w-0 flex-1 truncate' title={f.name}>
+                                            <span
+                                                className='min-w-0 flex-1 truncate'
+                                                title={f.name}
+                                            >
                                                 {f.name}
                                             </span>
                                             <span className='shrink-0 text-[11px] text-neutral-400'>
@@ -849,7 +853,7 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
                                                 type='button'
                                                 onClick={() =>
                                                     setExtraFiles(prev =>
-                                                        prev.filter((_, idx) => idx !== i),
+                                                        prev.filter((_, idx) => idx !== i)
                                                     )
                                                 }
                                                 className='inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-neutral-400 transition hover:bg-red-50 hover:text-red-600'

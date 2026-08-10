@@ -17,6 +17,7 @@ import {
     LuPackage,
     LuWarehouse,
     LuSearch,
+    LuBookOpen,
     LuSettings,
     LuUsers,
     LuLogOut,
@@ -128,6 +129,7 @@ export default function CrmShell({ user, role, children }) {
                 label: role === "ADMIN" ? "Пользователи" : "Сотрудники",
                 icon: LuUsers,
             },
+            { href: "/crm/help", label: "Инструкция", icon: LuBookOpen },
         ]
         if (role === "ADMIN") {
             base.push({ href: "/crm/settings", label: "Настройки", icon: LuSettings })
@@ -337,7 +339,11 @@ export default function CrmShell({ user, role, children }) {
                         <LuSearch className='h-5 w-5' />
                     </button>
                 </header>
-                <main className='flex-1 overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8'>
+                {/* overflow-x-clip, а не -hidden: hidden делает <main> скролл-контейнером
+                    и ломает position: sticky у всего внутри (панель активности на
+                    карточках, оглавление инструкции). clip обрезает так же, но
+                    контейнера прокрутки не создаёт. */}
+                <main className='flex-1 overflow-x-clip px-4 py-6 sm:px-6 lg:px-8'>
                     {children}
                 </main>
             </div>

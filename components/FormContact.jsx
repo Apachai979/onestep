@@ -1,5 +1,5 @@
 'use client'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FaPhone, FaCircleCheck } from "react-icons/fa6";
 import { ImSpinner2 } from "react-icons/im";
@@ -17,6 +17,10 @@ export default function FormContact({ titleForForm }) {
     // Согласие на рассылку — отдельное и необязательное: отправку формы оно не
     // блокирует, иначе это уже не свободно данное согласие.
     const [marketingConsent, setMarketingConsent] = useState(false);
+    // Метка источника из адреса (?src=expo на QR-коде со стенда). Читаем из
+    // window, а не через useSearchParams: страницы с формой статические, и
+    // хук потребовал бы оборачивать их в Suspense. Значение проверяет сервер.
+    const [src, setSrc] = useState('');
     const [hasErrorEmail, sethasErrorEmail] = useState(true);
     const [hasErrorName, setHasErrorName] = useState(true);
     const [hasErrorTel, setHasErrorTel] = useState(true);
@@ -28,6 +32,11 @@ export default function FormContact({ titleForForm }) {
         PHONE: '+7 ',
         COMPANY_TITLE: '',
     });
+
+    useEffect(() => {
+        const value = new URLSearchParams(window.location.search).get('src');
+        if (value) setSrc(value);
+    }, []);
 
     function handleCheckInput(e) {
         const { name, value } = e.target;
@@ -92,6 +101,7 @@ export default function FormContact({ titleForForm }) {
                     message: formData.TITLE,
                     consent,
                     marketingConsent,
+                    src,
                 }),
             });
             if (response.ok) {

@@ -152,7 +152,7 @@ export default function DealsTabs({ currentUserId, isAdmin = false }) {
                     value={filters.q}
                     onChange={q => setFilters(p => ({ ...p, q }))}
                     onEnter={() => setApplied(filters)}
-                    placeholder='Название сделки или клиента'
+                    placeholder='Название, клиент или номер закупки'
                 />
                 {/* На канбане статусы — это колонки, отдельный фильтр там лишний. */}
                 {tab === "list" && (

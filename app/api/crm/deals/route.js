@@ -62,6 +62,8 @@ const DEAL_KANBAN_STATS_SELECT = {
     discount: true,
     createdAt: true,
     updatedAt: true,
+    // Номер закупки участвует в поиске (см. matchesDealSearch).
+    purchaseNumber: true,
     counterparty: { select: { name: true } },
     payer: { select: { name: true, inn: true } },
     sourceProject: { select: { internalName: true } },

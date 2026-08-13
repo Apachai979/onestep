@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
-import { PROFILE_SELECT } from "@/lib/crm/profile"
+import { PROFILE_SELECT, toProfileDto } from "@/lib/crm/profile"
 import ProfileForm from "@/components/crm/ProfileForm"
 import { PageHeader } from "@/components/crm/ui"
 
@@ -23,7 +23,7 @@ export default async function ProfilePage() {
                 title='Мой профиль'
                 subtitle='Ваши контактные данные и личные настройки.'
             />
-            <ProfileForm initial={user} />
+            <ProfileForm initial={toProfileDto(user)} />
         </div>
     )
 }

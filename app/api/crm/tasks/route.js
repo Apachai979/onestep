@@ -9,6 +9,7 @@ import {
 } from "@/lib/crm/task"
 import { crmDayEnd, crmDayStart } from "@/lib/crm/datetime"
 import { logChange } from "@/lib/crm/change-log"
+import { notifyTaskAssigned } from "@/lib/crm/notify-task"
 
 const USER_SELECT = { id: true, firstName: true, lastName: true, email: true }
 const CP_SELECT = { id: true, name: true, type: true }
@@ -172,6 +173,9 @@ export async function POST(request) {
             authorId: session.user.id,
         })
     }
+
+    // Письмо исполнителю уходит фоном: ответ не ждёт SMTP, ошибки — в лог.
+    void notifyTaskAssigned({ task: created, actorId: session.user.id, event: "created" })
 
     return Response.json({ item: created }, { status: 201 })
 }

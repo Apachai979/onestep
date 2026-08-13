@@ -7,6 +7,7 @@ import {
     taskLogParents,
 } from "@/lib/crm/task"
 import { diffEntities, logChange } from "@/lib/crm/change-log"
+import { notifyTaskAssigned } from "@/lib/crm/notify-task"
 
 const TASK_LOG_FIELDS = ["title", "type", "status", "result", "assigneeId", "startAt", "endAt"]
 
@@ -91,6 +92,15 @@ export async function PATCH(request, { params }) {
                 authorId: session.user.id,
             })
         }
+    }
+
+    // Задачу передали другому — новый ответственный узнаёт об этом письмом.
+    if (updated.assigneeId !== existing.assigneeId) {
+        void notifyTaskAssigned({
+            task: updated,
+            actorId: session.user.id,
+            event: "reassigned",
+        })
     }
 
     return Response.json({ item: updated })

@@ -35,6 +35,9 @@ export default function ProfileForm({ initial }) {
         position: initial.position ?? "",
         telegram: initial.telegram ?? "",
     })
+    const [prefs, setPrefs] = useState({
+        taskEmail: initial.prefs?.taskEmail !== false,
+    })
     const [error, setError] = useState("")
     const [saving, setSaving] = useState(false)
 
@@ -50,7 +53,7 @@ export default function ProfileForm({ initial }) {
             const r = await fetch("/api/crm/profile", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(form),
+                body: JSON.stringify({ ...form, prefs }),
             })
             const text = await r.text()
             const data = text ? safeJson(text) : {}
@@ -117,20 +120,31 @@ export default function ProfileForm({ initial }) {
             <AccessSection user={initial} />
 
             <Section title='Уведомления' icon={LuBell}>
-                <p className='text-sm text-neutral-500'>
-                    Скоро здесь можно будет выбрать, как получать напоминания о задачах и
-                    событиях по сделкам — каждый настроит под себя.
+                <label className='flex cursor-pointer items-start gap-2.5 rounded-lg border border-line bg-surface_muted px-3 py-2.5'>
+                    <input
+                        type='checkbox'
+                        className='mt-0.5'
+                        checked={prefs.taskEmail}
+                        onChange={e =>
+                            setPrefs(prev => ({ ...prev, taskEmail: e.target.checked }))
+                        }
+                    />
+                    <span className='text-sm'>
+                        <span className='flex items-center gap-2 font-medium text-neutral-800'>
+                            <LuMail className='h-4 w-4 shrink-0' />
+                            Письма о новых задачах
+                        </span>
+                        <span className='mt-0.5 block text-neutral-500'>
+                            Когда вам ставят задачу или передают её, на {initial.email}
+                            {" "}приходит письмо. Задачи, которые вы ставите себе сами, не
+                            уведомляются.
+                        </span>
+                    </span>
+                </label>
+                <p className='mt-3 flex items-center gap-2 text-sm text-neutral-400'>
+                    <LuSend className='h-4 w-4 shrink-0' />
+                    Телеграм — появится позже, понадобится привязать аккаунт к боту
                 </p>
-                <ul className='mt-3 space-y-2 text-sm text-neutral-400'>
-                    <li className='flex items-center gap-2'>
-                        <LuSend className='h-4 w-4 shrink-0' />
-                        Телеграм — понадобится привязать аккаунт к боту
-                    </li>
-                    <li className='flex items-center gap-2'>
-                        <LuMail className='h-4 w-4 shrink-0' />
-                        Почта — на {initial.email}
-                    </li>
-                </ul>
             </Section>
 
             {error && (

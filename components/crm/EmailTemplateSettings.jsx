@@ -2,9 +2,21 @@
 import { useEffect, useState } from "react"
 import { Button, useToast } from "@/components/crm/ui"
 
-// Редактор шаблона письма, которым КП уходит клиенту.
-// props: placeholders — [[«{{number}}», «описание»], ...]
-export default function ProposalEmailSettings({ placeholders }) {
+// Редактор шаблона письма. Один и тот же экран для всех писем CRM —
+// отличаются только адрес настройки и подпись.
+//
+// props:
+//   endpoint     — /api/crm/settings/<...>, GET отдаёт {subject, body, defaults}
+//   title        — заголовок блока
+//   description  — где этот шаблон используется
+//   placeholders — [[«{{number}}», «описание»], ...]
+export default function EmailTemplateSettings({
+    endpoint,
+    title,
+    description,
+    placeholders,
+    rows = 12,
+}) {
     const toast = useToast()
     const [subject, setSubject] = useState("")
     const [body, setBody] = useState("")
@@ -13,7 +25,7 @@ export default function ProposalEmailSettings({ placeholders }) {
     const [saving, setSaving] = useState(false)
 
     useEffect(() => {
-        fetch("/api/crm/settings/proposal-email")
+        fetch(endpoint)
             .then(r => r.json())
             .then(d => {
                 setSubject(d.subject || "")
@@ -23,13 +35,13 @@ export default function ProposalEmailSettings({ placeholders }) {
             .catch(() => toast.error("Не удалось загрузить шаблон"))
             .finally(() => setLoading(false))
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [endpoint])
 
     async function save(next = null) {
         setSaving(true)
         try {
             const payload = next || { subject, body }
-            const r = await fetch("/api/crm/settings/proposal-email", {
+            const r = await fetch(endpoint, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -53,14 +65,8 @@ export default function ProposalEmailSettings({ placeholders }) {
 
     return (
         <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
-            <h2 className='text-sm font-semibold text-neutral-900'>
-                Шаблон письма с КП
-            </h2>
-            <p className='mt-1 text-sm text-neutral-500'>
-                Используется при отправке коммерческого предложения клиенту со
-                страницы «Сформировать КП». Менеджер видит текст перед отправкой и
-                может подправить его под конкретного клиента.
-            </p>
+            <h2 className='text-sm font-semibold text-neutral-900'>{title}</h2>
+            <p className='mt-1 text-sm text-neutral-500'>{description}</p>
 
             <div className='mt-4 space-y-3'>
                 <div>
@@ -74,7 +80,7 @@ export default function ProposalEmailSettings({ placeholders }) {
                 <div>
                     <label className='mb-1.5 block text-xs font-medium text-neutral-500'>Текст письма</label>
                     <textarea
-                        rows={12}
+                        rows={rows}
                         value={body}
                         onChange={e => setBody(e.target.value)}
                         className='w-full rounded-xl border border-line bg-white px-3 py-2 font-mono text-sm text-neutral-900 shadow-sm transition-all duration-200 focus:border-brand_main focus:outline-none focus:ring-2 focus:ring-brand_main/20'

@@ -14,6 +14,8 @@ const RELATION_FIELDS = {
         contactId: { model: "contact" },
         managerId: { model: "user" },
         sourceProjectId: { model: "project" },
+        auctionCustomerId: { model: "counterparty" },
+        auctionCustomerContactId: { model: "contact" },
     },
     DealItem: {
         productId: { model: "product" },
@@ -22,6 +24,7 @@ const RELATION_FIELDS = {
         distributorId: { model: "counterparty" },
         endCustomerId: { model: "counterparty" },
         managerId: { model: "user" },
+        duplicateOfId: { model: "project" },
     },
     ProjectItem: {
         productId: { model: "product" },

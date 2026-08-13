@@ -24,6 +24,10 @@ const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/
 
 function formatValue(v) {
     if (v === null || v === undefined) return "—"
+    // Флаги (isAuction, isGroupPrimary) хранятся булевыми — «true» в ленте
+    // менеджеру ничего не говорит.
+    if (typeof v === "boolean") return v ? "Да" : "Нет"
+    if (Array.isArray(v)) return v.join(", ") || "—"
     // Даты лежат в истории ISO-строками. Показываем их по-московски, а границы
     // суток (задача «на весь день») — просто датой, без 00:00 и 23:59.
     if (typeof v === "string" && ISO_RE.test(v)) {
@@ -177,7 +181,15 @@ export default function ChangeHistorySection({
                                                 </li>
                                             )
                                         }
-                                        if (val === null || val === undefined || val === "")
+                                        // В снимке «Создано» пустые значения не
+                                        // показываем — выключенный флаг такой же
+                                        // пустой, как незаполненное поле.
+                                        if (
+                                            val === null ||
+                                            val === undefined ||
+                                            val === "" ||
+                                            val === false
+                                        )
                                             return null
                                         return (
                                             <li key={field}>

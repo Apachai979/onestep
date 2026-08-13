@@ -55,16 +55,21 @@ function uniqueCounterparties(sources) {
 }
 
 function SectionHeading({ icon: Icon, title, hint, count }) {
+    // items-center, а не items-baseline: baseline у h2 считается по первому
+    // элементу — иконке-svg, а у неё это нижняя грань, поэтому счётчик и
+    // подпись съезжали вниз относительно заголовка.
     return (
-        <div className='flex flex-wrap items-baseline gap-x-2 gap-y-1'>
-            <h2 className='flex items-center gap-2 text-sm font-semibold text-neutral-900'>
+        <div className='flex flex-wrap items-center gap-x-2 gap-y-1'>
+            <h2 className='flex items-center gap-2 text-sm font-semibold leading-5 text-neutral-900'>
                 {Icon && <Icon className='h-4 w-4 text-brand_main' />}
                 {title}
             </h2>
             {count != null && (
-                <span className='text-xs tabular-nums text-neutral-400'>{count}</span>
+                <span className='text-xs leading-5 tabular-nums text-neutral-400'>
+                    {count}
+                </span>
             )}
-            {hint && <span className='text-xs text-neutral-500'>· {hint}</span>}
+            {hint && <span className='text-xs leading-5 text-neutral-500'>· {hint}</span>}
         </div>
     )
 }

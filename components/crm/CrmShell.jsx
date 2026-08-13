@@ -16,6 +16,7 @@ import {
     LuContact,
     LuPackage,
     LuWarehouse,
+    LuBarChart3,
     LuSearch,
     LuBookOpen,
     LuSettings,
@@ -124,6 +125,7 @@ export default function CrmShell({ user, role, children }) {
             { href: "/crm/contacts", label: "Контакты", icon: LuContact },
             { href: "/crm/products", label: "Товары", icon: LuPackage },
             { href: "/crm/supply", label: "Обеспечение", icon: LuWarehouse },
+            { href: "/crm/analytics", label: "Аналитика", icon: LuBarChart3 },
             {
                 href: "/crm/users",
                 label: role === "ADMIN" ? "Пользователи" : "Сотрудники",

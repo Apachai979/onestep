@@ -59,7 +59,7 @@ function findDeal(columns, dealId) {
 function moveCard(columns, dealId, newStatus) {
     if (!columns) return columns
     const from = DEAL_KANBAN_STATUSES.find(s =>
-        (columns[s]?.items || []).some(d => d.id === dealId),
+        (columns[s]?.items || []).some(d => d.id === dealId)
     )
     const target = columns[newStatus]
     if (!from || from === newStatus || !target) return columns
@@ -110,7 +110,7 @@ export default function DealsKanban({ query = "", isAdmin = false, onShowAll }) 
             if (!r.ok) throw new Error(data?.error || `Ошибка ${r.status}`)
             return data.columns || {}
         },
-        [url],
+        [url]
     )
 
     useEffect(() => {
@@ -245,7 +245,7 @@ export default function DealsKanban({ query = "", isAdmin = false, onShowAll }) 
                                     {(status === "NEGOTIATION" || status === "CONTRACT") && (
                                         <Link
                                             href={`/crm/deals/new?status=${status}`}
-                                            className='inline-flex h-6 w-6 items-center justify-center rounded-lg border border-line bg-white text-neutral-500 transition-colors hover:text-brand_main hover:border-brand_main/40'
+                                            className='inline-flex h-6 w-6 items-center justify-center rounded-lg border border-line bg-white text-neutral-500 transition-colors hover:border-brand_main/40 hover:text-brand_main'
                                             title='Добавить сделку с этим статусом'
                                         >
                                             +
@@ -312,8 +312,7 @@ function DealCard({ deal, locked, dragging, onDragStart, onDragEnd }) {
     const title = dealDisplayTitle(deal, deal.counterparty?.name)
     const hasItems = Array.isArray(deal.items) && deal.items.length > 0
     const progress = hasItems ? calculateDealShipmentProgress(deal) : null
-    const hasOverdue =
-        Array.isArray(deal.shipments) && deal.shipments.some(isShipmentOverdue)
+    const hasOverdue = Array.isArray(deal.shipments) && deal.shipments.some(isShipmentOverdue)
     // На карточке показываем сумму со скидкой — это то, что реально получим.
     const discountPct = deal.discount != null ? Number(deal.discount) : 0
     const amount = dealDiscountedTotal(deal)
@@ -329,10 +328,24 @@ function DealCard({ deal, locked, dragging, onDragStart, onDragEnd }) {
                 dragging ? "opacity-50" : "border-line"
             }`}
         >
-            {/* Аукцион помечаем иконкой в строке названия: текстовый бейдж
-                отжимал заголовок в узкую колонку и растил карточку в высоту. */}
+            {/* У аукциона верхней строкой — иконка и номер закупки: по нему
+                сделку и ищут глазами, а в отдельной строке он не отжимает
+                название в узкую колонку. Номер необязателен, поэтому без него
+                аукцион помечаем прежней иконкой прямо в строке названия —
+                иначе пометка исчезла бы совсем. */}
+            {deal.isAuction && deal.purchaseNumber && (
+                <p
+                    className='mb-1 flex items-center gap-1 text-amber-700'
+                    title={`Закупка № ${deal.purchaseNumber}`}
+                >
+                    <LuGavel size={12} className='shrink-0' />
+                    <span className='truncate text-[11px] font-semibold'>
+                        <span className='text-[10px] font-normal'>№</span> {deal.purchaseNumber}
+                    </span>
+                </p>
+            )}
             <p className='font-medium leading-snug text-neutral-900'>
-                {deal.isAuction && (
+                {deal.isAuction && !deal.purchaseNumber && (
                     <LuGavel
                         size={13}
                         title='Аукцион'

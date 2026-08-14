@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/configs/auth"
 import ProjectsTabs from "@/components/crm/ProjectsTabs"
@@ -14,10 +15,14 @@ export default async function ProjectsPage() {
                 title='Проекты'
                 subtitle='Аукционные проекты: связки дистрибьютор — конечный потребитель.'
             />
-            <ProjectsTabs
-                currentUserId={session?.user?.id}
-                isAdmin={session?.user?.role === "ADMIN"}
-            />
+            {/* Suspense — требование useSearchParams внутри useTabParam:
+                выбранный вид компонент читает из адреса. */}
+            <Suspense fallback={null}>
+                <ProjectsTabs
+                    currentUserId={session?.user?.id}
+                    isAdmin={session?.user?.role === "ADMIN"}
+                />
+            </Suspense>
         </div>
     )
 }

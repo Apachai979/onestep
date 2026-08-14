@@ -1,13 +1,16 @@
 "use client"
 import { useState } from "react"
+import { useTabParam } from "@/lib/crm/url-state"
 import TaskList from "./TaskList"
 import TasksKanban from "./TasksKanban"
 import TaskCalendar from "./TaskCalendar"
 import TaskForm from "./TaskForm"
 import { Button, Modal } from "@/components/crm/ui"
 
+const VIEW_KEYS = ["list", "kanban", "calendar"]
+
 export default function TasksTabs({ currentUserId, currentUserRole }) {
-    const [view, setView] = useState("list")
+    const [view, setView] = useTabParam(VIEW_KEYS)
     const [creating, setCreating] = useState(false)
     const [defaultStart, setDefaultStart] = useState(null)
 

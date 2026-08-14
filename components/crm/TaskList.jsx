@@ -15,6 +15,7 @@ import {
 } from "@/lib/crm/task"
 import { crmToday } from "@/lib/crm/datetime"
 import { onTasksChanged } from "@/lib/crm/tasks-events"
+import { useUrlFilters } from "@/lib/crm/url-state"
 import { TaskTypeBadge } from "./TaskTypeIcon"
 import TaskCloseModal from "./TaskCloseModal"
 import {
@@ -31,7 +32,9 @@ import {
 } from "@/components/crm/ui"
 
 // Дефолт списка задач — открытые: сброс возвращает именно его, а не «все».
-const DEFAULT_FILTERS = { status: "OPEN", type: "", assigneeId: "" }
+// Поля объекта задают и разбор адреса (см. useUrlFilters), поэтому «на сегодня»
+// живёт здесь же, а не отдельным состоянием.
+const DEFAULT_FILTERS = { status: "OPEN", type: "", assigneeId: "", today: false }
 
 function safeJson(text) {
     try {
@@ -75,8 +78,11 @@ export default function TaskList({ currentUserId, currentUserRole }) {
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
     const [closing, setClosing] = useState(null)
-    const [filters, setFilters] = useState(DEFAULT_FILTERS)
-    const [todayOnly, setTodayOnly] = useState(false)
+    // Фильтры держим в адресе: вернувшись из карточки, менеджер должен увидеть
+    // тот же отбор. Паузы не ждём — текстового поля здесь нет, только селекты.
+    const { filters, setFilters, applied, reset } = useUrlFilters(DEFAULT_FILTERS, {
+        delay: 0,
+    })
     const [users, setUsers] = useState([])
 
     useEffect(() => {
@@ -102,10 +108,10 @@ export default function TaskList({ currentUserId, currentUserRole }) {
 
     const load = useCallback(async () => {
         const params = new URLSearchParams()
-        if (filters.status) params.set("status", filters.status)
-        if (filters.type) params.set("type", filters.type)
-        if (filters.assigneeId) params.set("assigneeId", filters.assigneeId)
-        if (todayOnly) {
+        if (applied.status) params.set("status", applied.status)
+        if (applied.type) params.set("type", applied.type)
+        if (applied.assigneeId) params.set("assigneeId", applied.assigneeId)
+        if (applied.today) {
             const today = crmToday()
             params.set("from", today)
             params.set("to", today)
@@ -121,7 +127,7 @@ export default function TaskList({ currentUserId, currentUserRole }) {
             return
         }
         setItems(data.items || [])
-    }, [filters, todayOnly])
+    }, [applied])
 
     useEffect(() => {
         load()
@@ -217,12 +223,9 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                     filters.status !== DEFAULT_FILTERS.status ||
                     Boolean(filters.type) ||
                     Boolean(filters.assigneeId) ||
-                    todayOnly
+                    filters.today
                 }
-                onReset={() => {
-                    setFilters(DEFAULT_FILTERS)
-                    setTodayOnly(false)
-                }}
+                onReset={reset}
             >
                 <FilterSelect
                     label='Статус'
@@ -264,8 +267,8 @@ export default function TaskList({ currentUserId, currentUserRole }) {
                     <FilterToggle
                         label='На сегодня'
                         title='Мои задачи на сегодня'
-                        active={todayOnly}
-                        onChange={setTodayOnly}
+                        active={filters.today}
+                        onChange={on => setFilters(prev => ({ ...prev, today: on }))}
                     />
                 )}
             </FilterBar>

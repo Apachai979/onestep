@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/configs/auth"
 import TasksTabs from "@/components/crm/TasksTabs"
@@ -13,10 +14,14 @@ export default async function TasksPage() {
                 title='Задачи'
                 subtitle='Список и календарь: дедлайны, типы, ответственные.'
             />
-            <TasksTabs
-                currentUserId={session?.user?.id}
-                currentUserRole={session?.user?.role}
-            />
+            {/* Suspense — требование useSearchParams внутри useTabParam:
+                выбранный вид компонент читает из адреса. */}
+            <Suspense fallback={null}>
+                <TasksTabs
+                    currentUserId={session?.user?.id}
+                    currentUserRole={session?.user?.role}
+                />
+            </Suspense>
         </div>
     )
 }

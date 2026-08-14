@@ -11,8 +11,11 @@ import {
     FilterText,
     FilterToggle,
 } from "@/components/crm/ui"
+import { useTabParam, useUrlFilters } from "@/lib/crm/url-state"
 import ProjectsKanban from "./ProjectsKanban"
 import ProjectsList from "./ProjectsList"
+
+const VIEW_KEYS = ["kanban", "list"]
 
 const EMPTY_FILTERS = {
     q: "",
@@ -53,8 +56,8 @@ function buildQuery(filters, { includeStatus }) {
 }
 
 export default function ProjectsTabs({ currentUserId, isAdmin = false }) {
-    const [view, setView] = useState("kanban")
-    const [filters, setFilters] = useState(EMPTY_FILTERS)
+    const [view, setView] = useTabParam(VIEW_KEYS)
+    const { filters, setFilters, applied, apply, reset } = useUrlFilters(EMPTY_FILTERS)
     const [refs, setRefs] = useState({ distributors: [], customers: [], managers: [] })
 
     useEffect(() => {
@@ -71,13 +74,6 @@ export default function ProjectsTabs({ currentUserId, isAdmin = false }) {
         )
     }, [])
 
-    // Запрос идёт не на каждый символ: ждём паузы в наборе.
-    const [applied, setApplied] = useState(filters)
-    useEffect(() => {
-        const t = setTimeout(() => setApplied(filters), 300)
-        return () => clearTimeout(t)
-    }, [filters])
-
     const query = useMemo(
         () => buildQuery(applied, { includeStatus: view === "list" }),
         [applied, view],
@@ -87,9 +83,7 @@ export default function ProjectsTabs({ currentUserId, isAdmin = false }) {
     // отфильтрованный по этому статусу — длинную колонку удобнее смотреть
     // таблицей. Фильтр применяем сразу, без debounce.
     function showAllInList(status) {
-        const next = { ...filters, status: [status] }
-        setFilters(next)
-        setApplied(next)
+        apply({ ...filters, status: [status] })
         setView("list")
     }
 
@@ -162,11 +156,11 @@ export default function ProjectsTabs({ currentUserId, isAdmin = false }) {
                 </Button>
             </div>
 
-            <FilterBar canReset={activeCount > 0} onReset={() => setFilters(EMPTY_FILTERS)}>
+            <FilterBar canReset={activeCount > 0} onReset={reset}>
                 <FilterSearch
                     value={filters.q}
                     onChange={q => setFilters(prev => ({ ...prev, q }))}
-                    onEnter={() => setApplied(filters)}
+                    onEnter={() => apply(filters)}
                     placeholder='Название, клиент'
                 />
                 {/* На канбане статусы — это колонки, отдельный фильтр там лишний. */}

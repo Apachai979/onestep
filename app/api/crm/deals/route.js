@@ -14,6 +14,12 @@ import {
     matchesDealSearch,
     parseDealPayload,
 } from "@/lib/crm/deal"
+import {
+    AUCTION_BOARD_PER_COLUMN,
+    AUCTION_HIDDEN_STATUSES,
+    buildAuctionBoard,
+} from "@/lib/crm/auction-board"
+import { crmToday } from "@/lib/crm/datetime"
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
 import { DEAL_PROJECT_NO_NEED_ERROR, dealProjectPartiesError } from "@/lib/crm/access"
 import { inheritedDealDiscount } from "@/lib/crm/discount"
@@ -32,6 +38,8 @@ const CONTACT_SELECT = {
 const DEAL_INCLUDE = {
     counterparty: { select: COUNTERPARTY_SELECT },
     payer: { select: { id: true, name: true, inn: true } },
+    // Заказчик закупки участвует в поиске по сделкам (см. matchesDealSearch).
+    auctionCustomer: { select: { id: true, name: true } },
     // Сделка из проекта берёт название из него же — см. dealDisplayTitle.
     sourceProject: { select: { id: true, internalName: true } },
     manager: { select: MANAGER_SELECT },
@@ -62,11 +70,57 @@ const DEAL_KANBAN_STATS_SELECT = {
     discount: true,
     createdAt: true,
     updatedAt: true,
-    // Номер закупки участвует в поиске (см. matchesDealSearch).
+    // Номер закупки и заказчик участвуют в поиске (см. matchesDealSearch).
     purchaseNumber: true,
+    auctionCustomer: { select: { name: true } },
     counterparty: { select: { name: true } },
     payer: { select: { name: true, inn: true } },
     sourceProject: { select: { internalName: true } },
+}
+
+// Доска аукционов: карточке нужны срок закупки, НМЦК и заказчик, но не нужны
+// позиции и отгрузки — до торгов их ещё нет. Поэтому свой select, а не общий
+// DEAL_INCLUDE: поля для matchesDealSearch здесь те же (title, клиент,
+// плательщик, проект, номер закупки).
+const AUCTION_BOARD_SELECT = {
+    id: true,
+    title: true,
+    status: true,
+    isAuction: true,
+    purchaseNumber: true,
+    auctionUrl: true,
+    nmck: true,
+    bidsDeadlineAt: true,
+    auctionAt: true,
+    resultsAt: true,
+    // Итог прошедших торгов: статус + причина отказа (см. auctionOutcome),
+    // winner идёт подписью на проигранной карточке.
+    winner: true,
+    lossReason: true,
+    totalAmount: true,
+    discount: true,
+    createdAt: true,
+    counterparty: { select: { id: true, name: true } },
+    auctionCustomer: { select: { id: true, name: true } },
+    payer: { select: { name: true, inn: true } },
+    sourceProject: { select: { internalName: true } },
+    manager: { select: MANAGER_SELECT },
+}
+
+// Колонки доски вычисляются из срока закупки (см. lib/crm/auction-board.js), а
+// не хранятся: фильтровать по ним в SQL нечего, поэтому берём все аукционные
+// сделки и раскладываем в памяти. Их на порядок меньше, чем сделок вообще.
+async function loadAuctionColumns(where, q, perColumn) {
+    const rows = await prisma.deal.findMany({
+        where: {
+            ...where,
+            isAuction: true,
+            status: { notIn: AUCTION_HIDDEN_STATUSES },
+        },
+        select: AUCTION_BOARD_SELECT,
+    })
+    const filtered = q ? rows.filter(d => matchesDealSearch(d, q)) : rows
+    return buildAuctionBoard(filtered, { today: crmToday(), perColumn })
 }
 
 // Доска отдаётся колонками: items — первая страница карточек, total и sum —
@@ -123,15 +177,22 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
     const counterpartyId = searchParams.get("counterpartyId")
+    const auctionCustomerId = searchParams.get("auctionCustomerId")
     const managerId = searchParams.get("managerId")
     const isAuction = searchParams.get("isAuction")
     const q = searchParams.get("q")?.trim()
-    // view=kanban — доска: колонки со своей страницей карточек вместо плоского
-    // списка. Список сделок и селекты в формах ходят сюда же и получают items.
-    const kanban = searchParams.get("view") === "kanban"
+    // view=kanban — доска сделок по статусам, view=auctions — доска аукционов по
+    // сроку закупки. Список сделок и селекты в формах ходят сюда же за items.
+    const view = searchParams.get("view")
+    const kanban = view === "kanban"
+    const auctionBoard = view === "auctions"
     const perStatus = Math.min(
         100,
         Math.max(1, Number(searchParams.get("perStatus")) || DEAL_KANBAN_PER_STATUS),
+    )
+    const perColumn = Math.min(
+        200,
+        Math.max(1, Number(searchParams.get("perColumn")) || AUCTION_BOARD_PER_COLUMN),
     )
 
     const where = {}
@@ -149,6 +210,8 @@ export async function GET(request) {
         where.status = statuses.length === 1 ? statuses[0] : { in: statuses }
     }
     if (counterpartyId) where.counterpartyId = counterpartyId
+    // Заказчик закупки — вторая сторона аукциона, у обычных сделок его нет.
+    if (auctionCustomerId) where.auctionCustomerId = auctionCustomerId
     if (managerId) where.managerId = managerId
     if (isAuction === "true") where.isAuction = true
     else if (isAuction === "false") where.isAuction = false
@@ -163,6 +226,14 @@ export async function GET(request) {
         const { status: _status, ...kanbanWhere } = where
         const columns = await loadKanbanColumns(kanbanWhere, q, perStatus)
         return Response.json({ columns, perStatus })
+    }
+
+    if (auctionBoard) {
+        // Статус на доске аукционов тоже не фильтр: он участвует в правиле
+        // видимости карточки (см. isOnAuctionBoard) и показан на ней бейджем.
+        const { status: _status, ...auctionWhere } = where
+        const columns = await loadAuctionColumns(auctionWhere, q, perColumn)
+        return Response.json({ columns, perColumn, today: crmToday() })
     }
 
     const items = await prisma.deal.findMany({

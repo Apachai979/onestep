@@ -17,6 +17,7 @@ import {
 import { crmToday, formatCrmDate } from "@/lib/crm/datetime"
 import { notifyTasksChanged, onTasksChanged } from "@/lib/crm/tasks-events"
 import { dealDisplayTitle } from "@/lib/crm/deal"
+import { useUrlFilters } from "@/lib/crm/url-state"
 import { TaskTypeBadge } from "./TaskTypeIcon"
 import TaskCloseModal from "./TaskCloseModal"
 import {
@@ -30,6 +31,10 @@ import {
     Modal,
     useToast,
 } from "@/components/crm/ui"
+
+// Ответственный совпадает по имени с фильтром списка задач — вкладки делят одну
+// строку запроса, и «только мои» переживает переключение вида.
+const KANBAN_FILTERS = { q: "", assigneeId: "" }
 
 const COLUMN_ACCENT = {
     overdue: "bg-red-400/80",
@@ -85,8 +90,11 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
     const toast = useToast()
     const [items, setItems] = useState(null)
     const [error, setError] = useState("")
-    const [q, setQ] = useState("")
-    const [assigneeId, setAssigneeId] = useState("")
+    // Фильтры держим в адресе — возврат из карточки не должен их сбрасывать.
+    // Поиск здесь клиентский (фильтрует уже загруженные карточки), поэтому в
+    // поле смотрим на filters.q, а пауза нужна только для записи в адрес.
+    const { filters, setFilters, applied, reset } = useUrlFilters(KANBAN_FILTERS)
+    const { q, assigneeId } = filters
     const [users, setUsers] = useState([])
     const [draggingId, setDraggingId] = useState(null)
     const [dragOver, setDragOver] = useState(null)
@@ -102,7 +110,7 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
         setError("")
         try {
             const params = new URLSearchParams({ status: "OPEN" })
-            if (assigneeId) params.set("assigneeId", assigneeId)
+            if (applied.assigneeId) params.set("assigneeId", applied.assigneeId)
             const r = await fetch(`/api/crm/tasks?${params.toString()}`)
             const text = await r.text()
             const data = text ? safeJson(text) : {}
@@ -113,7 +121,7 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
             setError(err.message)
             setItems([])
         }
-    }, [assigneeId])
+    }, [applied.assigneeId])
 
     useEffect(() => {
         load()
@@ -261,20 +269,17 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
         <div className='space-y-4'>
             <FilterBar
                 canReset={Boolean(assigneeId)}
-                onReset={() => {
-                    setQ("")
-                    setAssigneeId("")
-                }}
+                onReset={reset}
             >
                 <FilterSearch
                     value={q}
-                    onChange={setQ}
+                    onChange={value => setFilters(prev => ({ ...prev, q: value }))}
                     placeholder='Заголовок или описание'
                 />
                 <FilterPicker
                     label='Ответственный'
                     value={assigneeId}
-                    onChange={setAssigneeId}
+                    onChange={id => setFilters(prev => ({ ...prev, assigneeId: id }))}
                     options={assigneeOptions}
                     searchPlaceholder='Имя или email'
                     emptyLabel='Сотрудник не найден'
@@ -284,7 +289,12 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
                         label='Только мои'
                         title='Показать только мои задачи'
                         active={assigneeId === currentUserId}
-                        onChange={on => setAssigneeId(on ? currentUserId : "")}
+                        onChange={on =>
+                            setFilters(prev => ({
+                                ...prev,
+                                assigneeId: on ? currentUserId : "",
+                            }))
+                        }
                     />
                 )}
             </FilterBar>

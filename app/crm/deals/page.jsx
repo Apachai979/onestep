@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/configs/auth"
 import DealsTabs from "@/components/crm/DealsTabs"
@@ -11,12 +12,16 @@ export default async function DealsPage() {
         <div className='space-y-5'>
             <PageHeader
                 title='Сделки'
-                subtitle='Прямые продажи клиентам: канбан и список с фильтрами.'
+                subtitle='Прямые продажи клиентам: канбан, список и доска аукционов по срокам закупок.'
             />
-            <DealsTabs
-                currentUserId={session?.user?.id}
-                isAdmin={session?.user?.role === "ADMIN"}
-            />
+            {/* Suspense — требование useSearchParams внутри useTabParam:
+                вкладку компонент читает из адреса. */}
+            <Suspense fallback={null}>
+                <DealsTabs
+                    currentUserId={session?.user?.id}
+                    isAdmin={session?.user?.role === "ADMIN"}
+                />
+            </Suspense>
         </div>
     )
 }

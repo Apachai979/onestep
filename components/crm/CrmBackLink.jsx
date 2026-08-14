@@ -3,51 +3,16 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { LuChevronLeft } from "react-icons/lu"
+import { pushNavUrl, readNavStack } from "@/lib/crm/nav-stack"
 
-const STACK_KEY = "crm:navStack"
-const STACK_LIMIT = 15
-
-function readStack() {
-    if (typeof window === "undefined") return []
-    try {
-        const raw = sessionStorage.getItem(STACK_KEY)
-        const parsed = raw ? JSON.parse(raw) : []
-        return Array.isArray(parsed) ? parsed : []
-    } catch {
-        return []
-    }
-}
-
-function writeStack(stack) {
-    try {
-        sessionStorage.setItem(STACK_KEY, JSON.stringify(stack))
-    } catch {
-        /* quota — не критично */
-    }
-}
-
-// Отслеживает CRM-навигацию в sessionStorage как стек URL. При переходе
-// на URL, который уже есть в стеке (типичный случай — форма сохранила
-// изменения и router.push вернул на детальную страницу), обрезаем всё
-// после него: цикл «список → карточка → редактирование → карточка»
-// после сохранения даёт стек [список, карточка], а не
-// [список, карточка, редактирование, карточка]. Значит «Назад» ведёт
-// в список, а не обратно в редактирование.
+// Отслеживает CRM-навигацию как стек URL (см. [lib/crm/nav-stack.js]).
+// Вкладку и фильтры списка в этот же URL дописывает useUrlFilters — их
+// правка стек не наращивает, а обновляет верхушку.
 export function CrmNavTracker() {
     const pathname = usePathname()
     useEffect(() => {
         if (typeof window === "undefined") return
-        const full = pathname + window.location.search
-        const stack = readStack()
-        const idx = stack.indexOf(full)
-        if (idx >= 0) {
-            // Возврат на уже посещённую страницу — обрезаем хвост.
-            stack.length = idx + 1
-        } else {
-            stack.push(full)
-            if (stack.length > STACK_LIMIT) stack.splice(0, stack.length - STACK_LIMIT)
-        }
-        writeStack(stack)
+        pushNavUrl(pathname + window.location.search)
     }, [pathname])
     return null
 }
@@ -65,7 +30,7 @@ export function usePrevPath(fallback) {
     const [fromHistory, setFromHistory] = useState(false)
     useEffect(() => {
         if (typeof window === "undefined") return
-        const stack = readStack()
+        const stack = readNavStack()
         // Идём от предпоследнего элемента вглубь, пропуская страницы
         // редактирования/создания — на них «Назад» вести не должна.
         let prev = null

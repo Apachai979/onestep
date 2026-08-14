@@ -5,6 +5,65 @@ import ImageCarousel from "@/components/ImageCarousel"
 import Link from "next/link"
 import Block from "@/components/Block"
 import Image from "next/image"
+import { notFound } from "next/navigation"
+
+// Прочерк в таблице состава — как он записан в data.json.
+const NO_AMOUNT = "-"
+
+// Документы к товару. У гемодиализа — свой комплект из /files/hemodialysis/
+// (РУ, инструкция и два СОПа), у остальных — общие РУ и инструкция.
+const HEMODIALYSIS_DOCUMENTS = [
+    {
+        href: "/files/hemodialysis/RC_hemodialysis.pdf",
+        label: "Регистрационное удостоверение №РЗН 2024/23580 от 10.09.2024",
+    },
+    {
+        href: "/files/hemodialysis/Instruction_hemodialysis.pdf",
+        label: "Инструкция по применению",
+    },
+    {
+        href: "/files/hemodialysis/1SOP_hemodialysis_start.docx",
+        label: 'СОП: "Подключение пациента к АИП с использованием АВФ"',
+    },
+    {
+        href: "/files/hemodialysis/1SOP_hemodialysis_end.docx",
+        label: 'СОП: "Отключение пациента с АВФ от аппарата искусственной почки"',
+    },
+]
+
+const COMMON_DOCUMENTS = [
+    {
+        href: "/files/registration_certificate.pdf",
+        label: "Регистрационное удостоверение №РЗН 2024/23821 от 16.10.2024",
+    },
+    {
+        href: "/files/instruction.pdf",
+        label: "Инструкция по применению",
+    },
+]
+
+// Строки таблицы состава: имя компонента + количества по колонкам-артикулам.
+// Количество ищется в композиции по названию, а не берётся по порядку внутри неё,
+// поэтому артикул без какой-то строки получает прочерк и не сдвигает соседние значения.
+function buildCompositionRows(compositions) {
+    const names = []
+    compositions.forEach(composition => {
+        composition.components.forEach(component => {
+            if (!names.includes(component.components_name_ru)) {
+                names.push(component.components_name_ru)
+            }
+        })
+    })
+
+    return names.map(name => ({
+        name,
+        amounts: compositions.map(
+            composition =>
+                composition.components.find(component => component.components_name_ru === name)
+                    ?.amount ?? NO_AMOUNT,
+        ),
+    }))
+}
 
 export async function generateStaticParams() {
     return parsedData.map(set => ({
@@ -15,6 +74,8 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }) {
     const neoset = parsedData.find(neo => neo.href === params.title)
 
+    if (!neoset) notFound()
+
     return {
         title: neoset.runame,
     }
@@ -23,77 +84,30 @@ export async function generateMetadata({ params }) {
 export default function Neoset({ params }) {
     const neoset = parsedData.find(neo => neo.href === params.title)
 
-    const componentsList = {}
-    neoset.in_the_beginning.compositions.forEach(composition => {
-        composition.components.forEach(component => {
-            if (!componentsList[component.components_name_ru]) {
-                componentsList[component.components_name_ru] = []
-            }
-            componentsList[component.components_name_ru].push(component.amount)
-        })
-    })
+    if (!neoset) notFound()
 
-    const componentsDializList = {}
-    if (neoset.name == "Nabor NeoSet dlya gemodializa (nachalo/zaversheniye)") {
-        neoset.in_the_end.compositions.forEach(composition => {
-            composition.components.forEach(component => {
-                if (!componentsDializList[component.components_name_ru]) {
-                    componentsDializList[component.components_name_ru] = []
-                }
-                componentsDializList[component.components_name_ru].push(component.amount)
-            })
-        })
-    }
+    // Набор с двумя этапами процедуры (сейчас это гемодиализ) отличается наличием
+    // in_the_end — таблица тогда делится на «Начало» и «Завершение процедуры».
+    const hasEndStage = Boolean(neoset.in_the_end)
 
-    const isGemodializ = neoset.name === "Nabor NeoSet dlya gemodializa (nachalo/zaversheniye)"
+    const beginningRows = buildCompositionRows(neoset.in_the_beginning.compositions)
+    const endRows = hasEndStage ? buildCompositionRows(neoset.in_the_end.compositions) : []
 
-    // Документы к товару. У гемодиализа — свой комплект из /files/hemodialysis/
-    // (РУ, инструкция и два СОПа), у остальных — общие РУ и инструкция.
-    const documents = isGemodializ
-        ? [
-              {
-                  href: "/files/hemodialysis/RC_hemodialysis.pdf",
-                  label: "Регистрационное удостоверение №РЗН 2024/23580 от 10.09.2024",
-              },
-              {
-                  href: "/files/hemodialysis/Instruction_hemodialysis.pdf",
-                  label: "Инструкция по применению",
-              },
-              {
-                  href: "/files/hemodialysis/1SOP_hemodialysis_start.docx",
-                  label: 'СОП: "Подключение пациента к АИП с использованием АВФ"',
-              },
-              {
-                  href: "/files/hemodialysis/1SOP_hemodialysis_end.docx",
-                  label: 'СОП: "Отключение пациента с АВФ от аппарата искусственной почки"',
-              },
-          ]
-        : [
-              {
-                  href: "/files/registration_certificate.pdf",
-                  label: "Регистрационное удостоверение №РЗН 2024/23821 от 16.10.2024",
-              },
-              {
-                  href: "/files/instruction.pdf",
-                  label: "Инструкция по применению",
-              },
-          ]
+    const documents = hasEndStage ? HEMODIALYSIS_DOCUMENTS : COMMON_DOCUMENTS
 
-    const renderComponentRows = components => {
-        return Object.keys(components).map((componentName, index) => (
-            <tr
-                key={index}
-                className='border-b border-stone-200 bg-gray-50 odd:bg-white even:bg-slate-100'
-            >
-                <td className='px-4 py-2'>{componentName}</td>
-                {components[componentName].map((amount, idx) => (
+    const columnsCount = neoset.in_the_beginning.compositions.length + 1
+
+    const renderComponentRows = rows =>
+        rows.map(row => (
+            <tr key={row.name} className='border-b border-stone-200 odd:bg-white even:bg-slate-100'>
+                <td className='px-4 py-2'>{row.name}</td>
+                {row.amounts.map((amount, idx) => (
                     <td key={idx} className='px-4 py-2 text-center'>
                         {amount}
                     </td>
                 ))}
             </tr>
         ))
-    }
 
     return (
         <>
@@ -103,11 +117,9 @@ export default function Neoset({ params }) {
                         <ImageCarousel slides={neoset.photo_lib} w='550' h='350' />
                     </div>
                     <div className='flex flex-1 flex-col'>
-                        <Link href='/'>
-                            <h1 className='text-3xl font-semibold text-txtGreen sm:text-4xl lg:text-5xl'>
-                                {neoset.runame}
-                            </h1>
-                        </Link>
+                        <h1 className='text-3xl font-semibold text-txtGreen sm:text-4xl lg:text-5xl'>
+                            {neoset.runame}
+                        </h1>
                         <p className='mt-5 text-2xl text-txtGreen'>{neoset.description}</p>
                         <ul className='mt-5 list-disc pl-5 text-txtGreen'>
                             {documents.map(doc => (
@@ -123,7 +135,7 @@ export default function Neoset({ params }) {
                         </ul>
                         <div className='mt-10'>
                             <ButtonOpenForm url='/'>
-                                <ButtonExtra textButton={"Получить консультацию"}></ButtonExtra>
+                                <ButtonExtra textButton='Получить консультацию' />
                             </ButtonOpenForm>
                         </div>
                     </div>
@@ -135,39 +147,42 @@ export default function Neoset({ params }) {
                     <table className='w-full min-w-max table-auto'>
                         <thead>
                             <tr className='border-b border-slate-600'>
-                                <th className='px-4 py-2 text-left'>Состав:</th>
-                                {neoset.in_the_beginning.compositions.map(el => {
-                                    return (
-                                        <th key={el.tagname} className='px-4 py-2'>
-                                            {el.tagname}
-                                        </th>
-                                    )
-                                })}
+                                <th scope='col' className='px-4 py-2 text-left'>
+                                    Состав:
+                                </th>
+                                {neoset.in_the_beginning.compositions.map(el => (
+                                    <th key={el.tagname} scope='col' className='px-4 py-2'>
+                                        {el.tagname}
+                                    </th>
+                                ))}
                             </tr>
                         </thead>
                         <tbody>
-                            {neoset.name ===
-                                "Nabor NeoSet dlya gemodializa (nachalo/zaversheniye)" && (
+                            {hasEndStage && (
                                 <tr className='border-y-2 border-slate-700 border-b-slate-400'>
-                                    <td className='px-4 py-2 font-semibold'>Начало процедуры</td>
+                                    <td colSpan={columnsCount} className='px-4 py-2 font-semibold'>
+                                        Начало процедуры
+                                    </td>
                                 </tr>
                             )}
 
-                            {renderComponentRows(componentsList)}
+                            {renderComponentRows(beginningRows)}
 
-                            {neoset.name ===
-                                "Nabor NeoSet dlya gemodializa (nachalo/zaversheniye)" && (
+                            {hasEndStage && (
                                 <>
                                     <tr className='border-y-2 border-slate-700 border-b-slate-400'>
-                                        <td className='px-4 py-2 font-semibold'>
+                                        <td
+                                            colSpan={columnsCount}
+                                            className='px-4 py-2 font-semibold'
+                                        >
                                             Завершение процедуры
                                         </td>
                                     </tr>
-                                    {renderComponentRows(componentsDializList)}
+                                    {renderComponentRows(endRows)}
                                 </>
                             )}
                             <tr className='border-t-2 border-slate-700'>
-                                <td className='px-4 py-2 font-semibold'>
+                                <td colSpan={columnsCount} className='px-4 py-2 font-semibold'>
                                     Состав набора может быть скорректирован по вашему запросу
                                 </td>
                             </tr>

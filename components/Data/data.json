@@ -1392,6 +1392,36 @@
 							"amount": "1"
 						}
 					]
+				},
+				{
+					"tagname": "Артикул NS-008-04",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "5"
+						},
+						{
+							"components_name": "Pokrytiye dvukhsloynoye zashchitnoye 60x60 sm",
+							"components_name_ru": "Покрытие двухслойное защитное 60х60 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya poloska 150x25 mm",
+							"components_name_ru": "Пластырная полоска 150х25 мм",
+							"amount": "6"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "-"
+						}
+					]
 				}
 			]
 		},
@@ -1411,11 +1441,6 @@
 							"amount": "3"
 						},
 						{
-							"components_name": "Bint elastichnyy fiksiruyushchiy 2m x 10 sm",
-							"components_name_ru": "Бинт эластичный фиксирующий 2м х 10 см",
-							"amount": "1"
-						},
-						{
 							"components_name": "Pintset plastikovyy perevyazochnyy",
 							"components_name_ru": "Пинцет пластиковый перевязочный",
 							"amount": "-"
@@ -1424,6 +1449,11 @@
 							"components_name": "Plastyrnaya povyazka absorbtsionnaya",
 							"components_name_ru": "Пластырная повязка абсорбционная",
 							"amount": "-"
+						},
+						{
+							"components_name": "Bint elastichnyy fiksiruyushchiy 2m x 10 sm",
+							"components_name_ru": "Бинт эластичный фиксирующий 2м х 10 см",
+							"amount": "1"
 						}
 					]
 				},
@@ -1479,6 +1509,36 @@
 							"components_name": "Pintset plastikovyy perevyazochnyy",
 							"components_name_ru": "Пинцет пластиковый перевязочный",
 							"amount": "1"
+						},
+						{
+							"components_name": "Plastyrnaya povyazka absorbtsionnaya",
+							"components_name_ru": "Пластырная повязка абсорбционная",
+							"amount": "2"
+						}
+					]
+				},
+				{
+					"tagname": "Артикул NS-008-04",
+					"components": [
+						{
+							"components_name": "Salfetka marlevaya 7,5x7,5 sm, 8 sloyev",
+							"components_name_ru": "Салфетка марлевая 7,5х7,5 см, 8 слоев",
+							"amount": "5"
+						},
+						{
+							"components_name": "Tampon marlevyy kruglyy 35 mm",
+							"components_name_ru": "Тампон марлевый круглый 35 мм",
+							"amount": "4"
+						},
+						{
+							"components_name": "Bint elastichnyy fiksiruyushchiy 2m x 10 sm",
+							"components_name_ru": "Бинт эластичный фиксирующий 2м х 10 см",
+							"amount": "1"
+						},
+						{
+							"components_name": "Pintset plastikovyy perevyazochnyy",
+							"components_name_ru": "Пинцет пластиковый перевязочный",
+							"amount": "-"
 						},
 						{
 							"components_name": "Plastyrnaya povyazka absorbtsionnaya",

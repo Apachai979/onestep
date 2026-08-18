@@ -28,3 +28,36 @@
 
 
 }
+/* Доски канбана: родной ползунок прячем — вместо него прилипший к низу окна
+   дубликат из components/crm/KanbanScroller.jsx. Ползунок дубликата задан явно,
+   чтобы система не подменила его исчезающим overlay-скроллбаром. */
+.crm-board-viewport {
+  scrollbar-width: none;
+}
+
+.crm-board-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.crm-board-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(23, 23, 23, 0.3) rgba(23, 23, 23, 0.06);
+}
+
+.crm-board-scrollbar::-webkit-scrollbar {
+  height: 10px;
+}
+
+.crm-board-scrollbar::-webkit-scrollbar-track {
+  background: rgba(23, 23, 23, 0.06);
+  border-radius: 9999px;
+}
+
+.crm-board-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(23, 23, 23, 0.3);
+  border-radius: 9999px;
+}
+
+.crm-board-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(23, 23, 23, 0.45);
+}

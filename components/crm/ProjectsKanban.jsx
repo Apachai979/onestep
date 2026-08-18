@@ -12,6 +12,7 @@ import { formatMoney } from "@/lib/crm/format"
 import { Badge, useToast } from "@/components/crm/ui"
 import { PROJECT_LOCKED_STATUSES } from "@/lib/crm/access"
 import DealLossDialog from "./DealLossDialog"
+import KanbanScroller from "./KanbanScroller"
 
 function safeJson(text) {
     try {
@@ -204,7 +205,7 @@ export default function ProjectsKanban({ query = "", isAdmin = false, onShowAll 
         <div className='space-y-4'>
             {error && <p className='text-sm text-red-600'>{error}</p>}
 
-            <div className='flex gap-3 overflow-x-auto pb-3'>
+            <KanbanScroller>
                 {PROJECT_STATUSES.map(status => {
                     const column = columns?.[status] || EMPTY_COLUMN
                     const list = column.items
@@ -277,7 +278,7 @@ export default function ProjectsKanban({ query = "", isAdmin = false, onShowAll 
                         </div>
                     )
                 })}
-            </div>
+            </KanbanScroller>
 
             {noNeedProject && (
                 <DealLossDialog

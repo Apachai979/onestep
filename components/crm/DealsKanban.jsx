@@ -31,6 +31,7 @@ import { useToast } from "@/components/crm/ui"
 import { DEAL_LOCKED_STATUSES } from "@/lib/crm/access"
 import { LuGavel } from "react-icons/lu"
 import DealLossDialog from "./DealLossDialog"
+import KanbanScroller from "./KanbanScroller"
 
 function safeJson(text) {
     try {
@@ -201,7 +202,7 @@ export default function DealsKanban({ query = "", isAdmin = false, onShowAll }) 
         <div className='space-y-4'>
             {error && <p className='text-sm text-red-600'>{error}</p>}
 
-            <div className='flex gap-3 overflow-x-auto pb-3'>
+            <KanbanScroller>
                 {DEAL_KANBAN_STATUSES.map(status => {
                     const column = columns?.[status] || EMPTY_COLUMN
                     const list = column.items
@@ -292,7 +293,7 @@ export default function DealsKanban({ query = "", isAdmin = false, onShowAll }) 
                         </div>
                     )
                 })}
-            </div>
+            </KanbanScroller>
 
             {losingDeal && (
                 <DealLossDialog

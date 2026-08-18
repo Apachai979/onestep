@@ -15,6 +15,7 @@ import {
 import { DEAL_STATUS_COLORS, DEAL_STATUS_LABELS, dealDisplayTitle } from "@/lib/crm/deal"
 import { crmHm, formatCrmDate, formatCrmTime } from "@/lib/crm/datetime"
 import { formatMoney } from "@/lib/crm/format"
+import KanbanScroller from "./KanbanScroller"
 
 const EMPTY_COLUMN = { items: [], total: 0, sum: 0 }
 
@@ -99,7 +100,7 @@ export default function AuctionsBoard({ query = "" }) {
         <div className='space-y-4'>
             {error && <p className='text-sm text-red-600'>{error}</p>}
 
-            <div className='flex gap-3 overflow-x-auto pb-3'>
+            <KanbanScroller>
                 {AUCTION_COLUMNS.map(column => {
                     const data = columns?.[column.key] || EMPTY_COLUMN
                     const list = data.items
@@ -151,7 +152,7 @@ export default function AuctionsBoard({ query = "" }) {
                         </div>
                     )
                 })}
-            </div>
+            </KanbanScroller>
         </div>
     )
 }

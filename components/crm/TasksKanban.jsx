@@ -31,6 +31,7 @@ import {
     Modal,
     useToast,
 } from "@/components/crm/ui"
+import KanbanScroller from "./KanbanScroller"
 
 // Ответственный совпадает по имени с фильтром списка задач — вкладки делят одну
 // строку запроса, и «только мои» переживает переключение вида.
@@ -305,7 +306,7 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
                 </p>
             )}
 
-            <div className='flex gap-3 overflow-x-auto pb-3'>
+            <KanbanScroller>
                 {TASK_BUCKETS.map(bucket => {
                     const list = byBucket[bucket] || []
                     const limit = limits[bucket] || TASK_KANBAN_PER_BUCKET
@@ -389,7 +390,7 @@ export default function TasksKanban({ currentUserId, currentUserRole }) {
                         </div>
                     )
                 })}
-            </div>
+            </KanbanScroller>
 
             {laterTask && (
                 <RescheduleDialog

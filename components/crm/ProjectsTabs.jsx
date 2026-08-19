@@ -161,7 +161,7 @@ export default function ProjectsTabs({ currentUserId, isAdmin = false }) {
                     value={filters.q}
                     onChange={q => setFilters(prev => ({ ...prev, q }))}
                     onEnter={() => apply(filters)}
-                    placeholder='Название, клиент'
+                    placeholder='Название, клиент, потребитель, ИНН'
                 />
                 {/* На канбане статусы — это колонки, отдельный фильтр там лишний. */}
                 {view === "list" && (

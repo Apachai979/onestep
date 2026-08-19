@@ -16,7 +16,7 @@ import {
 import { logChange, snapshotEntity } from "@/lib/crm/change-log"
 import { counterpartyDiscountInfo } from "@/lib/crm/discount"
 
-const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true }
+const COUNTERPARTY_SELECT = { id: true, name: true, type: true, region: true, inn: true }
 const MANAGER_SELECT = { id: true, firstName: true, lastName: true, email: true }
 
 const PROJECT_INCLUDE = {
@@ -33,8 +33,8 @@ const PROJECT_KANBAN_STATS_SELECT = {
     internalName: true,
     createdAt: true,
     updatedAt: true,
-    distributor: { select: { name: true, region: true } },
-    endCustomer: { select: { name: true, region: true } },
+    distributor: { select: { name: true, region: true, inn: true } },
+    endCustomer: { select: { name: true, region: true, inn: true } },
 }
 
 // Доска отдаётся колонками: items — первая страница карточек, total и sum —

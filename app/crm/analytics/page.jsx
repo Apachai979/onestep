@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { LuArrowRight, LuWallet } from "react-icons/lu"
+import { LuArrowRight, LuListChecks, LuWallet } from "react-icons/lu"
 import { PageHeader } from "@/components/crm/ui"
 
 export const metadata = { title: "Аналитика | CRM" }
@@ -14,6 +14,13 @@ const REPORTS = [
         icon: LuWallet,
         description:
             "Сколько продал каждый менеджер за период: по проведённым отгрузкам, с разбивкой по месяцам, клиентам и товарам.",
+    },
+    {
+        href: "/crm/analytics/tasks",
+        title: "Задачи менеджеров",
+        icon: LuListChecks,
+        description:
+            "Что менеджер сделал за период и что было запланировано: выполнено, не выполнено, просрочено, история задач по типам.",
     },
 ]
 

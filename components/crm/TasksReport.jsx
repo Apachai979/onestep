@@ -8,6 +8,7 @@ import {
     LuCheckCheck,
     LuClipboardList,
     LuDownload,
+    LuLink2,
     LuListChecks,
     LuTimer,
     LuUserPlus,
@@ -102,7 +103,7 @@ const TIMELINE_DOTS = {
     OVERDUE: "bg-red-400",
 }
 
-function TaskHistoryRow({ task, scope, isLast }) {
+function TaskHistoryRow({ task, scope, isLast, hideRelation = false }) {
     const dueLabel = task.allDay ? formatCrmDate(task.endAt) : formatCrmDateTime(task.endAt)
     // В разрезе «Запланировано» дата строки — это срок, в «Сделано» — дата
     // закрытия: иначе цифра в таблице не сходится с тем, что видно в списке.
@@ -146,7 +147,7 @@ function TaskHistoryRow({ task, scope, isLast }) {
                     </span>
                 )}
                 <StatusBadge task={task} />
-                {task.relation && (
+                {task.relation && !hideRelation && (
                     <>
                         <span className='text-neutral-300'>·</span>
                         <Link
@@ -211,6 +212,31 @@ function historyDate(task, scope) {
     return new Date(scope === "due" ? task.endAt : task.closedAt || task.endAt).getTime()
 }
 
+// Группировка ленты по привязке: задачи одной карточки идут подряд под общим
+// заголовком, и из строк привязка убирается — иначе название клиента
+// повторяется в каждой записи и забивает шапку.
+//
+// Внутри групп порядок остаётся датным (тем же, что выбран кнопкой), а сами
+// группы идут по алфавиту: их ищут глазами по названию клиента. «Без привязки»
+// всегда последней — это остаток, а не карточка.
+function groupByRelation(rows) {
+    const groups = new Map()
+    for (const task of rows) {
+        const key = task.relation?.href || "—"
+        let group = groups.get(key)
+        if (!group) {
+            group = { key, relation: task.relation || null, tasks: [] }
+            groups.set(key, group)
+        }
+        group.tasks.push(task)
+    }
+    return Array.from(groups.values()).sort((a, b) => {
+        if (!a.relation) return 1
+        if (!b.relation) return -1
+        return a.relation.name.localeCompare(b.relation.name, "ru")
+    })
+}
+
 // Расшифровка строки менеджера: сама история задач и разрез по типам.
 // Переключатель осей стоит прямо здесь — «сделано» и «запланировано» это два
 // разных списка, и без явного выбора цифры в таблице не сходятся со списком.
@@ -218,6 +244,7 @@ function ManagerDetails({ manager }) {
     const [scope, setScope] = useState("closed")
     const [showTypes, setShowTypes] = useState(false)
     const [asc, setAsc] = useState(false)
+    const [byRelation, setByRelation] = useState(false)
 
     const rows = useMemo(() => {
         const filtered =
@@ -233,6 +260,11 @@ function ManagerDetails({ manager }) {
             return asc ? diff : -diff
         })
     }, [manager.tasks, scope, asc])
+
+    const groups = useMemo(
+        () => (byRelation ? groupByRelation(rows) : null),
+        [rows, byRelation],
+    )
 
     return (
         <div className='space-y-3'>
@@ -281,21 +313,41 @@ function ManagerDetails({ manager }) {
 
                 {/* Порядок ленты. По умолчанию новые сверху — обычно смотрят
                     «чем человек занимался последнее время»; обратный порядок
-                    нужен, когда историю периода читают с начала. */}
-                {!showTypes && rows.length > 1 && (
-                    <button
-                        type='button'
-                        onClick={() => setAsc(v => !v)}
-                        title='Изменить порядок сортировки по дате'
-                        className='ml-auto inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-xs text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900'
-                    >
-                        {asc ? (
-                            <LuArrowUpNarrowWide className='h-3.5 w-3.5' />
-                        ) : (
-                            <LuArrowDownWideNarrow className='h-3.5 w-3.5' />
-                        )}
-                        {asc ? "Сначала старые" : "Сначала новые"}
-                    </button>
+                    нужен, когда историю периода читают с начала. Группировка по
+                    связи отвечает на другой вопрос — «что делали по этому
+                    клиенту», и дату не отменяет: внутри группы она сохраняется. */}
+                {/* Кнопки живут при любом непустом списке: раньше они прятались
+                    на списке из одной задачи, и включённая группировка оставалась
+                    без своего переключателя. */}
+                {!showTypes && rows.length > 0 && (
+                    <span className='ml-auto flex items-center gap-1'>
+                        <button
+                            type='button'
+                            onClick={() => setByRelation(v => !v)}
+                            title='Сгруппировать задачи по сделке, проекту или контрагенту'
+                            className={`inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-xs transition-colors ${
+                                byRelation
+                                    ? "bg-brand_main/10 font-medium text-neutral-900"
+                                    : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                            }`}
+                        >
+                            <LuLink2 className='h-3.5 w-3.5' />
+                            По связи
+                        </button>
+                        <button
+                            type='button'
+                            onClick={() => setAsc(v => !v)}
+                            title='Изменить порядок сортировки по дате'
+                            className='inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-xs text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900'
+                        >
+                            {asc ? (
+                                <LuArrowUpNarrowWide className='h-3.5 w-3.5' />
+                            ) : (
+                                <LuArrowDownWideNarrow className='h-3.5 w-3.5' />
+                            )}
+                            {asc ? "Сначала старые" : "Сначала новые"}
+                        </button>
+                    </span>
                 )}
             </div>
 
@@ -347,14 +399,66 @@ function ManagerDetails({ manager }) {
             ) : rows.length ? (
                 <>
                     <div className='pt-1'>
-                        {rows.map((task, i) => (
-                            <TaskHistoryRow
-                                key={task.id}
-                                task={task}
-                                scope={scope}
-                                isLast={i === rows.length - 1}
-                            />
-                        ))}
+                        {groups
+                            ? groups.map(group => (
+                                  // Группа — в языке остальной CRM: тонкая линия
+                                  // сверху и приглушённая строка-заголовок, как в
+                                  // SectionHeading и истории изменений. Подложек,
+                                  // рамок и теней здесь нет намеренно — раскрытая
+                                  // строка уже лежит в белой карточке таблицы, и
+                                  // карточка внутри карточки этому стилю чужда:
+                                  // структуру держат линия и отступы.
+                                  <div
+                                      key={group.key}
+                                      className='mt-4 border-t border-line pt-3 first:mt-0 first:border-t-0 first:pt-0'
+                                  >
+                                      <div className='mb-1.5 flex items-center gap-x-2'>
+                                          {/* Фирменный цвет, как у иконок в
+                                              заголовках секций: бледно-серая
+                                              иконка терялась и заголовок группы
+                                              не цеплял взгляд. */}
+                                          <LuLink2 className='h-3.5 w-3.5 shrink-0 text-brand_main' />
+                                          {group.relation ? (
+                                              <Link
+                                                  href={group.relation.href}
+                                                  className='min-w-0 truncate text-sm font-medium text-neutral-900 hover:text-brand_main'
+                                              >
+                                                  <span className='text-xs uppercase tracking-wide text-neutral-400'>
+                                                      {group.relation.label}{" "}
+                                                  </span>
+                                                  {group.relation.name}
+                                              </Link>
+                                          ) : (
+                                              <span className='text-sm font-medium text-neutral-500'>
+                                                  Без привязки
+                                              </span>
+                                          )}
+                                          {/* Счётчик прижат к правому краю: так
+                                              они выстраиваются в столбик и группы
+                                              видно, не читая названий. */}
+                                          <span className='ml-auto shrink-0 rounded-full bg-surface_muted px-2 py-0.5 text-xs tabular-nums text-neutral-500'>
+                                              {group.tasks.length}
+                                          </span>
+                                      </div>
+                                      {group.tasks.map((task, i) => (
+                                          <TaskHistoryRow
+                                              key={task.id}
+                                              task={task}
+                                              scope={scope}
+                                              isLast={i === group.tasks.length - 1}
+                                              hideRelation
+                                          />
+                                      ))}
+                                  </div>
+                              ))
+                            : rows.map((task, i) => (
+                                  <TaskHistoryRow
+                                      key={task.id}
+                                      task={task}
+                                      scope={scope}
+                                      isLast={i === rows.length - 1}
+                                  />
+                              ))}
                     </div>
                     {/* Длинную историю режем на сервере — молчать об этом нельзя,
                         иначе список выглядит полным. */}

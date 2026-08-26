@@ -170,13 +170,13 @@ function TaskHistoryRow({ task, scope, isLast, hideRelation = false }) {
 
             <div className='mt-1 flex flex-wrap items-start gap-x-2 gap-y-1'>
                 <TaskTypeBadge type={task.type} />
-                <span className='min-w-0 font-medium text-neutral-900'>{task.title}</span>
+                <span className='min-w-0 break-words font-medium text-neutral-900'>{task.title}</span>
             </div>
 
             {task.description && (
                 // whitespace-pre-line — менеджеры пишут описания списками, и без
                 // переносов они склеиваются в кашу.
-                <p className='mt-1 whitespace-pre-line text-sm leading-relaxed text-neutral-600'>
+                <p className='mt-1 whitespace-pre-line break-words text-sm leading-relaxed text-neutral-600'>
                     {task.description}
                 </p>
             )}
@@ -184,7 +184,7 @@ function TaskHistoryRow({ task, scope, isLast, hideRelation = false }) {
             {/* Итог помечаем словом, а не полоской слева: вертикальную линию
                 здесь уже держит сама лента, и вторая рядом читается как шум. */}
             {task.result && (
-                <p className='mt-1 whitespace-pre-line text-sm leading-relaxed text-neutral-600'>
+                <p className='mt-1 whitespace-pre-line break-words text-sm leading-relaxed text-neutral-600'>
                     <span
                         className={`mr-1.5 text-xs uppercase tracking-wide ${
                             task.status === "FAILED" ? "text-red-400" : "text-emerald-600/70"
@@ -242,7 +242,6 @@ function groupByRelation(rows) {
 // разных списка, и без явного выбора цифры в таблице не сходятся со списком.
 function ManagerDetails({ manager }) {
     const [scope, setScope] = useState("closed")
-    const [showTypes, setShowTypes] = useState(false)
     const [asc, setAsc] = useState(false)
     const [byRelation, setByRelation] = useState(false)
 
@@ -281,12 +280,9 @@ function ManagerDetails({ manager }) {
                             key={s.key}
                             type='button'
                             title={s.hint}
-                            onClick={() => {
-                                setScope(s.key)
-                                setShowTypes(false)
-                            }}
+                            onClick={() => setScope(s.key)}
                             className={`h-7 rounded-lg px-2.5 text-xs transition-colors ${
-                                !showTypes && scope === s.key
+                                scope === s.key
                                     ? "bg-brand_main/10 font-medium text-neutral-900"
                                     : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
                             }`}
@@ -296,21 +292,6 @@ function ManagerDetails({ manager }) {
                         </button>
                     )
                 })}
-                <button
-                    type='button'
-                    onClick={() => setShowTypes(true)}
-                    className={`h-7 rounded-lg px-2.5 text-xs transition-colors ${
-                        showTypes
-                            ? "bg-brand_main/10 font-medium text-neutral-900"
-                            : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
-                    }`}
-                >
-                    По типам
-                    <span className='ml-1 tabular-nums text-neutral-400'>
-                        {manager.types.length}
-                    </span>
-                </button>
-
                 {/* Порядок ленты. По умолчанию новые сверху — обычно смотрят
                     «чем человек занимался последнее время»; обратный порядок
                     нужен, когда историю периода читают с начала. Группировка по
@@ -319,7 +300,7 @@ function ManagerDetails({ manager }) {
                 {/* Кнопки живут при любом непустом списке: раньше они прятались
                     на списке из одной задачи, и включённая группировка оставалась
                     без своего переключателя. */}
-                {!showTypes && rows.length > 0 && (
+                {rows.length > 0 && (
                     <span className='ml-auto flex items-center gap-1'>
                         <button
                             type='button'
@@ -351,52 +332,7 @@ function ManagerDetails({ manager }) {
                 )}
             </div>
 
-            {showTypes ? (
-                manager.types.length ? (
-                    <div className='overflow-x-auto'>
-                        <table className='w-full text-sm'>
-                            <thead className='text-left text-[11px] font-medium uppercase tracking-wide text-neutral-400'>
-                                <tr>
-                                    <th className='py-1.5 pr-3 font-medium'>Тип задачи</th>
-                                    <th className='w-[30%] py-1.5 pr-3 font-medium'>Доля</th>
-                                    <th className='w-[10%] py-1.5 pr-3 text-right font-medium'>
-                                        Выполнено
-                                    </th>
-                                    <th className='w-[10%] py-1.5 pr-3 text-right font-medium'>
-                                        Не выполнено
-                                    </th>
-                                    <th className='w-[10%] py-1.5 text-right font-medium'>
-                                        Закрыто
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {manager.types.map(t => (
-                                    <tr key={t.key} className='border-t border-line/70'>
-                                        <td className='py-2 pr-3'>
-                                            <TaskTypeBadge type={t.key} />
-                                        </td>
-                                        <td className='py-2 pr-3'>
-                                            <DoneBar done={t.done} failed={t.failed} />
-                                        </td>
-                                        <td className='py-2 pr-3 text-right tabular-nums text-emerald-700'>
-                                            {t.done}
-                                        </td>
-                                        <td className='py-2 pr-3 text-right tabular-nums text-neutral-500'>
-                                            {t.failed || "—"}
-                                        </td>
-                                        <td className='py-2 text-right font-semibold tabular-nums text-neutral-900'>
-                                            {t.closed}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                ) : (
-                    <p className='text-sm text-neutral-500'>За период закрытых задач нет.</p>
-                )
-            ) : rows.length ? (
+            {rows.length ? (
                 <>
                     <div className='pt-1'>
                         {groups

@@ -408,11 +408,20 @@ export default function DataTable({
                                         {isExpanded && (
                                             <tr className='bg-surface_muted/60'>
                                                 <td colSpan={colSpan} className='py-3 pl-12 pr-4'>
-                                                    {/* Отступ + полоса слева: деталь читается как
-                                                        ветка своей строки, а не как ещё одна строка
-                                                        таблицы. */}
-                                                    <div className='rounded-r-lg border-l-2 border-brand_main/40 bg-white/70 py-1 pl-4 pr-3'>
-                                                        {expandable.render(row)}
+                                                    {/* w-0 + min-w-full: таблица считает ширины
+                                                        колонок автоматически, и содержимое
+                                                        раскрытия участвовало бы в расчёте — колонки
+                                                        шапки дёргались при каждой смене детали.
+                                                        Нулевая ширина убирает деталь из расчёта, а
+                                                        min-width растягивает её по ячейке при
+                                                        отрисовке. */}
+                                                    <div className='w-0 min-w-full'>
+                                                        {/* Отступ + полоса слева: деталь читается как
+                                                            ветка своей строки, а не как ещё одна строка
+                                                            таблицы. */}
+                                                        <div className='rounded-r-lg border-l-2 border-brand_main/40 bg-white/70 py-1 pl-4 pr-3'>
+                                                            {expandable.render(row)}
+                                                        </div>
                                                     </div>
                                                 </td>
                                             </tr>

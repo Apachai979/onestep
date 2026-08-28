@@ -45,6 +45,7 @@ model User {
   notes                  Note[]         @relation("NoteAuthor")
   attachments            Attachment[]   @relation("AttachmentUploadedBy")
   changeLogs             ChangeLog[]    @relation("ChangeLogAuthor")
+  tendersDecided         Tender[]       @relation("TenderDecidedBy")
 
   @@map("users")
 }
@@ -326,6 +327,8 @@ model Deal {
   items          DealItem[]
   tasks          Task[]
   shipments      Shipment[]
+  // Закупка из Tenderland, из которой завели эту сделку (если завели).
+  tender         Tender?
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -619,4 +622,55 @@ model Attachment {
   @@index([noteId])
   @@index([uploadedById])
   @@map("attachments")
+}
+
+// Входящая закупка из Tenderland. Отдельная сущность, а не сразу сделка:
+// автопоиск «CRM: воронка закупок» даёт ~15-20 закупок в день, и часть из них
+// нам не подходит по составу ТЗ (чужие наборы различимы по КТРУ). Менеджер
+// решает «участвуем / мимо», и только «участвуем» рождает сделку.
+model Tender {
+  id           String    @id @default(cuid())
+  // Идентификатор Тендерлэнда (TL\d+) — ключ дедупликации: повторная выгрузка
+  // обновляет запись, а не плодит копии.
+  tenderlandId String    @unique
+  regNumber    String?
+  name         String
+  beginPrice   Decimal   @default(0)
+  publishDate  DateTime?
+  beginDate    DateTime?
+  // Окончание приёма заявок и дата торгов — уезжают в сделку как
+  // bidsDeadlineAt и auctionAt, по ним же строится доска аукционов.
+  endDate      DateTime?
+  biddingDate  DateTime?
+  region       String?
+  typeName     String?
+  // Статус на площадке, как его отдаёт Тендерлэнд (не статус нашей сделки).
+  tenderStatus String?
+  sourceLink   String?
+  etpName      String?
+  // Позиции КТРУ строкой через перевод строки: по ним менеджер за секунду
+  // отличает наш набор от чужого (ЛОР, лапароскопия, катетер в комплекте).
+  ktru         String?
+  customerName String?
+  customerInn  String?
+  customerKpp  String?
+  customerOgrn String?
+
+  // NEW — не разобрана, TAKEN — участвуем (заведена сделка), SKIPPED — мимо.
+  decision     String    @default("NEW")
+  decisionAt   DateTime?
+  decisionById String?
+  decisionBy   User?     @relation("TenderDecidedBy", fields: [decisionById], references: [id], onDelete: SetNull)
+  skipReason   String?
+
+  dealId       String?   @unique
+  deal         Deal?     @relation(fields: [dealId], references: [id], onDelete: SetNull)
+
+  importedAt   DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([decision])
+  @@index([endDate])
+  @@index([customerInn])
+  @@map("tenders")
 }

@@ -1,37 +1,50 @@
+import { requireAdmin } from "@/lib/crm/admin"
 import { requireCrmSession } from "@/lib/crm/session"
-import { lastSyncPoint, syncTenders } from "@/lib/crm/tenders"
+import { refreshTenders, syncTenders } from "@/lib/crm/tenders"
+import { TENDERLAND_ERROR_STATUS } from "@/lib/crm/tenderland"
 
-// Статусы под коды ошибок адаптера: настройки чинит админ (503), всё остальное —
-// это проблема на стороне Тендерлэнда или сети (502).
-const STATUS_BY_CODE = {
-    TENDERLAND_CONFIG_MISSING: 503,
-    USER_INVALID_API_KEY: 502,
-    USER_DISABLE_API_MODULE: 502,
-    API_REQUEST_LIMIT: 429,
-    API_TOO_MANY_REQUESTS: 429,
+/**
+ * Планировщику сессия недоступна, поэтому ночной запуск входит по общему
+ * секрету. Пока TENDERS_CRON_SECRET не задан, дверь закрыта совсем — пустой
+ * заголовок не должен совпасть с пустой переменной окружения.
+ */
+function isCronRequest(request) {
+    const secret = process.env.TENDERS_CRON_SECRET
+    if (!secret) return false
+    return request.headers.get("x-cron-secret") === secret
 }
 
 export async function POST(request) {
-    const { session, response } = await requireCrmSession()
-    if (!session) return response
+    const cron = isCronRequest(request)
 
     let body = {}
     try {
         body = await request.json()
     } catch {
-        // Тело необязательно: кнопка «Загрузить закупки» шлёт пустой запрос.
+        // Тело необязательно: кнопка «Обновить закупки» шлёт пустой запрос.
+    }
+
+    // Полная выгрузка тянет архив автопоиска целиком и способна выесть суточный
+    // лимит данных, поэтому доступна только администратору и только вручную.
+    if (body?.full) {
+        const { response } = await requireAdmin()
+        if (response) return response
+    } else if (!cron) {
+        const { session, response } = await requireCrmSession()
+        if (!session) return response
     }
 
     try {
-        // По умолчанию догружаем от последней известной закупки. Полная выгрузка
-        // (full: true) нужна при первом запуске и после правки фильтра в кабинете.
-        const since = body?.full ? null : await lastSyncPoint()
-        const result = await syncTenders({ since })
-        return Response.json({ ok: true, ...result })
+        // Порядок важен: сначала забираем новые (им сразу проставляется отметка
+        // последнего изменения), потом сверяем отслеживаемые — так свежие
+        // закупки не попадут в доборы того же прогона.
+        const synced = await syncTenders({ full: Boolean(body?.full) })
+        const refreshed = await refreshTenders()
+        return Response.json({ ok: true, ...synced, refreshed })
     } catch (err) {
         return Response.json(
             { ok: false, error: err.message, code: err.code },
-            { status: STATUS_BY_CODE[err.code] || 502 },
+            { status: TENDERLAND_ERROR_STATUS[err.code] || 502 },
         )
     }
 }

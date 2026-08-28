@@ -1,10 +1,11 @@
 "use client"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { LuDownload, LuExternalLink, LuGavel } from "react-icons/lu"
+import { LuArrowUpRight, LuDownload, LuExternalLink, LuGavel, LuPlus } from "react-icons/lu"
 import { formatMoney } from "@/lib/crm/format"
 import { crmYmd, daysBetweenYmd, formatCrmDate } from "@/lib/crm/datetime"
 import { TENDER_DECISION_LABELS } from "@/lib/crm/tender-map"
+import TenderImportDialog from "@/components/crm/TenderImportDialog"
 import {
     Badge,
     Button,
@@ -61,6 +62,7 @@ export default function TendersList() {
     const [qApplied, setQApplied] = useState("")
     const [error, setError] = useState("")
     const [syncing, setSyncing] = useState(false)
+    const [importOpen, setImportOpen] = useState(false)
     const [busyId, setBusyId] = useState(null)
     const [refreshTick, setRefreshTick] = useState(0)
 
@@ -97,23 +99,52 @@ export default function TendersList() {
             const res = await fetch("/api/crm/tenders/sync", { method: "POST" })
             const data = await res.json().catch(() => ({}))
             if (!res.ok) {
-                toast.error(data?.error || "Не удалось загрузить закупки", {
+                toast.error(data?.error || "Не удалось обновить закупки", {
                     title: "Ошибка Tenderland",
                 })
                 return
             }
             const parts = [`Новых: ${data.created}`]
-            if (data.updated) parts.push(`обновлено: ${data.updated}`)
-            // Сколько осталось, Тендерлэнд не сообщает — только то, что мы упёрлись
-            // в потолок выгрузки. Поэтому зовём нажать ещё раз, а не считаем остаток.
+            // Отслеживаемые — это «Участвуем» и ещё не закрытые «Не разобраны».
+            // Показываем, сколько из них реально изменилось на площадке: ради
+            // этих цифр менеджер кнопку и нажимает.
+            const changed = data.refreshed?.updated || 0
+            if (changed) parts.push(`изменилось: ${changed}`)
+            if (data.refreshed?.deals) parts.push(`сделок поправлено: ${data.refreshed.deals}`)
+            if (!changed) parts.push(`сверено: ${data.refreshed?.tracked || 0}`)
+            // Потолок выдачи — 100 закупок за проход. Следующий запуск продолжит
+            // с того места, где остановились, так что достаточно нажать ещё раз.
             if (data.truncated) parts.push("забрали максимум за раз — нажмите ещё раз")
-            toast.success(parts.join(" · "), { title: "Закупки загружены" })
+            toast.success(parts.join(" · "), { title: "Закупки обновлены" })
             setRefreshTick(x => x + 1)
         } catch (err) {
             toast.error(err.message || "Сбой сети")
         } finally {
             setSyncing(false)
         }
+    }
+
+    /**
+     * Закупка, добавленная вручную по номеру. Показываем её сразу: ставим
+     * поиск по номеру и открываем вкладку, где она лежит, — иначе одна запись
+     * потеряется среди сотни новых, и менеджер решит, что импорт не сработал.
+     */
+    function afterImport(result) {
+        const tender = result?.tender
+        setImportOpen(false)
+        if (!tender) return
+
+        if (result.status === "EXISTS") {
+            toast.info("Эта закупка уже есть в списке")
+        } else {
+            toast.success("Закупка добавлена в разбор", { title: "Закупка найдена" })
+        }
+
+        setTab(tender.decision || "NEW")
+        const number = tender.regNumber || tender.tenderlandId || ""
+        setQ(number)
+        setQApplied(number)
+        setRefreshTick(x => x + 1)
     }
 
     const decide = useCallback(async function decide(tender, decision) {
@@ -139,7 +170,19 @@ export default function TendersList() {
                 return
             }
             if (decision === "TAKEN" && data.dealId) {
-                toast.success("Сделка создана — открываю карточку")
+                // Клиента подставляет сервер, и менеджер должен увидеть, кого именно:
+                // дистрибьютора из проекта по этому ЛПУ или нашу организацию.
+                const CLIENT_SOURCE_HINTS = {
+                    PROJECT_DISTRIBUTOR: data.projectName
+                        ? `клиент — ${data.clientName} из проекта «${data.projectName}»`
+                        : `клиент — ${data.clientName} из проекта`,
+                    OWN: `поставляем сами: клиент — ${data.clientName}`,
+                    CUSTOMER: `клиент — ${data.clientName}`,
+                    MANUAL: `клиент — ${data.clientName}`,
+                }
+                toast.success(CLIENT_SOURCE_HINTS[data.clientSource] || "Сделка создана", {
+                    title: "Сделка создана",
+                })
                 router.push(`/crm/deals/${data.dealId}`)
                 return
             }
@@ -171,6 +214,11 @@ export default function TendersList() {
                         <div className='font-medium text-neutral-900'>{t.name}</div>
                         <div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500'>
                             {t.regNumber ? <span>№ {t.regNumber}</span> : null}
+                            {/* Автопоиск её не приносил — её завели по номеру
+                                руками, и это стоит видеть при разборе. */}
+                            {t.source === "MANUAL" ? (
+                                <span className='text-neutral-400'>добавлена вручную</span>
+                            ) : null}
                             {t.typeName ? <span>{t.typeName}</span> : null}
                             {t.region ? <span>{t.region}</span> : null}
                             {t.sourceLink ? (
@@ -201,6 +249,22 @@ export default function TendersList() {
                                 {ktruList(t.ktru).length > 3 ? (
                                     <span className='text-[11px] text-neutral-400'>
                                         +{ktruList(t.ktru).length - 3}
+                                    </span>
+                                ) : null}
+                            </div>
+                        ) : null}
+                        {t.winnerName || t.refreshedAt ? (
+                            <div className='flex flex-wrap items-center gap-2 pt-0.5 text-xs'>
+                                {t.winnerName ? (
+                                    <Badge tone={t.winnerIsOwn ? "success" : "neutral"}>
+                                        {t.winnerIsOwn
+                                            ? "Победа: наше юрлицо"
+                                            : `Победитель: ${t.winnerName}`}
+                                    </Badge>
+                                ) : null}
+                                {t.refreshedAt ? (
+                                    <span className='text-neutral-400'>
+                                        обновлено {formatCrmDate(t.refreshedAt)}
                                     </span>
                                 ) : null}
                             </div>
@@ -242,14 +306,16 @@ export default function TendersList() {
                     if (t.decision === "TAKEN") {
                         return t.dealId ? (
                             <Button
-                                variant='secondary'
+                                variant='ghost'
                                 size='sm'
+                                title='Открыть сделку'
                                 onClick={e => {
                                     e.stopPropagation()
                                     router.push(`/crm/deals/${t.dealId}`)
                                 }}
                             >
                                 Сделка
+                                <LuArrowUpRight className='h-4 w-4' />
                             </Button>
                         ) : (
                             <Badge tone='neutral'>Участвуем</Badge>
@@ -308,22 +374,40 @@ export default function TendersList() {
 
     return (
         <div className='space-y-4'>
+            <TenderImportDialog
+                open={importOpen}
+                onClose={() => setImportOpen(false)}
+                onDone={afterImport}
+            />
+
             <Tabs items={tabsWithCounts} value={tab} onChange={setTab} />
 
             <FilterBar
                 canReset={Boolean(q)}
                 onReset={() => setQ("")}
                 actions={
-                    <Button
-                        type='button'
-                        size='sm'
-                        onClick={sync}
-                        loading={syncing}
-                        title='Забрать свежие закупки из автопоиска «CRM: воронка закупок»'
-                    >
-                        <LuDownload className='h-4 w-4' />
-                        {syncing ? "Загружаю…" : "Загрузить закупки"}
-                    </Button>
+                    <div className='flex flex-wrap gap-2'>
+                        <Button
+                            type='button'
+                            size='sm'
+                            variant='secondary'
+                            onClick={() => setImportOpen(true)}
+                            title='Найти закупку по номеру во всём Тендерлэнде — для тех, что автопоиск не поймал'
+                        >
+                            <LuPlus className='h-4 w-4' />
+                            По номеру
+                        </Button>
+                        <Button
+                            type='button'
+                            size='sm'
+                            onClick={sync}
+                            loading={syncing}
+                            title='Забрать свежие закупки из автопоиска «CRM: воронка закупок» и сверить те, что уже в работе'
+                        >
+                            <LuDownload className='h-4 w-4' />
+                            {syncing ? "Обновляю…" : "Обновить закупки"}
+                        </Button>
+                    </div>
                 }
             >
                 <FilterSearch
@@ -351,7 +435,7 @@ export default function TendersList() {
                     }
                     hint={
                         tab === "NEW"
-                            ? "Нажмите «Загрузить закупки» — CRM заберёт свежие из автопоиска «CRM: воронка закупок»."
+                            ? "Нажмите «Обновить закупки» — CRM заберёт свежие из автопоиска «CRM: воронка закупок»."
                             : undefined
                     }
                 />
@@ -379,6 +463,11 @@ export default function TendersList() {
                                         {Number(t.beginPrice) > 0 ? formatMoney(t.beginPrice) : "—"}
                                     </CardRow>
                                     <CardRow label='Заказчик'>{t.customerName || "—"}</CardRow>
+                                    {t.winnerName ? (
+                                        <CardRow label='Победитель'>
+                                            {t.winnerIsOwn ? "наше юрлицо" : t.winnerName}
+                                        </CardRow>
+                                    ) : null}
                                     {t.decision === "NEW" ? (
                                         <div className='flex gap-2 pt-2'>
                                             <Button
@@ -395,6 +484,21 @@ export default function TendersList() {
                                                 onClick={() => decide(t, "SKIPPED")}
                                             >
                                                 Мимо
+                                            </Button>
+                                        </div>
+                                    ) : null}
+                                    {t.decision === "TAKEN" && t.dealId ? (
+                                        <div className='pt-2'>
+                                            <Button
+                                                variant='secondary'
+                                                size='sm'
+                                                className='w-full'
+                                                onClick={() =>
+                                                    router.push(`/crm/deals/${t.dealId}`)
+                                                }
+                                            >
+                                                Сделка
+                                                <LuArrowUpRight className='h-4 w-4' />
                                             </Button>
                                         </div>
                                     ) : null}

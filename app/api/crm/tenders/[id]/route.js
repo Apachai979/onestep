@@ -1,7 +1,9 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { logChange } from "@/lib/crm/change-log"
-import { ensureCustomerCounterparty } from "@/lib/crm/tenders"
+import { ensureCustomerCounterparty, resolveDealClient } from "@/lib/crm/tenders"
+import { inheritedDealDiscount } from "@/lib/crm/discount"
+import { dealProjectPartiesError } from "@/lib/crm/access"
 
 /**
  * Решение менеджера по входящей закупке.
@@ -10,8 +12,9 @@ import { ensureCustomerCounterparty } from "@/lib/crm/tenders"
  *   { decision: "TAKEN", counterpartyId } — участвуем: заводим аукционную сделку
  *   { decision: "NEW" }                   — вернуть в разбор
  *
- * counterpartyId — клиент, которому продаём. Не передан — продаём напрямую
- * заказчику закупки, и клиентом становится он же (частый случай в госзакупках).
+ * counterpartyId — клиент, которому продаём. Если не передан, он выбирается по
+ * правилу из resolveDealClient: есть проект по этому конечному потребителю —
+ * клиентом становится дистрибьютор из проекта, нет проекта — наша организация.
  */
 export async function PATCH(request, { params }) {
     const { session, response } = await requireCrmSession()
@@ -69,12 +72,41 @@ export async function PATCH(request, { params }) {
         )
     }
 
-    const counterpartyId = body?.counterpartyId || auctionCustomerId
+    // Клиента можно задать явно (менеджер знает лучше), иначе выбираем по
+    // правилу: есть проект по этому потребителю — продаём через его
+    // дистрибьютора, нет проекта — поставляем сами.
+    const resolved = body?.counterpartyId
+        ? { counterpartyId: body.counterpartyId, source: "MANUAL", project: null }
+        : await resolveDealClient(auctionCustomerId)
+
     const client = await prisma.counterparty.findUnique({
-        where: { id: counterpartyId },
-        select: { id: true },
+        where: { id: resolved.counterpartyId },
+        select: {
+            id: true,
+            name: true,
+            discount: true,
+            group: { select: { name: true, discount: true } },
+        },
     })
     if (!client) return Response.json({ error: "Клиент не найден" }, { status: 400 })
+
+    // Скидка по той же цепочке, что и везде в CRM: проект → клиент/группа.
+    // Это снимок на момент создания — дальше сделка живёт со своей скидкой.
+    const discount = inheritedDealDiscount(resolved.project, client).value
+
+    // Сделку привязываем к проекту только когда дистрибьютор взят оттуда же:
+    // у сделки с проектом-источником клиент обязан совпадать с дистрибьютором
+    // проекта, а заказчик — с его конечным потребителем. Клиента, выбранного
+    // менеджером вручную, это правило может не пройти, поэтому там связи нет.
+    const sourceProjectId =
+        resolved.source === "PROJECT_DISTRIBUTOR" ? resolved.project.id : null
+    if (sourceProjectId) {
+        const partiesError = dealProjectPartiesError(resolved.project, {
+            counterpartyId: client.id,
+            auctionCustomerId,
+        })
+        if (partiesError) return Response.json({ error: partiesError }, { status: 400 })
+    }
 
     const deal = await prisma.$transaction(async tx => {
         const created = await tx.deal.create({
@@ -87,8 +119,10 @@ export async function PATCH(request, { params }) {
                 nmck: tender.beginPrice,
                 bidsDeadlineAt: tender.endDate,
                 auctionAt: tender.biddingDate,
-                counterpartyId,
+                counterpartyId: client.id,
                 auctionCustomerId,
+                discount,
+                sourceProjectId,
                 managerId: session.user.id,
                 createdById: session.user.id,
             },
@@ -108,12 +142,24 @@ export async function PATCH(request, { params }) {
             entityType: "DEAL",
             entityId: created.id,
             action: "CREATE",
-            payload: { source: "Tenderland", tenderlandId: tender.tenderlandId },
+            payload: {
+                source: "Tenderland",
+                tenderlandId: tender.tenderlandId,
+                clientSource: resolved.source,
+                projectId: sourceProjectId,
+            },
             authorId: session.user.id,
         })
 
         return created
     })
 
-    return Response.json({ ok: true, dealId: deal.id })
+    return Response.json({
+        ok: true,
+        dealId: deal.id,
+        // UI подписывает тост: менеджер должен видеть, кто стал клиентом и почему.
+        clientSource: resolved.source,
+        clientName: client.name,
+        projectName: resolved.project?.internalName || null,
+    })
 }

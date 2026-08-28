@@ -128,6 +128,11 @@ model Counterparty {
   priority        Int?
   note            String?
   contacts        Contact[]
+  // Наше собственное юрлицо: продаём мы, а не нам. Карточка остаётся обычным
+  // контрагентом (обычно дистрибьютором) — флаг лишь помечает её как «свою»,
+  // чтобы подставлять в сделки. Отмечает администратор в /crm/settings,
+  // компания по умолчанию хранится в Setting["defaultOwnCompanyId"].
+  isOwnCompany    Boolean  @default(false)
   // Группа компаний: одно из юрлиц помечается головным (isGroupPrimary).
   groupId         String?
   group           CounterpartyGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
@@ -153,6 +158,7 @@ model Counterparty {
   @@index([type])
   @@index([region])
   @@index([groupId])
+  @@index([isOwnCompany])
   @@map("counterparties")
 }
 

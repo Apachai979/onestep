@@ -162,13 +162,22 @@ export default function CounterpartyList({ type, newHref }) {
                 sortable: true,
                 sortValue: item => item.name,
                 render: item => (
-                    <Link
-                        href={`/crm/counterparties/${item.id}`}
-                        onClick={e => e.stopPropagation()}
-                        className='font-medium text-neutral-900 hover:text-brand_main'
-                    >
-                        {item.name}
-                    </Link>
+                    <span className='inline-flex flex-wrap items-center gap-1.5'>
+                        <Link
+                            href={`/crm/counterparties/${item.id}`}
+                            onClick={e => e.stopPropagation()}
+                            className='font-medium text-neutral-900 hover:text-brand_main'
+                        >
+                            {item.name}
+                        </Link>
+                        {/* Наше юрлицо — мы сами, а не клиент: в общем списке
+                            это надо видеть, не открывая карточку. */}
+                        {item.isOwnCompany && (
+                            <Badge tone='brand' size='sm'>
+                                Наша компания
+                            </Badge>
+                        )}
+                    </span>
                 ),
             },
             {
@@ -337,7 +346,14 @@ export default function CounterpartyList({ type, newHref }) {
                         onClick={() => router.push(`/crm/counterparties/${item.id}`)}
                     >
                         <div className='flex items-start justify-between gap-2'>
-                            <span className='font-medium text-neutral-900'>{item.name}</span>
+                            <span className='font-medium text-neutral-900'>
+                                {item.name}
+                                {item.isOwnCompany && (
+                                    <Badge tone='brand' size='sm' className='ml-1.5'>
+                                        Наша компания
+                                    </Badge>
+                                )}
+                            </span>
                             <span className='min-w-0 max-w-[45%] truncate text-right text-xs text-neutral-500'>
                                 {item.region}
                             </span>

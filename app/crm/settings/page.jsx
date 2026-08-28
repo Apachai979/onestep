@@ -4,6 +4,7 @@ import { authOptions } from "@/configs/auth"
 import { PROPOSAL_EMAIL_PLACEHOLDERS, TASK_EMAIL_PLACEHOLDERS } from "@/lib/crm/settings"
 import EmailTemplateSettings from "@/components/crm/EmailTemplateSettings"
 import ImportExportSettings from "@/components/crm/ImportExportSettings"
+import OwnCompaniesSettings from "@/components/crm/OwnCompaniesSettings"
 import { PageHeader } from "@/components/crm/ui"
 
 export const metadata = { title: "Настройки | CRM" }
@@ -18,6 +19,7 @@ export default async function SettingsPage() {
                 title='Настройки'
                 subtitle='Шаблоны и параметры CRM. Доступно только администратору.'
             />
+            <OwnCompaniesSettings />
             <ImportExportSettings />
             <EmailTemplateSettings
                 endpoint='/api/crm/settings/proposal-email'

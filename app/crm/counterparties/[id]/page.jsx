@@ -201,6 +201,13 @@ export default async function CounterpartyPage({ params }) {
                             <span className='rounded-full bg-brand_main/10 px-2.5 py-0.5 text-xs font-medium text-brand_main'>
                                 {COUNTERPARTY_TYPE_LABELS[item.type]}
                             </span>
+                            {/* Наше юрлицо: продаём мы, а не нам. Отмечает
+                                администратор в /crm/settings. */}
+                            {item.isOwnCompany && (
+                                <span className='rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700'>
+                                    Наша компания
+                                </span>
+                            )}
                         </div>
                         <p className='mt-1 text-sm text-neutral-500'>
                             {[

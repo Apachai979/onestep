@@ -443,6 +443,7 @@ async function importProjects(tx, wb, report, session) {
                 distributorId: distId,
                 endCustomerId: custId,
                 managerId: userByEmail(row["менеджер (email)"]) || session.user.id,
+                createdById: session.user.id,
             },
         })
         report.created += 1

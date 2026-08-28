@@ -276,6 +276,7 @@ export async function POST(request) {
                 distributorId: data.distributorId,
                 endCustomerId: data.endCustomerId,
                 managerId: data.managerId,
+                createdById: session.user.id,
                 contacts: contactsToConnect.length
                     ? { connect: contactsToConnect }
                     : undefined,

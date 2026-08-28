@@ -33,6 +33,7 @@ model User {
   counterpartiesUpdated  Counterparty[] @relation("CounterpartyUpdatedBy")
   counterpartiesManaged  Counterparty[] @relation("CounterpartyManager")
   projects               Project[]      @relation("ProjectManager")
+  projectsCreated        Project[]      @relation("ProjectCreatedBy")
   projectsUpdated        Project[]      @relation("ProjectUpdatedBy")
   dealsAsManager         Deal[]         @relation("DealManager")
   dealsAsAuthor          Deal[]         @relation("DealCreatedBy")
@@ -185,6 +186,8 @@ model Project {
   endCustomer       Counterparty  @relation("ProjectEndCustomer", fields: [endCustomerId], references: [id])
   managerId         String
   manager           User          @relation("ProjectManager", fields: [managerId], references: [id])
+  createdById       String?
+  createdBy         User?         @relation("ProjectCreatedBy", fields: [createdById], references: [id])
   updatedById       String?
   updatedBy         User?         @relation("ProjectUpdatedBy", fields: [updatedById], references: [id])
 

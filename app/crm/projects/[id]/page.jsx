@@ -33,6 +33,7 @@ export default async function ProjectPage({ params }) {
             distributor: true,
             endCustomer: true,
             manager: true,
+            createdBy: true,
             updatedBy: true,
             duplicateOf: { select: { id: true, internalName: true, status: true } },
             contacts: { orderBy: [{ lastName: "asc" }, { firstName: "asc" }] },
@@ -190,7 +191,14 @@ export default async function ProjectPage({ params }) {
                         title='Проект'
                         footer={
                             <>
-                                Создан <LocalDateTime value={item.createdAt} format='date' />
+                                {/* Автор есть не у всех проектов: поле появилось
+                                    позже, старым его восстановили из журнала
+                                    изменений, а что старше журнала — осталось
+                                    без автора, там подпись только с датой. */}
+                                {item.createdBy
+                                    ? `Создал ${fullName(item.createdBy)} · `
+                                    : "Создан "}
+                                <LocalDateTime value={item.createdAt} />
                                 {item.updatedBy && (
                                     <>
                                         {" · "}изменил {fullName(item.updatedBy)} ·{" "}

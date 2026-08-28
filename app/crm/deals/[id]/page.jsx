@@ -9,7 +9,6 @@ import { canDeleteDeal, dealItemShipmentUsage, isDealLocked } from "@/lib/crm/ac
 import { formatMoney, formatPercent } from "@/lib/crm/format"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import DealItemsSection from "@/components/crm/DealItemsSection"
-import DealParamsTabs from "@/components/crm/DealParamsTabs"
 import DealPayerCard from "@/components/crm/DealPayerCard"
 import DealStatusControl from "@/components/crm/DealStatusControl"
 import DeleteEntityButton from "@/components/crm/DeleteEntityButton"
@@ -289,65 +288,72 @@ export default async function DealPage({ params }) {
                     )}
 
                     {item.isAuction && (
-                        <DealParamsTabs
-                            tabs={[
-                                {
-                                    label: "Параметры сделки",
-                                    content: (
-                                        <>
-                                            <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>
-                                                {dealParamRows}
-                                            </dl>
-                                            <p className='mt-3 border-t border-line pt-2 text-[11px] text-neutral-400'>
-                                                {paramsFooter}
-                                            </p>
-                                        </>
-                                    ),
-                                },
-                                {
-                                    label: "Параметры аукциона",
-                                    content: (
-                                        <dl className='grid gap-x-4 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3'>
-                                            <Row label='НМЦК' value={formatMoney(item.nmck)} />
-                                            <Row
-                                                label='Номер закупки'
-                                                value={item.purchaseNumber || "—"}
-                                            />
-                                            <Row label='Ссылка на аукцион'>
-                                                {item.auctionUrl ? (
-                                                    <a
-                                                        href={item.auctionUrl}
-                                                        target='_blank'
-                                                        rel='noopener noreferrer'
-                                                        className='inline-flex items-center gap-1 text-brand_main hover:underline'
-                                                    >
-                                                        Открыть
-                                                        <LuExternalLink className='h-3.5 w-3.5' />
-                                                    </a>
-                                                ) : (
-                                                    "—"
-                                                )}
-                                            </Row>
-                                            <Row label='Окончание сбора заявок'>
-                                                <LocalDateTime value={item.bidsDeadlineAt} />
-                                            </Row>
-                                            <Row label='Проведение аукциона'>
-                                                <LocalDateTime value={item.auctionAt} />
-                                            </Row>
-                                            <Row label='Подведение итогов'>
-                                                <LocalDateTime value={item.resultsAt} />
-                                            </Row>
-                                            <Row label='Количество заявок' value={item.bidsCount ?? "—"} />
-                                            <Row
-                                                label='Количество участников'
-                                                value={item.participantsCount ?? "—"}
-                                            />
-                                            <Row label='Победитель' value={item.winner || "—"} />
-                                        </dl>
-                                    ),
-                                },
-                            ]}
-                        />
+                        <section className='rounded-xl border border-line bg-white p-4'>
+                            <h2 className='mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-500'>
+                                Параметры
+                            </h2>
+
+                            <ParamGroup title='Сделка' columns='sm:grid-cols-2 lg:grid-cols-4'>
+                                {dealParamRows}
+                            </ParamGroup>
+
+                            {/* Аукционная часть: закупка, сроки и итог — тремя
+                                колонками, чтобы всё читалось одним взглядом. */}
+                            <div className='mt-3 grid gap-x-4 gap-y-3 border-t border-line pt-3 lg:grid-cols-3'>
+                                <ParamGroup title='Закупка' columns='sm:grid-cols-3 lg:grid-cols-1'>
+                                    <Row label='НМЦК' value={formatMoney(item.nmck)} />
+                                    <Row label='Номер закупки' value={item.purchaseNumber || "—"} />
+                                    <Row label='Ссылка на аукцион'>
+                                        {item.auctionUrl ? (
+                                            <a
+                                                href={item.auctionUrl}
+                                                target='_blank'
+                                                rel='noopener noreferrer'
+                                                className='inline-flex items-center gap-1 text-brand_main hover:underline'
+                                            >
+                                                Открыть
+                                                <LuExternalLink className='h-3.5 w-3.5' />
+                                            </a>
+                                        ) : (
+                                            "—"
+                                        )}
+                                    </Row>
+                                </ParamGroup>
+
+                                <ParamGroup
+                                    title='Сроки'
+                                    columns='sm:grid-cols-3 lg:grid-cols-1'
+                                    className='lg:border-l lg:border-line lg:pl-4'
+                                >
+                                    <Row label='Окончание сбора заявок'>
+                                        <LocalDateTime value={item.bidsDeadlineAt} />
+                                    </Row>
+                                    <Row label='Проведение аукциона'>
+                                        <LocalDateTime value={item.auctionAt} />
+                                    </Row>
+                                    <Row label='Подведение итогов'>
+                                        <LocalDateTime value={item.resultsAt} />
+                                    </Row>
+                                </ParamGroup>
+
+                                <ParamGroup
+                                    title='Итоги'
+                                    columns='sm:grid-cols-3 lg:grid-cols-1'
+                                    className='lg:border-l lg:border-line lg:pl-4'
+                                >
+                                    <Row label='Количество заявок' value={item.bidsCount ?? "—"} />
+                                    <Row
+                                        label='Количество участников'
+                                        value={item.participantsCount ?? "—"}
+                                    />
+                                    <Row label='Победитель' value={item.winner || "—"} />
+                                </ParamGroup>
+                            </div>
+
+                            <p className='mt-3 border-t border-line pt-2 text-[11px] text-neutral-400'>
+                                {paramsFooter}
+                            </p>
+                        </section>
                     )}
 
                     {(item.deliveryAddress || item.note) && (
@@ -422,6 +428,20 @@ function Section({ title, footer, action, columns = "sm:grid-cols-2 lg:grid-cols
                 </p>
             )}
         </section>
+    )
+}
+
+// Группа полей внутри карточки параметров: подпись группы + своя сетка.
+// Нужна, чтобы «Параметры сделки» и «Параметры аукциона» читались рядом,
+// а не через переключение вкладок.
+function ParamGroup({ title, columns = "sm:grid-cols-2 lg:grid-cols-3", className = "", children }) {
+    return (
+        <div className={className}>
+            <p className='mb-2 text-[10px] font-medium uppercase tracking-wider text-neutral-400'>
+                {title}
+            </p>
+            <dl className={`grid gap-x-4 gap-y-2.5 ${columns}`}>{children}</dl>
+        </div>
     )
 }
 

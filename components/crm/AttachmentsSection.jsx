@@ -2,7 +2,11 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react"
 import { LuPaperclip, LuUpload, LuTrash2 } from "react-icons/lu"
 import { Section, useConfirm, useToast } from "@/components/crm/ui"
-import { fileIconKey, formatBytes, isImageMime } from "@/lib/crm/attachment"
+import {
+    attachmentLinkProps,
+    fileIconKey,
+    formatBytes,
+} from "@/lib/crm/attachment"
 import {
     LuFile,
     LuFileText,
@@ -188,8 +192,7 @@ export default function AttachmentsSection({
                     const key = fileIconKey(att.mimeType)
                     const Icon = ICONS[key]
                     const tone = TONES[key]
-                    const inline = isImageMime(att.mimeType)
-                    const href = `/api/crm/attachments/${att.id}/download${inline ? "?inline=1" : ""}`
+                    const linkProps = attachmentLinkProps(att)
                     return (
                         <li
                             key={att.id}
@@ -202,9 +205,7 @@ export default function AttachmentsSection({
                             </span>
                             <div className='min-w-0 flex-1'>
                                 <a
-                                    href={href}
-                                    target={inline ? "_blank" : undefined}
-                                    rel='noopener noreferrer'
+                                    {...linkProps}
                                     title={att.fileName}
                                     className='block text-[13px] font-medium leading-snug text-neutral-900 [overflow-wrap:anywhere] hover:text-brand_main'
                                 >

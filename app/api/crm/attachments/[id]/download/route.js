@@ -1,7 +1,7 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { openReadStream, statFile } from "@/lib/crm/storage/local"
-import { isImageMime } from "@/lib/crm/attachment"
+import { isPreviewableMime } from "@/lib/crm/attachment"
 
 function asciiFallback(name) {
     return String(name || "file").replace(/[^\x20-\x7E]+/g, "_")
@@ -22,7 +22,9 @@ export async function GET(request, { params }) {
     }
 
     const { searchParams } = new URL(request.url)
-    const inline = searchParams.get("inline") === "1" && isImageMime(att.mimeType)
+    // Показать в браузере можно только то, что заведомо не исполняется как
+    // разметка (см. PREVIEWABLE_MIME), — остальное всегда уходит вложением.
+    const inline = searchParams.get("inline") === "1" && isPreviewableMime(att.mimeType)
     const disposition = inline ? "inline" : "attachment"
     const encoded = encodeURIComponent(att.fileName)
 
@@ -44,6 +46,9 @@ export async function GET(request, { params }) {
             "Content-Length": String(stat.size),
             "Content-Disposition": `${disposition}; filename="${asciiFallback(att.fileName)}"; filename*=UTF-8''${encoded}`,
             "Cache-Control": "private, max-age=0, no-store",
+            // Файл отдаётся с нашего origin: не даём браузеру угадывать тип
+            // в обход заявленного и открывать вложение как страницу.
+            "X-Content-Type-Options": "nosniff",
         },
     })
 }

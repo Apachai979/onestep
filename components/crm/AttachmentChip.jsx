@@ -6,7 +6,11 @@ import {
     LuFileArchive,
     LuX,
 } from "react-icons/lu"
-import { fileIconKey, formatBytes, isImageMime } from "@/lib/crm/attachment"
+import {
+    attachmentLinkProps,
+    fileIconKey,
+    formatBytes,
+} from "@/lib/crm/attachment"
 
 const ICONS = {
     pdf: LuFileText,
@@ -34,8 +38,7 @@ export default function AttachmentChip({ attachment, onRemove, compact = false }
     const key = fileIconKey(attachment.mimeType)
     const Icon = ICONS[key]
     const tone = TONES[key]
-    const inline = isImageMime(attachment.mimeType)
-    const href = `/api/crm/attachments/${attachment.id}/download${inline ? "?inline=1" : ""}`
+    const linkProps = attachmentLinkProps(attachment)
 
     return (
         <div
@@ -49,9 +52,7 @@ export default function AttachmentChip({ attachment, onRemove, compact = false }
                 <Icon className='h-3.5 w-3.5' />
             </span>
             <a
-                href={href}
-                target={inline ? "_blank" : undefined}
-                rel='noopener noreferrer'
+                {...linkProps}
                 title={attachment.fileName}
                 onClick={e => e.stopPropagation()}
                 className='min-w-0 flex-1 truncate text-neutral-900 hover:text-brand_main'

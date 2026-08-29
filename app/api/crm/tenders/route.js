@@ -21,6 +21,7 @@ const TENDER_SELECT = {
     etpName: true,
     ktru: true,
     customerName: true,
+    customerShortName: true,
     customerInn: true,
     decision: true,
     decisionAt: true,
@@ -59,6 +60,9 @@ export async function GET(request) {
             { name: { contains: search } },
             { regNumber: { contains: search } },
             { customerName: { contains: search } },
+            // Аббревиатуру («ГБУЗ ВОДКБ») в полном наименовании не найти —
+            // там оно расписано словами.
+            { customerShortName: { contains: search } },
             { customerInn: { contains: search } },
             // Идентификатор Тендерлэнда — им наводится список после ручного
             // импорта закупки, у которой номер извещения не приехал.

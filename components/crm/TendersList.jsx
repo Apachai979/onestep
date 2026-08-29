@@ -4,7 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { LuArrowUpRight, LuDownload, LuExternalLink, LuGavel, LuPlus } from "react-icons/lu"
 import { formatMoney } from "@/lib/crm/format"
 import { crmYmd, daysBetweenYmd, formatCrmDate } from "@/lib/crm/datetime"
-import { TENDER_DECISION_LABELS } from "@/lib/crm/tender-map"
+import {
+    TENDER_DECISION_LABELS,
+    tenderCustomerLabel,
+    tenderlandCardUrl,
+} from "@/lib/crm/tender-map"
 import TenderImportDialog from "@/components/crm/TenderImportDialog"
 import {
     Badge,
@@ -42,6 +46,25 @@ function deadlineTone(endDate) {
     if (days === 1) return { label: `${date} · завтра`, tone: "text-red-600" }
     if (days <= 3) return { label: `${date} · ${days} дн.`, tone: "text-amber-600" }
     return { label: date, tone: "text-neutral-700" }
+}
+
+/**
+ * Ссылка наружу — на площадку и в карточку Тендерлэнда. Обе нужны: в CRM лежит
+ * выжимка, а документация закупки и протоколы остаются по ту сторону. Клик по
+ * ссылке не должен считаться кликом по строке таблицы.
+ */
+function OutLink({ href, children }) {
+    return (
+        <a
+            href={href}
+            target='_blank'
+            rel='noreferrer'
+            onClick={e => e.stopPropagation()}
+            className='inline-flex items-center gap-1 text-brand_main hover:underline'
+        >
+            {children} <LuExternalLink className='h-3 w-3' />
+        </a>
+    )
 }
 
 /** Позиции КТРУ — по ним менеджер отличает наш набор от чужого. */
@@ -105,16 +128,20 @@ export default function TendersList() {
                 return
             }
             const parts = [`Новых: ${data.created}`]
-            // Отслеживаемые — это «Участвуем» и ещё не закрытые «Не разобраны».
-            // Показываем, сколько из них реально изменилось на площадке: ради
-            // этих цифр менеджер кнопку и нажимает.
-            const changed = data.refreshed?.updated || 0
+            // Изменения приезжают из обоих шагов: выгрузка обновляет закупки с
+            // открытым приёмом заявок, сверка — те, что уже в работе. Менеджеру
+            // важно одно число: сколько карточек сдвинулось на площадке.
+            const changed = (data.updated || 0) + (data.refreshed?.updated || 0)
+            const dealsFixed = (data.deals || 0) + (data.refreshed?.deals || 0)
             if (changed) parts.push(`изменилось: ${changed}`)
-            if (data.refreshed?.deals) parts.push(`сделок поправлено: ${data.refreshed.deals}`)
-            if (!changed) parts.push(`сверено: ${data.refreshed?.tracked || 0}`)
-            // Потолок выдачи — 100 закупок за проход. Следующий запуск продолжит
-            // с того места, где остановились, так что достаточно нажать ещё раз.
-            if (data.truncated) parts.push("забрали максимум за раз — нажмите ещё раз")
+            if (dealsFixed) parts.push(`сделок поправлено: ${dealsFixed}`)
+            if (!changed) parts.push(`сверено: ${data.total || 0}`)
+            // Автопоиск отфильтрован по открытому приёму заявок и в кап
+            // выгрузки укладываться обязан. Не уложился — фильтр в кабинете
+            // сняли или расширили, и часть закупок осталась незабранной.
+            if (data.truncated) {
+                parts.push("выгрузка переполнена — проверьте фильтр автопоиска")
+            }
             toast.success(parts.join(" · "), { title: "Закупки обновлены" })
             setRefreshTick(x => x + 1)
         } catch (err) {
@@ -221,17 +248,18 @@ export default function TendersList() {
                             ) : null}
                             {t.typeName ? <span>{t.typeName}</span> : null}
                             {t.region ? <span>{t.region}</span> : null}
-                            {t.sourceLink ? (
-                                <a
-                                    href={t.sourceLink}
-                                    target='_blank'
-                                    rel='noreferrer'
-                                    onClick={e => e.stopPropagation()}
-                                    className='inline-flex items-center gap-1 text-brand_main hover:underline'
-                                >
-                                    источник <LuExternalLink className='h-3 w-3' />
-                                </a>
-                            ) : null}
+                            {/* Обе ссылки — одним блоком: врозь они переносятся
+                                по разным строкам и читаются как разные вещи. */}
+                            <span className='inline-flex items-center gap-3 whitespace-nowrap'>
+                                {t.sourceLink ? (
+                                    <OutLink href={t.sourceLink}>источник</OutLink>
+                                ) : null}
+                                {tenderlandCardUrl(t.tenderlandId) ? (
+                                    <OutLink href={tenderlandCardUrl(t.tenderlandId)}>
+                                        Тендерлэнд
+                                    </OutLink>
+                                ) : null}
+                            </span>
                         </div>
                         {ktruList(t.ktru).length ? (
                             <div className='flex flex-wrap gap-1 pt-0.5'>
@@ -290,7 +318,9 @@ export default function TendersList() {
                 header: "Заказчик",
                 render: t => (
                     <div className='max-w-xs text-sm text-neutral-700'>
-                        <div className='line-clamp-2'>{t.customerName || "—"}</div>
+                        <div title={t.customerName || undefined}>
+                            {tenderCustomerLabel(t) || "—"}
+                        </div>
                         {t.customerInn ? (
                             <div className='text-xs text-neutral-400'>ИНН {t.customerInn}</div>
                         ) : null}
@@ -462,12 +492,24 @@ export default function TendersList() {
                                     <CardRow label='НМЦК'>
                                         {Number(t.beginPrice) > 0 ? formatMoney(t.beginPrice) : "—"}
                                     </CardRow>
-                                    <CardRow label='Заказчик'>{t.customerName || "—"}</CardRow>
+                                    <CardRow label='Заказчик'>{tenderCustomerLabel(t) || "—"}</CardRow>
                                     {t.winnerName ? (
                                         <CardRow label='Победитель'>
                                             {t.winnerIsOwn ? "наше юрлицо" : t.winnerName}
                                         </CardRow>
                                     ) : null}
+                                    <CardRow label='Подробности'>
+                                        <span className='flex flex-wrap items-center gap-x-3 gap-y-1'>
+                                            {t.sourceLink ? (
+                                                <OutLink href={t.sourceLink}>источник</OutLink>
+                                            ) : null}
+                                            {tenderlandCardUrl(t.tenderlandId) ? (
+                                                <OutLink href={tenderlandCardUrl(t.tenderlandId)}>
+                                                    Тендерлэнд
+                                                </OutLink>
+                                            ) : null}
+                                        </span>
+                                    </CardRow>
                                     {t.decision === "NEW" ? (
                                         <div className='flex gap-2 pt-2'>
                                             <Button

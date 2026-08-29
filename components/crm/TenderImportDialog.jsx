@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { LuExternalLink, LuSearch } from "react-icons/lu"
 import { formatMoney } from "@/lib/crm/format"
 import { formatCrmDate } from "@/lib/crm/datetime"
+import { tenderCustomerLabel, tenderlandCardUrl } from "@/lib/crm/tender-map"
 import { Badge, Button, Input, Modal } from "@/components/crm/ui"
 
 /**
@@ -133,20 +134,38 @@ export default function TenderImportDialog({ open, onClose, onDone }) {
                                             {Number(c.beginPrice) > 0 ? (
                                                 <span>НМЦК {formatMoney(c.beginPrice)}</span>
                                             ) : null}
-                                            {c.sourceLink ? (
-                                                <a
-                                                    href={c.sourceLink}
-                                                    target='_blank'
-                                                    rel='noreferrer'
-                                                    className='inline-flex items-center gap-1 text-brand_main hover:underline'
-                                                >
-                                                    источник <LuExternalLink className='h-3 w-3' />
-                                                </a>
-                                            ) : null}
+                                            {/* Из списка кандидатов уходят смотреть карточку
+                                                целиком — по названию и НМЦК две перепубликации
+                                                одной закупки не различить. Обе ссылки держим
+                                                рядом одной строкой. */}
+                                            <span className='inline-flex items-center gap-3 whitespace-nowrap'>
+                                                {c.sourceLink ? (
+                                                    <a
+                                                        href={c.sourceLink}
+                                                        target='_blank'
+                                                        rel='noreferrer'
+                                                        className='inline-flex items-center gap-1 text-brand_main hover:underline'
+                                                    >
+                                                        источник{" "}
+                                                        <LuExternalLink className='h-3 w-3' />
+                                                    </a>
+                                                ) : null}
+                                                {tenderlandCardUrl(c.tenderlandId) ? (
+                                                    <a
+                                                        href={tenderlandCardUrl(c.tenderlandId)}
+                                                        target='_blank'
+                                                        rel='noreferrer'
+                                                        className='inline-flex items-center gap-1 text-brand_main hover:underline'
+                                                    >
+                                                        Тендерлэнд{" "}
+                                                        <LuExternalLink className='h-3 w-3' />
+                                                    </a>
+                                                ) : null}
+                                            </span>
                                         </div>
                                         {c.customerName ? (
                                             <div className='text-xs text-neutral-500'>
-                                                {c.customerName}
+                                                {tenderCustomerLabel(c)}
                                             </div>
                                         ) : null}
                                     </div>

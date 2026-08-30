@@ -1,29 +1,24 @@
 "use client"
-import Image from "next/image"
-import Link from "next/link"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
     LuChevronDown,
+    LuDownload,
     LuFileSpreadsheet,
     LuMail,
     LuPaperclip,
-    LuPrinter,
     LuSave,
     LuX,
 } from "react-icons/lu"
-import { rublesToWords } from "@/lib/crm/number-to-words"
+import {
+    bumpProposalNumber,
+    formatProposalNumber,
+    proposalNumberBase,
+} from "@/lib/crm/proposal-number"
+import { PROPOSAL_INTRO } from "@/lib/crm/proposal-seller"
 import { fillTemplate } from "@/lib/crm/template"
 import { MAX_MAIL_ATTACHMENTS_SIZE, formatBytes } from "@/lib/crm/attachment"
 import { useToast } from "@/components/crm/ui"
 import CrmBackLink from "@/components/crm/CrmBackLink"
-
-const SELLER = {
-    name: "ООО «НЕОМЕД»",
-    address: "634021, Томская обл, Томск г, Фрунзе пр, дом 115",
-    phones: "+7 (495) 231-01-11 · +7 (985) 231-01-11",
-    email: "info@onestep.su",
-    site: "www.onestep.su",
-}
 
 function todayStr() {
     const d = new Date()
@@ -48,17 +43,19 @@ function fmtInputDate(d) {
     return `${dd}.${mm}.${dt.getFullYear()}`
 }
 
-function fmtQty(n) {
-    const v = Math.round(Number(n) * 1000) / 1000
-    return v.toLocaleString("ru-RU", { maximumFractionDigits: 3 })
-}
+// Пауза перед перерисовкой предпросмотра: столько форма ждёт после последней
+// правки, прежде чем идти за новым PDF.
+const PREVIEW_DELAY_MS = 700
 
-function fmtMoneyPlain(n) {
-    const v = Number(n) || 0
-    return v.toLocaleString("ru-RU", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })
+function downloadBlob(blob, fileName) {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
 }
 
 function fmtAuto(n, digits) {
@@ -68,12 +65,12 @@ function fmtAuto(n, digits) {
 
 export default function ProposalView({
     dealId,
+    defaultNumber,
     buyer,
     endCustomer = "",
     contactName = "",
     contactEmail = "",
-    items,
-    subtotal,
+    itemsCount = 0,
     defaultDiscount,
     defaultWeight,
     defaultVolume,
@@ -82,7 +79,9 @@ export default function ProposalView({
     senderEmail,
 }) {
     const [form, setForm] = useState({
-        number: `${dealId.slice(-4).toUpperCase()}/1`,
+        // Номер приходит с сервера (следующая версия по сделке); фоллбэк —
+        // первая версия, если страницу отрисовали без него.
+        number: defaultNumber || formatProposalNumber(proposalNumberBase(dealId), 1),
         date: todayInput(),
         validDays: 60,
         buyer,
@@ -93,7 +92,7 @@ export default function ProposalView({
         deliveryTerm: "90 дней с момента оплаты",
         paymentTerm: "100%",
         deliveryCondition: "самовывоз, отгрузка производится кратно транспортным упаковкам",
-        intro: `Компания ${SELLER.name}, официальный дистрибьютор «OneStep», предлагает вашему вниманию коммерческое предложение на поставку следующей продукции:`,
+        intro: PROPOSAL_INTRO,
         discount: defaultDiscount || 0,
         vatRate: 10,
         volume: defaultVolume > 0 ? fmtAuto(defaultVolume, 3) : "",
@@ -107,58 +106,111 @@ export default function ProposalView({
         return e => setForm(prev => ({ ...prev, [field]: e.target.value }))
     }
 
-    const showEndCustomerRow = form.showEndCustomer && Boolean(form.endCustomer.trim())
+    // Номер, который уже лёг в документы сделки или уехал клиенту, — потрачен.
+    // Сразу переводим форму на следующую версию: иначе повторное сохранение
+    // кладёт рядом второй файл с тем же именем, и разбирать их приходится руками.
+    function bumpNumber() {
+        setForm(prev => ({ ...prev, number: bumpProposalNumber(prev.number) }))
+    }
 
-    const totals = useMemo(() => {
-        const sub = Number(subtotal) || 0
-        const discountPct = Math.max(0, Math.min(100, Number(form.discount) || 0))
-        const discountAmount = (sub * discountPct) / 100
-        const finalAmount = sub - discountAmount
-        const vatRate = Math.max(0, Math.min(100, Number(form.vatRate) || 0))
-        const vatAmount = vatRate > 0 ? (finalAmount * vatRate) / (100 + vatRate) : 0
-        return {
-            sub,
-            discountPct,
-            discountAmount,
-            finalAmount,
-            vatRate,
-            vatAmount,
-            words: rublesToWords(finalAmount),
-        }
-    }, [subtotal, form.discount, form.vatRate])
+    const showEndCustomerRow = form.showEndCustomer && Boolean(form.endCustomer.trim())
 
     const fileNameRef = useRef("")
     fileNameRef.current = `Коммерческое предложение № ${form.number} от ${fmtInputDate(form.date)}`
 
-    useEffect(() => {
-        if (typeof window === "undefined") return
-        let prevTitle = ""
-        function before() {
-            prevTitle = document.title
-            document.title = fileNameRef.current || " "
-        }
-        function after() {
-            if (prevTitle) document.title = prevTitle
-        }
-        window.addEventListener("beforeprint", before)
-        window.addEventListener("afterprint", after)
-        return () => {
-            window.removeEventListener("beforeprint", before)
-            window.removeEventListener("afterprint", after)
-        }
-    }, [])
-
-    function handlePrint() {
-        if (typeof window !== "undefined") window.print()
-    }
-
     const toast = useToast()
     const [saving, setSaving] = useState(false)
     const [exporting, setExporting] = useState(false)
+    const [downloading, setDownloading] = useState(false)
     const [sendOpen, setSendOpen] = useState(false)
     // Параметры обычно правят один раз в начале — блок сворачивается,
     // чтобы сам документ был выше на экране.
     const [paramsOpen, setParamsOpen] = useState(true)
+
+    const [pdfUrl, setPdfUrl] = useState("")
+    const [previewing, setPreviewing] = useState(false)
+    const [previewError, setPreviewError] = useState("")
+    // Счётчик ручных повторов: правки формы могут и не последовать, а упавший
+    // рендер нужно чем-то перезапустить.
+    const [previewAttempt, setPreviewAttempt] = useState(0)
+    const previewRef = useRef(null)
+    // Blob предпросмотра живёт до следующего рендера; ссылку держим в ref,
+    // чтобы отзывать её вне рендера — иначе браузер копит объекты в памяти.
+    const pdfUrlRef = useRef("")
+
+    function showPdf(url) {
+        if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current)
+        pdfUrlRef.current = url
+        setPdfUrl(url)
+    }
+
+    useEffect(
+        () => () => {
+            if (pdfUrlRef.current) URL.revokeObjectURL(pdfUrlRef.current)
+        },
+        [],
+    )
+
+    // Предпросмотр рендерит сервер — тем же кодом, что уходит в файл и в письмо.
+    // Правки в полях сыпятся посимвольно, поэтому запрос откладываем и обрываем
+    // предыдущий: иначе на каждую букву уходил бы полный рендер PDF.
+    const formKey = JSON.stringify(form)
+    useEffect(() => {
+        const controller = new AbortController()
+        const timer = setTimeout(async () => {
+            setPreviewing(true)
+            try {
+                const res = await fetch(`/api/crm/deals/${dealId}/proposal/pdf`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: formKey,
+                    signal: controller.signal,
+                })
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}))
+                    setPreviewError(data?.error || "Не удалось сформировать предпросмотр")
+                    return
+                }
+                showPdf(URL.createObjectURL(await res.blob()))
+                setPreviewError("")
+            } catch (err) {
+                if (err?.name !== "AbortError") {
+                    setPreviewError(err?.message || "Не удалось сформировать предпросмотр")
+                }
+            } finally {
+                if (!controller.signal.aborted) setPreviewing(false)
+            }
+        }, PREVIEW_DELAY_MS)
+        return () => {
+            clearTimeout(timer)
+            controller.abort()
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dealId, formKey, previewAttempt])
+
+    async function handleDownloadPdf() {
+        if (typeof window === "undefined") return
+        setDownloading(true)
+        try {
+            // Скачиваем свежий рендер, а не blob предпросмотра: между правкой
+            // поля и нажатием кнопки предпросмотр может быть ещё старым.
+            const res = await fetch(`/api/crm/deals/${dealId}/proposal/pdf`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(form),
+            })
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}))
+                toast.error(data?.error || "Не удалось сформировать PDF")
+                return
+            }
+            downloadBlob(await res.blob(), `${fileNameRef.current || "Коммерческое предложение"}.pdf`)
+        } catch (err) {
+            toast.error(err?.message || "Не удалось сформировать PDF")
+        } finally {
+            setDownloading(false)
+        }
+    }
 
     async function handleExportXlsx() {
         if (typeof window === "undefined") return
@@ -174,16 +226,10 @@ export default function ProposalView({
                 toast.error(data?.error || "Не удалось сформировать Excel")
                 return
             }
-            const blob = await res.blob()
-            const fileName = `${fileNameRef.current || "Коммерческое предложение"}.xlsx`
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement("a")
-            a.href = url
-            a.download = fileName
-            document.body.appendChild(a)
-            a.click()
-            a.remove()
-            URL.revokeObjectURL(url)
+            downloadBlob(
+                await res.blob(),
+                `${fileNameRef.current || "Коммерческое предложение"}.xlsx`,
+            )
         } catch (err) {
             toast.error(err?.message || "Не удалось сформировать Excel")
         } finally {
@@ -225,6 +271,7 @@ export default function ProposalView({
                 return
             }
             toast.success("КП сохранено в документы сделки", { title: fileName })
+            bumpNumber()
         } catch (err) {
             toast.error(err?.message || "Не удалось сформировать PDF")
         } finally {
@@ -233,8 +280,8 @@ export default function ProposalView({
     }
 
     return (
-        <div className='space-y-6 print:space-y-0'>
-            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between print:hidden'>
+        <div className='space-y-6'>
+            <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
                 <CrmBackLink
                     fallback={`/crm/deals/${dealId}`}
                     fallbackLabel='К сделке'
@@ -272,17 +319,18 @@ export default function ProposalView({
                     </button>
                     <button
                         type='button'
-                        onClick={handlePrint}
-                        className='inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90'
-                        title='В открывшемся диалоге выберите принтер «Сохранить как PDF»'
+                        onClick={handleDownloadPdf}
+                        disabled={downloading}
+                        className='inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand_main px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand_main/90 disabled:opacity-50'
+                        title='Скачать PDF на компьютер'
                     >
-                        <LuPrinter className='h-4 w-4' />
-                        Сохранить в PDF
+                        <LuDownload className='h-4 w-4' />
+                        {downloading ? "Формируем…" : "Скачать PDF"}
                     </button>
                 </div>
             </div>
 
-            <section className='rounded-xl border border-line bg-white print:hidden'>
+            <section className='rounded-xl border border-line bg-white'>
                 <button
                     type='button'
                     onClick={() => setParamsOpen(o => !o)}
@@ -431,197 +479,61 @@ export default function ProposalView({
                     contactName={contactName}
                     contactEmail={contactEmail}
                     fileName={`${fileNameRef.current}.pdf`}
+                    onSent={bumpNumber}
                     onClose={() => setSendOpen(false)}
                 />
             )}
 
-            {/* На мобильном КП листается по горизонтали как документ A4 */}
-            <div className='overflow-x-auto rounded-xl print:overflow-visible'>
-                <article className='proposal mx-auto min-w-[210mm] max-w-[210mm] bg-white px-10 py-8 text-[10.5pt] leading-snug text-black shadow-sm print:min-w-0 print:max-w-none print:p-0 print:shadow-none'>
-                    <header className='flex items-start justify-between gap-6 border-b border-black/10 pb-4'>
-                        <div className='shrink-0'>
-                            <Image
-                                src='/logo_name.svg'
-                                alt='OneStep'
-                                width={160}
-                                height={48}
-                                priority
-                            />
-                        </div>
-                        <div className='text-right text-[9pt] text-black/80'>
-                            <p>{SELLER.address}</p>
-                            <p>{SELLER.phones}</p>
-                            <p>{SELLER.email}</p>
-                            <p>{SELLER.site}</p>
-                        </div>
-                    </header>
+            {itemsCount === 0 ? (
+                <p className='rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800'>
+                    В сделке нет товарных позиций — таблица в КП будет пустой.
+                </p>
+            ) : null}
 
-                    <div className='mt-6 text-center'>
-                        <h1 className='text-base font-semibold'>
-                            Коммерческое предложение № {form.number} от {fmtInputDate(form.date)}
-                        </h1>
-                        <p className='mt-0.5 text-[9.5pt] italic text-black/70'>
-                            действительно {form.validDays} рабочих дней
-                        </p>
+            {/* Предпросмотр — тот же PDF, который уйдёт клиенту. Раньше здесь
+                жила вторая, html-вёрстка документа: она разъезжалась с PDF
+                (свои заголовки колонок, свои ширины, свой логотип) и не
+                показывала главного — где лягут переносы и границы страниц. */}
+            <section className='rounded-xl border border-line bg-white'>
+                <div className='flex items-center justify-between gap-2 border-b border-line px-4 py-2.5'>
+                    <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
+                        Предпросмотр
+                    </h2>
+                    <span className='text-[11px] text-neutral-400'>
+                        {previewing ? "Обновляем…" : "Так уйдёт клиенту"}
+                    </span>
+                </div>
+                {previewError ? (
+                    <div className='px-4 py-10 text-center'>
+                        <p className='text-sm text-red-600'>{previewError}</p>
+                        <button
+                            type='button'
+                            onClick={() => setPreviewAttempt(n => n + 1)}
+                            className='mt-2 rounded-lg border border-line px-3 py-1.5 text-sm text-neutral-700 transition hover:bg-surface_muted'
+                        >
+                            Повторить
+                        </button>
                     </div>
-
-                    <dl className='mt-5 space-y-1 text-[10.5pt]'>
-                        <ParamRow label='Покупатель' value={form.buyer} />
-                        {showEndCustomerRow && (
-                            <ParamRow label='Конечный потребитель' value={form.endCustomer} />
-                        )}
-                        <ParamRow label='Срок поставки' value={form.deliveryTerm} />
-                        <ParamRow label='Условия оплаты' value={form.paymentTerm} />
-                        <ParamRow label='Условия поставки' value={form.deliveryCondition} />
-                    </dl>
-
-                    <p className='mt-4'>{form.intro}</p>
-
-                    <table className='mt-3 w-full border-collapse text-[9pt]'>
-                        <thead>
-                            <tr className='bg-black/5'>
-                                <Th className='w-[3%]'>№</Th>
-                                <Th className='w-[12%]'>Артикул</Th>
-                                <Th>Наименование товара</Th>
-                                <Th className='w-[7%]'>Кол-во шт.</Th>
-                                <Th className='w-[8%]'>Цена за шт.</Th>
-                                <Th className='w-[7%]'>Кол-во шт. в тр. уп.</Th>
-                                <Th className='w-[8%]'>Цена за уп.</Th>
-                                <Th className='w-[7%]'>Кол-во тр. упаковок</Th>
-                                <Th className='w-[11%]'>Сумма, руб.</Th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {items.map(it => (
-                                <tr key={it.n} className='align-top'>
-                                    <Td className='text-center'>{it.n}</Td>
-                                    <Td>{it.sku || "—"}</Td>
-                                    <Td>
-                                        <p className='font-medium'>{it.name}</p>
-                                        {it.contents && (
-                                            <p className='mt-1 whitespace-pre-wrap text-[8.5pt] text-black/75'>
-                                                {it.contents}
-                                            </p>
-                                        )}
-                                    </Td>
-                                    <Td className='text-right'>{fmtQty(it.qty)}</Td>
-                                    <Td className='text-right'>{fmtMoneyPlain(it.unitPrice)}</Td>
-                                    <Td className='text-right'>
-                                        {it.packQty ? fmtQty(it.packQty) : "—"}
-                                    </Td>
-                                    <Td className='text-right'>
-                                        {it.packPrice !== null ? fmtMoneyPlain(it.packPrice) : "—"}
-                                    </Td>
-                                    <Td className='text-right'>
-                                        {it.packs !== null
-                                            ? Number.isInteger(it.packs)
-                                                ? it.packs
-                                                : fmtQty(it.packs)
-                                            : "—"}
-                                    </Td>
-                                    <Td className='text-right'>{fmtMoneyPlain(it.amount)}</Td>
-                                </tr>
-                            ))}
-                            {items.length === 0 && (
-                                <tr>
-                                    <Td colSpan={9} className='text-center text-black/50'>
-                                        В сделке нет товарных позиций
-                                    </Td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-
-                    <div className='mt-3 flex justify-end'>
-                        <table className='border-collapse text-[9.5pt]'>
-                            <tbody>
-                                <TotalsRow label='ИТОГО:' value={fmtMoneyPlain(totals.sub)} />
-                                {totals.discountPct > 0 && (
-                                    <>
-                                        <TotalsRow
-                                            label='Скидка:'
-                                            value={`${totals.discountPct}%`}
-                                        />
-                                        <TotalsRow
-                                            label='Сумма скидки:'
-                                            value={fmtMoneyPlain(totals.discountAmount)}
-                                        />
-                                        <TotalsRow
-                                            label='Итого со скидкой:'
-                                            value={fmtMoneyPlain(totals.finalAmount)}
-                                        />
-                                    </>
-                                )}
-                                {totals.vatRate > 0 && (
-                                    <TotalsRow
-                                        label={`В т.ч. НДС ${totals.vatRate}%:`}
-                                        value={fmtMoneyPlain(totals.vatAmount)}
-                                    />
-                                )}
-                            </tbody>
-                        </table>
+                ) : pdfUrl ? (
+                    <div className='relative'>
+                        <iframe
+                            ref={previewRef}
+                            // Масштаб 100%: документ показывается в натуральную
+                            // величину, как он выйдет на бумаге.
+                            src={`${pdfUrl}#zoom=100`}
+                            title='Коммерческое предложение'
+                            className='h-[80vh] w-full rounded-b-xl'
+                        />
+                        {previewing ? (
+                            <div className='pointer-events-none absolute inset-0 rounded-b-xl bg-white/40' />
+                        ) : null}
                     </div>
-
-                    <p className='mt-4 font-semibold'>Итого: {fmtMoneyPlain(totals.finalAmount)}</p>
-                    <p className='italic text-black/85'>{totals.words}</p>
-
-                    {(form.volume || form.weight) && (
-                        <div className='mt-3 text-right text-[9pt] italic text-black/70'>
-                            {form.volume && <p>Объём груза, м³: {form.volume}</p>}
-                            {form.weight && <p>Вес груза, кг: {form.weight}</p>}
-                        </div>
-                    )}
-
-                    <p className='mt-5 text-[8.5pt] text-black/70'>
-                        Настоящее коммерческое предложение не является офертой (в соответствии со
-                        ст. 435 ГК РФ). {SELLER.name} оставляет за собой право не заключать договор,
-                        либо заключить договор на иных условиях, отличных от предложенных.
+                ) : (
+                    <p className='px-4 py-10 text-center text-sm text-neutral-400'>
+                        Формируем предпросмотр…
                     </p>
-
-                    <div className='mt-6 text-[9.5pt]'>
-                        <p>С уважением,</p>
-                        <p>{form.senderName || "—"}</p>
-                        {form.senderPhone && <p>Тел. {form.senderPhone}</p>}
-                        {form.senderEmail && <p>Email: {form.senderEmail}</p>}
-                    </div>
-                </article>
-            </div>
-
-            <style jsx global>{`
-                .proposal table th,
-                .proposal table td {
-                    border: 1px solid rgba(0, 0, 0, 0.4);
-                    padding: 4px 6px;
-                }
-                .proposal .totals-cell {
-                    border: 1px solid rgba(0, 0, 0, 0.4);
-                    padding: 3px 8px;
-                }
-                @media print {
-                    @page {
-                        size: A4;
-                        margin: 0;
-                    }
-                    html,
-                    body {
-                        background: white !important;
-                    }
-                    body * {
-                        visibility: hidden;
-                    }
-                    .proposal,
-                    .proposal * {
-                        visibility: visible;
-                    }
-                    .proposal {
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        padding: 12mm !important;
-                    }
-                }
-            `}</style>
+                )}
+            </section>
         </div>
     )
 }
@@ -633,7 +545,15 @@ function firstEmail(s) {
     return m ? m[0] : ""
 }
 
-function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName, onClose }) {
+function SendProposalDialog({
+    dealId,
+    form,
+    contactName,
+    contactEmail,
+    fileName,
+    onSent,
+    onClose,
+}) {
     const toast = useToast()
     const [to, setTo] = useState(firstEmail(contactEmail))
     const [subject, setSubject] = useState("")
@@ -715,6 +635,7 @@ function SendProposalDialog({ dealId, form, contactName, contactEmail, fileName,
             toast.success(`Письмо отправлено на ${data.to}`, {
                 title: "КП отправлено",
             })
+            onSent?.()
             if (data.previewUrl) window.open(data.previewUrl, "_blank")
             onClose()
         } catch (err) {
@@ -932,37 +853,5 @@ function Input(props) {
             {...props}
             className='w-full rounded-lg border border-line px-2.5 py-1.5 text-[13px] shadow-sm focus:border-brand_main focus:outline-none'
         />
-    )
-}
-
-function ParamRow({ label, value }) {
-    return (
-        <div className='flex gap-2'>
-            <dt className='shrink-0 text-black/70'>{label}:</dt>
-            <dd className='font-medium'>{value || "—"}</dd>
-        </div>
-    )
-}
-
-function Th({ children, className = "" }) {
-    return <th className={`text-center font-semibold ${className}`}>{children}</th>
-}
-
-function Td({ children, className = "", ...rest }) {
-    return (
-        <td className={className} {...rest}>
-            {children}
-        </td>
-    )
-}
-
-function TotalsRow({ label, value }) {
-    return (
-        <tr>
-            <td className='totals-cell text-right font-semibold'>{label}</td>
-            <td className='totals-cell text-right' style={{ minWidth: 110 }}>
-                {value}
-            </td>
-        </tr>
     )
 }

@@ -163,15 +163,15 @@ const s = StyleSheet.create({
     // ========================================================================
     // ТАБЛИЦА ТОВАРОВ
     // Правило рисования границ, чтобы линии не задваивались:
-    //   - Контейнер (table) даёт top + left.
+    //   - Шапка (th) даёт верх, первая колонка (colNum) — лево.
     //   - Каждая ячейка (th, td) даёт bottom + right.
     // Итого рамка целая, ни один пиксель не пересекается дважды.
+    // Верх и лево нарочно не на контейнере: позиция не рвётся между страницами
+    // (wrap={false}), и когда очередная строка целиком уезжает на следующий
+    // лист, контейнер всё равно тянется до разрыва — его левая граница
+    // чертила одинокую вертикаль по пустому месту под таблицей.
     // ========================================================================
-    table: {
-        borderTopWidth: BORDER_W,
-        borderLeftWidth: BORDER_W,
-        borderColor: BORDER,
-    },
+    table: {},
     // Строка шапки таблицы (fixed — повторяется на каждой странице документа).
     thead: {
         flexDirection: "row",
@@ -184,6 +184,8 @@ const s = StyleSheet.create({
     // Ячейка шапки — сам заголовок колонки («№», «Артикул», ...)
     th: {
         padding: 4, // внутренние отступы (со всех сторон)
+        borderTopWidth: BORDER_W, // верхняя рамка таблицы; шапка fixed —
+        // повторяется на каждой странице вместе с ней
         borderRightWidth: BORDER_W,
         borderBottomWidth: BORDER_W,
         borderColor: BORDER,
@@ -210,7 +212,12 @@ const s = StyleSheet.create({
     },
     // Состав набора (мелкий текст под названием товара)
     contents: {
-        fontSize: 7, // самый мелкий шрифт в таблице
+        // Самый мелкий шрифт в таблице, и он же задаёт высоту строки: состав
+        // занимает десяток строчек, а позиция не рвётся между страницами
+        // (wrap={false} ниже). Полпункта здесь — это целая позиция, которая
+        // влезает или не влезает на лист: на 7pt типовое КП уходило на три
+        // страницы с пустой третьей, на 6.5 укладывается в две.
+        fontSize: 6.5,
         color: "#555", // серый, чтобы не отвлекал от главного
         marginTop: 2, // отступ между названием и составом
         lineHeight: 1.3, // небольшой воздух между строками состава
@@ -306,7 +313,9 @@ const s = StyleSheet.create({
     // Если меняешь одну — не забудь скорректировать другую, иначе таблица
     // «уедет».
     // ========================================================================
-    colNum: { width: "4%" }, // «№»
+    // «№» — первая колонка, она же несёт левую рамку таблицы: граница
+    // кончается вместе с последней строкой на странице, а не тянется в пустоту.
+    colNum: { width: "4%", borderLeftWidth: BORDER_W, borderColor: BORDER },
     colSku: { width: "12%" }, // Артикул
     colName: { width: "27%" }, // Наименование + Состав (широкая колонка)
     colQty: { width: "8%" }, // Кол-во шт.
@@ -448,6 +457,10 @@ export function ProposalDoc({ data }) {
                         <Text style={[s.th, s.colAmount]}>Сумма, руб.</Text>
                     </View>
                     {items.map(item => (
+                        // Позиция не рвётся между страницами: состав набора,
+                        // разорванный посередине, читается как две разные
+                        // позиции. Не влезла целиком — уезжает на следующий
+                        // лист, даже если внизу предыдущего остаётся пусто.
                         <View style={s.row} key={item.n} wrap={false}>
                             <Text style={[s.td, s.colNum, s.tdNum]}>{item.n}</Text>
                             <Text style={[s.td, s.colSku]}>{item.sku || "—"}</Text>
@@ -471,9 +484,7 @@ export function ProposalDoc({ data }) {
                             </Text>
                             <Text style={[s.td, s.colPacks, s.tdRight]}>
                                 {item.packs !== null && item.packs !== undefined
-                                    ? Number.isInteger(item.packs)
-                                        ? item.packs
-                                        : fmtQty(item.packs)
+                                    ? fmtQty(item.packs)
                                     : "—"}
                             </Text>
                             <Text style={[s.td, s.colAmount, s.tdRight]}>
@@ -489,12 +500,14 @@ export function ProposalDoc({ data }) {
                 <Text style={s.finalTotal}>Итого: {fmtMoney(totals.finalAmount)}</Text>
                 <Text style={s.words}>{totals.words}</Text>
 
-                {(volume || weight) && (
+                {/* Тернарник, а не &&: пустая строка ушла бы в дерево как
+                    текстовый узел вне <Text> — @react-pdf на это ругается. */}
+                {volume || weight ? (
                     <View style={s.volumeWeight}>
-                        {volume && <Text>Объём груза, м³: {volume}</Text>}
-                        {weight && <Text>Вес груза, кг: {weight}</Text>}
+                        {volume ? <Text>Объём груза, м³: {volume}</Text> : null}
+                        {weight ? <Text>Вес груза, кг: {weight}</Text> : null}
                     </View>
-                )}
+                ) : null}
 
                 <Text style={s.disclaimer}>
                     Настоящее коммерческое предложение не является офертой (в соответствии со ст.
@@ -502,7 +515,8 @@ export function ProposalDoc({ data }) {
                     заключить договор на иных условиях, отличных от предложенных.
                 </Text>
 
-                <View style={s.signature}>
+                {/* Подпись не рвём: имя, телефон и почта должны быть рядом. */}
+                <View style={s.signature} wrap={false}>
                     <Text>С уважением,</Text>
                     <Text>{senderName || "—"}</Text>
                     {senderPhone ? <Text>Тел. {senderPhone}</Text> : null}

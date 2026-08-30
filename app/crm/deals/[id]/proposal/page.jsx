@@ -4,6 +4,7 @@ import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import ProposalView from "@/components/crm/ProposalView"
 import { isDealLocked } from "@/lib/crm/access"
+import { nextProposalNumber } from "@/lib/crm/proposal-number"
 
 export const metadata = { title: "Коммерческое предложение | CRM" }
 
@@ -51,51 +52,23 @@ export default async function ProposalPage({ params }) {
 
     const items = await prisma.dealItem.findMany({
         where: { dealId: deal.id },
-        orderBy: { createdAt: "asc" },
-        include: {
-            product: {
-                select: {
-                    id: true,
-                    sku: true,
-                    name: true,
-                    category: true,
-                    transportPackQty: true,
-                    contents: true,
-                    unitWeightKg: true,
-                    unitVolumeM3: true,
-                },
-            },
+        select: {
+            quantity: true,
+            product: { select: { unitWeightKg: true, unitVolumeM3: true } },
         },
     })
 
-    const itemsForClient = items.map((it, i) => {
-        const qty = toNum(it.quantity)
-        const amount = toNum(it.amount)
-        const unitPrice = qty > 0 ? amount / qty : 0
-        const packQty = it.product?.transportPackQty || 0
-        const packs = packQty > 0 ? qty / packQty : null
-        const packPrice = packQty > 0 ? unitPrice * packQty : null
-        const unitWeight = toNum(it.product?.unitWeightKg)
-        const unitVolume = toNum(it.product?.unitVolumeM3)
-        return {
-            n: i + 1,
-            sku: it.sku || it.product?.sku || "",
-            name: it.product?.category || it.name,
-            contents: it.product?.contents || "",
-            qty,
-            unitPrice,
-            packQty: packQty || null,
-            packPrice,
-            packs: packs !== null && Number.isFinite(packs) ? packs : null,
-            amount,
-            unitWeight,
-            unitVolume,
-        }
-    })
+    // Клиенту позиции не нужны: документ рисует сервер. Отсюда — только
+    // объём и вес по умолчанию и счётчик, чтобы предупредить о пустой сделке.
+    const totalWeight = items.reduce(
+        (sum, it) => sum + toNum(it.product?.unitWeightKg) * toNum(it.quantity),
+        0,
+    )
+    const totalVolume = items.reduce(
+        (sum, it) => sum + toNum(it.product?.unitVolumeM3) * toNum(it.quantity),
+        0,
+    )
 
-    const subtotal = itemsForClient.reduce((s, x) => s + x.amount, 0)
-    const totalWeight = itemsForClient.reduce((s, x) => s + x.unitWeight * x.qty, 0)
-    const totalVolume = itemsForClient.reduce((s, x) => s + x.unitVolume * x.qty, 0)
     // Скидка в КП берётся из сделки. Если в сделке не задана —
     // фоллбэк на скидку контрагента (для старых сделок).
     const discountForProposal =
@@ -128,15 +101,19 @@ export default async function ProposalPage({ params }) {
         withInn(deal.sourceProject?.endCustomer) ||
         ""
 
+    // Номер КП считается на сервере: версия растёт по уже созданным
+    // предложениям сделки, чтобы файлы не выходили одноимёнными.
+    const defaultNumber = await nextProposalNumber(prisma, deal.id)
+
     return (
         <ProposalView
             dealId={deal.id}
+            defaultNumber={defaultNumber}
             buyer={withInn(deal.payer) || withInn(deal.counterparty)}
             endCustomer={endCustomer}
             contactName={contactName}
             contactEmail={deal.contact?.email || deal.counterparty?.email || ""}
-            items={itemsForClient}
-            subtotal={subtotal}
+            itemsCount={items.length}
             defaultDiscount={discountForProposal}
             defaultWeight={totalWeight}
             defaultVolume={totalVolume}

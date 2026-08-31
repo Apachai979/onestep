@@ -71,6 +71,7 @@ export default async function ShipmentPage({ params }) {
             recipientContact: true,
             createdBy: true,
             updatedBy: true,
+            shippedBy: true,
         },
     })
     if (!item) notFound()
@@ -138,6 +139,7 @@ export default async function ShipmentPage({ params }) {
                             label='Фактическая отгрузка'
                             value={<LocalDateTime value={item.shippedAt} />}
                         />
+                        <Row label='Отгрузил' value={fullName(item.shippedBy)} />
                         <Row label='Перевозчик' value={item.carrier} />
                         <Row label='Трек-номер' value={item.trackingNumber} />
                         <Row label='Вес' value={`${formatWeightKg(wv.weight)}${wvHint}`} />

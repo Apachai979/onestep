@@ -8,6 +8,7 @@ import {
     generateShipmentNumber,
 } from "@/lib/crm/shipment"
 import { dealLockResponse } from "@/lib/crm/access"
+import { logChange } from "@/lib/crm/change-log"
 
 const DEAL_SELECT = {
     id: true,
@@ -57,6 +58,7 @@ export async function GET(request) {
                 select: { id: true, firstName: true, lastName: true, phone: true, email: true },
             },
             createdBy: { select: { id: true, firstName: true, lastName: true, email: true } },
+            shippedBy: { select: { id: true, firstName: true, lastName: true, email: true } },
         },
     })
 
@@ -152,6 +154,8 @@ export async function POST(request) {
     const status = data.status || "DRAFT"
     const shippedAt =
         status === "SHIPPED" ? data.shippedAt || new Date() : data.shippedAt ?? null
+    // Документ можно завести сразу проведённым — тогда отгрузил тот, кто его создал.
+    const shippedById = status === "SHIPPED" ? session.user.id : null
 
     const created = await prisma.$transaction(async tx => {
         const number = await generateShipmentNumber(tx)
@@ -162,6 +166,7 @@ export async function POST(request) {
                 status,
                 plannedDate: data.plannedDate ?? null,
                 shippedAt,
+                shippedById,
                 deliveryAddress: data.deliveryAddress ?? null,
                 carrier: data.carrier ?? null,
                 trackingNumber: data.trackingNumber ?? null,
@@ -192,8 +197,25 @@ export async function POST(request) {
                         email: true,
                     },
                 },
+                shippedBy: {
+                    select: { id: true, firstName: true, lastName: true, email: true },
+                },
             },
         })
+        // В журнал сделки попадает только факт отгрузки — тот же принцип, что в
+        // PATCH: черновик это рабочий документ, событием для истории он станет,
+        // когда его проведут.
+        if (shipment.status === "SHIPPED") {
+            await logChange(tx, {
+                entityType: "Shipment",
+                entityId: shipment.id,
+                parentEntityType: "Deal",
+                parentEntityId: shipment.dealId,
+                action: "CREATE",
+                payload: { number: shipment.number, status: shipment.status },
+                authorId: session.user.id,
+            })
+        }
         return shipment
     })
 

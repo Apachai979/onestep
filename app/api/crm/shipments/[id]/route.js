@@ -6,6 +6,7 @@ import {
     calculateDealItemRemaining,
 } from "@/lib/crm/shipment"
 import { dealLockResponse } from "@/lib/crm/access"
+import { logChange } from "@/lib/crm/change-log"
 
 const DEAL_SELECT = {
     id: true,
@@ -37,6 +38,7 @@ const FULL_INCLUDE = {
     },
     createdBy: { select: { id: true, firstName: true, lastName: true, email: true } },
     updatedBy: { select: { id: true, firstName: true, lastName: true, email: true } },
+    shippedBy: { select: { id: true, firstName: true, lastName: true, email: true } },
 }
 
 export async function GET(_request, { params }) {
@@ -96,6 +98,9 @@ export async function PATCH(request, { params }) {
         if (!data.shippedAt && !existing.shippedAt) {
             data.shippedAt = new Date()
         }
+        // Кто провёл документ. Ходит парой с shippedAt: в updatedById этого
+        // не увидеть — его перетирает следующая правка трека или адреса.
+        data.shippedById = session.user.id
     }
     // Возврат в черновик — фактическая дата отгрузки очищается,
     // если её не передали явно в запросе.
@@ -106,6 +111,7 @@ export async function PATCH(request, { params }) {
         body.shippedAt === undefined
     ) {
         data.shippedAt = null
+        data.shippedById = null
     }
 
     let itemsUpdate = null
@@ -165,6 +171,23 @@ export async function PATCH(request, { params }) {
                     quantity: i.quantity,
                     note: i.note ?? null,
                 })),
+            })
+        }
+        // В журнал сделки пишем только смену статуса: «кто и когда отгрузил» —
+        // событие, ради которого в историю заглядывают. Правка трека или адреса
+        // в документе засоряла бы ленту, а видна она и так в самой отгрузке.
+        if (data.status && data.status !== existing.status) {
+            await logChange(tx, {
+                entityType: "Shipment",
+                entityId: shipment.id,
+                parentEntityType: "Deal",
+                parentEntityId: existing.dealId,
+                action: "UPDATE",
+                payload: {
+                    number: shipment.number,
+                    status: { from: existing.status, to: shipment.status },
+                },
+                authorId: session.user.id,
             })
         }
         return tx.shipment.findUnique({ where: { id: shipment.id }, include: FULL_INCLUDE })

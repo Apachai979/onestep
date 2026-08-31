@@ -43,6 +43,7 @@ model User {
   tasksAsAuthor          Task[]         @relation("TaskCreatedBy")
   shipmentsCreated       Shipment[]     @relation("ShipmentCreatedBy")
   shipmentsUpdated       Shipment[]     @relation("ShipmentUpdatedBy")
+  shipmentsShipped       Shipment[]     @relation("ShipmentShippedBy")
   notes                  Note[]         @relation("NoteAuthor")
   attachments            Attachment[]   @relation("AttachmentUploadedBy")
   changeLogs             ChangeLog[]    @relation("ChangeLogAuthor")
@@ -379,6 +380,11 @@ model Shipment {
   status             String   @default("DRAFT")
   plannedDate        DateTime?
   shippedAt          DateTime?
+  // Кто провёл отгрузку. Пара с shippedAt: ставится в момент перехода в SHIPPED
+  // и снимается при возврате в черновик. updatedById для этого не годится — его
+  // перетирает любая последующая правка документа.
+  shippedById        String?
+  shippedBy          User?    @relation("ShipmentShippedBy", fields: [shippedById], references: [id], onDelete: SetNull)
   deliveryAddress    String?
   carrier            String?
   trackingNumber     String?

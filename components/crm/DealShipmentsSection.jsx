@@ -45,6 +45,12 @@ function fmtDateTime(d) {
     return new Date(d).toLocaleString("ru-RU")
 }
 
+// Подпись «кто отгрузил» — рядом с фактической датой отгрузки.
+function userName(u) {
+    if (!u) return ""
+    return `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || u.email || ""
+}
+
 function contactName(c) {
     if (!c) return ""
     const fn = `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim()
@@ -822,6 +828,8 @@ function ShipmentRow({ shipment, dealItems, readOnly, onEdit, onShip, onReopen, 
     const shipped = shipment.status === "SHIPPED"
     const itemsById = new Map(dealItems.map(di => [di.id, di]))
     const wv = calculateShipmentWeightVolume(shipment)
+    // У документов, проведённых до появления поля, автора нет — остаётся дата.
+    const shippedBy = userName(shipment.shippedBy)
     // Цветная полоса слева — статус отгрузки читается по столбику карточек, не
     // перекрывая текст. Отгруженная поверх «зашрихована» серым: серый штрих читается
     // как «закрыто / неактивно» (зелёный выглядел просто фоном). Кнопки и блок
@@ -898,7 +906,16 @@ function ShipmentRow({ shipment, dealItems, readOnly, onEdit, onShip, onReopen, 
                 <Meta
                     label='Отгружена'
                     value={
-                        shipment.shippedAt ? fmtDateTime(shipment.shippedAt) : "—"
+                        shipment.shippedAt ? (
+                            <>
+                                {fmtDateTime(shipment.shippedAt)}
+                                {shippedBy && (
+                                    <span className='text-neutral-500'> · {shippedBy}</span>
+                                )}
+                            </>
+                        ) : (
+                            "—"
+                        )
                     }
                 />
                 <Meta label='Перевозчик' value={shipment.carrier || "—"} />

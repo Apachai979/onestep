@@ -16,6 +16,7 @@ export async function GET() {
             telegram: true,
             role: true,
             status: true,
+            lastSeenAt: true,
             createdAt: true,
         },
         orderBy: [{ status: "asc" }, { lastName: "asc" }, { firstName: "asc" }],

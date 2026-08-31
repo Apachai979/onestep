@@ -26,6 +26,10 @@ model User {
   // JSON-строка с личными настройками (каналы уведомлений и т.п.).
   // SQLite не умеет Json, поэтому храним текстом.
   prefs        String?
+  // Последнее обращение к CRM. Пишется пингом из requireCrmSession/requireAdmin
+  // (не чаще раза в 5 минут), а не по факту ввода пароля: сессия на JWT живёт
+  // долго, и «последний вход» у активно работающего сотрудника показывал бы месяц назад.
+  lastSeenAt   DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

@@ -5,6 +5,13 @@ import { useEffect, useMemo, useState } from "react"
 import { LuUsers } from "react-icons/lu"
 import { USER_ROLE_LABELS, USER_STATUS_LABELS } from "@/lib/crm/invite"
 import {
+    crmToday,
+    crmYmd,
+    daysBetweenYmd,
+    formatCrmDateTime,
+    formatCrmTime,
+} from "@/lib/crm/datetime"
+import {
     Badge,
     CardListSkeleton,
     CardRow,
@@ -35,6 +42,27 @@ function safeJson(text) {
 function fmtDate(d) {
     if (!d) return "—"
     return DATE_FMT.format(new Date(d))
+}
+
+// «Был в CRM»: отметку ставит любое обращение к системе, а не ввод пароля —
+// сессия живёт долго, и дата логина у работающего сотрудника была бы месячной.
+function fmtLastSeen(d) {
+    if (!d) return "не заходил"
+    const diff = daysBetweenYmd(crmYmd(d), crmToday())
+    if (diff === 0) return `сегодня, ${formatCrmTime(d)}`
+    if (diff === 1) return `вчера, ${formatCrmTime(d)}`
+    return fmtDate(d)
+}
+
+function LastSeen({ value }) {
+    return (
+        <span
+            title={value ? formatCrmDateTime(value) : ""}
+            className={`whitespace-nowrap ${value ? "text-neutral-600" : "text-neutral-400"}`}
+        >
+            {fmtLastSeen(value)}
+        </span>
+    )
 }
 
 function RoleBadge({ role }) {
@@ -137,6 +165,14 @@ export default function AdminUsersTable({ currentUserId }) {
                 render: u => <StatusBadge status={u.status} />,
             },
             {
+                key: "lastSeenAt",
+                header: "Был в CRM",
+                sortable: true,
+                // Ни разу не заходившие уходят в конец при сортировке по убыванию.
+                sortValue: u => (u.lastSeenAt ? new Date(u.lastSeenAt).getTime() : 0),
+                render: u => <LastSeen value={u.lastSeenAt} />,
+            },
+            {
                 key: "createdAt",
                 header: "Добавлен",
                 sortable: true,
@@ -204,6 +240,9 @@ export default function AdminUsersTable({ currentUserId }) {
                             </CardRow>
                             <CardRow label='Телеграм'>{u.telegram || "—"}</CardRow>
                             <CardRow label='Должность'>{u.position || "—"}</CardRow>
+                            <CardRow label='Был в CRM'>
+                                <LastSeen value={u.lastSeenAt} />
+                            </CardRow>
                             <CardRow label='Добавлен'>{fmtDate(u.createdAt)}</CardRow>
                         </div>
                     </MobileCard>

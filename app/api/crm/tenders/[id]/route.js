@@ -139,14 +139,14 @@ export async function PATCH(request, { params }) {
         })
 
         await logChange(tx, {
-            entityType: "DEAL",
+            entityType: "Deal",
             entityId: created.id,
             action: "CREATE",
             payload: {
                 source: "Tenderland",
                 tenderlandId: tender.tenderlandId,
                 clientSource: resolved.source,
-                projectId: sourceProjectId,
+                sourceProjectId,
             },
             authorId: session.user.id,
         })

@@ -1,7 +1,13 @@
 "use client"
 import { useCallback, useEffect, useState } from "react"
-import { CHANGE_ACTION_LABELS, ENTITY_LABELS, fieldLabel } from "@/lib/crm/change-log"
-import { crmHm, formatCrmDate, formatCrmDateTime } from "@/lib/crm/datetime"
+import {
+    CHANGE_ACTION_LABELS,
+    ENTITY_LABELS,
+    fieldLabel,
+    formatChangeValue,
+    isDiffValue,
+} from "@/lib/crm/change-log"
+import { formatCrmDateTime } from "@/lib/crm/datetime"
 
 function safeJson(text) {
     try {
@@ -18,25 +24,6 @@ function fullName(u) {
 
 function fmtDate(d) {
     return formatCrmDateTime(d)
-}
-
-const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/
-
-function formatValue(v) {
-    if (v === null || v === undefined) return "—"
-    // Флаги (isAuction, isGroupPrimary) хранятся булевыми — «true» в ленте
-    // менеджеру ничего не говорит.
-    if (typeof v === "boolean") return v ? "Да" : "Нет"
-    if (Array.isArray(v)) return v.join(", ") || "—"
-    // Даты лежат в истории ISO-строками. Показываем их по-московски, а границы
-    // суток (задача «на весь день») — просто датой, без 00:00 и 23:59.
-    if (typeof v === "string" && ISO_RE.test(v)) {
-        const hm = crmHm(v)
-        return hm === "00:00" || hm === "23:59" ? formatCrmDate(v) : formatCrmDateTime(v)
-    }
-    const s = String(v)
-    if (s.length > 80) return s.slice(0, 80) + "…"
-    return s
 }
 
 const ACTION_COLOR = {
@@ -64,10 +51,6 @@ const FILTERS = [
 
 function categoryOf(it) {
     return FILTER_OF[it.entityType] || "card"
-}
-
-function isDiffValue(v) {
-    return v && typeof v === "object" && ("from" in v || "to" in v)
 }
 
 // Компактная лента истории изменений. Встраивается вкладкой в «Активность»:
@@ -172,11 +155,11 @@ export default function ChangeHistorySection({
                                                         {fieldLabel(it.entityType, field)}:
                                                     </span>{" "}
                                                     <span className='text-neutral-400 line-through'>
-                                                        {formatValue(val.from)}
+                                                        {formatChangeValue(val.from)}
                                                     </span>{" "}
                                                     <span className='text-neutral-400'>→</span>{" "}
                                                     <span className='font-medium text-neutral-800'>
-                                                        {formatValue(val.to)}
+                                                        {formatChangeValue(val.to)}
                                                     </span>
                                                 </li>
                                             )
@@ -197,7 +180,7 @@ export default function ChangeHistorySection({
                                                     {fieldLabel(it.entityType, field)}:
                                                 </span>{" "}
                                                 <span className='font-medium text-neutral-800'>
-                                                    {formatValue(val)}
+                                                    {formatChangeValue(val)}
                                                 </span>
                                             </li>
                                         )

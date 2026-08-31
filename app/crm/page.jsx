@@ -30,7 +30,8 @@ import {
 import { crmToday } from "@/lib/crm/datetime"
 import { SHIPMENT_STATUS_LABELS } from "@/lib/crm/shipment"
 import { formatMoney } from "@/lib/crm/format"
-import { CHANGE_ACTION_LABELS, ENTITY_LABELS } from "@/lib/crm/change-log"
+import { changeActionText, changeTarget, CHANGE_ACTION_DOTS } from "@/lib/crm/change-log"
+import { resolveChangeTargets } from "@/lib/crm/change-log-data"
 import DashboardSearch from "@/components/crm/DashboardSearch"
 import LocalDateTime from "@/components/crm/LocalDateTime"
 import { Button, Card, StatCard, EmptyState } from "@/components/crm/ui"
@@ -149,52 +150,9 @@ export default async function CrmHome() {
             }),
         ])
 
-    // --- Resolve entity names for activity feed (batched) ---
-    const dealIds = new Set()
-    const projectIds = new Set()
-    const counterpartyIds = new Set()
-    for (const c of recentChanges) {
-        // Дочерние записи (задачи, заметки, файлы, позиции) хранят родителя
-        // прямо в parentEntityType/parentEntityId — берём его имя для ленты.
-        const hasParent = !!(c.parentEntityType && c.parentEntityId)
-        const targetEntity = hasParent ? c.parentEntityType : c.entityType
-        const targetId = hasParent ? c.parentEntityId : c.entityId
-        if (!targetEntity || !targetId) continue
-        if (targetEntity === "Deal") dealIds.add(targetId)
-        else if (targetEntity === "Project") projectIds.add(targetId)
-        else if (targetEntity === "Counterparty") counterpartyIds.add(targetId)
-    }
-    const [dealMap, projectMap, counterpartyMap] = await Promise.all([
-        dealIds.size
-            ? prisma.deal
-                  .findMany({
-                      where: { id: { in: Array.from(dealIds) } },
-                      select: {
-                          id: true,
-                          title: true,
-                          counterparty: { select: { name: true } },
-                          sourceProject: { select: { internalName: true } },
-                      },
-                  })
-                  .then(arr => new Map(arr.map(d => [d.id, d])))
-            : new Map(),
-        projectIds.size
-            ? prisma.project
-                  .findMany({
-                      where: { id: { in: Array.from(projectIds) } },
-                      select: { id: true, internalName: true },
-                  })
-                  .then(arr => new Map(arr.map(p => [p.id, p])))
-            : new Map(),
-        counterpartyIds.size
-            ? prisma.counterparty
-                  .findMany({
-                      where: { id: { in: Array.from(counterpartyIds) } },
-                      select: { id: true, name: true },
-                  })
-                  .then(arr => new Map(arr.map(c => [c.id, c])))
-            : new Map(),
-    ])
+    // Имена карточек для ленты активности — одним батчем на всю пачку записей
+    // (та же выборка, что у отчёта «Активность в CRM»).
+    const changeNames = await resolveChangeTargets(recentChanges)
 
     // --- Derived data ---
     const overdueTasks = myOpenTasks.filter(t => isTaskOverdue(t, now))
@@ -431,11 +389,13 @@ export default async function CrmHome() {
                     ) : (
                         <ul className='space-y-1.5'>
                             {recentChanges.map(c => {
-                                const entry = describeChange(c, {
-                                    dealMap,
-                                    projectMap,
-                                    counterpartyMap,
-                                })
+                                const target = changeTarget(c, changeNames)
+                                const entry = {
+                                    targetText: target.name || target.entityLabel,
+                                    targetHref: target.href,
+                                    actionText: changeActionText(c, target),
+                                    dotClass: CHANGE_ACTION_DOTS[c.action] || "bg-neutral-300",
+                                }
                                 return (
                                     <li
                                         key={c.id}
@@ -479,61 +439,6 @@ export default async function CrmHome() {
             </div>
         </div>
     )
-}
-
-// === helpers ===
-
-// Предлог для связки «дочерняя сущность → карточка-родитель»:
-// «задача по проекту», но «позиция в сделке».
-const PARENT_PREPOSITION = { Task: "по", Email: "по" }
-
-function describeChange(c, { dealMap, projectMap, counterpartyMap }) {
-    const isChild = !!(c.parentEntityType && c.parentEntityId)
-    const parent = isChild ? c.parentEntityType : c.entityType
-    const parentId = isChild ? c.parentEntityId : c.entityId
-    const entityLabel = ENTITY_LABELS[c.entityType] || c.entityType
-    const action = CHANGE_ACTION_LABELS[c.action] || c.action
-
-    let targetText = entityLabel
-    let targetHref = null
-
-    if (parent === "Deal" && parentId) {
-        const d = dealMap.get(parentId)
-        if (d) {
-            targetText = dealDisplayTitle(d, d.counterparty?.name)
-            targetHref = `/crm/deals/${parentId}`
-        }
-    } else if (parent === "Project" && parentId) {
-        const p = projectMap.get(parentId)
-        if (p) {
-            targetText = p.internalName
-            targetHref = `/crm/projects/${parentId}`
-        }
-    } else if (parent === "Counterparty" && parentId) {
-        const cp = counterpartyMap.get(parentId)
-        if (cp) {
-            targetText = cp.name
-            targetHref = `/crm/counterparties/${parentId}`
-        }
-    }
-
-    // Если имя родителя не нашли (карточка удалена) — прежний вид «создано Задача».
-    const parentResolved = targetHref !== null
-    const actionText =
-        isChild && parentResolved
-            ? `${action.toLowerCase()} ${entityLabel.toLowerCase()} ${
-                  PARENT_PREPOSITION[c.entityType] || "в"
-              }`
-            : `${action.toLowerCase()}`
-
-    const dotClass =
-        c.action === "CREATE"
-            ? "bg-green-500"
-            : c.action === "DELETE"
-              ? "bg-red-500"
-              : "bg-brand_main"
-
-    return { targetText, targetHref, actionText, dotClass }
 }
 
 // === presentational components ===

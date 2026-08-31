@@ -1,5 +1,5 @@
 import { requireCrmSession } from "@/lib/crm/session"
-import { refreshTenders, syncTenders } from "@/lib/crm/tenders"
+import { autoSkipExpiredTenders, refreshTenders, syncTenders } from "@/lib/crm/tenders"
 import { TENDERLAND_ERROR_STATUS } from "@/lib/crm/tenderland"
 
 /**
@@ -25,7 +25,12 @@ export async function POST(request) {
         // добирать — платно — то, что уже приехало в этом же прогоне.
         const synced = await syncTenders()
         const refreshed = await refreshTenders()
-        return Response.json({ ok: true, ...synced, refreshed })
+        // Разбор чистится здесь же, а не отдельным заданием: сети эта операция
+        // не требует, а прогон и так ежедневный. Идёт последним — закупка,
+        // которой только что продлили приём заявок, уже не считается
+        // просроченной.
+        const expired = await autoSkipExpiredTenders()
+        return Response.json({ ok: true, ...synced, refreshed, expired })
     } catch (err) {
         return Response.json(
             { ok: false, error: err.message, code: err.code },

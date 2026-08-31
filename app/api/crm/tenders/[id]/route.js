@@ -47,7 +47,16 @@ export async function PATCH(request, { params }) {
     if (decision === "NEW") {
         const updated = await prisma.tender.update({
             where: { id: tender.id },
-            data: { decision: "NEW", skipReason: null, decisionAt: null, decisionById: null },
+            // Отметку о решении не стираем, а переставляем на возврат: по
+            // непустому decisionAt автоувод просроченных (autoSkipExpiredTenders)
+            // понимает, что закупку вернули в разбор осознанно, и той же ночью
+            // её обратно в «Мимо» не отправит.
+            data: {
+                decision: "NEW",
+                skipReason: null,
+                decisionAt: new Date(),
+                decisionById: session.user.id,
+            },
         })
         return Response.json({ ok: true, tender: updated })
     }

@@ -1,6 +1,7 @@
 import prisma from "@/lib/client"
 import { requireCrmSession } from "@/lib/crm/session"
 import { getOwnCompanies } from "@/lib/crm/own-company"
+import { crmDayStart, crmToday } from "@/lib/crm/datetime"
 import { TENDER_DECISIONS } from "@/lib/crm/tender-map"
 import { importTenderByNumber } from "@/lib/crm/tenders"
 import { TENDERLAND_ERROR_STATUS } from "@/lib/crm/tenderland"
@@ -45,6 +46,14 @@ export async function GET(request) {
     const decision = searchParams.get("decision") || "NEW"
     const search = (searchParams.get("search") || "").trim()
     const take = Math.min(Number(searchParams.get("take")) || 100, 300)
+    // Просроченные — это те же неразобранные, поэтому отдельным решением
+    // (decision) они быть не могут: признак вычисляется по дате.
+    const expired = searchParams.get("expired") === "1"
+
+    // Граница просроченности — начало сегодняшних суток в зоне CRM, а не
+    // текущий момент: закупка с приёмом заявок до сегодня в списке подписана
+    // «сегодня» и заявку по ней ещё подают. Просрочено — вчера и раньше.
+    const expiredBefore = crmDayStart(crmToday())
 
     const where = {}
     if (decision !== "ALL") {
@@ -53,33 +62,55 @@ export async function GET(request) {
         }
         where.decision = decision
     }
+    // Условия складываем в AND: и отбор по сроку, и поиск разворачиваются в
+    // свои OR, а один where.OR на двоих затёр бы одно другим.
+    const and = []
+    // Разбор делится по сроку: работа — на «Не разобраны», прозеванное — на
+    // своей вкладке. Закупка без срока остаётся в работе: отсчитывать не от чего.
+    if (decision === "NEW") {
+        and.push(
+            expired
+                ? { endDate: { lt: expiredBefore } }
+                : { OR: [{ endDate: null }, { endDate: { gte: expiredBefore } }] },
+        )
+    }
     if (search) {
         // SQLite в Prisma не поддерживает mode: "insensitive", поэтому ищем как есть:
         // номер закупки и ИНН — цифры, а название чаще копируют из карточки.
-        where.OR = [
-            { name: { contains: search } },
-            { regNumber: { contains: search } },
-            { customerName: { contains: search } },
-            // Аббревиатуру («ГБУЗ ВОДКБ») в полном наименовании не найти —
-            // там оно расписано словами.
-            { customerShortName: { contains: search } },
-            { customerInn: { contains: search } },
-            // Идентификатор Тендерлэнда — им наводится список после ручного
-            // импорта закупки, у которой номер извещения не приехал.
-            { tenderlandId: { contains: search } },
-        ]
+        and.push({
+            OR: [
+                { name: { contains: search } },
+                { regNumber: { contains: search } },
+                { customerName: { contains: search } },
+                // Аббревиатуру («ГБУЗ ВОДКБ») в полном наименовании не найти —
+                // там оно расписано словами.
+                { customerShortName: { contains: search } },
+                { customerInn: { contains: search } },
+                // Идентификатор Тендерлэнда — им наводится список после ручного
+                // импорта закупки, у которой номер извещения не приехал.
+                { tenderlandId: { contains: search } },
+            ],
+        })
     }
+    if (and.length) where.AND = and
 
-    const [items, counts, own] = await Promise.all([
+    const expiredWhere = { decision: "NEW", endDate: { lt: expiredBefore } }
+
+    const [items, counts, expiredCount, own] = await Promise.all([
         prisma.tender.findMany({
             where,
             select: TENDER_SELECT,
             // Первым делом то, что горит: ближайший срок подачи заявок сверху,
-            // закупки без срока — в конец.
-            orderBy: [{ endDate: "asc" }, { importedAt: "desc" }],
+            // закупки без срока — в конец. На вкладке просроченных порядок
+            // обратный: сверху те, что истекли только что, — по ним ещё может
+            // быть подана заявка, которую забыли отметить.
+            orderBy: expired
+                ? [{ endDate: "desc" }, { importedAt: "desc" }]
+                : [{ endDate: "asc" }, { importedAt: "desc" }],
             take,
         }),
         prisma.tender.groupBy({ by: ["decision"], _count: { _all: true } }),
+        prisma.tender.count({ where: expiredWhere }),
         getOwnCompanies(),
     ])
 
@@ -89,12 +120,18 @@ export async function GET(request) {
     // справочник «Наши компании» на клиент.
     const ownInns = new Set(own.items.map(i => i.inn).filter(Boolean))
 
+    // Счётчик вкладки должен совпадать с тем, что она показывает: просроченные
+    // из «Не разобраны» вычтены и посчитаны отдельной строкой.
+    const byDecision = Object.fromEntries(counts.map(c => [c.decision, c._count._all]))
+    byDecision.NEW = Math.max((byDecision.NEW || 0) - expiredCount, 0)
+    byDecision.EXPIRED = expiredCount
+
     return Response.json({
         items: items.map(t => ({
             ...t,
             winnerIsOwn: Boolean(t.winnerInn && ownInns.has(t.winnerInn)),
         })),
-        counts: Object.fromEntries(counts.map(c => [c.decision, c._count._all])),
+        counts: byDecision,
     })
 }
 

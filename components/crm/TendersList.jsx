@@ -25,8 +25,13 @@ import {
     useToast,
 } from "@/components/crm/ui"
 
+// «Просрочены» — это те же неразобранные закупки, у которых приём заявок уже
+// закрыт: решением менеджера (decision) они не отличаются, отличаются датой.
+// Отдельной вкладкой они не мозолят глаза в работе, но и не пропадают: заявку
+// могли подать, а отметить в CRM забыть.
 const TABS = [
     { key: "NEW", label: "Не разобраны" },
+    { key: "EXPIRED", label: "Просрочены" },
     { key: "TAKEN", label: "Участвуем" },
     { key: "SKIPPED", label: "Мимо" },
     { key: "ALL", label: "Все" },
@@ -46,6 +51,32 @@ function deadlineTone(endDate) {
     if (days === 1) return { label: `${date} · завтра`, tone: "text-red-600" }
     if (days <= 3) return { label: `${date} · ${days} дн.`, tone: "text-amber-600" }
     return { label: date, tone: "text-neutral-700" }
+}
+
+const EMPTY_TITLES = {
+    NEW: "Новых закупок нет",
+    EXPIRED: "Всё разобрано вовремя",
+}
+
+const EMPTY_HINTS = {
+    NEW: "Нажмите «Обновить закупки» — CRM заберёт свежие из автопоиска «CRM: воронка закупок».",
+    EXPIRED: "Здесь оказываются закупки, у которых приём заявок закрылся, пока их не разобрали.",
+}
+
+/**
+ * Приём заявок закрыт — закупка ушла на вкладку «Просрочены». Граница та же,
+ * что на сервере: вчера и раньше (у сегодняшней закупки заявку ещё принимают).
+ */
+function isExpiredTender(tender) {
+    if (!tender?.endDate) return false
+    const days = daysBetweenYmd(crmYmd(), crmYmd(new Date(tender.endDate)))
+    return days !== null && days < 0
+}
+
+/** На какой вкладке лежит закупка — нужно, чтобы навестись на неё после импорта. */
+function tenderTab(tender) {
+    if (tender.decision !== "NEW") return tender.decision || "NEW"
+    return isExpiredTender(tender) ? "EXPIRED" : "NEW"
 }
 
 /**
@@ -96,7 +127,9 @@ export default function TendersList() {
 
     useEffect(() => {
         const controller = new AbortController()
-        const params = new URLSearchParams({ decision: tab })
+        // Просроченные — те же «не разобраны», отобранные по сроку.
+        const params = new URLSearchParams({ decision: tab === "EXPIRED" ? "NEW" : tab })
+        if (tab === "EXPIRED") params.set("expired", "1")
         if (qApplied) params.set("search", qApplied)
 
         setError("")
@@ -136,6 +169,9 @@ export default function TendersList() {
             if (changed) parts.push(`изменилось: ${changed}`)
             if (dealsFixed) parts.push(`сделок поправлено: ${dealsFixed}`)
             if (!changed) parts.push(`сверено: ${data.total || 0}`)
+            // Разбор чистится тем же прогоном: закупки, у которых приём заявок
+            // закрылся давно, уходят в «Мимо» сами.
+            if (data.expired) parts.push(`закрыто по сроку: ${data.expired}`)
             // Автопоиск отфильтрован по открытому приёму заявок и в кап
             // выгрузки укладываться обязан. Не уложился — фильтр в кабинете
             // сняли или расширили, и часть закупок осталась незабранной.
@@ -167,7 +203,9 @@ export default function TendersList() {
             toast.success("Закупка добавлена в разбор", { title: "Закупка найдена" })
         }
 
-        setTab(tender.decision || "NEW")
+        // Закупку по номеру заводят и задним числом — тогда её вкладка
+        // «Просрочены», а не «Не разобраны».
+        setTab(tenderTab(tender))
         const number = tender.regNumber || tender.tenderlandId || ""
         setQ(number)
         setQApplied(number)
@@ -177,7 +215,9 @@ export default function TendersList() {
     const decide = useCallback(async function decide(tender, decision) {
         if (decision === "SKIPPED") {
             const ok = await confirm({
-                title: "Закупка не наша?",
+                // У просроченной закупки вопрос другой: не «наша ли она», а
+                // «точно ли мимо неё прошли» — заявку подать уже нельзя.
+                title: isExpiredTender(tender) ? "Закупка прошла мимо?" : "Закупка не наша?",
                 description: `«${tender.name.slice(0, 120)}» уйдёт в отказы. Вернуть её в разбор можно на вкладке «Мимо».`,
                 confirmText: "Мимо",
             })
@@ -281,8 +321,13 @@ export default function TendersList() {
                                 ) : null}
                             </div>
                         ) : null}
-                        {t.winnerName || t.refreshedAt ? (
+                        {t.winnerName || t.refreshedAt || t.skipReason ? (
                             <div className='flex flex-wrap items-center gap-2 pt-0.5 text-xs'>
+                                {/* Причина отказа: по ней видно, закрыл закупку
+                                    коллега или автоматика по истечении срока. */}
+                                {t.skipReason ? (
+                                    <span className='text-neutral-500'>{t.skipReason}</span>
+                                ) : null}
                                 {t.winnerName ? (
                                     <Badge tone={t.winnerIsOwn ? "success" : "neutral"}>
                                         {t.winnerIsOwn
@@ -458,16 +503,8 @@ export default function TendersList() {
             ) : items.length === 0 ? (
                 <EmptyState
                     icon={LuGavel}
-                    title={
-                        tab === "NEW"
-                            ? "Новых закупок нет"
-                            : `Нет закупок в разделе «${TENDER_DECISION_LABELS[tab] || "Все"}»`
-                    }
-                    hint={
-                        tab === "NEW"
-                            ? "Нажмите «Обновить закупки» — CRM заберёт свежие из автопоиска «CRM: воронка закупок»."
-                            : undefined
-                    }
+                    title={EMPTY_TITLES[tab] || `Нет закупок в разделе «${TENDER_DECISION_LABELS[tab] || "Все"}»`}
+                    hint={EMPTY_HINTS[tab]}
                 />
             ) : (
                 <>
@@ -497,6 +534,9 @@ export default function TendersList() {
                                         <CardRow label='Победитель'>
                                             {t.winnerIsOwn ? "наше юрлицо" : t.winnerName}
                                         </CardRow>
+                                    ) : null}
+                                    {t.skipReason ? (
+                                        <CardRow label='Причина отказа'>{t.skipReason}</CardRow>
                                     ) : null}
                                     <CardRow label='Подробности'>
                                         <span className='flex flex-wrap items-center gap-x-3 gap-y-1'>

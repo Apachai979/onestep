@@ -341,8 +341,11 @@ model Deal {
   items          DealItem[]
   tasks          Task[]
   shipments      Shipment[]
-  // Закупка из Tenderland, из которой завели эту сделку (если завели).
-  tender         Tender?
+  // Закупки из Tenderland, заведённые в эту сделку. Их может быть несколько:
+  // по одному предмету заказчик сначала объявляет запрос цен, потом
+  // электронный аукцион — это одна и та же продажа, и вторую закупку менеджер
+  // привязывает к уже существующей сделке, а не заводит дубль.
+  tenders        Tender[]
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -707,7 +710,9 @@ model Tender {
   decisionBy   User?     @relation("TenderDecidedBy", fields: [decisionById], references: [id], onDelete: SetNull)
   skipReason   String?
 
-  dealId       String?   @unique
+  // Сделка, в которую взяли закупку. Не уникальна: несколько закупок по одному
+  // предмету (запрос цен → электронный аукцион) ведут в одну сделку.
+  dealId       String?
   deal         Deal?     @relation(fields: [dealId], references: [id], onDelete: SetNull)
 
   importedAt   DateTime  @default(now())
@@ -716,5 +721,6 @@ model Tender {
   @@index([decision])
   @@index([endDate])
   @@index([customerInn])
+  @@index([dealId])
   @@map("tenders")
 }

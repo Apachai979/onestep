@@ -7,6 +7,7 @@ import prisma from "@/lib/client"
 import { DEAL_LOSS_REASON_LABELS, dealOwnTitle } from "@/lib/crm/deal"
 import { canDeleteDeal, dealItemShipmentUsage, isDealLocked } from "@/lib/crm/access"
 import { formatMoney, formatPercent } from "@/lib/crm/format"
+import { tenderlandCardUrl } from "@/lib/crm/tender-map"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import DealItemsSection from "@/components/crm/DealItemsSection"
 import DealPayerCard from "@/components/crm/DealPayerCard"
@@ -53,6 +54,19 @@ export default async function DealPage({ params }) {
             },
             auctionCustomer: { select: { id: true, name: true, region: true } },
             auctionCustomerContact: true,
+            // Закупки из Тендерлэнда, заведённые в эту сделку. Обычно одна, но
+            // по одному предмету заказчик сначала объявляет запрос цен, потом
+            // электронный аукцион — вторую менеджер привязывает сюда же из
+            // /crm/tenders, и в карточке должно быть видно обе.
+            tenders: {
+                select: {
+                    id: true,
+                    tenderlandId: true,
+                    regNumber: true,
+                    typeName: true,
+                },
+                orderBy: { endDate: "asc" },
+            },
             // Нужны, чтобы понять, какие позиции уже ушли в проведённые отгрузки.
             shipments: {
                 select: {
@@ -303,6 +317,32 @@ export default async function DealPage({ params }) {
                                 <ParamGroup title='Закупка' columns='sm:grid-cols-3 lg:grid-cols-1'>
                                     <Row label='НМЦК' value={formatMoney(item.nmck)} />
                                     <Row label='Номер закупки' value={item.purchaseNumber || "—"} />
+                                    {/* Закупок бывает несколько: запрос цен и
+                                        электронный аукцион по одному предмету —
+                                        это одна продажа и одна сделка. */}
+                                    {item.tenders.length ? (
+                                        <Row label='Закупки из Тендерлэнда'>
+                                            <span className='space-y-0.5'>
+                                                {item.tenders.map(t => (
+                                                    <a
+                                                        key={t.id}
+                                                        href={tenderlandCardUrl(t.tenderlandId)}
+                                                        target='_blank'
+                                                        rel='noopener noreferrer'
+                                                        className='flex items-center gap-1 text-brand_main hover:underline'
+                                                    >
+                                                        {t.regNumber || t.tenderlandId}
+                                                        {t.typeName ? (
+                                                            <span className='text-neutral-400'>
+                                                                · {t.typeName}
+                                                            </span>
+                                                        ) : null}
+                                                        <LuExternalLink className='h-3.5 w-3.5' />
+                                                    </a>
+                                                ))}
+                                            </span>
+                                        </Row>
+                                    ) : null}
                                     <Row label='Ссылка на аукцион'>
                                         {item.auctionUrl ? (
                                             <a

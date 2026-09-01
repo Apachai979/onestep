@@ -85,6 +85,21 @@ export async function GET(_request, { params }) {
             sourceProject: {
                 select: { id: true, internalName: true, externalAuctionId: true },
             },
+            // Закупки, заведённые в эту сделку. Их может быть несколько: по
+            // одному предмету заказчик сначала объявляет запрос цен, потом
+            // электронный аукцион — вторую менеджер привязывает к этой же
+            // сделке из /crm/tenders.
+            tenders: {
+                select: {
+                    id: true,
+                    tenderlandId: true,
+                    regNumber: true,
+                    typeName: true,
+                    tenderStatus: true,
+                    endDate: true,
+                },
+                orderBy: { endDate: "asc" },
+            },
         },
     })
     if (!item) return Response.json({ error: "Не найдено" }, { status: 404 })

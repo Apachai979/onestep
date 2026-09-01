@@ -5,6 +5,7 @@ import { crmDayStart, crmToday } from "@/lib/crm/datetime"
 import { TENDER_DECISIONS } from "@/lib/crm/tender-map"
 import { importTenderByNumber } from "@/lib/crm/tenders"
 import { TENDERLAND_ERROR_STATUS } from "@/lib/crm/tenderland"
+import { dealsByCustomerInn } from "@/lib/crm/tender-duplicates"
 
 const TENDER_SELECT = {
     id: true,
@@ -120,6 +121,16 @@ export async function GET(request) {
     // справочник «Наши компании» на клиент.
     const ownInns = new Set(own.items.map(i => i.inn).filter(Boolean))
 
+    // «По этому заказчику уже есть открытая сделка-аукцион» — предупреждение до
+    // нажатия «Участвуем», а не диалог после него: чаще всего это сделка,
+    // которую коллега завёл после разговора с врачом, и закупку надо привязать
+    // к ней. Считаем пачкой на страницу, только для неразобранных: у взятых и
+    // отброшенных решение уже принято.
+    const openDeals =
+        decision === "NEW"
+            ? await dealsByCustomerInn(items.map(t => t.customerInn))
+            : new Map()
+
     // Счётчик вкладки должен совпадать с тем, что она показывает: просроченные
     // из «Не разобраны» вычтены и посчитаны отдельной строкой.
     const byDecision = Object.fromEntries(counts.map(c => [c.decision, c._count._all]))
@@ -130,6 +141,7 @@ export async function GET(request) {
         items: items.map(t => ({
             ...t,
             winnerIsOwn: Boolean(t.winnerInn && ownInns.has(t.winnerInn)),
+            openDeal: (t.customerInn && openDeals.get(t.customerInn)) || null,
         })),
         counts: byDecision,
     })

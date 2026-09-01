@@ -4,17 +4,27 @@ import { logChange } from "@/lib/crm/change-log"
 import { ensureCustomerCounterparty, resolveDealClient } from "@/lib/crm/tenders"
 import { inheritedDealDiscount } from "@/lib/crm/discount"
 import { dealProjectPartiesError } from "@/lib/crm/access"
+import { findDealCandidates, linkTenderToDeal } from "@/lib/crm/tender-duplicates"
 
 /**
  * Решение менеджера по входящей закупке.
  *
  *   { decision: "SKIPPED", skipReason }  — закупка не наша, остаётся в истории
  *   { decision: "TAKEN", counterpartyId } — участвуем: заводим аукционную сделку
+ *   { decision: "TAKEN", dealId }         — участвуем: закупка идёт в уже
+ *                                           заведённую сделку
+ *   { decision: "TAKEN", force: true }    — новая сделка вопреки найденным дублям
  *   { decision: "NEW" }                   — вернуть в разбор
  *
  * counterpartyId — клиент, которому продаём. Если не передан, он выбирается по
  * правилу из resolveDealClient: есть проект по этому конечному потребителю —
  * клиентом становится дистрибьютор из проекта, нет проекта — наша организация.
+ *
+ * Перед созданием сделки ищем, не ведётся ли эта закупка уже: менеджер продаж
+ * заводит аукционную сделку после разговора с врачом, до публикации закупки, и
+ * без проверки в CRM появляется вторая сделка по той же продаже. Нашлись
+ * кандидаты — отвечаем 409 со списком, а привязать или всё-таки завести новую
+ * решает менеджер вторым запросом (dealId или force).
  */
 export async function PATCH(request, { params }) {
     const { session, response } = await requireCrmSession()
@@ -79,6 +89,80 @@ export async function PATCH(request, { params }) {
             { error: "В закупке нет ИНН заказчика — заведите сделку вручную" },
             { status: 400 },
         )
+    }
+
+    // Менеджер выбрал сделку в диалоге дублей — закупка едет в неё.
+    if (body?.dealId) {
+        const deal = await prisma.deal.findUnique({
+            where: { id: body.dealId },
+            select: {
+                id: true,
+                title: true,
+                isAuction: true,
+                purchaseNumber: true,
+                auctionUrl: true,
+                nmck: true,
+                bidsDeadlineAt: true,
+                auctionAt: true,
+                auctionCustomerId: true,
+            },
+        })
+        if (!deal) return Response.json({ error: "Сделка не найдена" }, { status: 400 })
+
+        const { filled } = await prisma.$transaction(tx =>
+            linkTenderToDeal(tx, {
+                tender,
+                deal,
+                auctionCustomerId,
+                userId: session.user.id,
+            }),
+        )
+
+        return Response.json({
+            ok: true,
+            dealId: deal.id,
+            linked: true,
+            dealTitle: deal.title,
+            // UI подписывает тост: менеджер должен видеть, что закупка
+            // дозаполнила в чужой сделке.
+            filled,
+        })
+    }
+
+    // Дубли ищем только когда менеджер ещё не решил: force означает «я видел
+    // список и всё равно завожу новую».
+    if (!body?.force) {
+        const candidates = await findDealCandidates(tender)
+        if (candidates.length) {
+            return Response.json(
+                {
+                    error: "Похоже, эта закупка уже в работе",
+                    candidates: candidates.map(({ deal, confidence, reasons }) => ({
+                        id: deal.id,
+                        title: deal.title,
+                        status: deal.status,
+                        isAuction: deal.isAuction,
+                        purchaseNumber: deal.purchaseNumber,
+                        nmck: deal.nmck,
+                        bidsDeadlineAt: deal.bidsDeadlineAt,
+                        auctionAt: deal.auctionAt,
+                        clientName: deal.counterparty?.name || null,
+                        customerName: deal.auctionCustomer?.name || null,
+                        managerName:
+                            [deal.manager?.lastName, deal.manager?.firstName]
+                                .filter(Boolean)
+                                .join(" ") || null,
+                        tenders: deal.tenders.map(t => ({
+                            regNumber: t.regNumber,
+                            typeName: t.typeName,
+                        })),
+                        confidence,
+                        reasons,
+                    })),
+                },
+                { status: 409 },
+            )
+        }
     }
 
     // Клиента можно задать явно (менеджер знает лучше), иначе выбираем по

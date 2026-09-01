@@ -10,6 +10,7 @@ import {
     tenderlandCardUrl,
 } from "@/lib/crm/tender-map"
 import TenderImportDialog from "@/components/crm/TenderImportDialog"
+import TenderDuplicateDialog from "@/components/crm/TenderDuplicateDialog"
 import {
     Badge,
     Button,
@@ -119,6 +120,9 @@ export default function TendersList() {
     const [importOpen, setImportOpen] = useState(false)
     const [busyId, setBusyId] = useState(null)
     const [refreshTick, setRefreshTick] = useState(0)
+    // Найденные сервером сделки, в которых эта закупка, похоже, уже ведётся:
+    // { tender, candidates }. Развилку разбирает TenderDuplicateDialog.
+    const [duplicates, setDuplicates] = useState(null)
 
     useEffect(() => {
         const t = setTimeout(() => setQApplied(q.trim()), 300)
@@ -212,7 +216,14 @@ export default function TendersList() {
         setRefreshTick(x => x + 1)
     }
 
-    const decide = useCallback(async function decide(tender, decision) {
+    /**
+     * Решение по закупке. Для «Участвуем» есть две добавки:
+     *   { dealId } — закупка едет в уже существующую сделку;
+     *   { force }  — новая сделка вопреки найденным дублям.
+     * Без них сервер сначала проверяет, не ведётся ли эта закупка уже, и на
+     * найденных кандидатов отвечает 409 — тогда открывается диалог развилки.
+     */
+    const decide = useCallback(async function decide(tender, decision, options = {}) {
         if (decision === "SKIPPED") {
             const ok = await confirm({
                 // У просроченной закупки вопрос другой: не «наша ли она», а
@@ -229,14 +240,34 @@ export default function TendersList() {
             const res = await fetch(`/api/crm/tenders/${tender.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ decision }),
+                body: JSON.stringify({ decision, ...options }),
             })
             const data = await res.json().catch(() => ({}))
             if (!res.ok) {
+                // Сделки, в которых эта закупка, возможно, уже ведётся. Ошибкой
+                // это не показываем: менеджеру не запрещают завести новую, у
+                // него спрашивают, не та ли это самая продажа.
+                if (res.status === 409 && data?.candidates?.length) {
+                    setDuplicates({ tender, candidates: data.candidates })
+                    return
+                }
                 toast.error(data?.error || "Не удалось сохранить решение")
                 return
             }
             if (decision === "TAKEN" && data.dealId) {
+                setDuplicates(null)
+                if (data.linked) {
+                    // Что именно закупка дозаполнила в чужой сделке — менеджер
+                    // должен увидеть сразу: пустые поля там были не случайно.
+                    toast.success(
+                        data.filled?.length
+                            ? `Заполнено: ${data.filled.join(", ")}`
+                            : "Данные сделки уже заполнены — ничего не меняли",
+                        { title: `Закупка привязана к сделке «${data.dealTitle}»` },
+                    )
+                    router.push(`/crm/deals/${data.dealId}`)
+                    return
+                }
                 // Клиента подставляет сервер, и менеджер должен увидеть, кого именно:
                 // дистрибьютора из проекта по этому ЛПУ или нашу организацию.
                 const CLIENT_SOURCE_HINTS = {
@@ -369,6 +400,17 @@ export default function TendersList() {
                         {t.customerInn ? (
                             <div className='text-xs text-neutral-400'>ИНН {t.customerInn}</div>
                         ) : null}
+                        {/* По этому заказчику уже ведётся аукционная сделка —
+                            чаще всего её завёл коллега после разговора с врачом,
+                            и закупку надо привязать к ней, а не заводить вторую.
+                            Предупреждение видно до нажатия «Участвуем». */}
+                        {t.openDeal ? (
+                            <div className='pt-1 text-xs text-amber-600'>
+                                уже есть сделка
+                                {t.openDeal.count > 1 ? ` (${t.openDeal.count})` : ""}
+                                {t.openDeal.managerName ? ` · ${t.openDeal.managerName}` : ""}
+                            </div>
+                        ) : null}
                     </div>
                 ),
                 hideable: true,
@@ -455,6 +497,16 @@ export default function TendersList() {
                 onDone={afterImport}
             />
 
+            <TenderDuplicateDialog
+                open={Boolean(duplicates)}
+                tender={duplicates?.tender}
+                candidates={duplicates?.candidates || []}
+                busy={busyId === duplicates?.tender?.id}
+                onClose={() => setDuplicates(null)}
+                onLink={dealId => decide(duplicates.tender, "TAKEN", { dealId })}
+                onCreateNew={() => decide(duplicates.tender, "TAKEN", { force: true })}
+            />
+
             <Tabs items={tabsWithCounts} value={tab} onChange={setTab} />
 
             <FilterBar
@@ -529,7 +581,19 @@ export default function TendersList() {
                                     <CardRow label='НМЦК'>
                                         {Number(t.beginPrice) > 0 ? formatMoney(t.beginPrice) : "—"}
                                     </CardRow>
-                                    <CardRow label='Заказчик'>{tenderCustomerLabel(t) || "—"}</CardRow>
+                                    <CardRow label='Заказчик'>
+                                        <span>
+                                            {tenderCustomerLabel(t) || "—"}
+                                            {t.openDeal ? (
+                                                <span className='block text-xs text-amber-600'>
+                                                    уже есть сделка
+                                                    {t.openDeal.managerName
+                                                        ? ` · ${t.openDeal.managerName}`
+                                                        : ""}
+                                                </span>
+                                            ) : null}
+                                        </span>
+                                    </CardRow>
                                     {t.winnerName ? (
                                         <CardRow label='Победитель'>
                                             {t.winnerIsOwn ? "наше юрлицо" : t.winnerName}

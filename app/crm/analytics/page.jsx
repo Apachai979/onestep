@@ -1,12 +1,11 @@
 import Link from "next/link"
-import { LuActivity, LuArrowRight, LuListChecks, LuWallet } from "react-icons/lu"
+import { LuActivity, LuArrowRight, LuFileText, LuListChecks, LuWallet } from "react-icons/lu"
 import { PageHeader } from "@/components/crm/ui"
 
 export const metadata = { title: "Аналитика | CRM" }
 
-// Витрина раздела. Отчёты добавляются сюда карточкой — пока он один, но список
-// заведомо будет расти, поэтому у раздела своя страница, а не прямая ссылка на
-// единственный отчёт из меню.
+// Витрина раздела. Отчёты добавляются сюда карточкой и своей подпапкой —
+// поэтому у раздела своя страница, а не прямые ссылки на отчёты из меню.
 const REPORTS = [
     {
         href: "/crm/analytics/sales",
@@ -28,6 +27,13 @@ const REPORTS = [
         icon: LuActivity,
         description:
             "Кто и над чем работал в системе: действия по журналу изменений — создано, изменено, удалено, с лентой событий по каждому сотруднику.",
+    },
+    {
+        href: "/crm/analytics/proposals",
+        title: "Коммерческие предложения",
+        icon: LuFileText,
+        description:
+            "Реестр выставленных КП: номер, сделка, клиент, менеджер и что с КП сделали — сохранили в документы сделки или отправили письмом.",
     },
 ]
 

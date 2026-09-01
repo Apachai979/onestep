@@ -36,7 +36,7 @@ export default function DealPayerCard({ payer, clientName }) {
     }
 
     return (
-        <section className='rounded-xl border border-amber-200 bg-amber-50/40 p-4'>
+        <section className='rounded-2xl border border-amber-200 bg-amber-50/40 p-4 shadow-sm'>
             <div className='flex flex-wrap items-start justify-between gap-3'>
                 <div className='min-w-0'>
                     <p className='text-[10px] font-medium uppercase tracking-wider text-amber-700'>

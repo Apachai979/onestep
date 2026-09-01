@@ -277,10 +277,10 @@ export default function DealItemsSection({
     const hasShippedItems = items.some(it => it.isShipped)
 
     return (
-        <section className='rounded-xl border border-line bg-white p-5'>
+        <section className='rounded-2xl border border-line bg-white p-4 shadow-sm'>
             <div className='mb-4 flex items-center justify-between'>
                 <div>
-                    <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
+                    <h2 className='text-sm font-semibold text-neutral-900'>
                         Товарные позиции
                     </h2>
                     {hasShippedItems && (

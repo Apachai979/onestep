@@ -332,9 +332,9 @@ export default function DealShipmentsSection({
         dealItems.length > 0 && dealItems.every(di => (formRemaining[di.id] ?? 0) <= 0)
 
     return (
-        <section className='rounded-2xl border border-line bg-white p-6 shadow-sm'>
+        <section className='rounded-2xl border border-line bg-white p-4 shadow-sm'>
             <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
-                <h2 className='text-sm font-semibold uppercase tracking-wide text-neutral-500'>
+                <h2 className='text-sm font-semibold text-neutral-900'>
                     Отгрузки
                 </h2>
                 {!readOnly && !showForm && dealItems.length > 0 && (

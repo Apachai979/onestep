@@ -17,7 +17,7 @@ import DealShipmentsSection from "@/components/crm/DealShipmentsSection"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import ContactMeta from "@/components/crm/ContactMeta"
 import LocalDateTime from "@/components/crm/LocalDateTime"
-import { EntityHeading } from "@/components/crm/ui"
+import { EntityHeading, Section as UiSection } from "@/components/crm/ui"
 
 export const metadata = { title: "Сделка | CRM" }
 
@@ -306,11 +306,7 @@ export default async function DealPage({ params }) {
                     )}
 
                     {item.isAuction && (
-                        <section className='rounded-xl border border-line bg-white p-4'>
-                            <h2 className='mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-500'>
-                                Параметры
-                            </h2>
-
+                        <UiSection title='Параметры' padding='sm'>
                             <ParamGroup title='Сделка' columns='sm:grid-cols-2 lg:grid-cols-4'>
                                 {dealParamRows}
                             </ParamGroup>
@@ -330,7 +326,19 @@ export default async function DealPage({ params }) {
                                         там показываем прежние поля. */}
                                     {item.tenders.length ? (
                                         <Row label='Закупки'>
-                                            <span className='space-y-0.5'>
+                                            {/* Колонка узкая (~150px при 1024px), а
+                                                название процедуры доходит до 135
+                                                символов: строка обязана
+                                                переноситься, иначе она уезжает на
+                                                соседнюю группу и обрезается
+                                                overflow-x-clip у main. Обычный
+                                                текстовый поток, а не flex: у
+                                                flex-элемента min-width auto, и
+                                                номер из 22 цифр всё равно распирал
+                                                бы колонку. break-words рвёт по
+                                                символам только его — слова
+                                                названия переносятся целиком. */}
+                                            <span className='block space-y-0.5'>
                                                 {item.tenders.map(t => (
                                                     <a
                                                         key={t.id}
@@ -340,15 +348,16 @@ export default async function DealPage({ params }) {
                                                         }
                                                         target='_blank'
                                                         rel='noopener noreferrer'
-                                                        className='flex items-center gap-1 text-brand_main hover:underline'
+                                                        className='block break-words text-brand_main hover:underline'
                                                     >
                                                         {t.regNumber || t.tenderlandId}
                                                         {t.typeName ? (
                                                             <span className='text-neutral-400'>
-                                                                · {t.typeName}
+                                                                {" · "}
+                                                                {t.typeName}
                                                             </span>
                                                         ) : null}
-                                                        <LuExternalLink className='h-3.5 w-3.5' />
+                                                        <LuExternalLink className='ml-1 inline h-3.5 w-3.5' />
                                                     </a>
                                                 ))}
                                             </span>
@@ -405,10 +414,8 @@ export default async function DealPage({ params }) {
                                 </ParamGroup>
                             </div>
 
-                            <p className='mt-3 border-t border-line pt-2 text-[11px] text-neutral-400'>
-                                {paramsFooter}
-                            </p>
-                        </section>
+                            <SectionFooter>{paramsFooter}</SectionFooter>
+                        </UiSection>
                     )}
 
                     {(item.deliveryAddress || item.note) && (
@@ -467,31 +474,33 @@ export default async function DealPage({ params }) {
     )
 }
 
+// Карточка параметров: чрома и заголовок — общие (ui/Section), своя только
+// сетка полей и подпись снизу.
 function Section({ title, footer, action, columns = "sm:grid-cols-2 lg:grid-cols-3", children }) {
     return (
-        <section className='flex flex-col rounded-xl border border-line bg-white p-4'>
-            <div className='mb-2.5 flex items-center justify-between gap-3'>
-                <h2 className='text-xs font-semibold uppercase tracking-wide text-neutral-500'>
-                    {title}
-                </h2>
-                {action && <div className='shrink-0'>{action}</div>}
-            </div>
+        <UiSection title={title} action={action} padding='sm' className='flex flex-col'>
             <dl className={`grid flex-1 content-start gap-x-4 gap-y-2.5 ${columns}`}>{children}</dl>
-            {footer && (
-                <p className='mt-3 border-t border-line pt-2 text-[11px] text-neutral-400'>
-                    {footer}
-                </p>
-            )}
-        </section>
+            {footer && <SectionFooter>{footer}</SectionFooter>}
+        </UiSection>
+    )
+}
+
+// Подпись «создал / изменил» под карточкой параметров.
+function SectionFooter({ children }) {
+    return (
+        <p className='mt-3 border-t border-line pt-2 text-[11px] text-neutral-400'>{children}</p>
     )
 }
 
 // Группа полей внутри карточки параметров: подпись группы + своя сетка.
 // Нужна, чтобы «Параметры сделки» и «Параметры аукциона» читались рядом,
 // а не через переключение вкладок.
+// min-w-0 обязателен: группа — элемент грида, и без него длинное значение
+// (название процедуры, победитель) распирает её по min-content и вылезает
+// за свою колонку, потому что трек шире minmax(0,1fr) не станет.
 function ParamGroup({ title, columns = "sm:grid-cols-2 lg:grid-cols-3", className = "", children }) {
     return (
-        <div className={className}>
+        <div className={`min-w-0 ${className}`}>
             <p className='mb-2 text-[10px] font-medium uppercase tracking-wider text-neutral-400'>
                 {title}
             </p>
@@ -505,7 +514,7 @@ function ParamGroup({ title, columns = "sm:grid-cols-2 lg:grid-cols-3", classNam
 function PartyCard({ label, org, contact }) {
     const contactName = contactDisplay(contact)
     return (
-        <section className='flex flex-col rounded-xl border border-line bg-white p-4'>
+        <UiSection padding='sm' className='flex flex-col'>
             <p className='text-[10px] font-medium uppercase tracking-wider text-neutral-400'>
                 {label}
             </p>
@@ -532,7 +541,7 @@ function PartyCard({ label, org, contact }) {
             ) : (
                 <p className='text-sm text-neutral-400'>Не выбрано.</p>
             )}
-        </section>
+        </UiSection>
     )
 }
 

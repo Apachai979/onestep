@@ -194,45 +194,104 @@ export default function DataTable({
     const alignCls = a =>
         a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left"
 
+    const showPagination = !loading && total > pageSize
+
+    // Выбор колонок живёт в строке пагинации, слева от стрелок: своей строкой
+    // он занимал место над таблицей ради одной кнопки. Пагинации нет — кнопка
+    // возвращается в тулбар (там же, где поиск).
+    const columnsControl = columns.some(c => c.hideable) ? (
+        <div ref={colMenuRef} className='relative'>
+            <button
+                type='button'
+                onClick={() => setColMenu(o => !o)}
+                className={`inline-flex h-8 items-center gap-1 rounded-lg border px-2 text-xs transition-colors ${
+                    colMenu
+                        ? "border-neutral-300 bg-surface_muted text-neutral-900"
+                        : "border-line bg-white text-neutral-500 hover:border-neutral-300 hover:text-neutral-900"
+                }`}
+                aria-label='Колонки'
+            >
+                <LuSettings2 className='h-3.5 w-3.5' />
+                <span className='hidden sm:inline'>Колонки</span>
+            </button>
+            {colMenu && (
+                <div className='absolute right-0 top-full z-40 mt-1.5 w-56 animate-emersion rounded-xl border border-line bg-white p-1.5 shadow-lg shadow-neutral-900/10'>
+                    <p className='px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-400'>
+                        Показать колонки
+                    </p>
+                    {columns
+                        .filter(c => c.hideable)
+                        .map(c => (
+                            <label
+                                key={c.key}
+                                className='flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-50'
+                            >
+                                <input
+                                    type='checkbox'
+                                    checked={!hidden.has(c.key)}
+                                    onChange={() =>
+                                        setHidden(prev => {
+                                            const next = new Set(prev)
+                                            next.has(c.key) ? next.delete(c.key) : next.add(c.key)
+                                            return next
+                                        })
+                                    }
+                                    className='h-4 w-4 rounded border-line text-brand_main focus:ring-brand_main/30'
+                                />
+                                {c.header}
+                            </label>
+                        ))}
+                </div>
+            )}
+        </div>
+    ) : null
+
     // Одна и та же панель рисуется над таблицей и под ней: на длинной странице
-    // кнопка «вперёд» только внизу заставляет прокручивать весь список.
-    const pagination =
-        !loading && total > pageSize ? (
+    // кнопка «вперёд» только внизу заставляет прокручивать весь список. Кнопка
+    // колонок — только в верхней: colMenuRef и открытое меню в единственном
+    // экземпляре.
+    function renderPagination(withColumns = false) {
+        if (!showPagination) return null
+        return (
             <div className='flex items-center justify-between gap-3 px-1 text-xs text-neutral-500'>
                 <span>
                     {clampedPage * pageSize + 1}–{Math.min((clampedPage + 1) * pageSize, total)} из{" "}
                     {total}
                 </span>
-                <div className='flex items-center gap-1'>
-                    <button
-                        type='button'
-                        onClick={() => goToPage(Math.max(0, clampedPage - 1))}
-                        disabled={clampedPage === 0}
-                        className='inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-600 transition-colors hover:bg-surface_muted disabled:pointer-events-none disabled:opacity-40'
-                        aria-label='Назад'
-                    >
-                        <LuChevronLeft className='h-4 w-4' />
-                    </button>
-                    <span className='px-2 tabular-nums'>
-                        {clampedPage + 1} / {pageCount}
-                    </span>
-                    <button
-                        type='button'
-                        onClick={() => goToPage(Math.min(pageCount - 1, clampedPage + 1))}
-                        disabled={clampedPage >= pageCount - 1}
-                        className='inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-600 transition-colors hover:bg-surface_muted disabled:pointer-events-none disabled:opacity-40'
-                        aria-label='Вперёд'
-                    >
-                        <LuChevronRight className='h-4 w-4' />
-                    </button>
+                <div className='flex items-center gap-3'>
+                    {withColumns ? columnsControl : null}
+                    <div className='flex items-center gap-1'>
+                        <button
+                            type='button'
+                            onClick={() => goToPage(Math.max(0, clampedPage - 1))}
+                            disabled={clampedPage === 0}
+                            className='inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-600 transition-colors hover:bg-surface_muted disabled:pointer-events-none disabled:opacity-40'
+                            aria-label='Назад'
+                        >
+                            <LuChevronLeft className='h-4 w-4' />
+                        </button>
+                        <span className='px-2 tabular-nums'>
+                            {clampedPage + 1} / {pageCount}
+                        </span>
+                        <button
+                            type='button'
+                            onClick={() => goToPage(Math.min(pageCount - 1, clampedPage + 1))}
+                            disabled={clampedPage >= pageCount - 1}
+                            className='inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-600 transition-colors hover:bg-surface_muted disabled:pointer-events-none disabled:opacity-40'
+                            aria-label='Вперёд'
+                        >
+                            <LuChevronRight className='h-4 w-4' />
+                        </button>
+                    </div>
                 </div>
             </div>
-        ) : null
+        )
+    }
 
     return (
         <div ref={rootRef} className={`space-y-3 ${className}`}>
             {/* Toolbar */}
-            {(searchable || toolbar || columns.some(c => c.hideable)) && (
+            {(searchable || toolbar || (columnsControl && !showPagination)) && (
                 <div className='flex flex-wrap items-center gap-2'>
                     {searchable && (
                         <div className='relative min-w-[200px] flex-1 sm:max-w-xs'>
@@ -245,54 +304,7 @@ export default function DataTable({
                         </div>
                     )}
                     {toolbar}
-                    {columns.some(c => c.hideable) && (
-                        <div ref={colMenuRef} className='relative ml-auto'>
-                            <button
-                                type='button'
-                                onClick={() => setColMenu(o => !o)}
-                                className={`inline-flex h-8 items-center gap-1 rounded-lg border px-2 text-xs transition-colors ${
-                                    colMenu
-                                        ? "border-neutral-300 bg-surface_muted text-neutral-900"
-                                        : "border-line bg-white text-neutral-500 hover:border-neutral-300 hover:text-neutral-900"
-                                }`}
-                                aria-label='Колонки'
-                            >
-                                <LuSettings2 className='h-3.5 w-3.5' />
-                                <span className='hidden sm:inline'>Колонки</span>
-                            </button>
-                            {colMenu && (
-                                <div className='absolute right-0 top-full z-40 mt-1.5 w-56 animate-emersion rounded-xl border border-line bg-white p-1.5 shadow-lg shadow-neutral-900/10'>
-                                    <p className='px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-400'>
-                                        Показать колонки
-                                    </p>
-                                    {columns
-                                        .filter(c => c.hideable)
-                                        .map(c => (
-                                            <label
-                                                key={c.key}
-                                                className='flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-50'
-                                            >
-                                                <input
-                                                    type='checkbox'
-                                                    checked={!hidden.has(c.key)}
-                                                    onChange={() =>
-                                                        setHidden(prev => {
-                                                            const next = new Set(prev)
-                                                            next.has(c.key)
-                                                                ? next.delete(c.key)
-                                                                : next.add(c.key)
-                                                            return next
-                                                        })
-                                                    }
-                                                    className='h-4 w-4 rounded border-line text-brand_main focus:ring-brand_main/30'
-                                                />
-                                                {c.header}
-                                            </label>
-                                        ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    {!showPagination && <div className='ml-auto'>{columnsControl}</div>}
                 </div>
             )}
 
@@ -316,7 +328,7 @@ export default function DataTable({
                 </div>
             )}
 
-            {pagination}
+            {renderPagination(true)}
 
             {/* Table */}
             <div className='overflow-x-auto rounded-2xl border border-line bg-white shadow-sm'>
@@ -491,7 +503,7 @@ export default function DataTable({
             </div>
 
             {/* Pagination */}
-            {pagination}
+            {renderPagination()}
         </div>
     )
 }

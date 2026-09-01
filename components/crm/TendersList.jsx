@@ -571,6 +571,7 @@ export default function TendersList() {
                             columns={columns}
                             rows={items}
                             getRowId={t => t.id}
+                            pageSize={20}
                         />
                     </div>
                     <div className='space-y-3 md:hidden'>

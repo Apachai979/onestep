@@ -308,9 +308,12 @@ model Deal {
   purchaseNumber    String?
   auctionUrl        String?
   nmck              Decimal   @default(0)
+  // Окончание приёма заявок и дата торгов. Первая есть у любой процедуры,
+  // вторая — только у аукционов: у запроса цен и котировок торгов нет вовсе,
+  // и Тендерлэнд biddingDate по ним не отдаёт. Даты подведения итогов тут нет
+  // намеренно — в выгрузку она не приезжает, а руками её никто не вёл.
   bidsDeadlineAt    DateTime?
   auctionAt         DateTime?
-  resultsAt         DateTime?
   participantsCount Int?
   bidsCount         Int?
   winner            String?

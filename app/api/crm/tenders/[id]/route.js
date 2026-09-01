@@ -109,7 +109,7 @@ export async function PATCH(request, { params }) {
         })
         if (!deal) return Response.json({ error: "Сделка не найдена" }, { status: 400 })
 
-        const { filled } = await prisma.$transaction(tx =>
+        const { filled, replaced } = await prisma.$transaction(tx =>
             linkTenderToDeal(tx, {
                 tender,
                 deal,
@@ -124,8 +124,9 @@ export async function PATCH(request, { params }) {
             linked: true,
             dealTitle: deal.title,
             // UI подписывает тост: менеджер должен видеть, что закупка
-            // дозаполнила в чужой сделке.
+            // дозаполнила в чужой сделке и что в ней заменила.
             filled,
+            replaced,
         })
     }
 

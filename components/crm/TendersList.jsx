@@ -257,11 +257,17 @@ export default function TendersList() {
             if (decision === "TAKEN" && data.dealId) {
                 setDuplicates(null)
                 if (data.linked) {
-                    // Что именно закупка дозаполнила в чужой сделке — менеджер
-                    // должен увидеть сразу: пустые поля там были не случайно.
+                    // Что именно закупка изменила в чужой сделке — менеджер
+                    // должен увидеть сразу. Замена важнее: она означает, что
+                    // прежняя процедура отыграна и карточка переехала на новую.
+                    const parts = []
+                    if (data.replaced?.length) {
+                        parts.push(`заменено (прежняя закупка отыграна): ${data.replaced.join(", ")}`)
+                    }
+                    if (data.filled?.length) parts.push(`заполнено: ${data.filled.join(", ")}`)
                     toast.success(
-                        data.filled?.length
-                            ? `Заполнено: ${data.filled.join(", ")}`
+                        parts.length
+                            ? parts.join(" · ")
                             : "Данные сделки уже заполнены — ничего не меняли",
                         { title: `Закупка привязана к сделке «${data.dealTitle}»` },
                     )

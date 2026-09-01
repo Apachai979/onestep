@@ -41,7 +41,6 @@ const EMPTY = {
     nmck: "",
     bidsDeadlineAt: "",
     auctionAt: "",
-    resultsAt: "",
     participantsCount: "",
     bidsCount: "",
     winner: "",
@@ -153,7 +152,6 @@ export default function DealForm({
             nmck: toFormValue(initial.nmck) === "0" ? "" : toFormValue(initial.nmck),
             bidsDeadlineAt: isoToLocalInput(initial.bidsDeadlineAt),
             auctionAt: isoToLocalInput(initial.auctionAt),
-            resultsAt: isoToLocalInput(initial.resultsAt),
             participantsCount: toFormValue(initial.participantsCount),
             bidsCount: toFormValue(initial.bidsCount),
             winner: initial.winner ?? "",
@@ -400,7 +398,6 @@ export default function DealForm({
             // Аукцион: даты — в ISO; поля-заказчика чистим, если аукцион выключен.
             bidsDeadlineAt: form.isAuction ? localInputToIso(form.bidsDeadlineAt) : null,
             auctionAt: form.isAuction ? localInputToIso(form.auctionAt) : null,
-            resultsAt: form.isAuction ? localInputToIso(form.resultsAt) : null,
             auctionCustomerId: form.isAuction ? form.auctionCustomerId || null : null,
             auctionCustomerContactId: form.isAuction
                 ? form.auctionCustomerContactId || null
@@ -826,12 +823,6 @@ export default function DealForm({
                                 type='datetime-local'
                                 value={form.auctionAt}
                                 onChange={update("auctionAt")}
-                            />
-                            <Input
-                                label='Подведение итогов'
-                                type='datetime-local'
-                                value={form.resultsAt}
-                                onChange={update("resultsAt")}
                             />
                             {!isCreate && (
                                 <>

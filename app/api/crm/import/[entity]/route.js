@@ -350,7 +350,6 @@ async function importDeals(tx, wb, report, session) {
                     : null,
                 bidsDeadlineAt: isAuction ? cellDate(row["приём заявок до"]) : null,
                 auctionAt: isAuction ? cellDate(row["дата аукциона"]) : null,
-                resultsAt: isAuction ? cellDate(row["подведение итогов"]) : null,
                 participantsCount: isAuction ? cellInt(row["участников"]) : null,
                 bidsCount: isAuction ? cellInt(row["заявок"]) : null,
                 winner: isAuction ? cellStr(row["победитель"]) || null : null,

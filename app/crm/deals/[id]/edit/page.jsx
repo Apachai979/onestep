@@ -47,7 +47,6 @@ export default async function EditDealPage({ params }) {
         nmck: item.nmck != null ? item.nmck.toString() : null,
         bidsDeadlineAt: item.bidsDeadlineAt ? item.bidsDeadlineAt.toISOString() : null,
         auctionAt: item.auctionAt ? item.auctionAt.toISOString() : null,
-        resultsAt: item.resultsAt ? item.resultsAt.toISOString() : null,
         createdAt: item.createdAt.toISOString(),
         updatedAt: item.updatedAt.toISOString(),
     }

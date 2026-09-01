@@ -64,6 +64,10 @@ export default async function DealPage({ params }) {
                     tenderlandId: true,
                     regNumber: true,
                     typeName: true,
+                    // Извещение на площадке (ЕИС) — оно и нужно в карточке.
+                    // Ссылка на Тендерлэнд остаётся запасной: она вычисляется
+                    // из идентификатора и есть всегда.
+                    sourceLink: true,
                 },
                 orderBy: { endDate: "asc" },
             },
@@ -316,17 +320,24 @@ export default async function DealPage({ params }) {
                             <div className='mt-3 grid gap-x-4 gap-y-3 border-t border-line pt-3 lg:grid-cols-3'>
                                 <ParamGroup title='Закупка' columns='sm:grid-cols-3 lg:grid-cols-1'>
                                     <Row label='НМЦК' value={formatMoney(item.nmck)} />
-                                    <Row label='Номер закупки' value={item.purchaseNumber || "—"} />
                                     {/* Закупок бывает несколько: запрос цен и
                                         электронный аукцион по одному предмету —
-                                        это одна продажа и одна сделка. */}
+                                        это одна продажа и одна сделка. Номер и
+                                        ссылку отдельными строками не дублируем:
+                                        номер и есть текст ссылки, а ведёт она на
+                                        извещение на площадке. У сделки,
+                                        заведённой руками, закупки не привязаны —
+                                        там показываем прежние поля. */}
                                     {item.tenders.length ? (
-                                        <Row label='Закупки из Тендерлэнда'>
+                                        <Row label='Закупки'>
                                             <span className='space-y-0.5'>
                                                 {item.tenders.map(t => (
                                                     <a
                                                         key={t.id}
-                                                        href={tenderlandCardUrl(t.tenderlandId)}
+                                                        href={
+                                                            t.sourceLink ||
+                                                            tenderlandCardUrl(t.tenderlandId)
+                                                        }
                                                         target='_blank'
                                                         rel='noopener noreferrer'
                                                         className='flex items-center gap-1 text-brand_main hover:underline'
@@ -342,22 +353,29 @@ export default async function DealPage({ params }) {
                                                 ))}
                                             </span>
                                         </Row>
-                                    ) : null}
-                                    <Row label='Ссылка на аукцион'>
-                                        {item.auctionUrl ? (
-                                            <a
-                                                href={item.auctionUrl}
-                                                target='_blank'
-                                                rel='noopener noreferrer'
-                                                className='inline-flex items-center gap-1 text-brand_main hover:underline'
-                                            >
-                                                Открыть
-                                                <LuExternalLink className='h-3.5 w-3.5' />
-                                            </a>
-                                        ) : (
-                                            "—"
-                                        )}
-                                    </Row>
+                                    ) : (
+                                        <>
+                                            <Row
+                                                label='Номер закупки'
+                                                value={item.purchaseNumber || "—"}
+                                            />
+                                            <Row label='Ссылка на аукцион'>
+                                                {item.auctionUrl ? (
+                                                    <a
+                                                        href={item.auctionUrl}
+                                                        target='_blank'
+                                                        rel='noopener noreferrer'
+                                                        className='inline-flex items-center gap-1 text-brand_main hover:underline'
+                                                    >
+                                                        Открыть
+                                                        <LuExternalLink className='h-3.5 w-3.5' />
+                                                    </a>
+                                                ) : (
+                                                    "—"
+                                                )}
+                                            </Row>
+                                        </>
+                                    )}
                                 </ParamGroup>
 
                                 <ParamGroup
@@ -370,9 +388,6 @@ export default async function DealPage({ params }) {
                                     </Row>
                                     <Row label='Проведение аукциона'>
                                         <LocalDateTime value={item.auctionAt} />
-                                    </Row>
-                                    <Row label='Подведение итогов'>
-                                        <LocalDateTime value={item.resultsAt} />
                                     </Row>
                                 </ParamGroup>
 

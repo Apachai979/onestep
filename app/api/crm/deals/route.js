@@ -92,7 +92,6 @@ const AUCTION_BOARD_SELECT = {
     nmck: true,
     bidsDeadlineAt: true,
     auctionAt: true,
-    resultsAt: true,
     // Итог прошедших торгов: статус + причина отказа (см. auctionOutcome),
     // winner идёт подписью на проигранной карточке.
     winner: true,

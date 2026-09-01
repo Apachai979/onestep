@@ -12,6 +12,10 @@ import {
 } from "react-icons/lu"
 import TableSkeleton from "./TableSkeleton"
 
+// Смена страницы возвращает к началу таблицы, поэтому отступ сверху: на узких
+// экранах шапка CRM прилипшая, и без него первая строка уезжала бы под неё.
+const PAGE_SCROLL_OFFSET = 72
+
 /**
  * Переиспользуемая таблица дизайн-системы CRM.
  *
@@ -62,6 +66,7 @@ export default function DataTable({
     const [colMenu, setColMenu] = useState(false)
     const [expanded, setExpanded] = useState(() => new Set())
     const colMenuRef = useRef(null)
+    const rootRef = useRef(null)
 
     const visibleColumns = columns.filter(c => !hidden.has(c.key))
     const colSpan = visibleColumns.length + (selectable ? 1 : 0) + (expandable ? 1 : 0)
@@ -174,11 +179,58 @@ export default function DataTable({
         })
     }
 
+    // Страницы переключаются и снизу, и сверху таблицы: нажали внизу — читать
+    // начинают опять с первой строки, а она осталась выше экрана. Скроллим
+    // только вверх (страница ниже начала таблицы) — иначе список, целиком
+    // помещающийся на экране, дёргался бы на каждом нажатии.
+    function goToPage(next) {
+        setPage(next)
+        const el = rootRef.current
+        if (!el || typeof window === "undefined") return
+        const top = el.getBoundingClientRect().top + window.scrollY - PAGE_SCROLL_OFFSET
+        if (window.scrollY > top) window.scrollTo({ top, behavior: "smooth" })
+    }
+
     const alignCls = a =>
         a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left"
 
+    // Одна и та же панель рисуется над таблицей и под ней: на длинной странице
+    // кнопка «вперёд» только внизу заставляет прокручивать весь список.
+    const pagination =
+        !loading && total > pageSize ? (
+            <div className='flex items-center justify-between gap-3 px-1 text-xs text-neutral-500'>
+                <span>
+                    {clampedPage * pageSize + 1}–{Math.min((clampedPage + 1) * pageSize, total)} из{" "}
+                    {total}
+                </span>
+                <div className='flex items-center gap-1'>
+                    <button
+                        type='button'
+                        onClick={() => goToPage(Math.max(0, clampedPage - 1))}
+                        disabled={clampedPage === 0}
+                        className='inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-600 transition-colors hover:bg-surface_muted disabled:pointer-events-none disabled:opacity-40'
+                        aria-label='Назад'
+                    >
+                        <LuChevronLeft className='h-4 w-4' />
+                    </button>
+                    <span className='px-2 tabular-nums'>
+                        {clampedPage + 1} / {pageCount}
+                    </span>
+                    <button
+                        type='button'
+                        onClick={() => goToPage(Math.min(pageCount - 1, clampedPage + 1))}
+                        disabled={clampedPage >= pageCount - 1}
+                        className='inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-600 transition-colors hover:bg-surface_muted disabled:pointer-events-none disabled:opacity-40'
+                        aria-label='Вперёд'
+                    >
+                        <LuChevronRight className='h-4 w-4' />
+                    </button>
+                </div>
+            </div>
+        ) : null
+
     return (
-        <div className={`space-y-3 ${className}`}>
+        <div ref={rootRef} className={`space-y-3 ${className}`}>
             {/* Toolbar */}
             {(searchable || toolbar || columns.some(c => c.hideable)) && (
                 <div className='flex flex-wrap items-center gap-2'>
@@ -263,6 +315,8 @@ export default function DataTable({
                     </button>
                 </div>
             )}
+
+            {pagination}
 
             {/* Table */}
             <div className='overflow-x-auto rounded-2xl border border-line bg-white shadow-sm'>
@@ -437,37 +491,7 @@ export default function DataTable({
             </div>
 
             {/* Pagination */}
-            {!loading && total > pageSize && (
-                <div className='flex items-center justify-between gap-3 px-1 text-xs text-neutral-500'>
-                    <span>
-                        {clampedPage * pageSize + 1}–{Math.min((clampedPage + 1) * pageSize, total)}{" "}
-                        из {total}
-                    </span>
-                    <div className='flex items-center gap-1'>
-                        <button
-                            type='button'
-                            onClick={() => setPage(p => Math.max(0, p - 1))}
-                            disabled={clampedPage === 0}
-                            className='inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-600 transition-colors hover:bg-surface_muted disabled:pointer-events-none disabled:opacity-40'
-                            aria-label='Назад'
-                        >
-                            <LuChevronLeft className='h-4 w-4' />
-                        </button>
-                        <span className='px-2 tabular-nums'>
-                            {clampedPage + 1} / {pageCount}
-                        </span>
-                        <button
-                            type='button'
-                            onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))}
-                            disabled={clampedPage >= pageCount - 1}
-                            className='inline-flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-white text-neutral-600 transition-colors hover:bg-surface_muted disabled:pointer-events-none disabled:opacity-40'
-                            aria-label='Вперёд'
-                        >
-                            <LuChevronRight className='h-4 w-4' />
-                        </button>
-                    </div>
-                </div>
-            )}
+            {pagination}
         </div>
     )
 }

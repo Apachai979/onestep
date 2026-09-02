@@ -1,5 +1,6 @@
 "use client"
 import { Fragment, useEffect, useMemo, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import {
     LuArrowDown,
     LuArrowUp,
@@ -32,14 +33,30 @@ const PAGE_SCROLL_OFFSET = 72
  * Раскрытие живёт под строкой во всю ширину таблицы — так деталь читается в
  * контексте своей строки, без модалки и потери места на странице.
  *
+ * rowHref(row) => "/crm/deals/1" — строка ведёт на карточку и ведёт себя как
+ * ссылка: обычный клик переходит в этом же окне, Ctrl/Cmd/Shift-клик и средняя
+ * кнопка открывают новую вкладку (в установленном приложении — вкладку
+ * приложения). Для строк без адреса остаётся onRowClick.
+ *
  * Возможности: sticky-header, hover, сортировка, поиск, фильтры (toolbar-slot),
  * пагинация, выбор строк + bulk actions, переключение видимости колонок,
  * раскрытие строк. (Column-resize / saved-views / виртуализация — следующий проход.)
  */
+// Клик по ссылке, кнопке или полю внутри ячейки строка не перехватывает:
+// иначе переход шёл бы дважды — и по вложенной ссылке, и по строке.
+function fromInteractive(e) {
+    return Boolean(e.target.closest?.("a,button,input,label,select,textarea"))
+}
+
+function opensNewTab(e) {
+    return e.metaKey || e.ctrlKey || e.shiftKey
+}
+
 export default function DataTable({
     columns,
     rows,
     getRowId = r => r.id,
+    rowHref,
     onRowClick,
     rowClassName,
     loading = false,
@@ -56,6 +73,7 @@ export default function DataTable({
     footer,
     className = "",
 }) {
+    const router = useRouter()
     const [sort, setSort] = useState(initialSort)
     const [page, setPage] = useState(0)
     const [selected, setSelected] = useState(() => new Set())
@@ -401,19 +419,51 @@ export default function DataTable({
                                 const isSelected = selected.has(id)
                                 const rowExpandable = canExpand(row)
                                 const isExpanded = rowExpandable && expanded.has(id)
+                                const href = rowHref ? rowHref(row) : null
                                 // Клик по строке раскрывает деталь, если своего
                                 // обработчика нет: у раскрываемой таблицы это
                                 // ожидаемое поведение, а переход по ссылке
                                 // остаётся на самих ссылках внутри ячеек.
-                                const handleClick = onRowClick
-                                    ? () => onRowClick(row)
-                                    : rowExpandable
-                                      ? () => toggleExpanded(id)
-                                      : undefined
+                                const handleClick = href
+                                    ? e => {
+                                          if (fromInteractive(e)) return
+                                          if (opensNewTab(e)) {
+                                              window.open(href, "_blank", "noopener")
+                                              return
+                                          }
+                                          router.push(href)
+                                      }
+                                    : onRowClick
+                                      ? e => {
+                                            if (fromInteractive(e)) return
+                                            onRowClick(row)
+                                        }
+                                      : rowExpandable
+                                        ? e => {
+                                              if (fromInteractive(e)) return
+                                              toggleExpanded(id)
+                                          }
+                                        : undefined
+                                // Средняя кнопка: гасим автоскролл на mousedown
+                                // (сам клик приходит уже в onAuxClick).
+                                const handleMouseDown = href
+                                    ? e => {
+                                          if (e.button === 1 && !fromInteractive(e))
+                                              e.preventDefault()
+                                      }
+                                    : undefined
+                                const handleAuxClick = href
+                                    ? e => {
+                                          if (e.button !== 1 || fromInteractive(e)) return
+                                          window.open(href, "_blank", "noopener")
+                                      }
+                                    : undefined
                                 return (
                                     <Fragment key={id}>
                                         <tr
                                             onClick={handleClick}
+                                            onMouseDown={handleMouseDown}
+                                            onAuxClick={handleAuxClick}
                                             className={`border-t border-line transition-colors ${handleClick ? "cursor-pointer" : ""} ${
                                                 isSelected
                                                     ? "bg-brand_main/5"

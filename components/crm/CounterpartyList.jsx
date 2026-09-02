@@ -393,7 +393,7 @@ export default function CounterpartyList({ type, newHref }) {
                     rows={items || []}
                     loading={items === null}
                     getRowId={item => item.id}
-                    onRowClick={item => router.push(`/crm/counterparties/${item.id}`)}
+                    rowHref={item => `/crm/counterparties/${item.id}`}
                     initialSort={{ key: "name", dir: "asc" }}
                     empty={
                         <EmptyState

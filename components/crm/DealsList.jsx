@@ -222,7 +222,7 @@ export default function DealsList({ query = "" }) {
                     rows={items || []}
                     loading={items === null}
                     getRowId={d => d.id}
-                    onRowClick={d => router.push(`/crm/deals/${d.id}`)}
+                    rowHref={d => `/crm/deals/${d.id}`}
                     initialSort={{ key: "createdAt", dir: "desc" }}
                     pageSize={25}
                     empty={

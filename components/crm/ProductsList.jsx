@@ -257,7 +257,7 @@ export default function ProductsList({ canManage = false }) {
                     rows={items || []}
                     loading={items === null}
                     getRowId={p => p.id}
-                    onRowClick={p => router.push(`/crm/products/${p.id}`)}
+                    rowHref={p => `/crm/products/${p.id}`}
                     initialSort={{ key: "sku", dir: "asc" }}
                     empty={
                         <EmptyState

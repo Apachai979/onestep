@@ -209,6 +209,14 @@ NextAuth with only the **Credentials** provider (email + пароль), configur
 
 Инвариант хранения: **в базе всегда реальные UTC-моменты**. Задача «на весь день» (`Task.allDay`) — это московские сутки целиком, `00:00:00.000` … `23:59:59.999` МСК. Значения `input[type=date|datetime-local]` трактуются как московские. Логика срока задачи (`isTaskOverdue`, `isTaskToday`, `taskDueState`, `taskRangeLabel`, `taskDueRelativeLabel`) живёт только в [lib/crm/task.js](lib/crm/task.js) — не дублировать её в компонентах.
 
+### Строка списка — ссылка, а не `onClick`
+
+[DataTable](components/crm/ui/DataTable.jsx) принимает `rowHref(row)`: обычный клик переходит через роутер, Ctrl/Cmd/Shift-клик и средняя кнопка открывают карточку в новой вкладке (в установленной PWA — в новом окне приложения). С прежним `onRowClick={() => router.push(…)}` строка ссылкой не была, и «открыть в новой вкладке» не работало даже в браузере — а CRM ставят приложением, где вкладок нет вовсе.
+
+- `onRowClick` остаётся спискам, где клик не про переход (закрытие задачи в [TaskList.jsx](components/crm/TaskList.jsx)).
+- Клик по вложенным `a/button/input/label/select/textarea` строка не перехватывает — иначе переход шёл бы дважды: и по ссылке в ячейке, и по строке.
+- Среднюю кнопку гасим на `mousedown` (автоскролл), сам переход — в `onAuxClick`.
+
 ### Вид и фильтры списков живут в адресе
 
 Выбранная вкладка и фильтры списков CRM хранятся в query string (`/crm/deals?tab=list&managerId=…`), а не только в состоянии компонента: уход в карточку размонтирует список, и на «Назад» менеджер должен вернуться в тот же вид с тем же отбором. Хелперы — в [lib/crm/url-state.js](lib/crm/url-state.js): `useTabParam(keys)` для вкладки и `useUrlFilters(defaults)` для фильтров (внутри же живёт debounce — `filters` для полей, `applied` для запроса и адреса, `apply` для мгновенного применения, `reset` для сброса).

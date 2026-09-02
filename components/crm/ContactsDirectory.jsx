@@ -418,7 +418,7 @@ export default function ContactsDirectory() {
                     rows={items || []}
                     loading={items === null}
                     getRowId={c => c.id}
-                    onRowClick={c => router.push(`/crm/contacts/${c.id}`)}
+                    rowHref={c => `/crm/contacts/${c.id}`}
                     initialSort={{ key: "name", dir: "asc" }}
                     empty={
                         <EmptyState

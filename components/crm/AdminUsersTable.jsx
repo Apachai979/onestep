@@ -256,7 +256,7 @@ export default function AdminUsersTable({ currentUserId }) {
                     rows={items || []}
                     loading={items === null}
                     getRowId={u => u.id}
-                    onRowClick={u => router.push(`/crm/users/${u.id}/edit`)}
+                    rowHref={u => `/crm/users/${u.id}/edit`}
                     rowClassName={u => (u.status === "BLOCKED" ? "opacity-60" : "")}
                     searchable
                     searchPlaceholder='Поиск по имени, email, должности'

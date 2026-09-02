@@ -176,7 +176,7 @@ export default function ProjectsList({ query = "" }) {
                     rows={items || []}
                     loading={items === null}
                     getRowId={p => p.id}
-                    onRowClick={p => router.push(`/crm/projects/${p.id}`)}
+                    rowHref={p => `/crm/projects/${p.id}`}
                     initialSort={{ key: "createdAt", dir: "desc" }}
                     empty={
                         <EmptyState

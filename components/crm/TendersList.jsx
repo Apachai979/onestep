@@ -432,10 +432,8 @@ export default function TendersList() {
                                 variant='ghost'
                                 size='sm'
                                 title='Открыть сделку'
-                                onClick={e => {
-                                    e.stopPropagation()
-                                    router.push(`/crm/deals/${t.dealId}`)
-                                }}
+                                href={`/crm/deals/${t.dealId}`}
+                                onClick={e => e.stopPropagation()}
                             >
                                 Сделка
                                 <LuArrowUpRight className='h-4 w-4' />
@@ -487,7 +485,7 @@ export default function TendersList() {
                 },
             },
         ],
-        [busyId, decide, router],
+        [busyId, decide],
     )
 
     const tabsWithCounts = TABS.map(t => ({
@@ -646,9 +644,7 @@ export default function TendersList() {
                                                 variant='secondary'
                                                 size='sm'
                                                 className='w-full'
-                                                onClick={() =>
-                                                    router.push(`/crm/deals/${t.dealId}`)
-                                                }
+                                                href={`/crm/deals/${t.dealId}`}
                                             >
                                                 Сделка
                                                 <LuArrowUpRight className='h-4 w-4' />

@@ -305,7 +305,7 @@ export default function ShipmentsList() {
                     rows={filtered || []}
                     loading={items === null}
                     getRowId={sh => sh.id}
-                    onRowClick={sh => router.push(`/crm/shipments/${sh.id}`)}
+                    rowHref={sh => `/crm/shipments/${sh.id}`}
                     rowClassName={sh => (isShipmentOverdue(sh) ? "bg-red-50/40" : "")}
                     initialSort={{ key: "plannedDate", dir: "asc" }}
                     empty={

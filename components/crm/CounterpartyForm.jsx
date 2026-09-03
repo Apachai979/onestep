@@ -398,10 +398,10 @@ export default function CounterpartyForm({ type, initial, mode = "create", attac
                 <Field
                     label='Скидка клиента, %'
                     type='number'
-                    step='0.01'
+                    step='1'
                     min='0'
                     max='100'
-                    inputMode='decimal'
+                    inputMode='numeric'
                     value={form.discount}
                     onChange={update("discount")}
                 />

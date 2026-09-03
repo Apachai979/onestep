@@ -455,8 +455,8 @@ export default function ProjectForm({
                             type='number'
                             min='0'
                             max='100'
-                            step='0.01'
-                            inputMode='decimal'
+                            step='1'
+                            inputMode='numeric'
                             value={form.discount}
                             onChange={e => {
                                 discountTouchedRef.current = true

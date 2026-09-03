@@ -6,7 +6,8 @@ import { authOptions } from "@/configs/auth"
 import prisma from "@/lib/client"
 import { DEAL_LOSS_REASON_LABELS, dealOwnTitle } from "@/lib/crm/deal"
 import { canDeleteDeal, dealItemShipmentUsage, isDealLocked } from "@/lib/crm/access"
-import { formatMoney, formatPercent } from "@/lib/crm/format"
+import { discountSourceLabel, inheritedDealDiscount } from "@/lib/crm/discount"
+import { formatMoney } from "@/lib/crm/format"
 import { tenderlandCardUrl } from "@/lib/crm/tender-map"
 import CrmBackLink from "@/components/crm/CrmBackLink"
 import DealItemsSection from "@/components/crm/DealItemsSection"
@@ -14,6 +15,7 @@ import DealPayerCard from "@/components/crm/DealPayerCard"
 import DealStatusControl from "@/components/crm/DealStatusControl"
 import DeleteEntityButton from "@/components/crm/DeleteEntityButton"
 import DealShipmentsSection from "@/components/crm/DealShipmentsSection"
+import InlineDiscountControl from "@/components/crm/InlineDiscountControl"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import ContactMeta from "@/components/crm/ContactMeta"
 import LocalDateTime from "@/components/crm/LocalDateTime"
@@ -37,7 +39,9 @@ export default async function DealPage({ params }) {
     const item = await prisma.deal.findUnique({
         where: { id: params.id },
         include: {
-            counterparty: true,
+            // Группа клиента и скидка проекта — только ради подписи «откуда
+            // взялась скидка» в строке «Скидка» (см. lib/crm/discount.js).
+            counterparty: { include: { group: { select: { name: true, discount: true } } } },
             payer: true,
             contact: true,
             manager: true,
@@ -50,7 +54,7 @@ export default async function DealPage({ params }) {
                 },
             },
             sourceProject: {
-                select: { id: true, internalName: true },
+                select: { id: true, internalName: true, discount: true },
             },
             auctionCustomer: { select: { id: true, name: true, region: true } },
             auctionCustomerContact: true,
@@ -125,6 +129,22 @@ export default async function DealPage({ params }) {
     const discountAmount = discountPct != null ? (totalAmount * discountPct) / 100 : null
     const discountedTotal = discountAmount != null ? totalAmount - discountAmount : null
 
+    // Что сделка унаследовала бы по цепочке: скидка проекта, иначе — клиента
+    // (или его группы). Здесь это только подпись под полем: своё значение
+    // сделка получила при создании и хранит снимком.
+    const inheritedDiscount = inheritedDealDiscount(
+        item.sourceProject && {
+            discount: item.sourceProject.discount?.toString() ?? null,
+        },
+        {
+            discount: item.counterparty.discount?.toString() ?? null,
+            group: item.counterparty.group && {
+                name: item.counterparty.group.name,
+                discount: item.counterparty.group.discount?.toString() ?? null,
+            },
+        },
+    )
+
     const itemsForClient = item.items.map(({ product: _product, ...i }) => ({
         ...i,
         quantity: i.quantity.toString(),
@@ -150,14 +170,24 @@ export default async function DealPage({ params }) {
     const dealParamRows = (
         <>
             <Row label='Сумма сделки' value={formatMoney(item.totalAmount)} />
-            <Row
-                label='Скидка'
-                value={
-                    discountPct != null
-                        ? `${formatPercent(discountPct)} (${formatMoney(discountAmount)})`
-                        : "—"
-                }
-            />
+            {/* Скидка правится прямо здесь: её меняют чаще прочих полей и
+                обычно перед формированием КП — см. InlineDiscountControl. */}
+            <Row label='Скидка'>
+                <InlineDiscountControl
+                    url={`/api/crm/deals/${item.id}`}
+                    initialValue={discountPct}
+                    totalAmount={totalAmount}
+                    inheritedValue={inheritedDiscount.value}
+                    inheritedLabel={discountSourceLabel(inheritedDiscount)}
+                    usageHint='Используется в КП.'
+                    readOnly={locked}
+                    lockedHint={
+                        shippedCount > 0
+                            ? "По сделке есть проведённая отгрузка — скидка зафиксирована: её правка пересчитала бы суммы уже отгруженного."
+                            : null
+                    }
+                />
+            </Row>
             <Row
                 label='Сумма со скидкой'
                 value={discountedTotal != null ? formatMoney(discountedTotal) : "—"}

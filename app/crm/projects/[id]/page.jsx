@@ -7,13 +7,14 @@ import prisma from "@/lib/client"
 import { DEAL_STATUS_COLORS, DEAL_STATUS_LABELS, dealDiscountedTotal } from "@/lib/crm/deal"
 import { PROJECT_STATUS_LABELS } from "@/lib/crm/project"
 import { formatMoney } from "@/lib/crm/format"
-import { formatDiscount } from "@/lib/crm/discount"
+import { counterpartyDiscountInfo, discountSourceLabel } from "@/lib/crm/discount"
 import { canDeleteProject, isProjectLocked } from "@/lib/crm/access"
 import DeleteEntityButton from "@/components/crm/DeleteEntityButton"
 import ProjectStatusControl from "@/components/crm/ProjectStatusControl"
 import ActivityPanel from "@/components/crm/ActivityPanel"
 import ContactMeta from "@/components/crm/ContactMeta"
 import CrmBackLink from "@/components/crm/CrmBackLink"
+import InlineDiscountControl from "@/components/crm/InlineDiscountControl"
 import LocalDateTime from "@/components/crm/LocalDateTime"
 import { EntityHeading } from "@/components/crm/ui"
 
@@ -30,7 +31,9 @@ export default async function ProjectPage({ params }) {
     const item = await prisma.project.findUnique({
         where: { id: params.id },
         include: {
-            distributor: true,
+            // Группа дистрибьютора нужна только подписи «откуда взялась
+            // скидка»: у группы она перекрывает личную (см. lib/crm/discount).
+            distributor: { include: { group: { select: { name: true, discount: true } } } },
             endCustomer: true,
             manager: true,
             createdBy: true,
@@ -55,6 +58,17 @@ export default async function ProjectPage({ params }) {
     // а администратору в этом статусе доступно удаление.
     const locked = isProjectLocked(item.status, session)
     const canDelete = canDeleteProject(item.status, session)
+
+    // Скидка, которую проект унаследовал бы от дистрибьютора (или его группы).
+    // Здесь это только подпись под полем: своё значение проект получил при
+    // создании и хранит снимком.
+    const inheritedDiscount = counterpartyDiscountInfo({
+        discount: item.distributor.discount?.toString() ?? null,
+        group: item.distributor.group && {
+            name: item.distributor.group.name,
+            discount: item.distributor.group.discount?.toString() ?? null,
+        },
+    })
 
     // Сумма проекта — производная: сумма всех сделок, привязанных к проекту,
     // по финальной цене (со скидкой).
@@ -213,12 +227,18 @@ export default async function ProjectPage({ params }) {
                             label={`Сумма сделок по проекту${dealsCount ? ` (${dealsCount})` : ""}`}
                             value={formatMoney(dealsSum)}
                         />
+                        {/* Скидку правят прямо здесь — форму проекта ради
+                            одного числа открывать не нужно. */}
                         <Row label='Скидка'>
-                            {formatDiscount(item.discount) ?? (
-                                <span className='text-neutral-400'>
-                                    не задана — сделки возьмут из карточки клиента
-                                </span>
-                            )}
+                            <InlineDiscountControl
+                                url={`/api/crm/projects/${item.id}`}
+                                initialValue={item.discount?.toString() ?? null}
+                                emptyLabel='не задана — сделки возьмут из карточки клиента'
+                                inheritedValue={inheritedDiscount.value}
+                                inheritedLabel={discountSourceLabel(inheritedDiscount)}
+                                usageHint='Уйдёт в новые сделки по проекту — уже созданные не пересчитываются.'
+                                readOnly={locked}
+                            />
                         </Row>
                     </Section>
 

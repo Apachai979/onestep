@@ -1,6 +1,6 @@
 "use client"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { formatMoney } from "@/lib/crm/format"
 import {
     Badge,
@@ -28,6 +28,52 @@ function parseNum(v) {
 function fmt(n) {
     if (!Number.isFinite(n)) return ""
     return (Math.round(n * 100) / 100).toString()
+}
+
+// Сортировка позиций кликом по заголовку. Порядок только для просмотра: он не
+// уходит на сервер и не запоминается — позиции хранятся в порядке добавления
+// (orderBy createdAt), и он же остаётся дефолтом, в КП и отгрузках.
+const TEXT_COLLATOR = new Intl.Collator("ru", { numeric: true, sensitivity: "base" })
+
+// Артикулы вида «НС-01-10» сравниваем по-человечески: numeric-коллятор ставит
+// НС-01-2 перед НС-01-10. Позиции без артикула (вписанные руками) всегда внизу
+// — в обоих направлениях, иначе прайс начинался бы с прочерков.
+function compareItems(a, b, key) {
+    if (key === "quantity" || key === "amount") {
+        const x = parseNum(a[key])
+        const y = parseNum(b[key])
+        if (!Number.isFinite(x) && !Number.isFinite(y)) return 0
+        if (!Number.isFinite(x)) return 1
+        if (!Number.isFinite(y)) return -1
+        return x - y
+    }
+    const x = (a[key] ?? "").trim()
+    const y = (b[key] ?? "").trim()
+    if (!x && !y) return 0
+    if (!x) return 1
+    if (!y) return -1
+    return TEXT_COLLATOR.compare(x, y)
+}
+
+function sortItems(items, sort) {
+    if (!sort.key) return items
+    const dir = sort.dir === "desc" ? -1 : 1
+    // Пустые значения держим внизу независимо от направления, поэтому
+    // переворачиваем только сравнение непустых (сравнение с пустым даёт ±1).
+    return [...items].sort((a, b) =>
+        isEmptyPair(a, b, sort.key)
+            ? compareItems(a, b, sort.key)
+            : compareItems(a, b, sort.key) * dir
+    )
+}
+
+// «Пустая» строка по ключу сортировки: её место в конце от направления не зависит.
+function isEmptyPair(a, b, key) {
+    const val = it =>
+        key === "quantity" || key === "amount"
+            ? Number.isFinite(parseNum(it[key]))
+            : Boolean((it[key] ?? "").trim())
+    return val(a) !== val(b)
 }
 
 // Позиция «заморожена», если попала в проведённую отгрузку: править и удалять
@@ -72,6 +118,8 @@ export default function DealItemsSection({
     const [showAdd, setShowAdd] = useState(false)
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
+    // key: null — порядок добавления, как приходит с сервера.
+    const [sort, setSort] = useState({ key: null, dir: "asc" })
 
     // Проведение отгрузки делает router.refresh() — подхватываем новые позиции
     // с сервера, иначе кнопки правки остались бы на уже отгруженных строках.
@@ -275,6 +323,15 @@ export default function DealItemsSection({
         : null
 
     const hasShippedItems = items.some(it => it.isShipped)
+    const sortedItems = useMemo(() => sortItems(items, sort), [items, sort])
+
+    function toggleSort(key) {
+        setSort(prev =>
+            prev.key === key
+                ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
+                : { key, dir: "asc" }
+        )
+    }
 
     return (
         <section className='rounded-2xl border border-line bg-white p-4 shadow-sm'>
@@ -460,7 +517,7 @@ export default function DealItemsSection({
                         Позиций пока нет
                     </p>
                 )}
-                {items.map(it => (
+                {sortedItems.map(it => (
                     <MobileCard key={it.id}>
                         <div className='flex items-start justify-between gap-2'>
                             <span className='font-medium text-neutral-900'>
@@ -506,10 +563,32 @@ export default function DealItemsSection({
                 <table className='w-full text-sm'>
                     <thead className='bg-surface_muted text-left text-xs uppercase tracking-wider text-neutral-500'>
                         <tr>
-                            <th className='px-3 py-2'>Артикул</th>
-                            <th className='px-3 py-2'>Наименование</th>
-                            <th className='px-3 py-2 text-right'>Кол-во</th>
-                            <th className='px-3 py-2 text-right'>Сумма</th>
+                            <SortableTh
+                                sortKey='sku'
+                                sort={sort}
+                                onSort={toggleSort}
+                                label='Артикул'
+                            />
+                            <SortableTh
+                                sortKey='name'
+                                sort={sort}
+                                onSort={toggleSort}
+                                label='Наименование'
+                            />
+                            <SortableTh
+                                sortKey='quantity'
+                                sort={sort}
+                                onSort={toggleSort}
+                                label='Кол-во'
+                                align='right'
+                            />
+                            <SortableTh
+                                sortKey='amount'
+                                sort={sort}
+                                onSort={toggleSort}
+                                label='Сумма'
+                                align='right'
+                            />
                             <th className='px-3 py-2'></th>
                         </tr>
                     </thead>
@@ -521,7 +600,7 @@ export default function DealItemsSection({
                                 </td>
                             </tr>
                         )}
-                        {items.map(it => (
+                        {sortedItems.map(it => (
                             <tr key={it.id} className='border-t border-line'>
                                 <td className='px-3 py-2 text-neutral-700'>
                                     {it.sku || "—"}
@@ -579,6 +658,30 @@ export default function DealItemsSection({
             </div>
 
         </section>
+    )
+}
+
+function SortableTh({ sortKey, sort, onSort, label, align = "left" }) {
+    const active = sort.key === sortKey
+    return (
+        <th
+            className={`px-3 py-2 ${align === "right" ? "text-right" : ""}`}
+            aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
+        >
+            <button
+                type='button'
+                onClick={() => onSort(sortKey)}
+                title={`Сортировать по «${label}»`}
+                className={`inline-flex items-center gap-1 uppercase tracking-wider transition hover:text-neutral-800 ${
+                    active ? "text-neutral-800" : ""
+                }`}
+            >
+                {label}
+                <span className={active ? "" : "opacity-0"} aria-hidden='true'>
+                    {sort.dir === "desc" ? "↓" : "↑"}
+                </span>
+            </button>
+        </th>
     )
 }
 

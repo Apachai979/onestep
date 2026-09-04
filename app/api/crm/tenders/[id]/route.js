@@ -9,7 +9,10 @@ import { findDealCandidates, linkTenderToDeal } from "@/lib/crm/tender-duplicate
 /**
  * Решение менеджера по входящей закупке.
  *
- *   { decision: "SKIPPED", skipReason }  — закупка не наша, остаётся в истории
+ *   { decision: "SKIPPED", skipReason }  — закупка не наша, остаётся в истории;
+ *                                           взятую в работу так отменяет только
+ *                                           администратор, и закупка при этом
+ *                                           отвязывается от сделки
  *   { decision: "TAKEN", counterpartyId } — участвуем: заводим аукционную сделку
  *   { decision: "TAKEN", dealId }         — участвуем: закупка идёт в уже
  *                                           заведённую сделку
@@ -42,16 +45,52 @@ export async function PATCH(request, { params }) {
 
     const decision = body?.decision
     if (decision === "SKIPPED") {
-        const updated = await prisma.tender.update({
-            where: { id: tender.id },
-            data: {
-                decision: "SKIPPED",
-                skipReason: body?.skipReason?.trim() || null,
-                decisionAt: new Date(),
-                decisionById: session.user.id,
-            },
+        // Отменить участие может только администратор: по такой закупке уже
+        // заведена сделка, и «Мимо» здесь — не решение по входящему потоку, а
+        // исправление чужой ошибки.
+        if (tender.decision === "TAKEN" && session.user.role !== "ADMIN") {
+            return Response.json(
+                { error: "Отменить участие в закупке может только администратор" },
+                { status: 403 },
+            )
+        }
+
+        const unlinkedDealId = tender.dealId || null
+
+        const updated = await prisma.$transaction(async tx => {
+            const next = await tx.tender.update({
+                where: { id: tender.id },
+                data: {
+                    decision: "SKIPPED",
+                    skipReason: body?.skipReason?.trim() || null,
+                    decisionAt: new Date(),
+                    decisionById: session.user.id,
+                    // Закупка в «Мимо» не может числиться в сделке: карточка
+                    // показывала бы её в блоке «Закупка», а доска аукционов
+                    // считала бы сроки по отменённой процедуре. Саму сделку не
+                    // трогаем — статус ей ставит администратор руками, как и
+                    // везде в CRM.
+                    dealId: null,
+                },
+            })
+            if (unlinkedDealId) {
+                await logChange(tx, {
+                    entityType: "Deal",
+                    entityId: unlinkedDealId,
+                    action: "UPDATE",
+                    payload: {
+                        source: "Tenderland",
+                        tenderlandId: tender.tenderlandId,
+                        unlinkedTender: tender.regNumber || tender.tenderlandId,
+                    },
+                    authorId: session.user.id,
+                })
+            }
+            return next
         })
-        return Response.json({ ok: true, tender: updated })
+
+        // UI подписывает тост: сделка осталась, и с ней админу ещё разбираться.
+        return Response.json({ ok: true, tender: updated, unlinkedDealId })
     }
 
     if (decision === "NEW") {

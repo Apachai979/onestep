@@ -22,6 +22,7 @@ import {
     FilterSearch,
     MobileCard,
     Tabs,
+    useConfirm,
     useToast,
 } from "@/components/crm/ui"
 
@@ -104,9 +105,10 @@ function ktruList(value) {
     return value.split("\n").filter(Boolean)
 }
 
-export default function TendersList() {
+export default function TendersList({ isAdmin = false }) {
     const router = useRouter()
     const toast = useToast()
+    const confirm = useConfirm()
 
     const [tab, setTab] = useState("NEW")
     const [items, setItems] = useState(null)
@@ -181,13 +183,6 @@ export default function TendersList() {
                 parts.push("выгрузка переполнена — проверьте фильтр автопоиска")
             }
             toast.success(parts.join(" · "), { title: "Закупки обновлены" })
-            // Подтверждения у «Мимо» нет — решение отменяемое и его принимают
-            // пачкой; вместо диалога тост говорит, где закупку искать.
-            if (decision === "SKIPPED") {
-                toast.info("Вернуть её в разбор можно на вкладке «Мимо»", {
-                    title: "Закупка ушла в отказы",
-                })
-            }
             setRefreshTick(x => x + 1)
         } catch (err) {
             toast.error(err.message || "Сбой сети")
@@ -285,11 +280,19 @@ export default function TendersList() {
                 return
             }
             // Подтверждения у «Мимо» нет — решение отменяемое и его принимают
-            // пачкой; вместо диалога тост говорит, где закупку искать.
+            // пачкой; вместо диалога тост говорит, где закупку искать. Отмена
+            // участия — случай обратный: там диалог есть, а тост напоминает,
+            // что сделку сервер не тронул и с ней ещё разбираться.
             if (decision === "SKIPPED") {
-                toast.info("Вернуть её в разбор можно на вкладке «Мимо»", {
-                    title: "Закупка ушла в отказы",
-                })
+                if (data.unlinkedDealId) {
+                    toast.info("Сделка осталась — отмените или заархивируйте её в карточке", {
+                        title: "Участие в закупке отменено",
+                    })
+                } else {
+                    toast.info("Вернуть её в разбор можно на вкладке «Мимо»", {
+                        title: "Закупка ушла в отказы",
+                    })
+                }
             }
             setRefreshTick(x => x + 1)
         } catch (err) {
@@ -298,6 +301,31 @@ export default function TendersList() {
             setBusyId(null)
         }
     }, [router, toast])
+
+    /**
+     * Ошибочно взятая закупка: не та процедура, дубль, перепутали карточку.
+     * Удалять её нельзя — закупка остаётся историей, поэтому она просто уходит
+     * в «Мимо». Вместе с решением отваливается привязка к сделке (иначе
+     * отменённая процедура так и висела бы в карточке и на доске аукционов), а
+     * сама сделка остаётся: её статус ставит человек, а не автоматика.
+     *
+     * Диалог здесь, в отличие от обычного «Мимо», обязателен: отменяется чужое
+     * решение и уже заведённая сделка.
+     */
+    const cancelParticipation = useCallback(
+        async function cancelParticipation(tender) {
+            const ok = await confirm({
+                title: "Отменить участие в закупке?",
+                description: tender.deal
+                    ? `Закупка уйдёт в «Мимо» и отвяжется от сделки «${tender.deal.title}». Сама сделка останется — отмените или заархивируйте её в карточке.`
+                    : "Закупка уйдёт на вкладку «Мимо». Вернуть её в разбор можно оттуда.",
+                confirmText: "Отменить участие",
+                variant: "danger",
+            })
+            if (ok) decide(tender, "SKIPPED")
+        },
+        [confirm, decide],
+    )
 
     const columns = useMemo(
         () => [
@@ -428,19 +456,39 @@ export default function TendersList() {
                 align: "right",
                 render: t => {
                     if (t.decision === "TAKEN") {
-                        return t.dealId ? (
-                            <Button
-                                variant='ghost'
-                                size='sm'
-                                title='Открыть сделку'
-                                href={`/crm/deals/${t.dealId}`}
-                                onClick={e => e.stopPropagation()}
-                            >
-                                Сделка
-                                <LuArrowUpRight className='h-4 w-4' />
-                            </Button>
-                        ) : (
-                            <Badge tone='neutral'>Участвуем</Badge>
+                        return (
+                            <div className='flex justify-end gap-2'>
+                                {t.dealId ? (
+                                    <Button
+                                        variant='ghost'
+                                        size='sm'
+                                        title='Открыть сделку'
+                                        href={`/crm/deals/${t.dealId}`}
+                                        onClick={e => e.stopPropagation()}
+                                    >
+                                        Сделка
+                                        <LuArrowUpRight className='h-4 w-4' />
+                                    </Button>
+                                ) : (
+                                    <Badge tone='neutral'>Участвуем</Badge>
+                                )}
+                                {/* Разбор ошибок — дело администратора: тот же
+                                    запрет стоит и на сервере. */}
+                                {isAdmin ? (
+                                    <Button
+                                        variant='ghost'
+                                        size='sm'
+                                        title='Закупку взяли по ошибке — вернуть её в «Мимо»'
+                                        disabled={busyId === t.id}
+                                        onClick={e => {
+                                            e.stopPropagation()
+                                            cancelParticipation(t)
+                                        }}
+                                    >
+                                        Мимо
+                                    </Button>
+                                ) : null}
+                            </div>
                         )
                     }
                     if (t.decision === "SKIPPED") {
@@ -486,7 +534,7 @@ export default function TendersList() {
                 },
             },
         ],
-        [busyId, decide],
+        [busyId, decide, cancelParticipation, isAdmin],
     )
 
     const tabsWithCounts = TABS.map(t => ({
@@ -639,17 +687,29 @@ export default function TendersList() {
                                             </Button>
                                         </div>
                                     ) : null}
-                                    {t.decision === "TAKEN" && t.dealId ? (
-                                        <div className='pt-2'>
-                                            <Button
-                                                variant='secondary'
-                                                size='sm'
-                                                className='w-full'
-                                                href={`/crm/deals/${t.dealId}`}
-                                            >
-                                                Сделка
-                                                <LuArrowUpRight className='h-4 w-4' />
-                                            </Button>
+                                    {t.decision === "TAKEN" ? (
+                                        <div className='flex gap-2 pt-2'>
+                                            {t.dealId ? (
+                                                <Button
+                                                    variant='secondary'
+                                                    size='sm'
+                                                    className='flex-1'
+                                                    href={`/crm/deals/${t.dealId}`}
+                                                >
+                                                    Сделка
+                                                    <LuArrowUpRight className='h-4 w-4' />
+                                                </Button>
+                                            ) : null}
+                                            {isAdmin ? (
+                                                <Button
+                                                    variant='ghost'
+                                                    size='sm'
+                                                    disabled={busyId === t.id}
+                                                    onClick={() => cancelParticipation(t)}
+                                                >
+                                                    Мимо
+                                                </Button>
+                                            ) : null}
                                         </div>
                                     ) : null}
                                 </MobileCard>

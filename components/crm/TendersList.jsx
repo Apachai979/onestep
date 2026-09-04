@@ -22,7 +22,6 @@ import {
     FilterSearch,
     MobileCard,
     Tabs,
-    useConfirm,
     useToast,
 } from "@/components/crm/ui"
 
@@ -108,7 +107,6 @@ function ktruList(value) {
 export default function TendersList() {
     const router = useRouter()
     const toast = useToast()
-    const confirm = useConfirm()
 
     const [tab, setTab] = useState("NEW")
     const [items, setItems] = useState(null)
@@ -183,6 +181,13 @@ export default function TendersList() {
                 parts.push("выгрузка переполнена — проверьте фильтр автопоиска")
             }
             toast.success(parts.join(" · "), { title: "Закупки обновлены" })
+            // Подтверждения у «Мимо» нет — решение отменяемое и его принимают
+            // пачкой; вместо диалога тост говорит, где закупку искать.
+            if (decision === "SKIPPED") {
+                toast.info("Вернуть её в разбор можно на вкладке «Мимо»", {
+                    title: "Закупка ушла в отказы",
+                })
+            }
             setRefreshTick(x => x + 1)
         } catch (err) {
             toast.error(err.message || "Сбой сети")
@@ -224,17 +229,6 @@ export default function TendersList() {
      * найденных кандидатов отвечает 409 — тогда открывается диалог развилки.
      */
     const decide = useCallback(async function decide(tender, decision, options = {}) {
-        if (decision === "SKIPPED") {
-            const ok = await confirm({
-                // У просроченной закупки вопрос другой: не «наша ли она», а
-                // «точно ли мимо неё прошли» — заявку подать уже нельзя.
-                title: isExpiredTender(tender) ? "Закупка прошла мимо?" : "Закупка не наша?",
-                description: `«${tender.name.slice(0, 120)}» уйдёт в отказы. Вернуть её в разбор можно на вкладке «Мимо».`,
-                confirmText: "Мимо",
-            })
-            if (!ok) return
-        }
-
         setBusyId(tender.id)
         try {
             const res = await fetch(`/api/crm/tenders/${tender.id}`, {
@@ -290,13 +284,20 @@ export default function TendersList() {
                 router.push(`/crm/deals/${data.dealId}`)
                 return
             }
+            // Подтверждения у «Мимо» нет — решение отменяемое и его принимают
+            // пачкой; вместо диалога тост говорит, где закупку искать.
+            if (decision === "SKIPPED") {
+                toast.info("Вернуть её в разбор можно на вкладке «Мимо»", {
+                    title: "Закупка ушла в отказы",
+                })
+            }
             setRefreshTick(x => x + 1)
         } catch (err) {
             toast.error(err.message || "Сбой сети")
         } finally {
             setBusyId(null)
         }
-    }, [confirm, router, toast])
+    }, [router, toast])
 
     const columns = useMemo(
         () => [

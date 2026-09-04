@@ -362,12 +362,15 @@ export default function ProposalView({
                                 onChange={update("validDays")}
                             />
                         </Field>
+                        {/* Скидка — целыми процентами, как во всей цепочке
+                            «контрагент → проект → сделка»: торгуются круглыми,
+                            а сюда значение и приходит из сделки. */}
                         <Field label='Скидка, %' className='sm:col-span-2'>
                             <Input
                                 type='number'
                                 min='0'
                                 max='100'
-                                step='0.01'
+                                step='1'
                                 value={form.discount}
                                 onChange={update("discount")}
                             />
